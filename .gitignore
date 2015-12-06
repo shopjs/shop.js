@@ -1,0 +1,5 @@
+lib/
+coverage/
+node_modules/
+phantomjsdriver.log
+npm-debug.log
