@@ -1,0 +1,26 @@
+sudo: false
+env:
+  global:
+  - secure: RfK0aCfEXMS3VYJlwWCRvlC6uwMChf5c5CCF7C40RMT4e7PRMkeqgxTZnPXOoeunaC9/RenYkdNNqK5W8/5dt3JL/iQfJKQpHpnP56CdKbjVXYRXECdJWin7wXL3ZNe038kaD7cUlkMWC5XWe8TkYCJgTrsJ6etweMCL2UbLyM82cudqmwe92U44IltCpyYUxyQ6OCdJ8evpwwmWyfW9aszJxj9VUk1lH2L1F8wzMQk/PO7y+F73h2ryTcLeYeViJf2plY4NhnhETaJ4AgpMfOH2B1Yfj8lqS/vYOk6+LlfTZxuSNL1TSylykaJmOzh+f69UHHGETa517A6uBJuTTW39/up22SCw06Tf9eCzdevlrg5B2bqSKTiYLkgVPxN2yt/cUL8xzxt70IuALAjcdLxnEzmSGsOTJCx5/dvxwgZPlBP/0fpDIP9AgNOgQe7P3TVrAP+FJW+Nm+VUPHIPlmiw6Ji6ihxsYo6qVstGu1fh8SkvA4G4YDs2BO7cUrBiMadrjX/n8larn7kxlcu/o6ZcJZrLrfJBJsLjmQHiObBglm6dCMSJkAJEtASHQHYJ6ZlyAmQADw4DetZJ9Hdt9ueY7U7NDbRstcoqZVXWOUDVmeh+2TcXxhINE/sPQh6UW4U9BLlBYYFgXgL24TUo6E75y+8NHxBgEWNbGHwQnNQ=
+  - secure: hY5f+p81oXwng19Pv0EWnytBAzknAVcWSPzm54zkJNE+L6BTAwyFokL4BkSL5D0pJXZn6z91XsPHpDMZDHga63TjT3jsMIdWAS12dmtOvbrBCf/suvuFHPRruG/ghn1dALU2ovlk1DdlWfH18EnFcVzIKNm6CoD055CI+e2m12sjt59ZATK4G7kgarbfPTnwqYmvRbErQxy6R0qwYLKvzkPDNizwELMGsMIY7ftQQT0H/7jhKIuDfO8ITjBRTVqks3JZlpvan7IhXz0RzmrTieNFWVOprvKWkOa2CRctCGiRq83X7Yfjxf53MBy0Gq95nQ5ByCnIztzFu5g8w4VyMKnBNaiCaXi6vnfcDMTpEt52VwAJebCH/y5lvkYXwwzMcdlArghN9byNGf5N8+Lvx/8i2qy53bqzeW70X2KPZp0575YX5VhRFWY7xxllkqVSUi4T/MJlsaoLLc6fsdkqsU9cOkw5dxIfeAJEeuG0AxwM33B3I7yHbUmWAt8n+Dz2IT86kdudeiNMIdPReosRs4f6StPo995oUpXwQrGayIBjeyt+2VMqRLGGwrxYVo2qO2DdusazGtMeWYPmXQl8rEu57gGiw9Nwiwqf1gYx1AZJjEgW8yHcFRAayaDiK6QwsiwZvFkF0UERlxpKv6KpZo/cYTRfOs6Mk8YWJO1UV/o=
+language: node_js
+node_js:
+  - 4
+  - 5
+script:
+  - node_modules/.bin/shortcake test-ci
+cache:
+  directories:
+  - node_modules
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+  slack:
+    secure: PEV/DCajyUMO8EeH/3CYeIkeZhTRITdjmWGs6ZziNpJgEGepH/BdH6SCPWwnTprpF9/MEovdLmsvtaT6auJkNGpoRPHRSb+EU2Bt9nvtCPmgZv16gess2bS0Ceq9K+YmFesoagU8DzLl8rEMw0OQrMWWsV/B0plhK1QnjlPkQKg=
+before_install:
+  - export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+after_success:
+  - node_modules/.bin/shortcake coverage

@@ -1,0 +1,70 @@
+{
+  "name": "shopping.js",
+  "version": "1.0.0",
+  "description": "Shopping Framework for JavaScript.",
+  "homepage": "http://github.com/crowdstart/shopping.js",
+  "bugs": "http://github.com/crowdstart/shopping.js/issues",
+  "keywords": [
+    "browser",
+    "checkout",
+    "commerce",
+    "crowdfunding",
+    "crowdstart",
+    "ecommerce",
+    "fulfillment",
+    "orders",
+    "payments",
+    "preorders",
+    "products",
+    "referrals",
+    "shipping",
+    "site",
+    "subscriptions"
+  ],
+  "main": "lib/",
+  "browser": "lib/browser",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "scripts": {
+    "prepublish": "cake build-min",
+    "test": "cake build && cake test"
+  },
+  "author": "Crowdstart, LLC <hi@crowdstart.com> (http://crowdstart.com)",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/crowdstart/shopping.js/blob/master/LICENSE"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/crowdstart/shopping.js"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "chai-as-promised": "^5.1.0",
+    "co-mocha": "^1.1.2",
+    "codecov.io": "^0.1.6",
+    "coffee-script": "^1.9.1",
+    "connect": "^3.4.0",
+    "coveralls": "^2.11.4",
+    "debug": "^2.2.0",
+    "es5-shim": "^4.1.13",
+    "istanbul": "^0.4.1",
+    "joseph": "^0.2.9",
+    "mocha": "^2.3.4",
+    "mocha-lcov-reporter": "^1.0.0",
+    "moment": "^2.10.6",
+    "nightmare": "^2.0.8",
+    "postmortem": "^0.2.3",
+    "random-token": "0.0.8",
+    "requisite": "^1.14.0",
+    "serve-static": "^1.10.0",
+    "shortcake": "^1.1.7",
+    "uglify-js": "^2.6.1"
+  },
+  "dependencies": {
+  }
+}
