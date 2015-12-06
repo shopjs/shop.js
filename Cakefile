@@ -20,29 +20,15 @@ task 'build', 'build project', (cb) ->
   exec 'coffee -bcm -o lib/ src/', done
 
   opts =
-    entry:      'src/browser.coffee'
+    entry:      'src/index.coffee'
     stripDebug: true
 
   requisite.bundle opts, (err, bundle) ->
     return done err if err?
-
-    # Strip out unnecessary api bits
-    bundle.moduleCache['./blueprints/browser'].walkAst (node) ->
-      if (node.type == 'ObjectExpression') and (Array.isArray node.properties)
-
-        node.properties = node.properties.filter (prop) ->
-          if prop?.key?.name == 'method' and prop?.value?.value == 'POST'
-            return false
-          if prop?.key?.name == 'expects' and prop?.value?.name == 'statusOk'
-            return false
-          true
-
-      false
-
-    fs.writeFile 'crowdstart.js', (bundle.toString opts), 'utf8', done
+    fs.writeFile 'shopping.js', (bundle.toString opts), 'utf8', done
 
 task 'build-min', 'build project', ['build'], ->
-  exec 'uglifyjs crowdstart.js --compress --mangle --lint=false > crowdstart.min.js'
+  exec 'uglifyjs shopping.js --compress --mangle --lint=false > shopping.min.js'
 
 server = do require 'connect'
 
