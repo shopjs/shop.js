@@ -42,7 +42,7 @@ task 'test', 'Run tests', ['build', 'static-server'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''
-  test     = opts.test     ? 'test/ test/server/ test/browser/'
+  test     = opts.test     ? 'test/'
   verbose  = opts.verbose  ? ''
 
   bail    = '--bail' if bail
