@@ -76,7 +76,7 @@ class ObservableProperty
 #           middleware:[
 #               ...
 #           ]
-#       where middleware is an array of (value, name, model, top-level-model)-> value
+#       where middleware is an array of (value, name, model)-> value
 validate = (model, configs)->
   ret = {}
 
@@ -92,7 +92,7 @@ validate = (model, configs)->
             [name, model] = pair
             return Promise.resolve(pair)
               .then (pair)->
-                return middlewareFn.call(pair[1][pair[0]], pair[1], pair[0], model)
+                return middlewareFn.call(pair[1][pair[0]], pair[1], pair[0])
               .then (v)->
                 model[name] = v
                 return pair
