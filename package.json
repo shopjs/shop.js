@@ -1,9 +1,9 @@
 {
-  "name": "shopping.js",
+  "name": "shop.js",
   "version": "0.0.2",
   "description": "Shopping Framework for JavaScript.",
-  "homepage": "http://github.com/crowdstart/shopping.js",
-  "bugs": "http://github.com/crowdstart/shopping.js/issues",
+  "homepage": "http://github.com/crowdstart/shop.js",
+  "bugs": "http://github.com/crowdstart/shop.js/issues",
   "keywords": [
     "browser",
     "checkout",
@@ -34,13 +34,13 @@
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/crowdstart/shopping.js/blob/master/LICENSE"
+      "url": "https://github.com/crowdstart/shop.js/blob/master/LICENSE"
     }
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "http://github.com/crowdstart/shopping.js"
+    "url": "http://github.com/crowdstart/shop.js"
   },
   "devDependencies": {
     "chai": "^3.4.1",

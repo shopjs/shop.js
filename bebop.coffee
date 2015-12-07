@@ -11,8 +11,8 @@ compileCoffee = (src) ->
     globalRequire: true
   , (err, bundle) ->
     return console.error err if err?
-    fs.writeFileSync 'shopping.js', bundle.toString(), 'utf8'
-    console.log 'compiled shopping.js'
+    fs.writeFileSync 'shop.js', bundle.toString(), 'utf8'
+    console.log 'compiled shop.js'
 
 module.exports =
   port: 4242
