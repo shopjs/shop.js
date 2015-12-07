@@ -1,6 +1,6 @@
 global.Crowdstart ?= {}
 
-Shopping = require './shopping'
-Crowdstart.Shopping = Shopping
+Shop = require './shop'
+Crowdstart.Shop = Shop
 
 module.exports = Crowdstart

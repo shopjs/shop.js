@@ -25,10 +25,10 @@ task 'build', 'build project', (cb) ->
 
   requisite.bundle opts, (err, bundle) ->
     return done err if err?
-    fs.writeFile 'shopping.js', (bundle.toString opts), 'utf8', done
+    fs.writeFile 'shop.js', (bundle.toString opts), 'utf8', done
 
 task 'build-min', 'build project', ['build'], ->
-  exec 'uglifyjs shopping.js --compress --mangle --lint=false > shopping.min.js'
+  exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
 
 server = do require 'connect'
 
