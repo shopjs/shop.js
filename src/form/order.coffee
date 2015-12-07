@@ -1,3 +1,5 @@
+[isRequired, isPostalRequired] = require './middleware'
+
 model.export =
   'shippingAddress.line1':
     type: 'input'
