@@ -65,5 +65,10 @@
     "shortcake": "^1.1.7",
     "uglify-js": "^2.6.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "address-validator": "^0.2.2",
+    "broken": "^0.1.1",
+    "crowdstart.js": "^2.2.4",
+    "riot-observable": "^2.3.11"
+  }
 }
