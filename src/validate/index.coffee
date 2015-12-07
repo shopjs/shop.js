@@ -15,10 +15,14 @@ class ObservableProperty
       @_error err
 
   _change: (value)->
-    @model.error = null
+    if value  == @model.value
+      return
+
+    @clearError()
     @model.value = value
 
     @change value
+
     @exec()
       .then (value)=>
         @trigger 'update', value
@@ -28,6 +32,7 @@ class ObservableProperty
   change: ()->
 
   _update: (value)->
+    @clearError()
     @model.value = value
 
     @update value
@@ -38,6 +43,9 @@ class ObservableProperty
     @model.error = err
 
     @error err
+
+  clearError: ()->
+    @model.error = null
 
   error: ()->
 
