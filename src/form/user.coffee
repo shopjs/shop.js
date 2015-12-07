@@ -1,3 +1,5 @@
+[isRequired, isEmail, splitName] = require './middleware'
+
 model.export =
   email:
     type: 'input'
@@ -8,9 +10,6 @@ model.export =
 
   password:
     type: 'password'
-    middleware: [
-      isPassword
-    ]
 
   name:
     type: 'input'
