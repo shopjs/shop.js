@@ -42,8 +42,32 @@ class ObservableProperty
   error: ()->
 
   exec: ()->
-    return @model.exec model.model, model.name
+    [model, name] = @_find @model.model, @model.name
+    return @model.exec model, name
 
+  _find: (model, path)->
+    # expand names that are paths
+    names = path.split '.'
+
+    if names.length == 1
+      return [model, path]
+
+    lastName = names.pop()
+
+    currentObject = model
+    for name in names
+      if currentObject[name]?
+        currentObject = currentObject[name]
+        continue
+
+      if isNumber name
+        currentObject[name] = []
+      else
+        currentObject[name] = {}
+
+      currentObject = currentObject[name]
+
+    return [currentObject, lastName]
 # validate takes a model and a configuration and returns observable values
 #   model: an generic dictionary object that you want to generate observable properties from
 #   configs: a mapping of model values to a middleware stack eg.
@@ -62,10 +86,10 @@ validate = (model, configs)->
       for middlewareFn in config.middleware
         do (name, middlwareFn)->
           middlware.push (pair)->
-            [model, name] = pair
+            [name, model] = pair
             return Promise.resolve(pair)
               .then (pair)->
-                return middlewareFn.call(obs, pair[0], pair[1])
+                return middlewareFn.call(pair[1], pair[0], pair[1])
               .then (v)->
                 model[name] = v
                 return pair
@@ -76,8 +100,8 @@ validate = (model, configs)->
         return promise.new (resolve, reject)->
           resolve model[name]
 
-      exec = (model, name)->
-        p = Promise.resolve([model, name])
+      exec = (name, model)->
+        p = Promise.resolve([name, model])
         for middleware in validators
           p = p.then(validatorFn)
         return p
