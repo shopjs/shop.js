@@ -69,6 +69,9 @@
     "address-validator": "^0.2.2",
     "broken": "^0.1.1",
     "crowdstart.js": "^2.2.4",
-    "riot-observable": "^2.3.11"
+    "object-assign": "^4.0.1",
+    "promise-settle": "^0.2.1",
+    "riot": "2.2.4",
+    "setprototypeof": "^1.0.0"
   }
 }
