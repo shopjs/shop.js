@@ -12,7 +12,7 @@ CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
-  tag:  'checkout-form'
+  tag:  'checkout'
   html: '''
     <form onsubmit={submit}>
       <yield/>
@@ -33,7 +33,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-    'order.isGift':         null
+    'order.gift':         null
     'order.giftMessage:':   null
     'order.giftEmail':      null
 
@@ -42,6 +42,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
   _submit: (event)->
+    @errorMessage = null
     data =
       user:     @data.get 'user'
       order:    @data.get 'order'
@@ -67,7 +68,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     ).catch (err) =>
       console.log "shipping submit Error: #{err}"
 
-      if res.error.code == 'card-declined'
+      if err.message == 'Your card was declined.'
         @errorMessage = 'Sorry, your card was declined. Please check your payment information.'
       else
         @errorMessage = 'Sorry, unable to complete your transaction. Please try again later.'
