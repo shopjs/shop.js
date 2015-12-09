@@ -27,7 +27,7 @@ module.exports =
     return value
 
   requiresStripe: (value)->
-    throw new Error "Required" if @('type') == 'stripe' && (!value? || value == '')
+    throw new Error "Required" if @('order.type') == 'stripe' && (!value? || value == '')
     return value
 
   requireTerms: (value)->
@@ -36,7 +36,7 @@ module.exports =
     return value
 
   cardNumber: (value)->
-    if @('type') != 'stripe'
+    if @('order.type') != 'stripe'
       return value
 
     return new Promise (resolve, reject)->
@@ -46,7 +46,7 @@ module.exports =
         resolve value
 
   expiration: (value)->
-    if @('type') != 'stripe'
+    if @('order.type') != 'stripe'
       return value
 
     date = value.split '/'
@@ -63,7 +63,7 @@ module.exports =
         resolve value
 
   cvc: (value)->
-    if @('type') != 'stripe'
+    if @('order.type') != 'stripe'
       return value
 
     return new Promise (resolve, reject)->
