@@ -2,6 +2,7 @@ global.Crowdstart ?= {}
 refer = require 'referential'
 riot = require 'riot'
 Api = require 'crowdstart.js'
+m = require './mediator'
 
 Shop = require './shop'
 # Shop.templates require '../templates'
@@ -64,5 +65,7 @@ Shop.start = (token, opts)->
     client: new Api.Api
       key:      token
       endpoint: 'https://api.crowdstart.com'
+
+  return m
 
 module.exports = Crowdstart.Shop = Shop

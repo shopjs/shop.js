@@ -3,3 +3,5 @@ select(if='{ input.ref(countryField) == "us" }',id='{ input.name }', style='{ st
   option(if='{ placeholder }')
   option(each='{ value, name in options }', value='{value}', __selected='{ this.parent.input.ref(input.name) == value }')
     | {name}
+#{ 'yield' }
+
