@@ -1,9 +1,7 @@
 module.exports =
-  Checkout: require './checkout'
-  Controls : require './controls'
+  Checkout : require './checkout'
   register: ()->
     @Checkout.register()
 
-    @Controls.register()
 
 

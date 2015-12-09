@@ -19,6 +19,12 @@ module.exports =
     @set 'user.lastName', value.slice i+1
     return value
 
+  isPostalRequired: (value)->
+    if countryUtils.requiresPostalCode(@get('country') || '') && (!value? || value == '')
+      throw new Error "Required for Selected Country"
+
+    return value
+
   requiresStripe: (value)->
     throw new Error "Required" if @('type') == 'stripe' && (!value? || value == '')
     return value
