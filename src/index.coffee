@@ -17,6 +17,7 @@ Shop.start = (data)->
   Shop.Controls.register()
 
   d = refer
+    type: 'stripe'
     order:
       shippingAddress:
         country: 'us'
