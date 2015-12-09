@@ -67,11 +67,8 @@
   },
   "dependencies": {
     "address-validator": "^0.2.2",
-    "broken": "^0.1.1",
-    "crowdstart.js": "^2.2.4",
-    "object-assign": "^4.0.1",
-    "promise-settle": "^0.2.1",
-    "riot": "2.2.4",
-    "setprototypeof": "^1.0.0"
+    "card.js": "0.0.2",
+    "crowdcontrol": "^2.0.0",
+    "crowdstart.js": "^2.2.4"
   }
 }
