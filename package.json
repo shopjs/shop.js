@@ -66,9 +66,10 @@
   },
   "dependencies": {
     "address-validator": "^0.2.2",
-    "card.js": "0.0.2",
-    "crowdcontrol": "^2.0.0",
+    "crowdcontrol": "^2.0.1",
     "crowdstart.js": "^2.2.4",
-    "referential": "^0.3.4"
+    "is-object": "^1.0.1",
+    "referential": "^0.3.4",
+    "riot": "^2.2.4"
   }
 }

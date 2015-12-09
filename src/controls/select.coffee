@@ -1,4 +1,6 @@
 Control = require './control'
+riot = require 'riot'
+isObject = require 'is-object'
 
 isABrokenBrowser = (window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0)
 
@@ -7,32 +9,20 @@ module.exports = class Select extends Control
   html: require '../../templates/controls/select.jade'
   tags: false
   min: 10
+  options: null
 
   lastValueSet: null
 
-  options: ()->
-    return @opts
+  events:
+    updated: ()->
+      @onUpdated()
 
-  changed: false
+  getValue: (event)->
+    return $(event.target).val()?.trim().toLowerCase()
 
   change: ()->
     super
-    @changed = true
-
-  isCustom: (o)->
-    options = o
-    if !options?
-      options = @options()
-
-    for name, value of options
-      if isObject value
-        if !@isCustom value
-          return false
-
-      else if name == @input.ref input.name
-        return false
-
-    return true
+    riot.update()
 
   initSelect: ($select)->
     $select.select2(
@@ -47,30 +37,21 @@ module.exports = class Select extends Control
 
     @style = @style || 'width:100%'
 
-    @on 'updated', ()=>
-      $select = $(@root).find('select')
-      if $select[0]?
-        if isABrokenBrowser
-          $(@root).children('.select2').css width: '100%'
-        if !@initialized
-          requestAnimationFrame ()=>
-            @initSelect($select)
-            @initialized = true
-            @changed = true
-        else if @changed
-          requestAnimationFrame ()=>
-            # this bypasses caching of select option names
-            # no other way to force select2 to flush cache
-            if @isCustom()
-              $select.select('destroy')
-              @initSelect($select)
-            @changed = false
-            $select.select2('val', @input.ref input.name)
-      else
+  onUpdated: ()->
+    if !@input?
+      return
+
+    $select = $(@root).find('select')
+    if $select[0]?
+      if isABrokenBrowser
+        $(@root).children('.select2').css width: '100%'
+      if !@initialized
         requestAnimationFrame ()=>
-          @update()
+          @initSelect($select)
+          @initialized = true
+    else
+      requestAnimationFrame ()=>
+        @update()
 
     @on 'unmount', ()=>
       $select = $(@root).find('select')
-
-Select.register()

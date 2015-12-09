@@ -6,4 +6,4 @@ module.exports = class Control extends CrowdControl.Views.Input
     if @input?
       super
   getValue: (event)->
-    return $(event.target).val().trim()
+    return $(event.target).val()?.trim()

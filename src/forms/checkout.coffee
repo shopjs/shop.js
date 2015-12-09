@@ -13,7 +13,9 @@ CrowdControl = require 'crowdcontrol'
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout-form'
   html: '''
-  <yield/>
+    <form onsubmit={submit}>
+      <yield/>
+    </form>
   '''
 
   configs:
