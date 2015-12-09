@@ -22,7 +22,6 @@
     "subscriptions"
   ],
   "main": "lib/",
-  "browser": "lib/browser",
   "engines": {
     "node": ">=4.0.0"
   },
@@ -69,6 +68,7 @@
     "address-validator": "^0.2.2",
     "card.js": "0.0.2",
     "crowdcontrol": "^2.0.0",
-    "crowdstart.js": "^2.2.4"
+    "crowdstart.js": "^2.2.4",
+    "referential": "^0.3.4"
   }
 }

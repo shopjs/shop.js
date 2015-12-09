@@ -1,10 +1,23 @@
-{isRequired, isEmail, splitName, isPostalRequired, requiresStripe} = require './middleware'
+{
+  isRequired,
+  isEmail,
+  splitName,
+  isPostalRequired,
+  requiresStripe,
+  expiration,
+  cardNumber,
+  cvc,
+} = require './middleware'
 CrowdControl = require 'crowdcontrol'
 
-model.export = class CheckoutForm extends CrowdControl.Views.Form
+module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout-form'
+  html: '''
+  <yield/>
+  '''
+
   configs:
-    'name':             [ isRequire, splitName ]
+    'name':             [ isRequired, splitName ]
 
     'user.email':       [ isRequired, isEmail ]
     'user.password':    null
@@ -16,11 +29,7 @@ model.export = class CheckoutForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-    'expiry':                   [ requireStripe, expiration ]
+    'expiry':                   [ requiresStripe, expiration ]
 
     'payment.account.number':   [ requiresStripe, cardNumber]
-    'payment.account.cvc':      [ requireStripe, cvc ]
-  init: ()->
-    super
-
-CheckoutForm.register()
+    'payment.account.cvc':      [ requiresStripe, cvc ]
