@@ -19,7 +19,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
   '''
 
   configs:
-    'name':             [ isRequired, splitName ]
+    'user.name':        [ isRequired, splitName ]
 
     'user.email':       [ isRequired, isEmail ]
     'user.password':    null
@@ -31,7 +31,8 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-    'expiry':                   [ requiresStripe, expiration ]
+    'payment.account.expiry':   [ requiresStripe, expiration ]
 
     'payment.account.number':   [ requiresStripe, cardNumber]
     'payment.account.cvc':      [ requiresStripe, cvc ]
+
