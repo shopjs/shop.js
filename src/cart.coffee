@@ -19,8 +19,8 @@ class Cart
     for item in @items
       items.push items
       subtotal += item.quantity * item.price
-    return
-      items:    items
-      subtotal: subtotal
+
+    items:    items
+    subtotal: subtotal
 
 module.exports = new Cart
