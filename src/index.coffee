@@ -4,14 +4,16 @@ refer = require 'referential'
 Shop = require './shop'
 # Shop.templates require '../templates'
 Shop.Forms = require './forms'
+Shop.Controls = require './controls'
 
 Shop.Cart
 Shop.use = (templates)->
-  Shop.Forms.Controls.Control.prototype.errorHtml = templates?.Controls?.Error
-  Shop.Forms.Controls.Text.prototype.html = templates?.Controls?.Text
+  Shop.Controls.Control.prototype.errorHtml = templates?.Controls?.Error
+  Shop.Controls.Text.prototype.html = templates?.Controls?.Text
 
 Shop.start = (data)->
   Shop.Forms.register()
+  Shop.Controls.register()
 
   d = refer {}
   d.set data
