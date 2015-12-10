@@ -22,6 +22,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
   '''
 
   errorMessage: null
+  loading: false
 
   configs:
     'user.email':       [ isRequired, isEmail ]
@@ -45,6 +46,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
   _submit: (event)->
+    @loading = true
     m.trigger Events.Submit, @tag
 
     @errorMessage = null
@@ -53,7 +55,9 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       order:    @data.get 'order'
       payment:  @data.get 'payment'
 
+    @update()
     @client.checkout.charge(data).then((order)=>
+      @loading = false
       @data.set 'coupon', @data.get('order.coupon') || {}
       @data.set 'order', order
 
@@ -72,6 +76,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       m.trigger Events.SubmitSuccess, @tag
       @update()
     ).catch (err) =>
+      @loading = false
       console.log "shipping submit Error: #{err}"
 
       if err.message == 'Your card was declined.'
