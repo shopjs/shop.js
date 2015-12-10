@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "bebop": "1.7.11",
-    "cake-publish": "^0.1.1",
-    "cake-version": "^0.1.3",
+    "cake-publish": "0.1.1",
+    "cake-version": "0.1.3",
     "chai": "^3.4.1",
     "chai-as-promised": "^5.1.0",
     "co-mocha": "^1.1.2",
@@ -65,7 +65,7 @@
     "random-token": "0.0.8",
     "requisite": "1.14.2",
     "serve-static": "^1.10.0",
-    "shortcake": "^1.1.11",
+    "shortcake": "1.1.11",
     "uglify-js": "^2.6.1"
   },
   "dependencies": {
