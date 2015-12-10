@@ -49,10 +49,26 @@ calculateInvoice = ->
 
   @data.set 'order.subtotal', subtotal
 
-  taxRate      = (@data.get 'order.taxRate')      ? 0
-  shippingRate = (@data.get 'order.shippingRate') ? 0
+  for taxRateFilter in @data.get 'taxRates'
+    city = @data.get('order.shippingAddress.city')
+    if !city || (taxRateFilter.city? && taxRateFilter.city.toLowerCase() != city.toLowerCase())
+      continue
 
-  tax = Math.ceil (taxRate ? 0) * subtotal
+    state = @data.get('order.shippingAddress.state')
+    if !state || (taxRateFilter.state? && taxRateFilter.state.toLowerCase() != state.toLowerCase())
+      continue
+
+    country = @data.get('order.shippingAddress.country')
+    if !country || (taxRateFilter.country? && taxRateFilter.country.toLowerCase() != country.toLowerCase())
+      continue
+
+    @data.set 'order.taxRate', taxRateFilter.taxRate
+    break
+
+  taxRate   = (@data.get 'order.taxRate') ? 0
+  tax       = Math.ceil (taxRate ? 0) * subtotal
+
+  shippingRate = (@data.get 'order.shippingRate') ? 0
   shipping = shippingRate
 
   @data.set 'order.shipping', shipping
