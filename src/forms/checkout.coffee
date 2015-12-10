@@ -10,6 +10,8 @@
 } = require './middleware'
 CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
+m = require '../mediator'
+Events = require '../events'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
@@ -33,15 +35,18 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-    'order.gift':         null
-    'order.giftMessage:':   null
+    'order.gift':           null
+    'order.giftType':       null
     'order.giftEmail':      null
+    'order.giftMessage':   null
 
     'payment.account.number':   [ requiresStripe, cardNumber]
     'payment.account.expiry':   [ requiresStripe, expiration ]
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
   _submit: (event)->
+    m.trigger Events.Submit, @tag
+
     @errorMessage = null
     data =
       user:     @data.get 'user'
@@ -64,6 +69,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         ).catch (err)->
           console.log "new referralProgram Error: #{err}"
 
+      m.trigger Events.SubmitSuccess, @tag
       @update()
     ).catch (err) =>
       console.log "shipping submit Error: #{err}"
@@ -73,4 +79,5 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       else
         @errorMessage = 'Sorry, unable to complete your transaction. Please try again later.'
 
+      m.trigger Events.SubmitFailed, @tag
       @update()
