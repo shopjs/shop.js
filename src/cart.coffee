@@ -30,28 +30,29 @@ module.exports = new Cart
 m = require './mediator'
 Events = require './events'
 
-m.on Events.SetData, (@data)->
+m.on Events.SetData, (@data) ->
   calculateInvoice.call @
 
-m.on Events.UpdateItems, ()->
+m.on Events.UpdateItems, ->
   calculateInvoice.call @
 
 m.on Events.ChangeSuccess, (key, value)->
   if key.indexOf('quantity') >= 0 || key.indexOf('city') >= 0 || key.indexOf('state') >= 0 || key.indexOf('country') >= 0
     calculateInvoice.call @
 
-calculateInvoice = ()->
-  items = @data.get 'order.items'
-  subtotal = -@data.get 'order.discount'  || 0
+calculateInvoice = ->
+  items    =   @data.get 'order.items'
+  subtotal = -(@data.get 'order.discount') ? 0
+
   for item in items
     subtotal += item.price * item.quantity
 
   @data.set 'order.subtotal', subtotal
 
-  taxRate = @data.get 'order.shippingRate' || 0
-  shippingRate = @data.get 'order.shippingRate' || 0
+  taxRate      = (@data.get 'order.taxRate')      ? 0
+  shippingRate = (@data.get 'order.shippingRate') ? 0
 
-  tax = Math.ceil (taxRate || 0) * subtotal
+  tax = Math.ceil (taxRate ? 0) * subtotal
   shipping = shippingRate
 
   @data.set 'order.shipping', shipping
