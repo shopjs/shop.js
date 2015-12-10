@@ -54,6 +54,16 @@ Shop.start = (token, opts)->
 
   opts = opts || {}
 
+  search = /([^&=]+)=?([^&]*)/g
+  q = window.location.href.split('?')[1]
+  qs = {}
+  if q?
+    while (match = search.exec(q))
+      qs[decodeURIComponent(match[1])] = decodeURIComponent(match[2])
+
+
+  referrer = qs.referrer ? opts.order?.referrer
+
   o = refer
     taxRates:       opts.taxRates || []
     order:
@@ -62,6 +72,7 @@ Shop.start = (token, opts)->
       shippingRate: opts.config?.shippingRate   || opts.order?.shippingRate  || 0
       taxRate:      opts.config?.taxRate        || opts.order?.taxRate       || 0
       currency:     opts.config?.currency       || opts.order?.currency      || 'usd'
+      referrerId:   referrer
       shippingAddress:
         country: 'us'
       discount: 0
