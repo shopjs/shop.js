@@ -94,4 +94,3 @@ task 'watch:test', 'watch for changes and re-run tests', ->
 
     if /^test/.test filename
       invoke 'test', test: filename
-
