@@ -10,5 +10,46 @@ module.exports = class CartForm extends CrowdControl.Views.Form
     </lineitem>
     <yield/>
   '''
+  configs:
+    'order.promoCode':  null
 
   renderCurrency: require('../utils/currency').renderUICurrencyFromJSON
+
+  applying: false
+  promoMessage: ''
+
+  applyPromoCode: ()->
+    @promoMessage = ''
+    promoCode = @data.get('order.promoCode')
+    if !promoCode
+      return
+
+    @promoMessage = 'Applying...'
+    @applying = true
+    promoCode = promoCode.toUpperCase()
+
+    @client.coupon.get(promoCode).then((coupon)=>
+      if coupon.enabled
+        @data.set 'order.coupon', coupon
+        @data.set 'order.couponCodes', [promoCode]
+        if coupon.freeProductId != "" && coupon.freeQuantity > 0
+          @client.product.get(coupon.freeProductId).then((freeProduct)=>
+            @applying = false
+            @promoMessage = "#{ coupon.freeQuantity } Free #{ freeProduct.name }"
+            @update()
+            m.trigger Events.UpdateItems
+          ).catch (err)=>
+            @applying = false
+            @update()
+            console.log "couponFreeProduct Error: #{err}"
+        else
+          m.trigger Events.UpdateItems
+          @applying = false
+          @promoMessage = promoCode + ' Applied!'
+      else
+        @promoMessage = 'This code is expired.'
+      @update()
+    ).catch (err)=>
+      @applying = false
+      @promoMessage = 'This code is invalid.'
+      @update()

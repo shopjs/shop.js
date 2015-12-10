@@ -41,8 +41,33 @@ m.on Events.ChangeSuccess, (key, value)->
     calculateInvoice.call @
 
 calculateInvoice = ->
-  items    =   @data.get 'order.items'
-  subtotal = -(@data.get 'order.discount') ? 0
+  discount = 0
+  coupon = @data.get 'order.coupon'
+
+  if coupon?
+    switch coupon.type
+      when 'flat'
+        if !coupon.productId? || coupon.productId == ''
+          discount = (coupon.amount || 0)
+        else
+          for item in @data.get 'order.items'
+            if item.productId == coupon.productId
+              discount += (coupon.amount || 0) * item.quantity
+
+      when 'percent'
+        if !coupon.productId? || coupon.productId == ''
+          for item in @data.get 'order.items'
+            discount += (coupon.amount || 0) * item.price * item.quantity * 0.01
+        else
+          for item in @data.get 'order.items'
+            if item.productId == coupon.productId
+              discount += (coupon.amount || 0) * item.price * item.quantity * 0.01
+        discount = Math.floor discount
+
+  @data.set 'order.discount', discount
+
+  items    =    @data.get 'order.items'
+  subtotal =    -discount
 
   for item in items
     subtotal += item.price * item.quantity
