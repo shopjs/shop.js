@@ -28,3 +28,4 @@ module.exports =
   compilers:
     css: -> false
     coffee: compileCoffee
+    jade:   compileCoffee
