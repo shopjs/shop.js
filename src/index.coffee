@@ -5,6 +5,7 @@ Api = require 'crowdstart.js'
 m = require './mediator'
 Events = require './events'
 Promise = require 'broken'
+analytics = require './utils/analytics'
 
 Shop = require './shop'
 # Shop.templates require '../templates'
@@ -103,6 +104,21 @@ Shop.start = (token, opts)->
 
   # quite hacky
   m.trigger Events.SetData, d
+
+  m.on Events.Ready, ()->
+    analytics.track 'Viewed Checkout Step',
+      step: 1
+    analytics.track 'Completed Checkout Step',
+      step: 1
+    analytics.track 'Viewed Checkout Step',
+      step: 2
+
+  m.on Events.SubmitSuccess, ()->
+    analytics.track 'Completed Checkout Step',
+      step: 2
+    analytics.track 'Viewed Checkout Step',
+      step: 3
+
   return m
 
 waits = 0
@@ -138,6 +154,25 @@ setItem = ()->
 
     item.quantity = quantity
 
+    oldValue = item.quantity
+    newValue = quantity
+
+    deltaQuantity = newValue - oldValue
+    if deltaQuantity > 0
+      analytics.track 'Added Product',
+        id: item.productId
+        sku: item.productSlug
+        name: item.productName
+        quantity: deltaQuantity
+        price: parseFloat(item.price / 100)
+    else if deltaQuantity < 0
+      analytics.track 'Removed Product',
+        id: item.productId
+        sku: item.productSlug
+        name: item.productName
+        quantity: deltaQuantity
+        price: parseFloat(item.price / 100)
+
     setItem()
     return
 
@@ -155,6 +190,13 @@ setItem = ()->
     waits--
     for item, i in items
       if product.id == item.id || product.slug == item.id
+        analytics.track 'Added Product',
+          id: product.id
+          sku: product.slug
+          name: product.name
+          quantity: item.quantity
+          price: parseFloat(product.price / 100)
+
         updateItem product, item
         break
     setItem()
