@@ -7,6 +7,7 @@
   expiration,
   cardNumber,
   cvc,
+  isEcardGiftRequired,
 } = require './middleware'
 CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
@@ -39,8 +40,8 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
     'order.gift':           null
     'order.giftType':       null
-    'order.giftEmail':      null
-    'order.giftMessage':   null
+    'order.giftEmail':      [ isEcardGiftRequired, isEmail ]
+    'order.giftMessage':    null
 
     'payment.account.number':   [ requiresStripe, cardNumber]
     'payment.account.expiry':   [ requiresStripe, expiration ]
