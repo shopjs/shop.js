@@ -144,6 +144,12 @@ setItem = ()->
 
     if i < items.length
       items.splice i, 1
+      analytics.track 'Removed Product',
+        id: item.productId
+        sku: item.productSlug
+        name: item.productName
+        quantity: item.quantity
+        price: parseFloat(item.price / 100)
 
     setItem()
     return
