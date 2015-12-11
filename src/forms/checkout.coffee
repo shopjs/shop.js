@@ -13,6 +13,7 @@ CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
+analytics = require '../utils/analytics'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
@@ -47,6 +48,14 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'payment.account.expiry':   [ requiresStripe, expiration ]
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
+  init: ()->
+    analytics.track 'Viewed Checkout Step',
+      step: 1
+    analytics.track 'Completed Checkout Step',
+      step: 1
+    analytics.track 'Viewed Checkout Step',
+      step: 2
+
   _submit: (event)->
     if @loading || @checkedOut
       return
@@ -62,6 +71,11 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
     @update()
     @client.checkout.charge(data).then((order)=>
+      analytics.track 'Completed Checkout Step',
+        step: 2
+      analytics.track 'Viewed Checkout Step',
+        step: 3
+
       @loading = false
       @data.set 'coupon', @data.get('order.coupon') || {}
       @data.set 'order', order
