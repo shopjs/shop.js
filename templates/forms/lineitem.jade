@@ -3,8 +3,6 @@ div
 div
   | { data.get('productName') }
 div
-  | x { renderCurrency(cartdata.get('order.currency'), data.get('price')) }
+  | { renderCurrency(cartdata.get('order.currency'), data.get('price') * data.get('quantity')) }
   div
-    | { renderCurrency(cartdata.get('order.currency'), data.get('listPrice')) }
-div
-  | = { renderCurrency(cartdata.get('order.currency'), data.get('quantity') * data.get('price')) }
+    | { renderCurrency(cartdata.get('order.currency'), data.get('listPrice') * data.get('quantity')) }
