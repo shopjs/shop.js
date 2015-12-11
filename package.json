@@ -42,7 +42,7 @@
     "url": "http://github.com/crowdstart/shop.js"
   },
   "devDependencies": {
-    "bebop": "1.7.11",
+    "bebop": "1.7.16",
     "cake-publish": "0.1.1",
     "cake-version": "0.1.3",
     "chai": "^3.4.1",
