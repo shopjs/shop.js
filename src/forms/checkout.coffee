@@ -23,6 +23,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
   errorMessage: null
   loading: false
+  checkedOut: false
 
   configs:
     'user.email':       [ isRequired, isEmail ]
@@ -73,6 +74,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         ).catch (err)->
           console.log "new referralProgram Error: #{err}"
 
+      @checkedOut = true
       m.trigger Events.SubmitSuccess, @tag
       @update()
     ).catch (err) =>

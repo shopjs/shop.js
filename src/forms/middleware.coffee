@@ -21,7 +21,7 @@ module.exports =
     return value
 
   isPostalRequired: (value)->
-    if countryUtils.requiresPostalCode(@get('country') || '') && (!value? || value == '')
+    if countryUtils.requiresPostalCode(@get('order.shippingAddress.country') || '') && (!value? || value == '')
       throw new Error "Required for Selected Country"
 
     return value
