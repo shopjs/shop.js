@@ -10,11 +10,17 @@ module.exports =
     throw new Error 'Required'
 
   isEmail: (value)->
+    if !value
+      return value
+
     return value.toLowerCase() if emailRe.test value
 
     throw new Error 'Enter a valid email'
 
   splitName: (value)->
+    if !value
+      return value
+
     i = value.indexOf ' '
     @set 'user.firstName', value.slice 0, i
     @set 'user.lastName', value.slice i+1
@@ -26,6 +32,11 @@ module.exports =
 
     return value
 
+  isEcardGiftRequired: (value)->
+    return value if (!@get('order.gift') || @get('order.giftType') != 'ecard') || (value && value != '')
+
+    throw new Error 'Required'
+
   requiresStripe: (value)->
     throw new Error "Required" if @('order.type') == 'stripe' && (!value? || value == '')
     return value
@@ -36,6 +47,9 @@ module.exports =
     return value
 
   cardNumber: (value)->
+    if !value
+      return value
+
     if @('order.type') != 'stripe'
       return value
 
@@ -46,6 +60,9 @@ module.exports =
         resolve value
 
   expiration: (value)->
+    if !value
+      return value
+
     if @('order.type') != 'stripe'
       return value
 
@@ -63,6 +80,9 @@ module.exports =
         resolve value
 
   cvc: (value)->
+    if !value
+      return value
+
     if @('order.type') != 'stripe'
       return value
 
