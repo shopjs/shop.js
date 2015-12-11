@@ -4,5 +4,5 @@ div
   | { data.get('productName') }
 div
   | { renderCurrency(cartdata.get('order.currency'), data.get('price') * data.get('quantity')) }
-  div
+  div(if="{ data.get('listPrice') > data.get('price') }")
     | { renderCurrency(cartdata.get('order.currency'), data.get('listPrice') * data.get('quantity')) }

@@ -47,7 +47,7 @@ Shop.use = (templates)->
 # Referral Program Object
 #
 client = null
-items = []
+data = null
 Shop.start = (token, opts)->
   Shop.Forms.register()
   Shop.Controls.register()
@@ -64,7 +64,7 @@ Shop.start = (token, opts)->
 
   referrer = qs.referrer ? opts.order?.referrer
 
-  o = refer
+  d = refer
     taxRates:       opts.taxRates || []
     order:
       giftType:     'physical'
@@ -79,15 +79,16 @@ Shop.start = (token, opts)->
       tax: 0
       subtotal: 0
       total: 0
-      items: items
-  o.set opts
+      items: []
+  d.set opts
 
   client = new Api.Api
     key:      token
     endpoint: 'https://api.crowdstart.com'
 
+  data = d
   tags = riot.mount '*',
-    data: o
+    data: d
     client: client
 
   ps = []
@@ -101,7 +102,7 @@ Shop.start = (token, opts)->
     m.trigger Events.Ready
 
   # quite hacky
-  m.trigger Events.SetData, o
+  m.trigger Events.SetData, d
   return m
 
 waits = 0
@@ -113,6 +114,8 @@ Shop.setItem = (id, quantity)->
     setItem()
 
 setItem = ()->
+  items = data.get 'order.items'
+
   if itemUpdateQueue.length == 0
     return
 
@@ -125,6 +128,7 @@ setItem = ()->
 
     if i < items.length
       items.splice i, 1
+
     setItem()
     return
 
@@ -139,6 +143,7 @@ setItem = ()->
 
   # fetch up to date information at time of checkout openning
   # TODO: Think about revising so we don't report old prices if they changed after checkout is open
+
   items.push
     id: id
     quantity: quantity
