@@ -47,6 +47,9 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
   _submit: (event)->
+    if @loading || @checkedOut
+      return
+
     @loading = true
     m.trigger Events.Submit, @tag
 
