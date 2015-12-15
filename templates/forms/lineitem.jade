@@ -1,5 +1,7 @@
-div
+div(if="{ !data.get('locked') }")
   quantity-select-control(input="{ inputs.quantity }")
+div(if="{ data.get('locked') }", class="locked")
+  | { data.get('quantity') }
 div
   | { data.get('productName') }
 div

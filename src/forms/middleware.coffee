@@ -91,3 +91,9 @@ module.exports =
         if $('input[name=cvc]').hasClass('jp-card-invalid')
           reject new Error('Enter a valid CVC number')
         resolve value
+
+  agreeToTerms: (value)->
+    if value == true
+      return value
+
+    throw new Error 'Agree to the terms and conditions'
