@@ -136,8 +136,6 @@ Shop.setItem = (id, quantity, locked=false)->
 setItem = ()->
   items = data.get 'order.items'
 
-  store.set 'items', items
-
   if itemUpdateQueue.length == 0
     return
 
@@ -160,6 +158,7 @@ setItem = ()->
         quantity: item.quantity
         price: parseFloat(item.price / 100)
 
+    m.trigger Events.UpdateItems
     setItem()
     return
 
@@ -189,6 +188,7 @@ setItem = ()->
         quantity: deltaQuantity
         price: parseFloat(item.price / 100)
 
+    m.trigger Events.UpdateItems
     setItem()
     return
 

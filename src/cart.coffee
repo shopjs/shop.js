@@ -29,6 +29,7 @@ module.exports = new Cart
 #leave this here for now
 m = require './mediator'
 Events = require './events'
+store = require 'store'
 
 m.on Events.SetData, (@data) ->
   calculateInvoice.call @
@@ -41,6 +42,9 @@ m.on Events.ChangeSuccess, (key, value)->
     calculateInvoice.call @
 
 calculateInvoice = ->
+  items = @data.get 'order.items'
+  store.set 'items', items
+
   discount = 0
   coupon = @data.get 'order.coupon'
 
