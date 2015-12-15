@@ -16,6 +16,7 @@ riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
 analytics = require '../utils/analytics'
+store = require 'store'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
@@ -65,6 +66,14 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       order:    @data.get 'order'
       payment:  @data.get 'payment'
 
+    # Do this until there is a riot version that fixes loops and riot.upate
+    newItems = []
+    for item in data.order.items
+      if item.quantity > 0
+        newItems.push item
+
+    data.order.items = newItems
+
     @update()
     @client.checkout.charge(data).then((order)=>
 
@@ -84,6 +93,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         ).catch (err)->
           console.log "new referralProgram Error: #{err}"
 
+      store.clear()
       @checkedOut = true
       m.trigger Events.SubmitSuccess, @tag
       @update()
