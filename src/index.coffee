@@ -149,7 +149,10 @@ setItem = ()->
       break if item.productId == id || item.productSlug == id
 
     if i < items.length
-      items.splice i, 1
+      # Do this until there is a riot version that fixes loops and riot.upate
+      items[i].quantity = 0
+      #items.splice i, 1
+
       analytics.track 'Removed Product',
         id: item.productId
         sku: item.productSlug
