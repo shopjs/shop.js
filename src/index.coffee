@@ -6,6 +6,7 @@ m = require './mediator'
 Events = require './events'
 Promise = require 'broken'
 analytics = require './utils/analytics'
+store = require 'store'
 
 Shop = require './shop'
 # Shop.templates require '../templates'
@@ -62,8 +63,9 @@ Shop.start = (token, opts)->
     while (match = search.exec(q))
       qs[decodeURIComponent(match[1])] = decodeURIComponent(match[2])
 
-
   referrer = qs.referrer ? opts.order?.referrer
+
+  items = store.get 'items'
 
   d = refer
     taxRates:       opts.taxRates || []
@@ -80,7 +82,7 @@ Shop.start = (token, opts)->
       tax: 0
       subtotal: 0
       total: 0
-      items: []
+      items: items ? []
   d.set opts
 
   client = new Api.Api
@@ -119,12 +121,14 @@ Shop.start = (token, opts)->
     analytics.track 'Viewed Checkout Step',
       step: 3
 
+  # force update
+  riot.update()
   return m
 
 waits = 0
 itemUpdateQueue = []
-Shop.setItem = (id, quantity)->
-  itemUpdateQueue.push [id, quantity]
+Shop.setItem = (id, quantity, locked=false)->
+  itemUpdateQueue.push [id, quantity, locked]
 
   if itemUpdateQueue.length == 1
     setItem()
@@ -132,10 +136,12 @@ Shop.setItem = (id, quantity)->
 setItem = ()->
   items = data.get 'order.items'
 
+  store.set 'items', items
+
   if itemUpdateQueue.length == 0
     return
 
-  [id, quantity] = itemUpdateQueue.shift()
+  [id, quantity, locked] = itemUpdateQueue.shift()
 
   # delete item
   if quantity == 0
@@ -159,6 +165,7 @@ setItem = ()->
     continue if item.productId != id && item.productSlug != id
 
     item.quantity = quantity
+    item.locked = locked
 
     oldValue = item.quantity
     newValue = quantity
@@ -186,8 +193,9 @@ setItem = ()->
   # TODO: Think about revising so we don't report old prices if they changed after checkout is open
 
   items.push
-    id: id
-    quantity: quantity
+    id:         id
+    quantity:   quantity
+    locked:     locked
 
   # waiting for response so don't update
   waits++

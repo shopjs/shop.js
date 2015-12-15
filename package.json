@@ -74,6 +74,7 @@
     "crowdstart.js": "2.2.7",
     "is-object": "1.0.1",
     "referential": "0.3.5",
-    "riot": "2.2.4"
+    "riot": "2.2.4",
+    "store": "1.3.17"
   }
 }

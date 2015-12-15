@@ -8,7 +8,9 @@
   cardNumber,
   cvc,
   isEcardGiftRequired,
+  agreeToTerms,
 } = require './middleware'
+
 CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
 m = require '../mediator'
@@ -47,6 +49,8 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     'payment.account.number':   [ requiresStripe, cardNumber]
     'payment.account.expiry':   [ requiresStripe, expiration ]
     'payment.account.cvc':      [ requiresStripe, cvc ]
+
+    'terms':                    [ agreeToTerms ]
 
   _submit: (event)->
     if @loading || @checkedOut
