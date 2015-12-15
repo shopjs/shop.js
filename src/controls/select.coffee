@@ -12,6 +12,7 @@ module.exports = class Select extends Control
   options: null
 
   lastValueSet: null
+  ignore: false
 
   events:
     updated: ()->
@@ -25,6 +26,7 @@ module.exports = class Select extends Control
     riot.update()
 
   initSelect: ($select)->
+    $select.val @input.ref.get(@input.name)
     $select.select2(
       tags: @tags
       placeholder: @placeholder
