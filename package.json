@@ -1,6 +1,6 @@
 {
   "name": "shop.js",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Shopping Framework for JavaScript.",
   "homepage": "http://github.com/crowdstart/shop.js",
   "bugs": "http://github.com/crowdstart/shop.js/issues",
