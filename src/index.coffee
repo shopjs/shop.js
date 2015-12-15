@@ -45,11 +45,22 @@ Shop.use = (templates)->
 #   }
 # ]
 #
+# Format of opts.analytics
+# {
+#   pixels: map of string to string (map of pixel names to pixel url)
+# }
+#
 #Format of opts.referralProgram
 # Referral Program Object
 #
 client = null
 data = null
+
+Shop.analytics = analytics
+Shop.isEmpty = ()->
+  items = data.get 'order.items'
+  return items.length == 0
+
 Shop.start = (token, opts)->
   Shop.Forms.register()
   Shop.Controls.register()
@@ -107,22 +118,34 @@ Shop.start = (token, opts)->
   # quite hacky
   m.trigger Events.SetData, d
 
-  m.on Events.Ready, ()->
-    analytics.track 'Viewed Checkout Step',
-      step: 1
-    analytics.track 'Completed Checkout Step',
-      step: 1
-    analytics.track 'Viewed Checkout Step',
-      step: 2
-
   m.on Events.SubmitSuccess, ()->
-    analytics.track 'Completed Checkout Step',
-      step: 2
-    analytics.track 'Viewed Checkout Step',
-      step: 3
+    options =
+        orderId:  data.get 'order.id'
+        total:    parseFloat(data.get('order.total') /100),
+        # revenue: parseFloat(order.total/100),
+        shipping: parseFloat(data.get('order.shipping') /100),
+        tax:      parseFloat(data.get('order.tax') /100),
+        discount: parseFloat(data.get('order.discount') /100),
+        coupon:   data.get('order.couponCodes.0') || '',
+        currency: data.get('order.currency'),
+        products: []
+
+    for item, i in data.get 'order.items'
+      options.products[i] =
+        id: item.productId
+        sku: item.productSlug
+        name: item.productName
+        quantity: item.quantity
+        price: parseFloat(item.price / 100)
+
+    analytics.track 'Completed Order', options
+    pixels =  data.get 'analytics.pixels.checkout'
+    if pixels?
+      analytics.track 'checkout', pixels
 
   # force update
   riot.update()
+
   return m
 
 waits = 0
