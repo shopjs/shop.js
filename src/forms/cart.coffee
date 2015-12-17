@@ -20,8 +20,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
       @applyPromoCode()
       @update()
 
-  configs:
-    'order.promoCode':  null
+  configs: require './config'
 
   renderCurrency: require('../utils/currency').renderUICurrencyFromJSON
 

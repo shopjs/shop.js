@@ -1,21 +1,7 @@
-{
-  isRequired,
-  isEmail,
-  splitName,
-  isPostalRequired,
-  requiresStripe,
-  expiration,
-  cardNumber,
-  cvc,
-  isEcardGiftRequired,
-  agreeToTerms,
-} = require './middleware'
-
 CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
-analytics = require '../utils/analytics'
 store = require 'store'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
@@ -30,28 +16,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
   loading: false
   checkedOut: false
 
-  configs:
-    'user.email':       [ isRequired, isEmail ]
-    'user.name':        [ isRequired, splitName ]
-    'user.password':    null
-
-    'order.shippingAddress.line1':      [ isRequired ]
-    'order.shippingAddress.line2':      null
-    'order.shippingAddress.city':       [ isRequired ]
-    'order.shippingAddress.state':      [ isRequired ]
-    'order.shippingAddress.postalCode': [ isPostalRequired ]
-    'order.shippingAddress.country':    [ isRequired ]
-
-    'order.gift':           null
-    'order.giftType':       null
-    'order.giftEmail':      [ isEcardGiftRequired, isEmail ]
-    'order.giftMessage':    null
-
-    'payment.account.number':   [ requiresStripe, cardNumber]
-    'payment.account.expiry':   [ requiresStripe, expiration ]
-    'payment.account.cvc':      [ requiresStripe, cvc ]
-
-    'terms':                    [ agreeToTerms ]
+  configs: require './config'
 
   _submit: (event)->
     if @loading || @checkedOut
