@@ -14,6 +14,8 @@ module.exports = class QuantitySelect extends Select
     8: 8
     9: 9
 
+  readOnly: true
+
   getValue: (event)->
     return parseFloat($(event.target).val()?.trim())
 

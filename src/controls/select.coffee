@@ -11,7 +11,7 @@ module.exports = class Select extends Control
   min: 10
   options: null
 
-  lastValueSet: null
+  readOnly: false
   ignore: false
 
   events:
@@ -26,13 +26,37 @@ module.exports = class Select extends Control
     riot.update()
 
   initSelect: ($select)->
-    $select.val @input.ref.get(@input.name)
-    $select.select2(
-      tags: @tags
-      placeholder: @placeholder
-      minimumResultsForSearch: @min
-      width: '100%' if isABrokenBrowser
-    ).change((event)=>@change(event))
+    options = []
+    invertedOptions = {}
+    for value, name of @options
+      options.push
+        name: name
+        value: value
+
+      invertedOptions[name] = value
+
+    $select.selectize(
+      dropdownParent: 'body'
+      valueField: 'value',
+      labelField: 'name',
+      searchField: 'name',
+      items: [@input.ref.get(@input.name)]
+      options: options
+      sortField: 'text'
+    ).on('change', (event)=>@change(event))
+
+    #support auto fill
+    $input = $select.parent().find('.selectize-input input:first')
+    $input.on('change', (event)->
+      val = $(event.target).val()
+      if invertedOptions[val]?
+        $select[0].selectize.setValue(invertedOptions[val])
+    )
+
+    #support read only
+    if @readOnly
+      $input.attr('readonly', true)
+
 
   init:(opts)->
     super
@@ -45,8 +69,6 @@ module.exports = class Select extends Control
 
     $select = $(@root).find('select')
     if $select[0]?
-      if isABrokenBrowser
-        $(@root).children('.select2').css width: '100%'
       if !@initialized
         requestAnimationFrame ()=>
           @initSelect($select)
@@ -55,5 +77,5 @@ module.exports = class Select extends Control
       requestAnimationFrame ()=>
         @update()
 
-    @on 'unmount', ()=>
-      $select = $(@root).find('select')
+    # @on 'unmount', ()=>
+    #   $select = $(@root).find('select')
