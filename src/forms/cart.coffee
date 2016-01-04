@@ -50,6 +50,8 @@ module.exports = class CartForm extends CrowdControl.Views.Form
             @update()
             m.trigger Events.UpdateItems
           ).catch (err)=>
+            store.remove 'promoCode'
+
             @applying = false
             @update()
             console.log "couponFreeProduct Error: #{err}"
@@ -58,9 +60,14 @@ module.exports = class CartForm extends CrowdControl.Views.Form
           @applying = false
           @promoMessage = promoCode + ' Applied!'
       else
+        store.remove 'promoCode'
+
+        @applying = false
         @promoMessage = 'This code is expired.'
       @update()
     ).catch (err)=>
+      store.remove 'promoCode'
+
       @applying = false
       @promoMessage = 'This code is invalid.'
       @update()
