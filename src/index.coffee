@@ -143,6 +143,12 @@ Shop.start = (token, opts)->
     if pixels?
       analytics.track 'checkout', pixels
 
+  # fix incompletely loaded items
+  if items? && items.length > 0
+    for item in items
+      if item.id?
+        reloadItem item.id
+
   # force update
   riot.update()
 
@@ -167,7 +173,7 @@ setItem = ()->
   # delete item
   if quantity == 0
     for item, i in items
-      break if item.productId == id || item.productSlug == id
+      break if item.productId == id || item.productSlug == id || item.id == id
 
     if i < items.length
       # Do this until there is a riot version that fixes loops and riot.upate
@@ -225,6 +231,11 @@ setItem = ()->
 
   # waiting for response so don't update
   waits++
+
+  reloadItem id
+
+reloadItem = (id)->
+  items = data.get 'order.items'
 
   client.product.get(id).then((product)->
     waits--
