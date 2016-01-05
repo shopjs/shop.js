@@ -41,7 +41,6 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
     @update()
     @client.checkout.charge(data).then((order)=>
-
       @loading = false
       @data.set 'coupon', @data.get('order.coupon') || {}
       @data.set 'order', order
