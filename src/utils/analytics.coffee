@@ -1,4 +1,7 @@
 module.exports =
   track: (event, data) ->
     if window.analytics?
-      window.analytics.track(event, data)
+      try
+        window.analytics.track(event, data)
+      catch err
+        console.error(err)
