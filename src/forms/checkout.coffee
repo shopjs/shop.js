@@ -40,8 +40,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     data.order.items = newItems
 
     @update()
-    @client.checkout.charge(data).then((order)=>
-      @loading = false
+    @client.checkout.authorize(data).then((order)=>
       @data.set 'coupon', @data.get('order.coupon') || {}
       @data.set 'order', order
 
@@ -57,13 +56,33 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         ).catch (err)->
           console.log "new referralProgram Error: #{err}"
 
-      store.clear()
-      @checkedOut = true
-      m.trigger Events.SubmitSuccess, @tag
+      hasErrored = false
+      @client.checkout.capture(order.id).then((order)=>
+        @data.set 'order', order
+      ).catch (err)=>
+        hasErrored = true
+        @loading = false
+        console.log "checkout submit Error: #{err}"
+        @errorMessage = 'Sorry, unable to complete your transaction. Please try again later.'
+
+        m.trigger Events.SubmitFailed, @tag
+        @update()
+
+      # Don't immediately issue success so we allow for some time to analytics to catch up
+      setTimeout ()=>
+        if !hasErrored
+          @loading = false
+          store.clear()
+
+          @checkedOut = true
+          m.trigger Events.SubmitSuccess, @tag
+          @update()
+      , 200
+
       @update()
     ).catch (err) =>
       @loading = false
-      console.log "shipping submit Error: #{err}"
+      console.log "authorize submit Error: #{err}"
 
       if err.message == 'Your card was declined.'
         @errorMessage = 'Sorry, your card was declined. Please check your payment information.'
