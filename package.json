@@ -71,7 +71,7 @@
   "dependencies": {
     "address-validator": "0.2.2",
     "crowdcontrol": "2.0.5",
-    "crowdstart.js": "2.2.7",
+    "crowdstart.js": "2.2.8",
     "es5-shim": "4.4.1",
     "is-object": "1.0.1",
     "moment": "2.11.0",
