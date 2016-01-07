@@ -1,22 +1,22 @@
-global.Crowdstart ?= {}
-refer = require 'referential'
-riot = require 'riot'
-Api = require 'crowdstart.js'
-m = require './mediator'
-Events = require './events'
-Promise = require 'broken'
-analytics = require './utils/analytics'
-store = require 'store'
+Promise       = require 'broken'
+refer         = require 'referential'
+riot          = require 'riot'
+store         = require 'store'
 
-Shop = require './shop'
-# Shop.templates require '../templates'
-Shop.Forms = require './forms'
+Crowdstart    = require 'crowdstart.js'
+
+m             = require './mediator'
+Events        = require './events'
+analytics     = require './utils/analytics'
+
+Shop          = require './shop'
+Shop.Forms    = require './forms'
 Shop.Controls = require './controls'
+Shop.Cart     = require './cart'
 
-Shop.Cart = require './cart'
-Shop.use = (templates)->
-  Shop.Controls.Control.prototype.errorHtml = templates.Controls.Error if templates?.Controls?.Error
-  Shop.Controls.Text.prototype.html = templates.Controls.Text if templates?.Controls?.Text
+Shop.use = (templates) ->
+  Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
+  Shop.Controls.Text::html         = templates.Controls.Text  if templates?.Controls?.Text
 
 # Format of opts.config
 # {
@@ -57,16 +57,12 @@ client = null
 data = null
 
 Shop.analytics = analytics
-Shop.isEmpty = ()->
+
+Shop.isEmpty = ->
   items = data.get 'order.items'
   return items.length == 0
 
-Shop.start = (token, opts)->
-  Shop.Forms.register()
-  Shop.Controls.register()
-
-  opts = opts || {}
-
+getReferrer = ->
   search = /([^&=]+)=?([^&]*)/g
   q = window.location.href.split('?')[1]
   qs = {}
@@ -74,7 +70,16 @@ Shop.start = (token, opts)->
     while (match = search.exec(q))
       qs[decodeURIComponent(match[1])] = decodeURIComponent(match[2])
 
-  referrer = qs.referrer ? opts.order?.referrer
+  qs.referrer
+
+Shop.start = (opts = {}) ->
+  unless opts.key?
+    throw new Error 'Please specify your API Key'
+
+  Shop.Forms.register()
+  Shop.Controls.register()
+
+  referrer = getReferrer() ? opts.order?.referrer
 
   items = store.get 'items'
 
@@ -96,9 +101,9 @@ Shop.start = (token, opts)->
       items: items ? []
   d.set opts
 
-  client = new Api.Api
-    key:      token
-    endpoint: 'https://api.crowdstart.com'
+  client = new Crowdstart.Api
+    key:      opts.key
+    endpoint: opts.endpoint
 
   data = d
   tags = riot.mount '*',
@@ -108,17 +113,17 @@ Shop.start = (token, opts)->
   ps = []
   for tag in tags
     p = new Promise (resolve)->
-      tag.one 'updated', ()->
+      tag.one 'updated', ->
         resolve()
     ps.push p
 
-  Promise.settle(ps).then ()->
+  Promise.settle(ps).then ->
     m.trigger Events.Ready
 
   # quite hacky
   m.trigger Events.SetData, d
 
-  m.on Events.SubmitSuccess, ()->
+  m.on Events.SubmitSuccess, ->
     options =
         orderId:  data.get 'order.id'
         total:    parseFloat(data.get('order.total') /100),
@@ -143,26 +148,27 @@ Shop.start = (token, opts)->
     if pixels?
       analytics.track 'checkout', pixels
 
-  # fix incompletely loaded items
+  # Fix incompletely loaded items
   if items? && items.length > 0
     for item in items
       if item.id?
         reloadItem item.id
 
-  # force update
+  # Force update
   riot.update()
 
   return m
 
-waits = 0
+waits           = 0
 itemUpdateQueue = []
+
 Shop.setItem = (id, quantity, locked=false)->
   itemUpdateQueue.push [id, quantity, locked]
 
   if itemUpdateQueue.length == 1
     setItem()
 
-setItem = ()->
+setItem = ->
   items = data.get 'order.items'
 
   if itemUpdateQueue.length == 0
@@ -221,7 +227,7 @@ setItem = ()->
     setItem()
     return
 
-  # fetch up to date information at time of checkout openning
+  # Fetch up to date information at time of checkout openning
   # TODO: Think about revising so we don't report old prices if they changed after checkout is open
 
   items.push
@@ -234,29 +240,30 @@ setItem = ()->
 
   reloadItem id
 
-reloadItem = (id)->
+reloadItem = (id) ->
   items = data.get 'order.items'
 
-  client.product.get(id).then((product)->
-    waits--
-    for item, i in items
-      if product.id == item.id || product.slug == item.id
-        analytics.track 'Added Product',
-          id: product.id
-          sku: product.slug
-          name: product.name
-          quantity: item.quantity
-          price: parseFloat(product.price / 100)
+  client.product.get id
+    .then (product) ->
+      waits--
+      for item, i in items
+        if product.id == item.id || product.slug == item.id
+          analytics.track 'Added Product',
+            id: product.id
+            sku: product.slug
+            name: product.name
+            quantity: item.quantity
+            price: parseFloat(product.price / 100)
 
-        updateItem product, item
-        break
-    setItem()
-  ).catch (err)->
-    waits--
-    console.log "setItem Error: #{err}"
-    setItem()
+          updateItem product, item
+          break
+      setItem()
+    .catch (err) ->
+      waits--
+      console.log "setItem Error: #{err}"
+      setItem()
 
-updateItem = (product, item)->
+updateItem = (product, item) ->
   item.id             = undefined
   item.productId      = product.id
   item.productSlug    = product.slug
