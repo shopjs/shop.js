@@ -57,7 +57,6 @@ module.exports = class Select extends Control
     if @readOnly
       $input.attr('readonly', true)
 
-
   init:(opts)->
     super
 
@@ -74,8 +73,10 @@ module.exports = class Select extends Control
           @initSelect($select)
           @initialized = true
     else
-      requestAnimationFrame ()=>
-        @update()
+      $control = $(@root).find('.selectize-control')
+      if !$control[0]?
+        requestAnimationFrame ()=>
+          @update()
 
     # @on 'unmount', ()=>
     #   $select = $(@root).find('select')

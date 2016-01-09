@@ -112,6 +112,10 @@ Shop.start = (token, opts)->
         resolve()
     ps.push p
 
+  riot.update = ()->
+    for tag in tags
+      tag.update()
+
   Promise.settle(ps).then ()->
     m.trigger Events.Ready
 

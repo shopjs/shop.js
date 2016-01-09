@@ -11,10 +11,9 @@ module.exports = class StateSelect extends Select
       return
 
     if @input.ref(@countryField) == 'us'
-      $(@root).find('.select2').show()
+      $(@root).find('.selectize-control').show()
     else
-      $(@root).find('.select2').hide()
+      $(@root).find('.selectize-control').hide()
       value = @input.ref(@input.name)
       @input.ref.set(@input.name, value.toUpperCase()) if value
     super
-
