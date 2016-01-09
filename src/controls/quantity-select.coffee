@@ -19,7 +19,11 @@ module.exports = class QuantitySelect extends Select
   getValue: (event)->
     return parseFloat($(event.target).val()?.trim())
 
-  change: ()->
+  change: (e)->
+    # riot phantom tag issue
+    if !e.target?
+      return
+
     oldValue = @data.get 'quantity'
     super
     newValue = @data.get 'quantity'
