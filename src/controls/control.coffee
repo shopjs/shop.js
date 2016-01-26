@@ -3,6 +3,8 @@ m = require '../mediator'
 Events = require '../Events'
 riot = require 'riot'
 
+scrolling = false
+
 module.exports = class Control extends CrowdControl.Views.Input
   lookup: 'user.email'
 
@@ -22,6 +24,14 @@ module.exports = class Control extends CrowdControl.Views.Input
       return
 
     super
+
+    if !scrolling
+      scrolling = true
+      $('html, body').animate(
+        scrollTop: $(@root).offset().top - $(window).height()/2
+        complete: ->
+          scrolling = false
+      , 500)
     m.trigger Events.ChangeFailed, @input.name, @input.ref.get @input.name
 
   change: ()->
