@@ -54,16 +54,19 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         ).then((referrer)=>
           @data.set 'referrerId', referrer.id
         ).catch (err)->
+          window?.Raven?.captureException(err)
           console.log "new referralProgram Error: #{err}"
 
       hasErrored = false
       @client.checkout.capture(order.id).then((order)=>
         @data.set 'order', order
       ).catch (err)=>
+        window?.Raven?.captureException(err)
+
         hasErrored = true
         @loading = false
         console.log "checkout submit Error: #{err}"
-        @errorMessage = 'Sorry, unable to complete your transaction. Please try again later.'
+        @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
         m.trigger Events.SubmitFailed, @tag
         @update()
@@ -84,10 +87,11 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       @loading = false
       console.log "authorize submit Error: #{err}"
 
-      if err.message == 'Your card was declined.'
-        @errorMessage = 'Sorry, your card was declined. Please check your payment information.'
+      if err.type == 'authorization-error'
+        @errorMessage = err.message
       else
-        @errorMessage = 'Sorry, unable to complete your transaction. Please try again later.'
+        window?.Raven?.captureException(err)
+        @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
       m.trigger Events.SubmitFailed, @tag
       @update()
