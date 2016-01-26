@@ -29,9 +29,11 @@ module.exports = class Control extends CrowdControl.Views.Input
       scrolling = true
       $('html, body').animate(
         scrollTop: $(@root).offset().top - $(window).height()/2
+      ,
         complete: ->
           scrolling = false
-      , 500)
+        duration: 500
+      )
     m.trigger Events.ChangeFailed, @input.name, @input.ref.get @input.name
 
   change: ()->
