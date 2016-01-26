@@ -3,6 +3,9 @@ path      = require 'path'
 exec      = require('executive').interactive
 requisite = require 'requisite'
 
+require 'broken'
+Promise.suppressUncaughtRejectionError = false
+
 compileCoffee = (src) ->
   return unless /^src|src\/index.coffee$/.test src
 
