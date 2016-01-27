@@ -70,7 +70,11 @@ getReferrer = ->
     while (match = search.exec(q))
       qs[decodeURIComponent(match[1])] = decodeURIComponent(match[2])
 
-  qs.referrer
+  if qs.referrer?
+    store.set 'referrer', qs.referrer
+    return q.referrer
+  else
+    return store.get 'referrer'
 
 Shop.start = (opts = {}) ->
   unless opts.key?
