@@ -29,7 +29,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
   applyPromoCode: ()->
     @promoMessage = ''
-    promoCode = @data.get('order.promoCode')
+    promoCode = @data.get 'order.promoCode'
     if !promoCode
       return
 
@@ -39,35 +39,27 @@ module.exports = class CartForm extends CrowdControl.Views.Form
     @applying = true
     promoCode = promoCode.toUpperCase()
 
-    @client.coupon.get(promoCode).then((coupon)=>
-      if coupon.enabled
-        @data.set 'order.coupon', coupon
-        @data.set 'order.couponCodes', [promoCode]
-        if coupon.freeProductId != "" && coupon.freeQuantity > 0
-          @client.product.get(coupon.freeProductId).then((freeProduct)=>
-            @applying = false
-            @promoMessage = "#{ coupon.freeQuantity } Free #{ freeProduct.name }"
-            @update()
-            m.trigger Events.UpdateItems
-          ).catch (err)=>
-            store.remove 'promoCode'
+    m.trigger Events.ApplyCoupon, promoCode
+    @cart.promoCode(promoCode).then(=>
+      @applying = false
 
-            @applying = false
-            @update()
-            console.log "couponFreeProduct Error: #{err}"
-        else
-          m.trigger Events.UpdateItems
-          @applying = false
-          @promoMessage = promoCode + ' Applied!'
+      coupon = @data.get 'order.coupon'
+      if coupon?.freeProductId? && coupon.freeProductId != "" && coupon.freeQuantity > 0
+        @promoMessage = "#{ coupon.freeQuantity } Free #{ freeProduct.name }"
       else
-        store.remove 'promoCode'
+        @promoMessage = promoCode + ' Applied!'
 
-        @applying = false
-        @promoMessage = 'This code is expired.'
+      m.trigger Events.ApplyCouponSuccess, coupon
       @update()
     ).catch (err)=>
       store.remove 'promoCode'
-
       @applying = false
-      @promoMessage = 'This code is invalid.'
+
+      coupon = @data.get 'order.coupon'
+      if coupon?.enabled
+        @promoMessage = 'This code is expired.'
+      else
+        @promoMessage = 'This code is invalid.'
+
+      m.trigger Events.ApplyCouponFailed, err
       @update()
