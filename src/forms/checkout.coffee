@@ -26,41 +26,10 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     m.trigger Events.Submit, @tag
 
     @errorMessage = null
-    data =
-      user:     @data.get 'user'
-      order:    @data.get 'order'
-      payment:  @data.get 'payment'
-
-    # Do this until there is a riot version that fixes loops and riot.upate
-    newItems = []
-    for item in data.order.items
-      if item.quantity > 0
-        newItems.push item
-
-    data.order.items = newItems
 
     @update()
-    @client.checkout.authorize(data).then((order)=>
-      @data.set 'coupon', @data.get('order.coupon') || {}
-      @data.set 'order', order
-
-      referralProgram = @data.get 'referralProgram'
-
-      if referralProgram?
-        @client.referrer.create(
-          userId: data.order.userId
-          orderId: data.order.orderId
-          program: referralProgram
-        ).then((referrer)=>
-          @data.set 'referrerId', referrer.id
-        ).catch (err)->
-          window?.Raven?.captureException(err)
-          console.log "new referralProgram Error: #{err}"
-
-      hasErrored = false
-      @client.checkout.capture(order.id).then((order)=>
-        @data.set 'order', order
-      ).catch (err)=>
+    @cart.checkout().then((pRef)=>
+      pRef.p.catch (err)=>
         window?.Raven?.captureException(err)
 
         hasErrored = true
@@ -71,8 +40,8 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         m.trigger Events.SubmitFailed, @tag
         @update()
 
-      # Don't immediately issue success so we allow for some time to analytics to catch up
-      setTimeout ()=>
+      hasErrored = false
+      setTimeout =>
         if !hasErrored
           @loading = false
           store.clear()
@@ -82,8 +51,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           @update()
       , 200
 
-      @update()
-    ).catch (err) =>
+    ).catch (err)=>
       @loading = false
       console.log "authorize submit Error: #{err}"
 

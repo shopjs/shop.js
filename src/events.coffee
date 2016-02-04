@@ -1,10 +1,15 @@
 module.exports =
-  SetData:
-    'set-data'
-  UpdateItems:
-    'update-items'
   Ready:
     'ready'
+  SetData:
+    'set-data'
+
+  TryUpdateItem:
+    'try-update-item'
+  UpdateItem:
+    'update-item'
+  UpdateItems:
+    'update-items'
 
   Change:
     'change'
@@ -19,4 +24,11 @@ module.exports =
     'submit-success'
   SubmitFailed:
     'submit-failed'
+
+  ApplyCoupon:
+    'apply-coupon'
+  ApplyCouponSuccess:
+    'apply-coupon-success'
+  ApplyCouponFailed:
+    'apply-coupon-failed'
 

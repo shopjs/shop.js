@@ -1,18 +1,18 @@
-Promise       = require 'broken'
-refer         = require 'referential'
-riot          = require 'riot'
-store         = require 'store'
+Promise         = require 'broken'
+refer           = require 'referential'
+riot            = require 'riot'
+store           = require 'store'
+{Cart}          = require 'commerce.js'
 
-Crowdstart    = require 'crowdstart.js'
+Crowdstart      = require 'crowdstart.js'
 
-m             = require './mediator'
-Events        = require './events'
-analytics     = require './utils/analytics'
+m               = require './mediator'
+Events          = require './events'
+analytics       = require './utils/analytics'
 
-Shop          = require './shop'
-Shop.Forms    = require './forms'
-Shop.Controls = require './controls'
-Shop.Cart     = require './cart'
+Shop            = require './shop'
+Shop.Forms      = require './forms'
+Shop.Controls   = require './controls'
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -53,13 +53,11 @@ Shop.use = (templates) ->
 #Format of opts.referralProgram
 # Referral Program Object
 #
-client = null
-data = null
 
 Shop.analytics = analytics
 
 Shop.isEmpty = ->
-  items = data.get 'order.items'
+  items = @data.get 'order.items'
   return items.length == 0
 
 getReferrer = ->
@@ -87,7 +85,7 @@ Shop.start = (opts = {}) ->
 
   items = store.get 'items'
 
-  d = refer
+  @data = refer
     taxRates:       opts.taxRates || []
     order:
       giftType:     'physical'
@@ -103,16 +101,28 @@ Shop.start = (opts = {}) ->
       subtotal: 0
       total: 0
       items: items ? []
-  d.set opts
+  @data.set opts
 
-  client = new Crowdstart.Api
+  @client = new Crowdstart.Api
     key:      opts.key
     endpoint: opts.endpoint
 
-  data = d
+  @cart = new Cart @client, @data
+
   tags = riot.mount '*',
-    data: d
-    client: client
+    data:   @data
+    cart:   @cart
+    client: @client
+
+  riot.update = ->
+    for tag in tags
+      tag.update()
+
+  @cart.onUpdate = (item)=>
+    items = @data.get 'order.items'
+    store.set 'items', items
+    m.trigger Events.UpdateItem, item
+    riot.update()
 
   ps = []
   for tag in tags
@@ -121,27 +131,28 @@ Shop.start = (opts = {}) ->
         resolve()
     ps.push p
 
-  riot.update = ->
-    for tag in tags
-      tag.update()
-
-  Promise.settle(ps).then ->
+  Promise.settle(ps).then(->
     m.trigger Events.Ready
+  ).catch (err)->
+    window?.Raven?.captureException err
 
   # quite hacky
-  m.trigger Events.SetData, d
+  m.data = @data
+  m.trigger Events.SetData, @data
+  m.on Events.SetData, (@data)->
+    @cart.invoice()
 
   m.on Events.SubmitSuccess, ->
     options =
-        orderId:  data.get 'order.id'
-        total:    parseFloat(data.get('order.total') /100),
-        # revenue: parseFloat(order.total/100),
-        shipping: parseFloat(data.get('order.shipping') /100),
-        tax:      parseFloat(data.get('order.tax') /100),
-        discount: parseFloat(data.get('order.discount') /100),
-        coupon:   data.get('order.couponCodes.0') || '',
-        currency: data.get('order.currency'),
-        products: []
+      orderId:  data.get 'order.id'
+      total:    parseFloat(data.get('order.total') /100),
+      # revenue: parseFloat(order.total/100),
+      shipping: parseFloat(data.get('order.shipping') /100),
+      tax:      parseFloat(data.get('order.tax') /100),
+      discount: parseFloat(data.get('order.discount') /100),
+      coupon:   data.get('order.couponCodes.0') || '',
+      currency: data.get('order.currency'),
+      products: []
 
     for item, i in data.get 'order.items'
       options.products[i] =
@@ -171,114 +182,14 @@ waits           = 0
 itemUpdateQueue = []
 
 Shop.setItem = (id, quantity, locked=false)->
-  itemUpdateQueue.push [id, quantity, locked]
-
-  if itemUpdateQueue.length == 1
-    setItem()
-
-setItem = ->
-  items = data.get 'order.items'
-
-  if itemUpdateQueue.length == 0
-    return
-
-  [id, quantity, locked] = itemUpdateQueue.shift()
-
-  # delete item
-  if quantity == 0
-    for item, i in items
-      break if item.productId == id || item.productSlug == id || item.id == id
-
-    if i < items.length
-      # Do this until there is a riot version that fixes loops and riot.upate
-      items[i].quantity = 0
-      #items.splice i, 1
-
-      analytics.track 'Removed Product',
-        id: item.productId
-        sku: item.productSlug
-        name: item.productName
-        quantity: item.quantity
-        price: parseFloat(item.price / 100)
-
-    m.trigger Events.UpdateItems
-    setItem()
-    return
-
-  # try and update item quantity
-  for item, i in items
-    continue if item.productId != id && item.productSlug != id
-
-    item.quantity = quantity
-    item.locked = locked
-
-    oldValue = item.quantity
-    newValue = quantity
-
-    deltaQuantity = newValue - oldValue
-    if deltaQuantity > 0
-      analytics.track 'Added Product',
-        id: item.productId
-        sku: item.productSlug
-        name: item.productName
-        quantity: deltaQuantity
-        price: parseFloat(item.price / 100)
-    else if deltaQuantity < 0
-      analytics.track 'Removed Product',
-        id: item.productId
-        sku: item.productSlug
-        name: item.productName
-        quantity: deltaQuantity
-        price: parseFloat(item.price / 100)
-
-    m.trigger Events.UpdateItems
-    setItem()
-    return
-
-  # Fetch up to date information at time of checkout openning
-  # TODO: Think about revising so we don't report old prices if they changed after checkout is open
-
-  items.push
-    id:         id
-    quantity:   quantity
-    locked:     locked
-
-  # waiting for response so don't update
-  waits++
-
-  reloadItem id
-
-reloadItem = (id) ->
-  items = data.get 'order.items'
-
-  client.product.get id
-    .then (product) ->
-      waits--
-      for item, i in items
-        if product.id == item.id || product.slug == item.id
-          analytics.track 'Added Product',
-            id: product.id
-            sku: product.slug
-            name: product.name
-            quantity: item.quantity
-            price: parseFloat(product.price / 100)
-
-          updateItem product, item
-          break
-      setItem()
-    .catch (err) ->
-      waits--
-      console.log "setItem Error: #{err}"
-      setItem()
-
-updateItem = (product, item) ->
-  item.id             = undefined
-  item.productId      = product.id
-  item.productSlug    = product.slug
-  item.productName    = product.name
-  item.price          = product.price
-  item.listPrice      = product.listPrice
-  m.trigger Events.UpdateItems
-  riot.update()
+  m.trigger Events.TryUpdateItem, id
+  p = @cart.set id, quantity, locked
+  if @promise != p
+    @promise = p
+    @promise.then(->
+      riot.update()
+      m.trigger Events.UpdateItems, @data.get 'order.items'
+    ).catch (err)->
+      window?.Raven?.captureException err
 
 module.exports = Crowdstart.Shop = Shop
