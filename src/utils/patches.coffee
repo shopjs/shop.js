@@ -15,17 +15,6 @@ raf = require 'raf'
 window.requestAnimationFrame ?= raf
 window.cancelAnimationFrame ?= raf.cancel
 
-# IE 10 monkey patch because of riot passing the node to its own appendChild.
-if ieMajor <= 10
-  if Node?
-    appendChild = Node.prototype.appendChild
-    Node.prototype.appendChild = (element)->
-      if element == @
-        @parentNode.removeChild element
-        @_tag.originalParentElement.appendChild @
-        return
-      appendChild.call @, element
-
 module.exports =
   ieVersion:
     major: ieMajor
