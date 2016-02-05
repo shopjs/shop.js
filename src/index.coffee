@@ -186,7 +186,7 @@ Shop.setItem = (id, quantity, locked=false)->
   p = @cart.set id, quantity, locked
   if @promise != p
     @promise = p
-    @promise.then(->
+    @promise.then(=>
       riot.update()
       m.trigger Events.UpdateItems, @data.get 'order.items'
     ).catch (err)->
