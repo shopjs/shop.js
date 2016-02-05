@@ -1,6 +1,10 @@
+require './utils/patches'
+
 Promise         = require 'broken'
-refer           = require 'referential'
 riot            = require 'riot'
+window?.riot    = riot
+
+refer           = require 'referential'
 store           = require 'store'
 {Cart}          = require 'commerce.js'
 
@@ -116,7 +120,7 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  tags = riot.mount '*',
+  tags = riot.mount 'cart, checkout',
     data:   @data
     cart:   @cart
     client: @client

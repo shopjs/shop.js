@@ -1,6 +1,7 @@
 Control = require './control'
 riot = require 'riot'
 isObject = require 'is-object'
+requestAnimationFrame = require 'raf'
 
 isABrokenBrowser = (window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0)
 
