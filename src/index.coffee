@@ -66,7 +66,14 @@ getReferrer = ->
   qs = {}
   if q?
     while (match = search.exec(q))
-      qs[decodeURIComponent(match[1])] = decodeURIComponent(match[2])
+      k = match[1]
+      try
+        k = decodeURIComponent k
+      v = match[2]
+      try
+        v = decodeURIComponent v
+      catch err
+      qs[k] = v
 
   if qs.referrer?
     store.set 'referrer', qs.referrer
@@ -171,7 +178,7 @@ Shop.start = (opts = {}) ->
   if items? && items.length > 0
     for item in items
       if item.id?
-        reloadItem item.id
+        @cart.load item.id
 
   # Force update
   riot.update()
