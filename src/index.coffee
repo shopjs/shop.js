@@ -145,9 +145,10 @@ Shop.start = (opts = {}) ->
 
   # quite hacky
   m.data = @data
-  m.trigger Events.SetData, @data
-  m.on Events.SetData, (@data)->
+  m.on Events.SetData, (@data)=>
     @cart.invoice()
+
+  m.trigger Events.SetData, @data
 
   m.on Events.SubmitSuccess, ->
     options =
