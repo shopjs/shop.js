@@ -71,7 +71,7 @@ module.exports = class Select extends Control
     if $select[0]?
       if !@initialized
         requestAnimationFrame ()=>
-          @initSelect($select)
+          @initSelect $select
           @initialized = true
     else
       $control = $(@root).find('.selectize-control')

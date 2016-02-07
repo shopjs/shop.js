@@ -47,9 +47,10 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           store.clear()
 
           @checkedOut = true
-          m.trigger Events.SubmitSuccess, @tag
           @update()
       , 200
+
+      m.trigger Events.SubmitSuccess, @tag
 
     ).catch (err)=>
       @loading = false
