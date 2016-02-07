@@ -154,19 +154,19 @@ Shop.start = (opts = {}) ->
 
   m.trigger Events.SetData, @data
 
-  m.on Events.SubmitSuccess, ->
+  m.on Events.SubmitSuccess, =>
     options =
-      orderId:  data.get 'order.id'
-      total:    parseFloat(data.get('order.total') /100),
+      orderId:  @data.get 'order.id'
+      total:    parseFloat(@data.get('order.total') /100),
       # revenue: parseFloat(order.total/100),
-      shipping: parseFloat(data.get('order.shipping') /100),
-      tax:      parseFloat(data.get('order.tax') /100),
-      discount: parseFloat(data.get('order.discount') /100),
-      coupon:   data.get('order.couponCodes.0') || '',
-      currency: data.get('order.currency'),
+      shipping: parseFloat(@data.get('order.shipping') /100),
+      tax:      parseFloat(@data.get('order.tax') /100),
+      discount: parseFloat(@data.get('order.discount') /100),
+      coupon:   @data.get('order.couponCodes.0') || '',
+      currency: @data.get('order.currency'),
       products: []
 
-    for item, i in data.get 'order.items'
+    for item, i in @data.get 'order.items'
       options.products[i] =
         id: item.productId
         sku: item.productSlug
@@ -175,9 +175,13 @@ Shop.start = (opts = {}) ->
         price: parseFloat(item.price / 100)
 
     analytics.track 'Completed Order', options
-    pixels =  data.get 'analytics.pixels.checkout'
+    pixels =  @data.get 'analytics.pixels.checkout'
     if pixels?
       analytics.track 'checkout', pixels
+
+  m.on 'error', (err)->
+    console.log err
+    window?.Raven?.captureException err
 
   # Fix incompletely loaded items
   if items? && items.length > 0
