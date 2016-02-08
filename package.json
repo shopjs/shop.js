@@ -71,7 +71,7 @@
   "dependencies": {
     "address-validator": "0.2.2",
     "broken": "0.1.2",
-    "commerce.js": "1.0.7",
+    "commerce.js": "1.0.8",
     "crowdcontrol": "2.0.12",
     "crowdstart.js": "2.2.8",
     "es5-shim": "4.4.1",

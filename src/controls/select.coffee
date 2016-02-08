@@ -1,11 +1,11 @@
-Control = require './control'
+Text = require './text'
 riot = require 'riot'
 isObject = require 'is-object'
 requestAnimationFrame = require 'raf'
 
 isABrokenBrowser = (window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0)
 
-module.exports = class Select extends Control
+module.exports = class Select extends Text
   tag: 'select-control'
   html: require '../../templates/controls/select.jade'
   tags: false
