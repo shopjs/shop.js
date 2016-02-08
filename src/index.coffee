@@ -5,7 +5,7 @@ riot            = require 'riot'
 window?.riot    = riot
 
 refer           = require 'referential'
-store           = require 'store'
+store           = require './utils/store'
 {Cart}          = require 'commerce.js'
 
 Crowdstart      = require 'crowdstart.js'
