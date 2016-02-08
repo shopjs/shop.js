@@ -1,5 +1,4 @@
 Select = require './select'
-analytics = require '../utils/analytics'
 
 module.exports = class QuantitySelect extends Select
   tag: 'quantity-select-control'

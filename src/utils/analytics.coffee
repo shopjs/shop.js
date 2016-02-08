@@ -1,6 +1,6 @@
 module.exports =
   track: (event, data) ->
-    if window.analytics?
+    if window?.analytics?
       try
         window.analytics.track(event, data)
       catch err
