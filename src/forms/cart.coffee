@@ -2,7 +2,7 @@ CrowdControl = require 'crowdcontrol'
 riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
-store = require 'store'
+store = require '../utils/store'
 require '../utils/patches'
 
 module.exports = class CartForm extends CrowdControl.Views.Form
