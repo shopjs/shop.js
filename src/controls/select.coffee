@@ -10,7 +10,8 @@ module.exports = class Select extends Control
   html: require '../../templates/controls/select.jade'
   tags: false
   min: 10
-  options: null
+  options: ->
+    return {}
 
   readOnly: false
   ignore: false
@@ -29,7 +30,7 @@ module.exports = class Select extends Control
   initSelect: ($select)->
     options = []
     invertedOptions = {}
-    for value, name of @options
+    for value, name of @options()
       options.push
         name: name
         value: value
@@ -38,12 +39,11 @@ module.exports = class Select extends Control
 
     $select.selectize(
       dropdownParent: 'body'
-      valueField: 'value',
-      labelField: 'name',
-      searchField: 'name',
-      items: [@input.ref.get(@input.name)]
+      valueField: 'value'
+      labelField: 'name'
+      searchField: 'name'
+      items: [@input.ref.get(@input.name)] || []
       options: options
-      sortField: 'text'
     ).on('change', (event)=>@change(event))
 
     #support auto fill
