@@ -49,11 +49,6 @@ Shop.use = (templates) ->
 #   }
 # ]
 #
-# Format of opts.analytics
-# {
-#   pixels: map of string to string (map of pixel names to pixel url)
-# }
-#
 #Format of opts.referralProgram
 # Referral Program Object
 #
@@ -153,31 +148,6 @@ Shop.start = (opts = {}) ->
     @cart.invoice()
 
   m.trigger Events.SetData, @data
-
-  m.on Events.SubmitSuccess, =>
-    options =
-      orderId:  @data.get 'order.id'
-      total:    parseFloat(@data.get('order.total') /100),
-      # revenue: parseFloat(order.total/100),
-      shipping: parseFloat(@data.get('order.shipping') /100),
-      tax:      parseFloat(@data.get('order.tax') /100),
-      discount: parseFloat(@data.get('order.discount') /100),
-      coupon:   @data.get('order.couponCodes.0') || '',
-      currency: @data.get('order.currency'),
-      products: []
-
-    for item, i in @data.get 'order.items'
-      options.products[i] =
-        id: item.productId
-        sku: item.productSlug
-        name: item.productName
-        quantity: item.quantity
-        price: parseFloat(item.price / 100)
-
-    analytics.track 'Completed Order', options
-    pixels =  @data.get 'analytics.pixels.checkout'
-    if pixels?
-      analytics.track 'checkout', pixels
 
   m.on 'error', (err)->
     console.log err
