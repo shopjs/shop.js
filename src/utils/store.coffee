@@ -14,5 +14,14 @@ else
       return v
 
     set: (k, v)->
+      keys = cookies.get('_keys') ? ''
+      cookies.set '_keys', keys += ' ' + k
       return cookies.set k, JSON.stringify(v)
 
+    clear: ->
+      keys = cookies.get('_keys') ? ''
+      ks = keys.split ' '
+      for k in ks
+        cookies.expire k
+
+      cookies.expire '_keys'
