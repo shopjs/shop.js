@@ -4,9 +4,9 @@ div(if="{ data.get('locked') }", class="locked")
   | { data.get('quantity') }
 div
   | { data.get('productName') }
-  div
+  div(if="{ data.get('description') }")
     | { data.get('description') }
 div
-  | { renderCurrency(cartdata.get('order.currency'), data.get('price') * data.get('quantity')) }
-  div(if="{ data.get('listPrice') > data.get('price') }")
-    | { renderCurrency(cartdata.get('order.currency'), data.get('listPrice') * data.get('quantity')) }
+  | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
+  div(if="{ data.get().listPrice > data.get().price }")
+    | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }
