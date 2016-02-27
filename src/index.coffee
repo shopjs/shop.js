@@ -158,6 +158,8 @@ Shop.start = (opts = {}) ->
     for item in items
       if item.id?
         @cart.load item.id
+      else if item.productId?
+        @cart.refresh item.productId
 
   # Force update
   riot.update()
