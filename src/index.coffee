@@ -2,6 +2,7 @@ require './utils/patches'
 
 Promise         = require 'broken'
 riot            = require 'riot'
+extend          = require 'extend'
 window?.riot    = riot
 
 refer           = require 'referential'
@@ -107,7 +108,12 @@ Shop.start = (opts = {}) ->
       subtotal: 0
       total: 0
       items: items ? []
-  @data.set opts
+  data = @data.get()
+  for k, v of data
+    if opts[k]
+      extend data[k], opts[k]
+
+  @data.set data
 
   @client = new Crowdstart.Api
     key:      opts.key
