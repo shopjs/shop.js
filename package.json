@@ -63,7 +63,7 @@
     "nightmare": "2.0.9",
     "postmortem": "^0.2.3",
     "random-token": "0.0.8",
-    "requisite": "1.16.0",
+    "requisite": "1.17.4",
     "serve-static": "^1.10.0",
     "shortcake": "1.1.11",
     "uglify-js": "^2.6.1"
@@ -81,6 +81,7 @@
     "moment": "2.11.0",
     "raf": "3.1.0",
     "referential": "0.4.1",
+    "requisite": "1.17.4",
     "riot": "2.3.15",
     "selectize": "0.12.1",
     "store": "1.3.20"

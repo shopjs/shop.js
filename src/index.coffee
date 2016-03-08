@@ -15,7 +15,7 @@ m               = require './mediator'
 Events          = require './events'
 analytics       = require './utils/analytics'
 
-Shop            = require './shop'
+Shop            = {}
 Shop.Forms      = require './forms'
 Shop.Controls   = require './controls'
 
@@ -52,7 +52,6 @@ Shop.use = (templates) ->
 #
 #Format of opts.referralProgram
 # Referral Program Object
-#
 
 Shop.analytics = analytics
 
@@ -121,7 +120,11 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  tags = riot.mount 'cart, checkout',
+  tagNames = []
+  for k, v of Shop.Forms
+    tagNames.push v.prototype.tag
+
+  tags = riot.mount tagNames.join(', '),
     data:   @data
     cart:   @cart
     client: @client

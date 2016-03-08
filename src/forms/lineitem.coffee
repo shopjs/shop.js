@@ -9,10 +9,4 @@ module.exports = class LineItemForm extends CrowdControl.Views.Form
   configs:
     'quantity': null
 
-  init: ()->
-    # ie10 riot issue hack
-    @originalParentElement = @root.parentElement
-
-    super
-
   renderCurrency: require('../utils/currency').renderUICurrencyFromJSON

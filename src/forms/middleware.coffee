@@ -18,6 +18,23 @@ module.exports =
 
     throw new Error 'Enter a valid email'
 
+  isPassword: (value)->
+    if !value
+      return new Error 'Required'
+
+    return value if value.length >= 6
+
+    throw new Error 'Password must be atleast 6 characters long.'
+
+  matchesPassword: (value)->
+    if !value
+      return new Error 'Required'
+
+    return value if value == @get 'user.password'
+
+    throw new Error 'Passwords must match.'
+
+
   splitName: (value)->
     if !value
       return value
