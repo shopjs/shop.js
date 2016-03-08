@@ -28,15 +28,16 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
 
   _submit: (event)->
     opts =
-      email:        @data.get 'user.email'
-      firstName:    @data.get 'user.firstName'
-      lastName:     @data.get 'user.lastName'
-      password:     @data.get 'user.password'
+      email:            @data.get 'user.email'
+      firstName:        @data.get 'user.firstName'
+      lastName:         @data.get 'user.lastName'
+      password:         @data.get 'user.password'
+      passwordConfirm:  @data.get 'user.passwordConfirm'
 
     @errorMessage = null
 
     m.trigger Events.Register
-    @client.account.register(opts).then((res)=>
+    @client.account.create(opts).then((res)=>
       m.trigger Events.RegisterSuccess, res
       @update()
     ).catch (err)=>
