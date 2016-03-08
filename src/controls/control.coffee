@@ -1,6 +1,6 @@
 CrowdControl = require 'crowdcontrol'
 m = require '../mediator'
-Events = require '../Events'
+Events = require '../events'
 riot = require 'riot'
 
 scrolling = false
