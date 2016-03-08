@@ -122,7 +122,7 @@ Shop.start = (opts = {}) ->
 
   tagNames = []
   for k, v of Shop.Forms
-    tagNames.push v.prototype.tag
+    tagNames.push(v.prototype.tag) if v.prototype.tag?
 
   tags = riot.mount tagNames.join(', '),
     data:   @data
