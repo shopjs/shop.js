@@ -44,4 +44,4 @@ module.exports =
   RegisterSuccess:
     'register-success'
   RegisterFailed:
-    'login-failed'
+    'register-failed'

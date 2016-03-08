@@ -34,7 +34,6 @@ module.exports =
 
     throw new Error 'Passwords must match.'
 
-
   splitName: (value)->
     if !value
       return value
