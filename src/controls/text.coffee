@@ -2,8 +2,9 @@ Control = require './control'
 placeholder = require '../utils/placeholder'
 
 module.exports = class Text extends Control
-  tag:  'text-control'
-  html: require '../../templates/controls/text.jade'
+  tag:      'text-control'
+  html:     require '../../templates/controls/text.jade'
+  type:     'text'
   formElement: 'input'
   init: ()->
     super

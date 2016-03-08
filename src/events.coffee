@@ -32,3 +32,16 @@ module.exports =
   ApplyCouponFailed:
     'apply-coupon-failed'
 
+  Login:
+    'login'
+  LoginSuccess:
+    'login-success'
+  LoginFailed:
+    'login-failed'
+
+  Register:
+    'register'
+  RegisterSuccess:
+    'register-success'
+  RegisterFailed:
+    'login-failed'

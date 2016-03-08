@@ -12,6 +12,8 @@ module.exports =
   #Specific Controls
   UserEmail:                    require './user-email'
   UserName:                     require './user-name'
+  UserPassword:                 require './user-password'
+  UserPasswordConfirm:          require './user-password-confirm'
   ShippingAddressLine1:         require './shippingaddress-line1'
   ShippingAddressLine2:         require './shippingaddress-line2'
   ShippingAddressCity:          require './shippingaddress-city'
@@ -39,6 +41,8 @@ module.exports =
 
     @UserEmail.register()
     @UserName.register()
+    @UserPassword.register()
+    @UserPasswordConfirm.register()
     @ShippingAddressLine1.register()
     @ShippingAddressLine2.register()
     @ShippingAddressCity.register()
