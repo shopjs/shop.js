@@ -1,13 +1,11 @@
 CrowdControl = require 'crowdcontrol'
 m = require '../mediator'
-Events = require '../Events'
+Events = require '../events'
 riot = require 'riot'
 
 scrolling = false
 
 module.exports = class Control extends CrowdControl.Views.Input
-  lookup: 'user.email'
-
   init: ()->
     if !@input? && @inputs?
       @input = @inputs[@lookup]
