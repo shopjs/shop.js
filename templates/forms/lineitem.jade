@@ -8,5 +8,9 @@ div
     | { data.get('description') }
 div
   | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
+  div
+    | { cartdata.get('order.currency').toUpperCase() }
   div(if="{ data.get().listPrice > data.get().price }")
     | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }
+    div
+      | { cartdata.get('order.currency').toUpperCase() }
