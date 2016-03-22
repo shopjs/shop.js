@@ -7,6 +7,6 @@ div
   div(if="{ data.get('description') }")
     | { data.get('description') }
 div
-  | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
+  | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }&nbsp;{ data.get('order.currency').toUpperCase() }
   div(if="{ data.get().listPrice > data.get().price }")
-    | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }
+    | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }&nbsp;{ data.get('order.currency').toUpperCase() }

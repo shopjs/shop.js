@@ -11,4 +11,6 @@ module.exports = class Text extends Control
 
     @on 'updated', =>
       el = @root.getElementsByTagName(@formElement)[0]
-      placeholder el
+
+      if @type != 'password'
+        placeholder el
