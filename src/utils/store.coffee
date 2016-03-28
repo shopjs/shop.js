@@ -1,5 +1,5 @@
 store = require 'store'
-cookies = require 'cookies-js'
+cookies = require 'js-cookies'
 
 if store.enabled
   module.exports = store
