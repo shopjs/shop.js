@@ -1,12 +1,12 @@
 store = require 'store'
-cookies = require 'js-cookie'
+cookie = require 'js-cookie'
 
 if store.enabled
   module.exports = store
 else
   module.exports =
     get: (k)->
-      v = cookies.get(k)
+      v = cookie.get(k)
       try
         v = JSON.parse v
       catch e
@@ -14,14 +14,14 @@ else
       return v
 
     set: (k, v)->
-      keys = cookies.get('_keys') ? ''
-      cookies.set '_keys', keys += ' ' + k
-      return cookies.set k, JSON.stringify(v)
+      keys = cookie.get('_keys') ? ''
+      cookie.set '_keys', keys += ' ' + k
+      return cookie.set k, JSON.stringify(v)
 
     clear: ->
-      keys = cookies.get('_keys') ? ''
+      keys = cookie.get('_keys') ? ''
       ks = keys.split ' '
       for k in ks
-        cookies.expire k
+        cookie.expire k
 
-      cookies.expire '_keys'
+      cookie.expire '_keys'
