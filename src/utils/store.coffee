@@ -22,6 +22,6 @@ else
       keys = cookie.get('_keys') ? ''
       ks = keys.split ' '
       for k in ks
-        cookie.expire k
+        cookie.remove k
 
-      cookie.expire '_keys'
+      cookie.remove '_keys'
