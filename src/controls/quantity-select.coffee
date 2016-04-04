@@ -5,6 +5,7 @@ module.exports = class QuantitySelect extends Select
   lookup: 'quantity'
   options: ->
     return {
+      0: 0
       1: 1
       2: 2
       3: 3
