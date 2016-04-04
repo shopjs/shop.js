@@ -15,9 +15,10 @@ m               = require './mediator'
 Events          = require './events'
 analytics       = require './utils/analytics'
 
-Shop            = require './shop'
-Shop.Forms      = require './forms'
-Shop.Controls   = require './controls'
+Shop                = require './shop'
+Shop.Forms          = require './forms'
+Shop.Controls       = require './controls'
+Shop.CrowdControl   = require 'crowdcontrol'
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
