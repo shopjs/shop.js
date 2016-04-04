@@ -19,6 +19,7 @@ Shop                = require './shop'
 Shop.Forms          = require './forms'
 Shop.Controls       = require './controls'
 Shop.CrowdControl   = require 'crowdcontrol'
+Shop.Referrential   = refer
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
