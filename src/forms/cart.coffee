@@ -7,11 +7,9 @@ require '../utils/patches'
 
 module.exports = class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
-  html: '''
-    <lineitem each="{ item, v in data('order.items') }" cartdata="{ this.parent.data }" data="{ this.parent.data.ref('order.items.' + v) }" if="{ item.quantity > 0 }">
-    </lineitem>
-    <yield/>
-  '''
+  html: require '../../templates/forms/cart.jade'
+
+  emptyMessage: 'Your Cart Is Empty'
 
   init: ()->
     # ie10 riot issue hack
@@ -31,6 +29,9 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
   applying: false
   promoMessage: ''
+
+  isEmpty: ()->
+    return @data('order.items').length == 0
 
   applyPromoCode: ()->
     @promoMessage = ''

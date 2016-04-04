@@ -186,4 +186,7 @@ Shop.setItem = (id, quantity, locked=false)->
     ).catch (err)->
       window?.Raven?.captureException err
 
+Shop.getItem = (id)->
+  return @cart.get id
+
 module.exports = Crowdstart.Shop = Shop
