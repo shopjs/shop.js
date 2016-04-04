@@ -2,6 +2,7 @@ Select = require './select'
 
 module.exports = class QuantitySelect extends Select
   tag: 'quantity-select-control'
+  lookup: 'quantity'
   options: ->
     return {
       1: 1

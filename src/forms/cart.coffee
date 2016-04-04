@@ -7,9 +7,11 @@ require '../utils/patches'
 
 module.exports = class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
-  html: require '../../templates/forms/cart.jade'
-
-  emptyMessage: 'Your Cart Is Empty'
+  html: '''
+    <yield>
+      <lineitems if="{ !isEmpty() }"></lineitems>
+    </yield>
+  '''
 
   init: ()->
     # ie10 riot issue hack
