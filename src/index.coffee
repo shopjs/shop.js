@@ -54,6 +54,8 @@ Shop.use = (templates) ->
 # Referral Program Object
 #
 
+Shop.riot = riot
+
 Shop.analytics = analytics
 
 Shop.isEmpty = ->
