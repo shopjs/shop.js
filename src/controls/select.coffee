@@ -5,6 +5,8 @@ requestAnimationFrame = require 'raf'
 
 isABrokenBrowser = (window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0)
 
+coolDown = -1
+
 module.exports = class Select extends Text
   tag: 'select-control'
   html: require '../../templates/controls/select.jade'
@@ -47,7 +49,19 @@ module.exports = class Select extends Text
       searchField: 'name'
       items: [@input.ref.get(@input.name)] || []
       options: options
-    ).on('change', (event)=>@change(event))
+    ).on 'change', (event)=>
+      # This isn't working right, sometimes you have one change firing events on unrelated fields
+      if coolDown != -1
+        return
+
+      coolDown = setTimeout ()->
+        coolDown = -1
+      , 100
+
+      @change(event)
+      event.preventDefault()
+      event.stopPropagation()
+      return false
 
     #support auto fill
     $input = $select.parent().find('.selectize-input input:first')

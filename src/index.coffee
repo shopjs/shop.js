@@ -140,7 +140,8 @@ Shop.start = (opts = {}) ->
   @cart.onUpdate = (item)=>
     items = @data.get 'order.items'
     store.set 'items', items
-    m.trigger Events.UpdateItem, item
+    if item?
+      m.trigger Events.UpdateItem, item
     riot.update()
 
   ps = []
