@@ -14,5 +14,3 @@ module.exports = class LineItemForm extends CrowdControl.Views.Form
     @originalParentElement = @root.parentElement
 
     super
-
-  renderCurrency: require('../utils/currency').renderUICurrencyFromJSON

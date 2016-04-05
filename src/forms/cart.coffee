@@ -27,8 +27,6 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
   configs: require './config'
 
-  renderCurrency: require('../utils/currency').renderUICurrencyFromJSON
-
   applying: false
   promoMessage: ''
 

@@ -10,8 +10,11 @@ module.exports = class Select extends Text
   html: require '../../templates/controls/select.jade'
   tags: false
   min: 10
+
+  selectOptions: {}
+
   options: ->
-    return {}
+    return @selectOptions
 
   readOnly: false
   ignore: false
@@ -68,11 +71,15 @@ module.exports = class Select extends Text
       return
 
     $select = $(@root).find('select')
-    if $select[0]?
+    select = $select[0]
+    if select?
       if !@initialized
         requestAnimationFrame ()=>
           @initSelect $select
           @initialized = true
+      else
+        select.selectize.clear true
+        select.selectize.addItem @input.ref.get(@input.name), true
     else
       $control = $(@root).find('.selectize-control')
       if !$control[0]?
