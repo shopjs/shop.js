@@ -44,7 +44,7 @@
   "devDependencies": {
     "bebop": "1.8.0",
     "cake-publish": "0.1.1",
-    "cake-version": "0.1.3",
+    "cake-version": "0.1.5",
     "chai": "^3.4.1",
     "chai-as-promised": "5.2.0",
     "co-mocha": "^1.1.2",
