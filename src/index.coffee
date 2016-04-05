@@ -19,7 +19,10 @@ Shop                = require './shop'
 Shop.Forms          = require './forms'
 Shop.Controls       = require './controls'
 Shop.CrowdControl   = require 'crowdcontrol'
-Shop.Referrential   = refer
+Shop.Referential    = refer
+
+# Monkey Patch common utils onto every View/Instance
+Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
