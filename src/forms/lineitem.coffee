@@ -11,3 +11,6 @@ module.exports = class LineItemForm extends CrowdControl.Views.Form
 
   init: ()->
     super
+
+  delete: (event)->
+    m.trigger Events.DeleteLineItem, @data

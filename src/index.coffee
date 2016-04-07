@@ -161,6 +161,10 @@ Shop.start = (opts = {}) ->
   m.on Events.SetData, (@data)=>
     @cart.invoice()
 
+  m.on Events.DeleteLineItem, (item)=>
+    id = item.get 'id'
+    @cart.set id, 0
+
   m.trigger Events.SetData, @data
 
   m.on 'error', (err)->

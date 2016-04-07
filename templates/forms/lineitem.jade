@@ -10,6 +10,7 @@
       | { data.get('productSlug') }
     .product-description(if="{ data.get('description') }")
       | { data.get('description') }
+  .product-delete(onclick="{ delete }")
   .product-price-container
     .product-price
       | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
