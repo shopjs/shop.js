@@ -1,0 +1,18 @@
+.footer {
+  border-top: 1px solid #AAA;
+  padding-top: 20px;
+}
+
+#press img {
+  width: calc(99.99% * 1/5 - (30px - 30px * 1/5));
+}
+
+#about p {
+  font-size: 2em;
+}
+
+#footer i {
+  padding-left: 10px;
+  font-size: 1.5em;
+}
+
