@@ -3,7 +3,7 @@ require 'shortcake'
 use 'cake-version'
 use 'cake-publish'
 
-fs        = require 'fs'
+fs        = require 'mz/fs'
 requisite = require 'requisite'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
@@ -14,21 +14,16 @@ option '-v', '--verbose',           'enable verbose test logging'
 task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
-task 'build', 'build project', (cb) ->
-  todo = 2
-  done = (err) ->
-    throw err if err?
-    cb() if --todo is 0
+task 'build', 'build project', ->
+  # Compile src/ to lib/
+  yield exec 'coffee -bcm -o lib/ src/'
 
-  exec 'coffee -bcm -o lib/ src/', done
-
-  opts =
+  # Create shop.js bundle
+  bundle = yield requisite.bundle
     entry:      'src/index.coffee'
-    stripDebug: true
 
-  requisite.bundle opts, (err, bundle) ->
-    return done err if err?
-    fs.writeFile 'shop.js', (bundle.toString opts), 'utf8', done
+  js = bundle.toString stripDebug: true
+  yield fs.writeFile 'shop.js', js, 'utf8'
 
 task 'build-min', 'build project', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
