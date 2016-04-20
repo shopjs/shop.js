@@ -1,4 +1,5 @@
-var Shop = require('./shop.js');
+
+var Shop = require('shop.js');
 
 Shop.use({
   Controls: {

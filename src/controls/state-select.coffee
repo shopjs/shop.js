@@ -2,7 +2,7 @@ Select = require './select'
 
 module.exports = class StateSelect extends Select
   tag: 'state-select-control'
-  html: require '../../templates/controls/state-select'
+  html: require '../templates/controls/state-select'
   options: ->
     return require('../data/states').data
   countryField: 'order.shippingAddress.country'
