@@ -19,7 +19,7 @@
         <ul class="nav navbar-nav navbar-right">
           <li><a class="navbar-brand" href="#">Droney 2.0</a></li>
           <li>
-            <button class="btn btn-primary navbar-btn buy-button">Get Droney 2.0!</button>
+            <button class="btn btn-muted navbar-btn buy-button">Get Droney 2.0!</button>
           </li>
         </ul>
       </div>
@@ -34,11 +34,11 @@
         <div class="side-cart">
           <cart empty-message="Add something to your cart.">
             <div class="nav"><!-- this class may interfere w/ bootstrap -->
-              <button class=btn">
+              <button class=btn btn-muted">
                 <i class="fa fa-arrow-left"></i>
                 Back
               </button>
-              <button class="btn" __disabled="{ isEmpty() }">
+              <button class="btn btn-muted" __disabled="{ isEmpty() }">
                 <i class="fa fa-arrow-right"></i>
                 Checkout
               </button>
@@ -74,10 +74,45 @@
                 </div>
               </div>
               <hr><!-- another div/class divider -->
-
-              
-
-
+              <div class="invoice-line">
+                <div>
+                  Subtotal:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <div class="invoice-line">
+                <div>
+                  Shipping (billed later):
+                </div>
+                <div>
+                  - -
+                </div>
+              </div>
+              <div class="invoice-line">
+                <div>
+                  Tax ({ data.get('order.taxRate') * 100 }%);
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.tax'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <hr><!-- yad/cd -->
+              <div class="invoice-line">
+                <div>
+                  Total:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.total'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <div class="checkout-button">
+                <a class="btn btn-primary" href="/checkout"></a>
+              </div>
+            </div>
+          </cart>
+        </div>
       </section>
       <section id="press">
         <div class="row">
@@ -115,5 +150,6 @@
     </section>
     <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="js/app.js"></script>
   </body>
 </html>
