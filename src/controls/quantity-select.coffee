@@ -1,21 +1,20 @@
 Select = require './select'
+Events = require '../events'
+m = require '../mediator'
+
+opts = {}
+
+for i in [1...100]
+  opts[i] = i
 
 module.exports = class QuantitySelect extends Select
   tag: 'quantity-select-control'
   lookup: 'quantity'
   options: ->
-    return {
-      0: 0
-      1: 1
-      2: 2
-      3: 3
-      4: 4
-      5: 5
-      6: 6
-      7: 7
-      8: 8
-      9: 9
-    }
+    return opts
+
+  init: ()->
+    super
 
   readOnly: true
 

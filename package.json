@@ -1,6 +1,6 @@
 {
   "name": "shop.js",
-  "version": "1.0.32",
+  "version": "1.0.36",
   "description": "Shopping Framework for JavaScript.",
   "homepage": "http://github.com/crowdstart/shop.js",
   "bugs": "http://github.com/crowdstart/shop.js/issues",
@@ -72,7 +72,7 @@
   "dependencies": {
     "address-validator": "0.2.2",
     "broken": "0.1.2",
-    "commerce.js": "1.0.19",
+    "commerce.js": "1.0.20",
     "cookies-js": "1.2.2",
     "crowdcontrol": "2.0.12",
     "crowdstart.js": "2.2.8",
