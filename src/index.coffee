@@ -17,6 +17,7 @@ analytics       = require './utils/analytics'
 
 Shop                = require './shop'
 Shop.Forms          = require './forms'
+Shop.Widgets        = require './widgets'
 Shop.Controls       = require './controls'
 Shop.CrowdControl   = require 'crowdcontrol'
 Shop.Referential    = refer
@@ -93,6 +94,7 @@ Shop.start = (opts = {}) ->
     throw new Error 'Please specify your API Key'
 
   Shop.Forms.register()
+  Shop.Widgets.register()
   Shop.Controls.register()
 
   referrer = getReferrer() ? opts.order?.referrer
@@ -128,7 +130,7 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  tags = riot.mount 'cart, checkout',
+  tags = riot.mount 'cart, cart-counter, checkout',
     data:   @data
     cart:   @cart
     client: @client
@@ -160,6 +162,10 @@ Shop.start = (opts = {}) ->
   m.data = @data
   m.on Events.SetData, (@data)=>
     @cart.invoice()
+
+  m.on Events.DeleteLineItem, (item)->
+    id = item.get 'id'
+    Shop.setItem id, 0
 
   m.trigger Events.SetData, @data
 
