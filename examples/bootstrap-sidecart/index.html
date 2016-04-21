@@ -25,20 +25,18 @@
       </div>
     </nav>
     <div class="container text-center">
-      <section id="main">
-        <h1>Droney 2.0</h1>
         <br>
         <img alt="Droney 2.0" src="/img/drone.svg" height="550" width="600">
       </section>
       <section id="sidecart">
-        <div class="side-cart">
+        <div class="side-cart hidden">
           <cart empty-message="Add something to your cart.">
             <div class="nav"><!-- this class may interfere w/ bootstrap -->
-              <button class=btn btn-muted">
+              <button id="back" class="btn btn-muted">
                 <i class="fa fa-arrow-left"></i>
                 Back
               </button>
-              <button class="btn btn-muted" __disabled="{ isEmpty() }">
+              <button id="checkout" class="btn btn-muted" __disabled="{ isEmpty() }">
                 <i class="fa fa-arrow-right"></i>
                 Checkout
               </button>
@@ -108,7 +106,7 @@
                 </div>
               </div>
               <div class="checkout-button">
-                <a class="btn btn-primary" href="/checkout"></a>
+                <a class="btn btn-muted" href="/checkout">checkout</a>
               </div>
             </div>
           </cart>
