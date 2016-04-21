@@ -55,7 +55,9 @@ stuff
 
 `<text-control />`
 ### other features/attributes/etc
-here.
+`data.(get/set)()`
+accesses
+`order`
 
 
 ## interesting:
