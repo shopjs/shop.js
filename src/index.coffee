@@ -15,9 +15,15 @@ m               = require './mediator'
 Events          = require './events'
 analytics       = require './utils/analytics'
 
-Shop            = {}
-Shop.Forms      = require './forms'
-Shop.Controls   = require './controls'
+Shop                = require './shop'
+Shop.Forms          = require './forms'
+Shop.Widgets        = require './widgets'
+Shop.Controls       = require './controls'
+Shop.CrowdControl   = require 'crowdcontrol'
+Shop.Referential    = refer
+
+# Monkey Patch common utils onto every View/Instance
+Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -53,6 +59,8 @@ Shop.use = (templates) ->
 #Format of opts.referralProgram
 # Referral Program Object
 
+Shop.riot = riot
+
 Shop.analytics = analytics
 
 Shop.isEmpty = ->
@@ -85,6 +93,7 @@ Shop.start = (opts = {}) ->
     throw new Error 'Please specify your API Key'
 
   Shop.Forms.register()
+  Shop.Widgets.register()
   Shop.Controls.register()
 
   referrer = getReferrer() ? opts.order?.referrer
@@ -136,7 +145,8 @@ Shop.start = (opts = {}) ->
   @cart.onUpdate = (item)=>
     items = @data.get 'order.items'
     store.set 'items', items
-    m.trigger Events.UpdateItem, item
+    if item?
+      m.trigger Events.UpdateItem, item
     riot.update()
 
   ps = []
@@ -155,6 +165,10 @@ Shop.start = (opts = {}) ->
   m.data = @data
   m.on Events.SetData, (@data)=>
     @cart.invoice()
+
+  m.on Events.DeleteLineItem, (item)->
+    id = item.get 'id'
+    Shop.setItem id, 0
 
   m.trigger Events.SetData, @data
 
@@ -188,5 +202,8 @@ Shop.setItem = (id, quantity, locked=false)->
       m.trigger Events.UpdateItems, @data.get 'order.items'
     ).catch (err)->
       window?.Raven?.captureException err
+
+Shop.getItem = (id)->
+  return @cart.get id
 
 module.exports = Crowdstart.Shop = Shop

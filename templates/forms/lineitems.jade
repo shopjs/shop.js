@@ -1,0 +1,2 @@
+lineitem(each="{ item, v in data('order.items') }", cartdata="{ this.parent.data }", data="{ this.parent.data.ref('order.items.' + v) }")
+  #{ 'yield' }

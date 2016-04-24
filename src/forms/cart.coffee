@@ -6,9 +6,9 @@ store = require '../utils/store'
 module.exports = class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
   html: '''
-    <lineitem each="{ item, v in data('order.items') }" cartdata="{ this.parent.data }" data="{ this.parent.data.ref('order.items.' + v) }" if="{ item.quantity > 0 }">
-    </lineitem>
-    <yield/>
+    <yield>
+      <lineitems if="{ !isEmpty() }"></lineitems>
+    </yield>
   '''
 
   init: ()->
@@ -22,10 +22,11 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
   configs: require './config'
 
-  renderCurrency: require('../utils/currency').renderUICurrencyFromJSON
-
   applying: false
   promoMessage: ''
+
+  isEmpty: ()->
+    return @data('order.items').length == 0
 
   applyPromoCode: ()->
     @promoMessage = ''

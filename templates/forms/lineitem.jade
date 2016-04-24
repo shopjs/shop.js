@@ -1,12 +1,22 @@
-div(if="{ !data.get('locked') }")
-  quantity-select-control(input="{ inputs.quantity }")
-div(if="{ data.get('locked') }", class="locked")
-  | { data.get('quantity') }
-div
-  | { data.get('productName') }
-  div(if="{ data.get('description') }")
-    | { data.get('description') }
-div
-  | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }&nbsp;{ data.get('order.currency').toUpperCase() }
-  div(if="{ data.get().listPrice > data.get().price }")
-    | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }&nbsp;{ data.get('order.currency').toUpperCase() }
+#{ 'yield' }
+  .product-quantity-container(if="{ !data.get('locked') }")
+    quantity-select-control
+  .product-quantity-container(if="{ data.get('locked') }", class="locked")
+    | { data.get('quantity') }
+  .product-text-container
+    .product-name
+      | { data.get('productName') }
+    .product-slug
+      | { data.get('productSlug') }
+    .product-description(if="{ data.get('description') }")
+      | { data.get('description') }
+  .product-delete(onclick="{ delete }")
+  .product-price-container
+    .product-price
+      | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
+      .product-currency
+        | { cartdata.get('order.currency').toUpperCase() }
+    .product-list-price(if="{ data.get().listPrice > data.get().price }")
+      | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }
+      .product-currency
+        | { cartdata.get('order.currency').toUpperCase() }
