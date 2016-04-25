@@ -1,8 +1,6 @@
 CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
-store = require '../utils/store'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'

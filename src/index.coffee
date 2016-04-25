@@ -58,7 +58,6 @@ Shop.use = (templates) ->
 #
 #Format of opts.referralProgram
 # Referral Program Object
-#
 
 Shop.riot = riot
 
@@ -130,7 +129,11 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  tags = riot.mount 'cart, cart-counter, checkout',
+  tagNames = []
+  for k, v of Shop.Forms
+    tagNames.push(v.prototype.tag) if v.prototype.tag?
+
+  tags = riot.mount tagNames.join(', '),
     data:   @data
     cart:   @cart
     client: @client
