@@ -63,6 +63,13 @@ module.exports =
   ProfileUpdateFailed:
     'profile-update-failed'
 
+  ShippingAddressUpdate:
+    'shipping-address-update'
+  ShippingAddressUpdateSuccess:
+    'shipping-address-update-success'
+  ShippingAddressUpdateFailed:
+    'shipping-address-update-failed'
+
   CreateReferralProgram:
     'create-referral-program'
   CreateReferralProgramSuccess:

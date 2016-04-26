@@ -38,7 +38,7 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
       lastName = @data.get 'user.lastName'
       @data.set 'user.name', firstName + ' ' + lastName
 
-      if @data.get 'referralProgram' && (!res.referrers? || res.referrers.length == 0)
+      if @data.get('referralProgram') && (!res.referrers? || res.referrers.length == 0)
         requestAnimationFrame ()=>
           m.trigger Events.CreateReferralProgram
           @client.referrer.create({

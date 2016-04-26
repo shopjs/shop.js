@@ -41,15 +41,14 @@
 
   .address-information
     .street
-      { data.get('shippingAddress.line1') }
+      | { data.get('shippingAddress.line1') }
     .apartment(if="{ data.get('shippingAddress.line2') }")
-      { data.get('shippingAddress.line2') }
+      | { data.get('shippingAddress.line2') }
     .city
-      { data.get('shippingAddress.city') }
+      | { data.get('shippingAddress.city') }
     .state(if="{ data.get('shippingAddress.state')}")
-      { data.get('shippingAddress.state').toUpperCase() }
+      | { data.get('shippingAddress.state').toUpperCase() }
     .state(if="{ data.get('shippingAddress.postalCode')}")
-      { data.get('shippingAddress.postalCode') }
+      | { data.get('shippingAddress.postalCode') }
     .country
-      { data.get('shippingAddress.country').toUpperCase() }
-
+      | { data.get('shippingAddress.country').toUpperCase() }

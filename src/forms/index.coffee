@@ -1,13 +1,14 @@
 module.exports =
-  Checkout:     require './checkout'
-  Cart:         require './cart'
-  LineItem:     require './lineitem'
-  LineItems:    require './lineitems'
-  Login:        require './login'
-  Order:        require './order'
-  Orders:       require './orders'
-  Profile:      require './profile'
-  Register:     require './register'
+  Checkout:         require './checkout'
+  Cart:             require './cart'
+  LineItem:         require './lineitem'
+  LineItems:        require './lineitems'
+  Login:            require './login'
+  Order:            require './order'
+  Orders:           require './orders'
+  Profile:          require './profile'
+  Register:         require './register'
+  ShippingAddress:  require './shippingaddress'
 
   register: ()->
     @Checkout.register()
@@ -19,3 +20,4 @@ module.exports =
     @Orders.register()
     @Profile.register()
     @Register.register()
+    @ShippingAddress.register()

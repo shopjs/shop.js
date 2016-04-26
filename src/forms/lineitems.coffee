@@ -7,8 +7,11 @@ module.exports = class LineItems extends CrowdControl.Views.View
   tag:  'lineitems'
   html: require '../../templates/forms/lineitems'
   init: ()->
+    if @orderData?
+      @data = @orderData
+
     super
 
     @on 'update', ()=>
-      if @lineItemData?
-        @data = @lineItemData
+      if @orderData?
+        @data = @orderData
