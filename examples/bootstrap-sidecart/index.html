@@ -29,87 +29,91 @@
         <img alt="Droney 2.0" src="/img/drone.svg" height="550" width="600">
       </section>
       <section id="sidecart">
-        <div class="side-cart hidden">
-          <cart empty-message="Add something to your cart.">
-            <div class="nav"><!-- this class may interfere w/ bootstrap -->
-              <button id="back" class="btn btn-muted">
-                <i class="fa fa-arrow-left"></i>
-                Back
-              </button>
-              <button id="checkout" class="btn btn-muted" __disabled="{ isEmpty() }">
-                <i class="fa fa-arrow-right"></i>
-                Checkout
-              </button>
-            </div>
-            <h2 class="text-muted">Your Cart</h2>
-            <div class="cart-empty-message" if="{ isEmpty() }">
-              Add something to your cart.
-            </div>
-            <lineitems if="{ !isEmpty() }"></lineitems>
+        <div class="side-cart hidden modal right" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <cart empty-message="Add something to your cart.">
+              <div class="nav"><!-- this class may interfere w/ bootstrap -->
+                <button id="back" class="btn btn-muted">
+                  <i class="fa fa-arrow-left"></i>
+                  Back
+                </button>
+                <button id="checkout" class="btn btn-muted" __disabled="{ isEmpty() }">
+                  <i class="fa fa-arrow-right"></i>
+                  Checkout
+                </button>
+              </div>
+              <h2 class="text-muted">Your Cart</h2>
+              <div class="cart-empty-message" if="{ isEmpty() }">
+                Add something to your cart.
+              </div>
+              <lineitems if="{ !isEmpty() }"></lineitems>
 
-            <div if="{ !isEmpty() }">
-              <hr /> <!-- This used to be a div w/ divider class -->
-              <div class="promo">
-                <div>
-                  <text-control placeholder="Promo/Coupon Code" input="{ inputs['order.promoCode'] }"></text-control>
+              <div if="{ !isEmpty() }">
+                <hr /> <!-- This used to be a div w/ divider class -->
+                <div class="promo">
+                  <div>
+                    <text-control placeholder="Promo/Coupon Code" input="{ inputs['order.promoCode'] }"></text-control>
+                  </div>
+                  <div>
+                    <button class="btn" onClick="{ applyPromoCode }">Apply</button>
+                  </div>
+                  <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying}"><!-- come back to promo/promo-message -->
+                    Don't forget to apply your code!
+                  </div>
+                  <div class="promo-message" if="{ promoMessage }">
+                    { promoMessage }
+                  </div>
                 </div>
-                <div>
-                  <button class="btn" onClick="{ applyPromoCode }">Apply</button>
+                <div if="{ data.get('order.discount') > 0}"><!-- this was animated -->
+                  <div>
+                    Discount:
+                  </div>
+                  <div>
+                    { renderCurrency(data.get('order.currency'), data.get('order.discount'))}&nbsp;{data.get('order.currency').toUpperCase() }
+                  </div>
                 </div>
-                <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying}"><!-- come back to promo/promo-message -->
-                  Don't forget to apply your code!
+                <hr><!-- another div/class divider -->
+                <div class="invoice-line">
+                  <div>
+                    Subtotal:
+                  </div>
+                  <div>
+                    { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                  </div>
                 </div>
-                <div class="promo-message" if="{ promoMessage }">
-                  { promoMessage }
+                <div class="invoice-line">
+                  <div>
+                    Shipping (billed later):
+                  </div>
+                  <div>
+                    - -
+                  </div>
+                </div>
+                <div class="invoice-line">
+                  <div>
+                    Tax ({ data.get('order.taxRate') * 100 }%);
+                  </div>
+                  <div>
+                    { renderCurrency(data.get('order.currency'), data.get('order.tax'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                  </div>
+                </div>
+                <hr><!-- yad/cd -->
+                <div class="invoice-line">
+                  <div>
+                    Total:
+                  </div>
+                  <div>
+                    { renderCurrency(data.get('order.currency'), data.get('order.total'))}&nbsp;{ data.get('order.currency').toUpperCase() }
+                  </div>
+                </div>
+                <div class="checkout-button">
+                  <a class="btn btn-muted" href="/checkout">checkout</a>
                 </div>
               </div>
-              <div if="{ data.get('order.discount') > 0}"><!-- this was animated -->
-                <div>
-                  Discount:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.discount'))}&nbsp;{data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <hr><!-- another div/class divider -->
-              <div class="invoice-line">
-                <div>
-                  Subtotal:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <div class="invoice-line">
-                <div>
-                  Shipping (billed later):
-                </div>
-                <div>
-                  - -
-                </div>
-              </div>
-              <div class="invoice-line">
-                <div>
-                  Tax ({ data.get('order.taxRate') * 100 }%);
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.tax'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <hr><!-- yad/cd -->
-              <div class="invoice-line">
-                <div>
-                  Total:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.total'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <div class="checkout-button">
-                <a class="btn btn-muted" href="/checkout">checkout</a>
-              </div>
-            </div>
-          </cart>
+            </cart>
+          </div>
+          </div>
         </div>
       </section>
       <section id="press">
