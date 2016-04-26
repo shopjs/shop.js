@@ -4,7 +4,7 @@ countryUtils = require '../utils/country'
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
-module.exports =
+middleware =
   isRequired: (value)->
     return value if value && value != ''
 
@@ -18,21 +18,26 @@ module.exports =
 
     throw new Error 'Enter a valid email'
 
+  isNewPassword: (value)->
+    if !@get 'user.currentPassword'
+      throw new Error 'Current password required' if value
+      return value
+
+    return middleware.isPassword value
+
   isPassword: (value)->
     if !value
-      return new Error 'Required'
+      throw new Error 'Required'
 
     return value if value.length >= 6
 
-    throw new Error 'Password must be atleast 6 characters long.'
+    throw new Error 'Password must be atleast 6 characters long'
 
   matchesPassword: (value)->
-    if !value
-      return new Error 'Required'
-
+    return value if !@get 'user.password'
     return value if value == @get 'user.password'
 
-    throw new Error 'Passwords must match.'
+    throw new Error 'Passwords must match'
 
   splitName: (value)->
     if !value
@@ -114,3 +119,5 @@ module.exports =
       return value
 
     throw new Error 'Agree to the terms and conditions'
+
+module.exports = middleware

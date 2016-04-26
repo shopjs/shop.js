@@ -9,8 +9,6 @@ module.exports = class LineItemForm extends CrowdControl.Views.Form
   configs:
     'quantity': null
 
-  renderCurrency: require('../utils/currency').renderUICurrencyFromJSON
-
   init: ()->
     super
 
