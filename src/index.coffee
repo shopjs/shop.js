@@ -9,7 +9,7 @@ refer           = require 'referential'
 store           = require './utils/store'
 {Cart}          = require 'commerce.js'
 
-Crowdstart      = require 'crowdstart.js'
+Crowdstart      = require 'hanzo.js'
 
 m               = require './mediator'
 Events          = require './events'
