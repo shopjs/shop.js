@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../style/main.css">
+    <title>shop.js sidecart bootstrap example</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">
+            <img alt="Droney 2.0" src="/img/drone.svg" height="40" width="40">
+          </a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a class="navbar-brand" href="#">Droney 2.0</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container text-center">
+      <div class="co-header">
+        <h1 class="text-muted text-center">
+          Checkout
+        </h1>
+      </div>
+      <checkout>
+        <div class="contact-information">
+          <h1>Contact Information</h1>
+          <div class="field">
+            <user-name class="input" placeholder="Name"></user-name>
+          </div>
+          <div class="field">
+            <user-email class="input" placeholder="Email"></user-email>
+          </div>
+        </div>
+        <div class="form"><!-- bootstrapify -->
+          <h1>
+            Shipping Address
+          </h1>
+          <div class="fields"><!-- bootstrapify -->
+            <div>
+              <shippingaddress-line1 class="input" placeholder="Address"></shippingaddress-line1>
+            </div>
+            <div>
+              <shippingaddress-line2 class="input" placeholder="Suite"></shippingaddress-line2>
+            </div>
+          </div>
+          <div class="fields">
+            <div>
+              <shippingaddress-city class="input" placeholder="City"></shippingaddress-city>
+            </div>
+            <div>
+              <shippingaddress-postalcode class="input" placeholder="Postal Code"></shippingaddress-postalcode>
+            </div>
+          </div>
+          <div class="fields">
+            <div>
+              <shippingaddress-state class="input" placeholder="State"></shippingaddress-state>
+            </div>
+            <div>
+              <shippingaddress-country class="input"placeholder="Country"></shippingaddress-country>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h1>
+            Payment Information
+          </h1>
+          <div><!-- payment row -->
+            <div>
+              <div>
+                <card-number class="input" name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
+              </div>
+              <div>
+                <div>
+                  <card-expiry class="input" name="expiry" placeholder="MM / YY"></card-expiry>
+                </div>
+                <div>
+                  <card-cvc class="input" name="cvc" placeholder="CVC"></card-cvc>
+                </div>
+              </div>
+
+              <!-- credit card CO pics -->
+            </div>
+            <div> <!-- col -->
+              <div> <!-- class="card" card image -->
+              </div>
+            </div>
+          </div>
+          <!-- stripe logo -->
+        </div>
+        <div>
+          <h1>
+            Almost Done
+          </h1>
+
+          <div class="droney-terms">
+            <terms class="checkbox">
+              <label>I agree to Droney's <a href="#">terms and conditions</a>.</label>
+            </terms>
+          </div>
+
+          <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+          <div if="{ errorMessage }">
+            { errorMessage }
+          </div>
+        </div>
+      </checkout>
+      <div>
+        <div>
+          <div>
+            <cart>
+              <h2>
+                Your Cart
+              </h2>
+
+              <lineitems if="{ !isEmpty() }"></lineitems>
+
+              <hr />
+              <div class="promo">
+                <div>
+                  <promocode class="input" placeholder="Promo/Coupon Code"></promocode>
+                </div>
+                <div>
+                  <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
+                </div>
+                <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying }">
+                  Don't forget to apply your code!
+                </div>
+                <div class="promo-message" if="{ promoMessage }">
+                  { promoMessage }
+                </div>
+              </div>
+              <div if="{ data.get('order.discount') > 0}">
+                <div>
+                  Discount:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.discount')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <hr>
+              <div>
+                <div>
+                  Subtotal:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <div>
+                <div>
+                  Shipping (billed later):
+                </div>
+                <div>
+                  - -
+                </div>
+              </div>
+              <div>
+                <div>
+                  Tax ({ data.get('order.taxRate') * 100 }%):
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <hr />
+              <div>
+                <div>
+                  Total:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.total')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+            </cart>
+          </div>
+        </div>
+      </div>
+    </div>
+    <section id="footer">
+      <footer class="footer">
+        <div class="container">
+          <div class="row">
+            <p class="text-muted text-center">Droney 2.0 
+            <i class="fa fa-facebook"></i> <i class="fa fa-twitter"></i> <i class="fa fa-hacker-news"></i> <i class="fa fa-reddit-alien"></i>
+            </p>
+          </div>
+        </div>
+      </footer>
+    </section>
+    <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="../js/bundle.js"></script>
+  </body>
+</html>
