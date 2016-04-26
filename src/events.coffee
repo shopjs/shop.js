@@ -48,3 +48,24 @@ module.exports =
     'register-success'
   RegisterFailed:
     'register-failed'
+
+  ProfileLoad:
+    'profile-load'
+  ProfileLoadSuccess:
+    'profile-load-success'
+  ProfileLoadFailed:
+    'profile-load-failed'
+
+  ProfileUpdate:
+    'profile-update'
+  ProfileUpdateSuccess:
+    'profile-update-success'
+  ProfileUpdateFailed:
+    'profile-update-failed'
+
+  CreateReferralProgram:
+    'create-referral-program'
+  CreateReferralProgramSuccess:
+    'create-referral-program-success'
+  CreateReferralProgramFailed:
+    'create-referral-program-failed'

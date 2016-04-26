@@ -1,5 +1,4 @@
 CrowdControl    = require 'crowdcontrol'
-Crowdstart      = require 'crowdstart.js'
 {
   isRequired,
   isEmail,
