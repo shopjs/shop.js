@@ -23,7 +23,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
     'user.password':            [ isPassword ]
     'user.passwordConfirm':     [ isPassword, matchesPassword ]
 
-  errorMessage: null
+  errorMessage: ''
 
   _submit: (event)->
     opts =
@@ -33,8 +33,9 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
 
-    @errorMessage = null
+    @errorMessage = ''
 
+    @update()
     m.trigger Events.Register
     @client.account.create(opts).then((res)=>
       m.trigger Events.RegisterSuccess, res

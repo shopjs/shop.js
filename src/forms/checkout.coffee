@@ -10,7 +10,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     </form>
   '''
 
-  errorMessage: null
+  errorMessage: ''
   loading: false
   checkedOut: false
 
@@ -23,8 +23,9 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     @loading = true
     m.trigger Events.Submit, @tag
 
-    @errorMessage = null
+    @errorMessage = ''
 
+    @update()
     @client.account.exists(@data.get 'user.email').then((res)=>
       if res.exists
         @data.set 'user.id', @data.get 'user.email'

@@ -23,6 +23,8 @@ module.exports = class AddressForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
+  errorMessage: ''
+
   init: ()->
     if @orderData?
       @data = @orderData
@@ -38,8 +40,9 @@ module.exports = class AddressForm extends CrowdControl.Views.Form
       id:  @data.get 'order.id'
       shippingAddress: @data.get 'order.shippingAddress'
 
-    @errorMessage = null
+    @errorMessage = ''
 
+    @update()
     m.trigger Events.ShippingAddressUpdate
     @client.account.updateOrder(opts).then((res)=>
       m.trigger Events.ShippingAddressUpdateSuccess, res
