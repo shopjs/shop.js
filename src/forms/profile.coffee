@@ -24,7 +24,7 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
     'user.password':            [ isNewPassword ]
     'user.passwordConfirm':     [ isNewPassword, matchesPassword ]
 
-  errorMessage: null
+  errorMessage: ''
 
   hasOrders: ()->
     orders = @data.get('user.orders')
@@ -77,8 +77,9 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
 
-    @errorMessage = null
+    @errorMessage = ''
 
+    @update()
     m.trigger Events.ProfileUpdate
     @client.account.update(opts).then((res)=>
       @data.set 'user.currentPassword', null

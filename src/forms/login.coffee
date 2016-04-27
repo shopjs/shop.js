@@ -19,15 +19,16 @@ module.exports = class LoginForm extends CrowdControl.Views.Form
     'user.email':       [ isRequired, isEmail ]
     'user.password':    [ isPassword ]
 
-  errorMessage: null
+  errorMessage: ''
 
   _submit: (event)->
     opts =
       email:    @data.get 'user.email'
       password: @data.get 'user.password'
 
-    @errorMessage = null
+    @errorMessage = ''
 
+    @update()
     m.trigger Events.Login
     @client.account.login(opts).then((res)=>
       m.trigger Events.LoginSuccess, res
