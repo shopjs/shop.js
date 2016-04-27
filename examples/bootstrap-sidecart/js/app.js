@@ -25,3 +25,7 @@ $('#back').on('click', event => {
   $('.side-cart').addClass('hidden');
   $('.buy-button').attr('disabled', false);
 });
+
+$('#checkout').on('click', event => {
+  window.location = 'checkout';
+})
