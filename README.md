@@ -18,7 +18,8 @@ Shopping framework for JavaScript.
 ## app.js
 `js/app.js`
 ## settings
-```module.exports = {
+```js
+module.exports = {
   key: 'api key',
   endpoint: 'api endpoint',
   taxRates: [
@@ -39,7 +40,8 @@ Shopping framework for JavaScript.
       }
     ]
   }
-};```
+};
+```
 # shop.js docs
 ## containers
 `shop.js` uses a container pattern. Specifically you will be dealing with the `<cart>` container.
