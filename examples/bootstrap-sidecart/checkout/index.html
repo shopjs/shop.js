@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="../style/main.css">
+    <link rel="stylesheet" type="text/css" href="/style/main.css">
     <title>shop.js sidecart bootstrap example</title>
   </head>
   <body>
@@ -30,11 +30,11 @@
       <checkout>
         <div class="contact-information">
           <h1>Contact Information</h1>
-          <div class="field">
-            <user-name class="input" placeholder="Name"></user-name>
+          <div>
+            <user-name placeholder="Name"></user-name>
           </div>
-          <div class="field">
-            <user-email class="input" placeholder="Email"></user-email>
+          <div>
+            <user-email  placeholder="Email"></user-email>
           </div>
         </div>
         <div class="form"><!-- bootstrapify -->
@@ -43,26 +43,26 @@
           </h1>
           <div class="fields"><!-- bootstrapify -->
             <div>
-              <shippingaddress-line1 class="input" placeholder="Address"></shippingaddress-line1>
+              <shippingaddress-line1 placeholder="Address"></shippingaddress-line1>
             </div>
             <div>
-              <shippingaddress-line2 class="input" placeholder="Suite"></shippingaddress-line2>
-            </div>
-          </div>
-          <div class="fields">
-            <div>
-              <shippingaddress-city class="input" placeholder="City"></shippingaddress-city>
-            </div>
-            <div>
-              <shippingaddress-postalcode class="input" placeholder="Postal Code"></shippingaddress-postalcode>
+              <shippingaddress-line2 placeholder="Suite"></shippingaddress-line2>
             </div>
           </div>
           <div class="fields">
             <div>
-              <shippingaddress-state class="input" placeholder="State"></shippingaddress-state>
+              <shippingaddress-city placeholder="City"></shippingaddress-city>
             </div>
             <div>
-              <shippingaddress-country class="input"placeholder="Country"></shippingaddress-country>
+              <shippingaddress-postalcode placeholder="Postal Code"></shippingaddress-postalcode>
+            </div>
+          </div>
+          <div class="fields">
+            <div>
+              <shippingaddress-state placeholder="State"></shippingaddress-state>
+            </div>
+            <div>
+              <shippingaddress-country placeholder="Country"></shippingaddress-country>
             </div>
           </div>
         </div>
@@ -73,14 +73,14 @@
           <div><!-- payment row -->
             <div>
               <div>
-                <card-number class="input" name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
+                <card-number name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
               </div>
               <div>
                 <div>
-                  <card-expiry class="input" name="expiry" placeholder="MM / YY"></card-expiry>
+                  <card-expiry name="expiry" placeholder="MM / YY"></card-expiry>
                 </div>
                 <div>
-                  <card-cvc class="input" name="cvc" placeholder="CVC"></card-cvc>
+                  <card-cvc name="cvc" placeholder="CVC"></card-cvc>
                 </div>
               </div>
 
@@ -123,7 +123,7 @@
               <hr />
               <div class="promo">
                 <div>
-                  <promocode class="input" placeholder="Promo/Coupon Code"></promocode>
+                  <promocode class="form-control" placeholder="Promo/Coupon Code"></promocode>
                 </div>
                 <div>
                   <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
