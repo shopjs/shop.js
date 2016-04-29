@@ -1,7 +1,28 @@
 .info {
   border: 1px solid #669999;
   border-radius: 5px;
+  margin-bottom: 5px;
 }
+
+.co {
+  margin-bottom: 20px;
+  border-bottom: 3px solid #669999;
+}
+
+.head {
+  padding-bottom: 10px;
+}
+
+input {
+  margin-bottom: 5px;
+  margin-left: 2%;
+  width: 96%;
+}
+
+h2 {
+  margin-left: 20px;
+}
+
 #footer i {
   padding-left: 10px;
   font-size: 1.5em;
