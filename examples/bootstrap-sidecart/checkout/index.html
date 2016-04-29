@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="/style/main.css">
     <title>shop.js sidecart bootstrap example</title>
@@ -17,208 +17,144 @@
           </a>
         </div>
         <ul class="nav navbar-nav navbar-right">
-          <li><a class="navbar-brand" href="#">Droney 2.0</a></li>
+          <li>
+            <a class="navbar-brand" href="#">Droney 2.0</a>
+          </li>
         </ul>
       </div>
     </nav>
     <div class="container text-center">
-      <div class="co-header">
-        <h1 class="text-muted text-center">
+      <div class="checkout">
+        <h1 class="text-muted">
           Checkout
         </h1>
-      </div>
-      <checkout>
-        <div class="contact-information">
-          <h1>Contact Information</h1>
-          <div>
+        <checkout>
+          <div class="contact-info">
+            <h1>Contact Information</h1>
             <user-name placeholder="Name"></user-name>
+            <user-email placeholder="Email"></user-email>
           </div>
-          <div>
-            <user-email  placeholder="Email"></user-email>
+          <div class="shipping-info">
+            <!-- bootstrapify -->
+            <h1>
+              Shipping Address
+            </h1>
+            <shippingaddress-line1 placeholder="Address"></shippingaddress-line1>
+            <shippingaddress-line2 placeholder="Suite"></shippingaddress-line2>
+            <shippingaddress-city placeholder="City"></shippingaddress-city>
+            <shippingaddress-postalcode placeholder="Postal Code"></shippingaddress-postalcode>
+            <shippingaddress-state placeholder="State"></shippingaddress-state>
+            <shippingaddress-country placeholder="Country"></shippingaddress-country>
           </div>
-        </div>
-        <div class="form"><!-- bootstrapify -->
-          <h1>
-            Shipping Address
-          </h1>
-          <div class="fields"><!-- bootstrapify -->
-            <div>
-              <shippingaddress-line1 placeholder="Address"></shippingaddress-line1>
-            </div>
-            <div>
-              <shippingaddress-line2 placeholder="Suite"></shippingaddress-line2>
-            </div>
-          </div>
-          <div class="fields">
-            <div>
-              <shippingaddress-city placeholder="City"></shippingaddress-city>
-            </div>
-            <div>
-              <shippingaddress-postalcode placeholder="Postal Code"></shippingaddress-postalcode>
-            </div>
-          </div>
-          <div class="fields">
-            <div>
-              <shippingaddress-state placeholder="State"></shippingaddress-state>
-            </div>
-            <div>
-              <shippingaddress-country placeholder="Country"></shippingaddress-country>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h1>
-            Payment Information
-          </h1>
-          <div><!-- payment row -->
-            <div>
-              <div>
-                <card-number name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
-              </div>
-              <div>
-                <div>
-                  <card-expiry name="expiry" placeholder="MM / YY"></card-expiry>
-                </div>
-                <div>
-                  <card-cvc name="cvc" placeholder="CVC"></card-cvc>
-                </div>
-              </div>
+          <div class="payment-info">
+            <h1>
+              Payment Information
+            </h1>
 
-              <!-- credit card CO pics -->
-            </div>
-            <div> <!-- col -->
-              <div> <!-- class="card" card image -->
-              </div>
-            </div>
+            <card-number name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
+            <card-expiry name="expiry" placeholder="MM / YY"></card-expiry>
+            <card-cvc name="cvc" placeholder="CVC"></card-cvc>
+            <!-- credit card CO pics -->
           </div>
+
+          <!-- class="card" card image -->
+
           <!-- stripe logo -->
-        </div>
-        <div>
-          <h1>
-            Almost Done
-          </h1>
-
-          <div class="droney-terms">
-            <terms class="checkbox">
-              <label>I agree to Droney's <a href="#">terms and conditions</a>.</label>
-            </terms>
+          <div class="finish">
+            <h1>
+              Almost Done
+            </h1>
+            <div class="droney-terms">
+              <terms class="checkbox">
+                <label>I agree to Droney's
+                  <a href="#">terms and conditions</a>.</label>
+              </terms>
+            </div>
+            <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+            <div if="{ errorMessage }">
+              { errorMessage }
+            </div>
           </div>
+        </checkout>
+      </div>
+      <div class="cart">
+        <cart>
+          <h2>
+            Your Cart
+          </h2>
+          <lineitems if="{ !isEmpty() }"></lineitems>
+          <hr/>
+          <div class="promo">
+            <promocode class="form-control" placeholder="Promo/Coupon Code"></promocode>
+            <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
+            <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying }">
+              Don't forget to apply your code!
+            </div>
+            <div class="promo-message" if="{ promoMessage }">
+              { promoMessage }
+            </div>
 
-          <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
-          <div if="{ errorMessage }">
-            { errorMessage }
+            <div if="{ data.get('order.discount') > 0}">
+              Discount: { renderCurrency(data.get('order.currency'), data.get('order.discount')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+            </div>
           </div>
-        </div>
-      </checkout>
-      <div>
-        <div>
-          <div>
-            <cart>
-              <h2>
-                Your Cart
-              </h2>
-
-              <lineitems if="{ !isEmpty() }"></lineitems>
-
-              <hr />
-              <div class="promo">
-                <div>
-                  <promocode class="form-control" placeholder="Promo/Coupon Code"></promocode>
-                </div>
-                <div>
-                  <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
-                </div>
-                <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying }">
-                  Don't forget to apply your code!
-                </div>
-                <div class="promo-message" if="{ promoMessage }">
-                  { promoMessage }
-                </div>
-              </div>
-              <div if="{ data.get('order.discount') > 0}">
-                <div>
-                  Discount:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.discount')) }&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <hr>
-              <div>
-                <div>
-                  Subtotal:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <div>
-                <div>
-                  Shipping (billed later):
-                </div>
-                <div>
-                  - -
-                </div>
-              </div>
-              <div>
-                <div>
-                  Tax ({ data.get('order.taxRate') * 100 }%):
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-              <hr />
-              <div>
-                <div>
-                  Total:
-                </div>
-                <div>
-                  { renderCurrency(data.get('order.currency'), data.get('order.total')) }&nbsp;{ data.get('order.currency').toUpperCase() }
-                </div>
-              </div>
-            </cart>
+          <hr>
+          <div class="total">
+            Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() } Shipping (billed later):
+            <div>
+              - -
+            </div>
+            <div>
+              Tax ({ data.get('order.taxRate') * 100 }%):
+            </div>
+            <div>
+              { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+            </div>
+            <hr/>
+            <div>
+              Total:
+            </div>
+            <div>
+              { renderCurrency(data.get('order.currency'), data.get('order.total')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+            </div>
           </div>
+        </cart>
+      </div>
+
+      <div class="thanks">
+        <div class="loader">Loading...</div>
+        <p>You will receive a confirmation email soon.</p>
+
+        <p>Your order number is
+          <strong></strong>.</p>
+        <div class="share-social">
+          <a href="https://facebook.com">
+            <i class="fa fa-facebook"></i>
+          </a>
+
+          <a href="https://twitter.com">
+            <i class="fa fa-twitter"></i>
+          </a>
+
+          <a href="https://plus.google.com">
+            <i class="fa fa-google-plus"></i>
+          </a>
+
+          <a href="mailto:">
+            <i class="fa fa-envelope"></i>
+          </a>
         </div>
       </div>
     </div>
-    
-    <div class="loader">Loading...</div>
-  </div>
-  <div class="thanks">
-    <div>
-      <div>
-        <div>
-          <p>You will receive a confirmation email soon.</p>
-
-          <p>Your order number is <strong></strong>.</p>
-          <div class="share-social">
-            <a href="https://facebook.com">
-              <i class="fa fa-facebook"></i>
-            </a>
-
-            <a href="https://twitter.com">
-              <i class="fa fa-twitter"></i>
-            </a>
-
-            <a href="https://plus.google.com">
-              <i class="fa fa-google-plus"></i>
-            </a>
-
-            <a href="mailto:">
-              <i class="fa fa-envelope"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
     <section id="footer">
       <footer class="footer">
         <div class="container">
           <div class="row">
-            <p class="text-muted text-center">Droney 2.0 
-            <i class="fa fa-facebook"></i> <i class="fa fa-twitter"></i> <i class="fa fa-hacker-news"></i> <i class="fa fa-reddit-alien"></i>
+            <p class="text-muted text-center">Droney 2.0
+              <i class="fa fa-facebook"></i>
+              <i class="fa fa-twitter"></i>
+              <i class="fa fa-hacker-news"></i>
+              <i class="fa fa-reddit-alien"></i>
             </p>
           </div>
         </div>
