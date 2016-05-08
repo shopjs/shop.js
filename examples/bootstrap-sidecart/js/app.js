@@ -32,7 +32,7 @@ $(window).load(() => {
     $('.buy-button').attr('disabled', false);
   });
 
-  $('#checkout').on('click', event => {
+  $('.checkout-btn').on('click', event => {
     window.location = 'checkout';
   })
 });
