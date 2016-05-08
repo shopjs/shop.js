@@ -33,3 +33,7 @@ h2 {
   padding-top: 20px;
   margin-top: 20px;
 }
+
+.loading {
+  display: none;
+}
