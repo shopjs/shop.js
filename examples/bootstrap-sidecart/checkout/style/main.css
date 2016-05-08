@@ -35,3 +35,8 @@ h2 {
 .loading {
   display: none;
 }
+.bootstrap.classes {
+  color: red;
+  font-weight: bold;
+  padding-left: 20px;
+}
