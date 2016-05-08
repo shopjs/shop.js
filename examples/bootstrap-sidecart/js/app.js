@@ -16,6 +16,13 @@ $(window).load(() => {
 
   window.m = m;
 
+  // redirect user to index if cart is empty on /checkout/index.html
+  if (window.location.pathname === '/checkout/') {
+    if (Shop.isEmpty()) {
+      window.location = '/';
+    }
+  }
+
   // /index.html
   $('.buy-button').on('click', function(event) {
     if(!Shop.getItem('droney-2.0'))
