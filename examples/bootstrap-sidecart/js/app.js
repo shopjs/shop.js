@@ -1,7 +1,7 @@
 
 var Shop = require('shop.js');
 
-$(document).ready(() => {
+$(window).load(() => {
   Shop.use({
     Controls: {
       Error: '<div class="bootstrap classes" if="{ errorMessage }">{ errorMessage }</div>'
@@ -14,8 +14,8 @@ $(document).ready(() => {
 
   // /index.html
   $('.buy-button').on('click', function(event) {
-    if(!Shop.getItem('droney'))
-      Shop.setItem('droney', 1);
+    if(!Shop.getItem('droney-2.0'))
+      Shop.setItem('droney-2.0', 1);
     // show cart
     $('.side-cart').removeClass('hidden');
     // disable checkout button
