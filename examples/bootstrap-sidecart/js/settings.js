@@ -1,5 +1,5 @@
 module.exports = {
-  key: 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJiaXQiOjQ1MDM2MTcwNzU2NzUxNzIsImp0aSI6IjlVTlh6MUoyZlE0Iiwic3ViIjoiRXFUR294cDV1MyJ9.N1QaJPj098JsaOuDU_fBKeChem3VDn-ggWy9V0QulOZ6R2ySIOxs79I_ajQtm9QJ842QR3hZDFl78vhXJqOeVw',
+  key: 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJiaXQiOjQ1MDM2MTcwNzU2NzUxNzYsImp0aSI6IkNTaWFDckhpdDQ0Iiwic3ViIjoiRXFUR294cDV1MyJ9.fRcRQRRe0CrcnGSW12fmQ_8Cly6mqByIc5wTnANPdPWP3V1Bx9AIGbTVPTx_3KbBEziGewKJtNT1ys6WDXegyg',
   endpoint: 'https://api.staging.crowdstart.com',
   taxRates: [
     {
