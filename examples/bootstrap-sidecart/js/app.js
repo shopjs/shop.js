@@ -14,6 +14,10 @@ $(window).load(() => {
     $('.loading').removeClass('loading');
   });
 
+  m.on('submit-success', () => {
+    $('.thanks.hidden').removeClass('hidden');
+  });
+
   window.m = m;
 
   // redirect user to index if cart is empty on /checkout/index.html
