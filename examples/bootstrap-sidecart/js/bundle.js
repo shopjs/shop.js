@@ -2,24 +2,56 @@
 
 var Shop = require('shop.js');
 
-Shop.use({
-  Controls: {
-    Error: '<div class="bootstrap classes" if="{ errorMessage}">{ errorMessage }</div>'
+$(window).load(() => {
+  Shop.use({
+    Controls: {
+      Error: '<div class="bootstrap classes" if="{ errorMessage }">{ errorMessage }</div>'
+    }
+  });
+
+  var m = Shop.start(require('./settings'));
+
+  m.on('ready', () => {
+    $('.loading').removeClass('loading');
+  });
+
+  m.on('submit-success', () => {
+    $('.thanks.hidden').removeClass('hidden');
+  });
+
+  window.m = m;
+
+  // redirect user to index if cart is empty on /checkout/index.html
+  if (window.location.pathname === '/checkout/') {
+    if (Shop.isEmpty()) {
+      window.location = '/';
+    }
   }
-});
 
-var m = Shop.start(require('./settings'));
+  // /index.html
+  $('.buy-button').on('click', function(event) {
+    if(!Shop.getItem('droney-2.0'))
+      Shop.setItem('droney-2.0', 1);
+    // show cart
+    $('.side-cart').removeClass('hidden');
+    // disable checkout button
+    $(this).attr('disabled', true);
+  });
 
-window.m = m;
+  // this button will only be viewable after .buy-button has been clicked.
+  $('#back').on('click', event => {
+    $('.side-cart').addClass('hidden');
+    $('.buy-button').attr('disabled', false);
+  });
 
-$('.buy-button').on('click', (event) => {
-  if(!Shop.getItem('droney'))
-    Shop.setItem('droney', 1);
+  $('.checkout-btn').on('click', event => {
+    window.location = 'checkout';
+  })
 });
 
 },{"./settings":2,"shop.js":40}],2:[function(require,module,exports){
 module.exports = {
-  key: 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJiaXQiOjQ1MDM2MTcwNzU2NzUxNzIsImp0aSI6Imw3bDRMcUszTWFNIiwic3ViIjoiRXFUR294cDV1MyJ9.Xeg07zuDt6NjyuGl8rl2XRGph-bwulZhyYwBXthGjTpxCIh3Sj8XkBsthliOvifKCiUoi46lQWTahiUan0xZNw',
+  key: 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJiaXQiOjQ1MDM2MTcwNzU2NzUxNzYsImp0aSI6IkNTaWFDckhpdDQ0Iiwic3ViIjoiRXFUR294cDV1MyJ9.fRcRQRRe0CrcnGSW12fmQ_8Cly6mqByIc5wTnANPdPWP3V1Bx9AIGbTVPTx_3KbBEziGewKJtNT1ys6WDXegyg',
   endpoint: 'https://api.staging.crowdstart.com',
   taxRates: [
     {
