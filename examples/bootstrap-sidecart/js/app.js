@@ -10,6 +10,10 @@ $(window).load(() => {
 
   var m = Shop.start(require('./settings'));
 
+  m.on('ready', () => {
+    $('.loading').removeClass('loading');
+  });
+
   window.m = m;
 
   // /index.html
