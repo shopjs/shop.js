@@ -10,7 +10,7 @@
 
     <title>shop.js sidecart bootstrap example</title>
   </head>
-  <body>
+  <body class="loading">
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -118,7 +118,7 @@
           </div>
         </div>
       </section>
-      <section id="checkout">
+      <section id="checkout" class="hidden">
         <div class="row co">
           <h1 class="text-muted text-center">
             Checkout
@@ -174,7 +174,8 @@
                       <a href="#">terms and conditions</a>.</label>
                   </terms>
                 </div>
-                <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+                <button class="{ btn: true, btn-primary: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+                <button id="back-btn" class="btn btn-warning" type="button">Back</button>
                 <div if="{ errorMessage }">
                   { errorMessage }
                 </div>
