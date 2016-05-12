@@ -61,3 +61,37 @@
   border-bottom-color: #EEEEEE;
   background-color: #FAFAFA;
 }
+/* ----- Checkout ----- */
+.info {
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.co {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E7E7E7;
+}
+
+.head {
+  padding-bottom: 10px;
+}
+
+input {
+  margin-bottom: 5px;
+  margin-left: 2%;
+  width: 96%;
+}
+
+h2 {
+  margin-left: 20px;
+}
+
+.loading {
+  display: none;
+}
+/* ---- 'Required' Error msg ----- */
+.bootstrap.classes {
+  color: red;
+  font-weight: bold;
+  padding-left: 20px;
+}

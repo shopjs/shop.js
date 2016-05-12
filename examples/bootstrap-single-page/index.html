@@ -118,6 +118,139 @@
           </div>
         </div>
       </section>
+      <section id="checkout">
+        <div class="row co">
+          <h1 class="text-muted text-center">
+            Checkout
+          </h1>
+        </div>
+        <div class="row">
+          <div class="checkout col-lg-8">
+            <checkout>
+              <div class="contact-info info">
+                <div class="head">
+                  <h2 class="text-muted">Contact Information</h2>
+                </div>
+                <div>
+                  <user-name placeholder="Name"></user-name>
+                </div>
+                <div>
+                  <user-email placeholder="Email"></user-email>
+                </div>
+              </div>
+              <div class="shipping-info info">
+                <!-- bootstrapify -->
+                <h2 class="text-muted">
+                  Shipping Address
+                </h2>
+                <shippingaddress-line1 placeholder="Address"></shippingaddress-line1>
+                <shippingaddress-line2 placeholder="Suite"></shippingaddress-line2>
+                <shippingaddress-city placeholder="City"></shippingaddress-city>
+                <shippingaddress-postalcode placeholder="Postal Code"></shippingaddress-postalcode>
+                <shippingaddress-state placeholder="State"></shippingaddress-state>
+                <shippingaddress-country placeholder="Country"></shippingaddress-country>
+              </div>
+              <div class="payment-info info">
+                <h2 class="text-muted">
+                  Payment Information
+                </h2>
+
+                <card-number name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
+                <card-expiry name="expiry" placeholder="MM / YY"></card-expiry>
+                <card-cvc name="cvc" placeholder="CVC"></card-cvc>
+                <!-- credit card CO pics -->
+              </div>
+
+              <!-- class="card" card image -->
+
+              <!-- stripe logo -->
+              <div class="finish info">
+                <h2 class="text-muted">
+                  Almost Done
+                </h2>
+                <div class="droney-terms">
+                  <terms class="checkbox">
+                    <label>I agree to Droney's
+                      <a href="#">terms and conditions</a>.</label>
+                  </terms>
+                </div>
+                <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+                <div if="{ errorMessage }">
+                  { errorMessage }
+                </div>
+              </div>
+            </checkout>
+          </div>
+          <div class="cart col-lg-4 info">
+            <cart>
+              <h2 class="text-muted">
+                Your Cart
+              </h2>
+              <lineitems if="{ !isEmpty() }"></lineitems>
+              <hr/>
+              <div class="promo">
+                <promocode placeholder="Promo/Coupon Code"></promocode>
+                <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
+                <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying }">
+                  Don't forget to apply your code!
+                </div>
+                <div class="promo-message" if="{ promoMessage }">
+                  { promoMessage }
+                </div>
+
+                <div if="{ data.get('order.discount') > 0}">
+                  Discount: { renderCurrency(data.get('order.currency'), data.get('order.discount')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+              <hr>
+              <div class="total">
+                Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() } Shipping (billed later):
+                <div>
+                  - -
+                </div>
+                <div>
+                  Tax ({ data.get('order.taxRate') * 100 }%):
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+                <hr/>
+                <div>
+                  Total:
+                </div>
+                <div>
+                  { renderCurrency(data.get('order.currency'), data.get('order.total')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+                </div>
+              </div>
+            </cart>
+          </div>
+        </div>
+        <div class="thanks hidden alert alert-success">
+          <h2>Thank you!</h2>
+          <p>You will receive a confirmation email soon.</p>
+
+          <p>Your order number is
+            <strong></strong>.</p>
+          <div class="share-social text-center">
+            <a href="https://facebook.com">
+              <i class="fa fa-facebook"></i>
+            </a>
+
+            <a href="https://twitter.com">
+              <i class="fa fa-twitter"></i>
+            </a>
+
+            <a href="https://plus.google.com">
+              <i class="fa fa-google-plus"></i>
+            </a>
+
+            <a href="mailto:">
+              <i class="fa fa-envelope"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      </section>
       <section id="press">
         <div class="row">
           <img src="/img/press/Forbes.png"></img>
