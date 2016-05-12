@@ -1,5 +1,5 @@
 
-var Shop = require('shop.js');
+const Shop = require('shop.js');
 
 $(window).load(() => {
   Shop.use({
@@ -8,7 +8,7 @@ $(window).load(() => {
     }
   });
 
-  var m = Shop.start(require('./settings'));
+  const m = Shop.start(require('./settings'));
 
   m.on('ready', () => {
     $('.loading').removeClass('loading');
