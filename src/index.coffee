@@ -9,7 +9,7 @@ refer           = require 'referential'
 store           = require './utils/store'
 {Cart}          = require 'commerce.js'
 
-Crowdstart      = require 'crowdstart.js'
+Crowdstart      = require 'hanzo.js'
 
 m               = require './mediator'
 Events          = require './events'
@@ -24,6 +24,7 @@ Shop.Referential    = refer
 
 # Monkey Patch common utils onto every View/Instance
 Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
+Shop.CrowdControl.Views.View.prototype.renderDate = require('./utils/dates')
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -58,7 +59,6 @@ Shop.use = (templates) ->
 #
 #Format of opts.referralProgram
 # Referral Program Object
-#
 
 Shop.riot = riot
 
@@ -118,9 +118,12 @@ Shop.start = (opts = {}) ->
       total: 0
       items: items ? []
   data = @data.get()
-  for k, v of data
+  for k, v of opts
     if opts[k]
-      extend data[k], opts[k]
+      if !data[k]?
+        data[k] = opts[k]
+      else
+        extend data[k], opts[k]
 
   @data.set data
 
@@ -130,7 +133,11 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  tags = riot.mount 'cart, cart-counter, checkout',
+  tagNames = []
+  for k, v of Shop.Forms
+    tagNames.push(v.prototype.tag) if v.prototype.tag?
+
+  tags = riot.mount tagNames.join(', '),
     data:   @data
     cart:   @cart
     client: @client
