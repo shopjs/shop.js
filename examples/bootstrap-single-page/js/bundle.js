@@ -39,14 +39,28 @@ $(window).load(() => {
   });
 
   // this button will only be viewable after .buy-button has been clicked.
+  // this is a sidecart button
   $('#back').on('click', event => {
     $('.side-cart').addClass('hidden');
     $('.buy-button').attr('disabled', false);
   });
 
   $('.checkout-btn').on('click', event => {
-    window.location = 'checkout';
-  })
+    $('.side-cart').addClass('hidden');
+    $('#checkout').removeClass('hidden');
+    $('html, body').animate({
+      scrollTop: $('#checkout').offset().top
+    }, 2000);
+  });
+
+  // #checkout back button
+  $('#back-btn').on('click', event => {
+    $('#checkout').addClass('hidden');
+    $('.buy-button').attr('disabled', false);
+    $('html, body').animate({
+      scrollTop: 0
+    }, 250);
+  });
 });
 
 },{"./settings":2,"shop.js":40}],2:[function(require,module,exports){
