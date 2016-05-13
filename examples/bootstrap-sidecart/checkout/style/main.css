@@ -35,8 +35,7 @@ h2 {
 .loading {
   display: none;
 }
-.bootstrap.classes {
-  color: red;
-  font-weight: bold;
+.text-danger {
   padding-left: 20px;
+  font-weight: bold;
 }

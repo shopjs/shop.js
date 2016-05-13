@@ -19,7 +19,7 @@ $(window).load(() => {
   //
   Shop.use({
     Controls: {
-      Error: '<div class="bootstrap classes" if="{ errorMessage }">{ errorMessage }</div>'
+      Error: '<div class="text-danger" if="{ errorMessage }">{ errorMessage }</div>'
     }
   });
 
