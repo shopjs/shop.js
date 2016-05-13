@@ -13,16 +13,5 @@ module.exports = {
       state:   'ca',
       country: 'us'
     }
-  ],
-  referralProgram: {
-    name:     'Such Referral',
-    triggers: [0],
-    actions: [
-      {
-        type:     'Credit',
-        currency: 'points',
-        amount:   1
-      }
-    ]
-  }
+  ]
 };
