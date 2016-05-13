@@ -35,3 +35,44 @@ module.exports =
   ApplyCouponFailed:
     'apply-coupon-failed'
 
+  Login:
+    'login'
+  LoginSuccess:
+    'login-success'
+  LoginFailed:
+    'login-failed'
+
+  Register:
+    'register'
+  RegisterSuccess:
+    'register-success'
+  RegisterFailed:
+    'register-failed'
+
+  ProfileLoad:
+    'profile-load'
+  ProfileLoadSuccess:
+    'profile-load-success'
+  ProfileLoadFailed:
+    'profile-load-failed'
+
+  ProfileUpdate:
+    'profile-update'
+  ProfileUpdateSuccess:
+    'profile-update-success'
+  ProfileUpdateFailed:
+    'profile-update-failed'
+
+  ShippingAddressUpdate:
+    'shipping-address-update'
+  ShippingAddressUpdateSuccess:
+    'shipping-address-update-success'
+  ShippingAddressUpdateFailed:
+    'shipping-address-update-failed'
+
+  CreateReferralProgram:
+    'create-referral-program'
+  CreateReferralProgramSuccess:
+    'create-referral-program-success'
+  CreateReferralProgramFailed:
+    'create-referral-program-failed'
