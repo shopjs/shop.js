@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 //
 // Shop.js Side Cart Example
-// 
+//
 
 //
 // Pull in Shop.js module CommonJS module
@@ -14,8 +14,8 @@ const Shop = require('shop.js');
 //
 $(window).load(() => {
   //
-  // Shop.use supports overwriting of the internal templates.  
-  // This is commonly done with the error template for the low level form controls to support various frameworks.  
+  // Shop.use supports overwriting of the internal templates.
+  // This is commonly done with the error template for the low level form controls to support various frameworks.
   //The below example is for Bootstrop.
   //
   Shop.use({
@@ -39,7 +39,7 @@ $(window).load(() => {
     //
     $('.loading').removeClass('loading');
   });
-  
+
   //
   // The 'submit-success' event is sent when the user successfully submits a payment and it is successfully charged.
   //
@@ -61,43 +61,43 @@ $(window).load(() => {
       window.location = '/';
     }
   }
-  
+
   //
   // The .buy-button is on index.html and opens the side cart
   //
   $buyButton = $('.buy-button');
-  
+
   //
   // #back is on the index.html and closes the side cart
   //
-  $backButton = $('#back');
-  
+  $backButton = $('.back-button');
+
   //
   // The .side-cart is on index.html
   //
   $sideCart = $('.side-cart');
-  
+
   //
   // The .checkoutbtn is on index.html and submits the cart to checkout
   //
-  $checkoutButton = $('.checkout-btn')
+  $checkoutButton = $('.checkout-button')
 
   //
-  // When the user clicks the .buy-button, add a Droney 2.0 to the user's cart, and then show the 
-  // side cart.  
+  // When the user clicks the .buy-button, add a Droney 2.0 to the user's cart, and then show the
+  // side cart.
   //
   $buyButton.on('click', (event)=> {
-    // 
+    //
     // If there is no Droney item of any type in the cart, add it 1.
     //
     if(!Shop.getItem('droney-2.0'))
       Shop.setItem('droney-2.0', 1);
-      
+
     //
     // Show the side cart
     //
     $sideCart.removeClass('hidden');
-    
+
     //
     // Disable the .buy-button
     //
@@ -112,7 +112,7 @@ $(window).load(() => {
     // Hide the side cart
     //
     $sideCart.addClass('hidden');
-    
+
     //
     // Enable the .buy-button
     //
