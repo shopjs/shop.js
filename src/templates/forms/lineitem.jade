@@ -13,11 +13,10 @@
   .product-delete(onclick="{ delete }")
   .product-price-container
     .product-price
-      | { renderCurrency(cartdata.get('order.currency'), data.get().price * data.get().quantity) }
+      | { renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }
       .product-currency
-        | { cartdata.get('order.currency').toUpperCase() }
+        | { parentData.get('currency').toUpperCase() }
     .product-list-price(if="{ data.get().listPrice > data.get().price }")
-      | { renderCurrency(cartdata.get('order.currency'), data.get().listPrice * data.get().quantity) }
+      | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }
       .product-currency
-        | { cartdata.get('order.currency').toUpperCase() }
-
+        | { parentData.get('currency').toUpperCase() }

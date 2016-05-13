@@ -1,9 +1,7 @@
 CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
 m = require '../mediator'
 Events = require '../events'
 store = require '../utils/store'
-require '../utils/patches'
 
 module.exports = class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
@@ -14,9 +12,6 @@ module.exports = class CartForm extends CrowdControl.Views.Form
   '''
 
   init: ()->
-    # ie10 riot issue hack
-    @originalParentElement = @root.parentElement
-
     super
     promoCode = store.get 'promoCode'
 

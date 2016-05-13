@@ -1,0 +1,2 @@
+order(each="{ item, v in data('user.orders') }", parent-data="{ this.parent.data.get('user') }", data="{ this.parent.data.ref('user.orders.' + v) }")
+  #{ 'yield' }
