@@ -18,8 +18,6 @@ $(window).load(() => {
     $('.thanks.hidden').removeClass('hidden');
   });
 
-  window.m = m;
-
   $('.buy-button').on('click', function(event) {
     if(!Shop.getItem('droney-2.0'))
       Shop.setItem('droney-2.0', 1);
