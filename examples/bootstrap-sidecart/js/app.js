@@ -18,8 +18,6 @@ $(window).load(() => {
     $('.thanks.hidden').removeClass('hidden');
   });
 
-  window.m = m;
-
   // redirect user to index if cart is empty on /checkout/index.html
   if (window.location.pathname === '/checkout/') {
     if (Shop.isEmpty()) {
