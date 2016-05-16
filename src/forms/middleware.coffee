@@ -59,6 +59,12 @@ middleware =
 
     throw new Error 'Required'
 
+  isPostalRequired: (value) ->
+    if countryUtils.requiresPostalCode(@get('order.shippingAddress.country') || '') && (!value? || value == '')
+      throw new Error "Required for Selected Country"
+
+    value
+
   requiresStripe: (value) ->
     throw new Error "Required" if @('order.type') == 'stripe' && (!value? || value == '')
     return value
