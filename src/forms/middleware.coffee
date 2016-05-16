@@ -50,6 +50,10 @@ middleware =
 
     value
 
+  isPostalRequired: (value) ->
+    if countryUtils.requiresPostalCode(@get('order.shippingAddress.country') || '') && (!value? || value == '')
+      throw new Error "Required for Selected Country"
+
   isEcardGiftRequired: (value) ->
     return value if (!@get('order.gift') || @get('order.giftType') != 'ecard') || (value && value != '')
 
