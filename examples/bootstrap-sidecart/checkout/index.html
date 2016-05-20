@@ -110,14 +110,13 @@
             </div>
             <hr>
             <div class="total">
-              Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() } Shipping (billed later):
+              Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() } 
               <div>
-                - -
+                Shipping:
+                { renderCurrency(data.get('order.currency'), data.get('order.shipping')) }&nbsp;{ data.get('order.currency').toUpperCase() }
               </div>
               <div>
                 Tax ({ data.get('order.taxRate') * 100 }%):
-              </div>
-              <div>
                 { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
               </div>
               <hr/>
