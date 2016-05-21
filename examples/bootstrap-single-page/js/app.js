@@ -140,7 +140,7 @@ $(window).load(() => {
     // Scroll the page to the top of the checkout.
     //
     $('html, body').animate({
-      scrollTop: $('#checkout').offset().top
+      scrollTop: $checkout.offset().top
     }, 200);
   });
 
@@ -168,7 +168,8 @@ $(window).load(() => {
     // Scroll the page back to the top.
     //
     $('html, body').animate({
-      scrollTop: 0
+      // 50 is the height of the navbar.
+      scrollTop: 50
     }, 200);
   });
 });
