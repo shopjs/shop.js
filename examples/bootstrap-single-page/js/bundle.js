@@ -19,16 +19,6 @@ $(window).load(() => {
     $('.thanks.hidden').removeClass('hidden');
   });
 
-  window.m = m;
-
-  // redirect user to index if cart is empty on /checkout/index.html
-  if (window.location.pathname === '/checkout/') {
-    if (Shop.isEmpty()) {
-      window.location = '/';
-    }
-  }
-
-  // /index.html
   $('.buy-button').on('click', function(event) {
     if(!Shop.getItem('droney-2.0'))
       Shop.setItem('droney-2.0', 1);
@@ -48,18 +38,20 @@ $(window).load(() => {
   $('.checkout-btn').on('click', event => {
     $('.side-cart').addClass('hidden');
     $('#checkout').removeClass('hidden');
+    $('.hide-when-co').addClass('hidden');
     $('html, body').animate({
       scrollTop: $('#checkout').offset().top
-    }, 2000);
+    }, 200);
   });
 
   // #checkout back button
   $('#back-btn').on('click', event => {
     $('#checkout').addClass('hidden');
     $('.buy-button').attr('disabled', false);
+    $('.hide-when-co').removeClass('hidden');
     $('html, body').animate({
       scrollTop: 0
-    }, 250);
+    }, 200);
   });
 });
 
@@ -79,18 +71,7 @@ module.exports = {
       state:   'ca',
       country: 'us'
     }
-  ],
-  referralProgram: {
-    name:     'Such Referral',
-    triggers: [0],
-    actions: [
-      {
-        type:     'Credit',
-        currency: 'points',
-        amount:   1
-      }
-    ]
-  }
+  ]
 };
 
 },{}],3:[function(require,module,exports){
