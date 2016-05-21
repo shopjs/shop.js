@@ -15,7 +15,7 @@ $(window).load(() => {
   //
   // Shop.use supports overwriting of the internal templates.
   // This is commonly done with the error template for the low level form controls to support various frameworks.
-  //The below example is for Bootstrop.
+  // The below example is for Bootstrop.
   //
   Shop.use({
     Controls: {
@@ -67,7 +67,7 @@ $(window).load(() => {
   $buyButton = $('.buy-button');
 
   //
-  // #back is on the index.html and closes the side cart
+  // .back-button is on the index.html and closes the side cart
   //
   $backButton = $('.back-button');
 
@@ -85,7 +85,7 @@ $(window).load(() => {
   // When the user clicks the .buy-button, add a Droney 2.0 to the user's cart, and then show the
   // side cart.
   //
-  $buyButton.on('click', (event)=> {
+  $buyButton.on('click', (event) => {
     //
     // If there is no Droney item of any type in the cart, add it 1.
     //
@@ -104,7 +104,7 @@ $(window).load(() => {
   });
 
   //
-  // When the user clicks #back, cloase the side cart
+  // When the user clicks .back-button, close the side cart
   //
   $backButton.on('click', event => {
     //
