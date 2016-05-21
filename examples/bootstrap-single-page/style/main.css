@@ -97,3 +97,9 @@ h2 {
   font-weight: bold;
   padding-left: 20px;
 }
+
+/* ----- OVERRIDE SELECTIZE Z-INDEX (quantity dropdown in sidecart) ----- */
+
+.selectize-dropdown {
+  z-index: 2000;
+}
