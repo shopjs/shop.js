@@ -93,8 +93,7 @@ h2 {
 }
 
 /* ---- 'Required' Error msg ----- */
-.bootstrap.classes {
-  color: red;
+.text-danger {
   font-weight: bold;
   padding-left: 20px;
 }
