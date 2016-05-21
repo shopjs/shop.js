@@ -124,7 +124,7 @@ $(window).load(() => {
     //
     // Hide the side cart
     //
-    $sidecart.addClass('hidden');
+    $sideCart.addClass('hidden');
 
     //
     // Show the checkout dialog
