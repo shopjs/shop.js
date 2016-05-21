@@ -30,7 +30,7 @@
     </nav>
     <div class="container text-center">
       <br>
-      <img alt="Droney 2.0" src="/img/drone.svg" height="550" width="600" class="hide-when-co"> 
+      <img alt="Droney 2.0" src="/img/drone.svg" height="550" width="600" class="hide-when-co">
     </section>
     <section id="sidecart">
       <div class="side-cart hidden modal right" role="dialog">
@@ -38,11 +38,11 @@
           <div class="modal-content">
             <cart empty-message="Add something to your cart.">
               <div class="nav">
-                <button id="back" class="btn btn-muted">
+                <button class="btn btn-muted back-button">
                   <i class="fa fa-arrow-left"></i>
                   Back
                 </button>
-                <button class="btn btn-muted checkout-btn" __disabled="{ isEmpty() }">
+                <button class="btn btn-muted checkout-button" __disabled="{ isEmpty() }">
                   <i class="fa fa-arrow-right"></i>
                   Checkout
                 </button>
@@ -112,7 +112,7 @@
                   </div>
                 </div>
                 <div class="checkout-button">
-                  <button class="btn btn-muted checkout-btn">checkout</button>
+                  <button class="btn btn-muted checkout-button">checkout</button>
                 </div>
               </div>
             </cart>
@@ -120,14 +120,14 @@
         </div>
       </div>
     </section>
-    <section id="checkout" class="hidden">
+    <section class="hidden checkout">
         <div class="row co">
           <h1 class="text-muted text-center">
             Checkout
           </h1>
         </div>
         <div class="row">
-          <div class="checkout col-lg-8">
+          <div class="col-lg-8">
             <checkout>
               <div class="contact-info info">
                 <div class="head">
@@ -177,7 +177,7 @@
                   </terms>
                 </div>
                 <button class="{ btn: true, btn-primary: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
-                <button id="back-btn" class="btn btn-warning" type="button">Back</button>
+                <button class="btn btn-warning checkout-back-button" type="button">Back</button>
                 <div if="{ errorMessage }">
                   { errorMessage }
                 </div>
