@@ -17,6 +17,8 @@
   font-size: 1.5em;
 }
 
+/* ----- Sidecart Modal ----- */
+
 .modal.right .modal-dialog {
   position: fixed;
   margin: auto;
@@ -89,6 +91,7 @@ h2 {
 .loading {
   display: none;
 }
+
 /* ---- 'Required' Error msg ----- */
 .bootstrap.classes {
   color: red;

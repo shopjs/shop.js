@@ -37,17 +37,19 @@ $(window).load(() => {
   $('.checkout-btn').on('click', event => {
     $('.side-cart').addClass('hidden');
     $('#checkout').removeClass('hidden');
+    $('.hide-when-co').addClass('hidden');
     $('html, body').animate({
       scrollTop: $('#checkout').offset().top
-    }, 2000);
+    }, 200);
   });
 
   // #checkout back button
   $('#back-btn').on('click', event => {
     $('#checkout').addClass('hidden');
     $('.buy-button').attr('disabled', false);
+    $('.hide-when-co').removeClass('hidden');
     $('html, body').animate({
       scrollTop: 0
-    }, 250);
+    }, 200);
   });
 });
