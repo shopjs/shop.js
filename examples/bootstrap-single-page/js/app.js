@@ -45,6 +45,7 @@ $(window).load(() => {
     // was a success.
     //
     $('.thanks.hidden').removeClass('hidden');
+    $('.checkout').addClass('hidden');
   });
 
   //
