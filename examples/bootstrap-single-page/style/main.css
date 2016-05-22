@@ -99,7 +99,11 @@ h2 {
 }
 
 /* ----- OVERRIDE SELECTIZE Z-INDEX (quantity dropdown in sidecart) ----- */
-
 .selectize-dropdown {
   z-index: 2000;
+}
+
+/* ----- Make thank you message text larger. ----- */
+.thanks {
+  font-size: 2.5rem;  
 }
