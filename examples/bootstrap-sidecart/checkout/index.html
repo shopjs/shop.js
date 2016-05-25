@@ -9,7 +9,11 @@
     <link rel="stylesheet" type="text/css" href="style/main.css">
     <title>shop.js sidecart bootstrap example</title>
   </head>
+
+  <!-- class .loading shows only after the Shop.js app is loaded -->
   <body class="loading">
+
+    <!-- Navagation bar -->
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -24,6 +28,8 @@
         </ul>
       </div>
     </nav>
+    <!-- end navbar-->
+
     <div class="container">
       <div class="row co">
         <h1 class="text-muted text-center">
@@ -110,7 +116,7 @@
             </div>
             <hr>
             <div class="total">
-              Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() } 
+              Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() }
               <div>
                 Shipping:
                 { renderCurrency(data.get('order.currency'), data.get('order.shipping')) }&nbsp;{ data.get('order.currency').toUpperCase() }
@@ -155,7 +161,6 @@
         </div>
       </div>
     </div>
-    <section id="footer">
       <footer class="footer">
         <div class="container">
           <div class="row">
@@ -168,7 +173,6 @@
           </div>
         </div>
       </footer>
-    </section>
     <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/js/standalone/selectize.min.js" type="text/javascript"></script>
