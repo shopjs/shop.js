@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/css/selectize.bootstrap3.min.css">
+    <link rel="stylesheet" type="text/css" href="style/main.css">
+    <title>shop.js sidecart bootstrap example</title>
+  </head>
+
+  <!-- class .loading shows only after the Shop.js app is loaded -->
+  <body class="loading">
+
+    <!-- Navagation bar -->
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">
+            <img alt="Droney 2.0" src="/img/drone.svg" height="40" width="40">
+          </a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li>
+            <a class="navbar-brand" href="/">Droney 2.0</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <!-- end navbar-->
+
+    <div class="container">
+      <div class="row co">
+        <h1 class="text-muted text-center">
+          Checkout
+        </h1>
+      </div>
+      <div class="row co-body">
+        <div class="checkout col-lg-8">
+          <checkout>
+            <div class="contact-info info">
+              <div class="head">
+                <h2 class="text-muted">Contact Information</h2>
+              </div>
+              <div>
+                <user-name placeholder="Name"></user-name>
+              </div>
+              <div>
+                <user-email placeholder="Email"></user-email>
+              </div>
+            </div>
+            <div class="shipping-info info">
+              <!-- bootstrapify -->
+              <h2 class="text-muted">
+                Shipping Address
+              </h2>
+              <shippingaddress-line1 placeholder="Address"></shippingaddress-line1>
+              <shippingaddress-line2 placeholder="Suite"></shippingaddress-line2>
+              <shippingaddress-city placeholder="City"></shippingaddress-city>
+              <shippingaddress-postalcode placeholder="Postal Code"></shippingaddress-postalcode>
+              <shippingaddress-state placeholder="State"></shippingaddress-state>
+              <shippingaddress-country placeholder="Country"></shippingaddress-country>
+            </div>
+            <div class="payment-info info">
+              <h2 class="text-muted">
+                Payment Information
+              </h2>
+
+              <card-number name="number" placeholder="XXXX XXXX XXXX XXXX"></card-number>
+              <card-expiry name="expiry" placeholder="MM / YY"></card-expiry>
+              <card-cvc name="cvc" placeholder="CVC"></card-cvc>
+              <!-- credit card CO pics -->
+            </div>
+
+            <!-- class="card" card image -->
+
+            <!-- stripe logo -->
+            <div class="finish info">
+              <h2 class="text-muted">
+                Almost Done
+              </h2>
+              <div class="droney-terms">
+                <terms class="checkbox">
+                  <label>I agree to Droney's
+                    <a href="#">terms and conditions</a>.</label>
+                </terms>
+              </div>
+              <button class="{ button: true, fluid: true, loading: loading || checkedOut }" type="submit">Confirm Preorder</button>
+              <div if="{ errorMessage }">
+                { errorMessage }
+              </div>
+            </div>
+          </checkout>
+        </div>
+        <div class="cart col-lg-4 info">
+          <cart>
+            <h2 class="text-muted">
+              Your Cart
+            </h2>
+            <lineitems if="{ !isEmpty() }"></lineitems>
+            <hr/>
+            <div class="promo">
+              <promocode placeholder="Promo/Coupon Code"></promocode>
+              <button class="{ btn: true, loading: applying }" onclick="{ applyPromoCode }">Apply</button>
+              <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying }">
+                Don't forget to apply your code!
+              </div>
+              <div class="promo-message" if="{ promoMessage }">
+                { promoMessage }
+              </div>
+
+              <div if="{ data.get('order.discount') > 0}">
+                Discount: { renderCurrency(data.get('order.currency'), data.get('order.discount')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+              </div>
+            </div>
+            <hr>
+            <div class="total">
+              Subtotal: { renderCurrency(data.get('order.currency'), data.get('order.subtotal')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+              <div>
+                Shipping:
+                { renderCurrency(data.get('order.currency'), data.get('order.shipping')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+              </div>
+              <div>
+                Tax ({ data.get('order.taxRate') * 100 }%):
+                { renderCurrency(data.get('order.currency'), data.get('order.tax')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+              </div>
+              <hr/>
+              <div>
+                Total:
+              </div>
+              <div>
+                { renderCurrency(data.get('order.currency'), data.get('order.total')) }&nbsp;{ data.get('order.currency').toUpperCase() }
+              </div>
+            </div>
+          </cart>
+        </div>
+      </div>
+      <div class="thanks hidden alert alert-success">
+        <h2>Thank you!</h2>
+        <p>You will receive a confirmation email soon.</p>
+
+        <p>Your order number is
+          <strong></strong>.</p>
+        <div class="share-social text-center">
+          <a href="https://facebook.com">
+            <i class="fa fa-facebook"></i>
+          </a>
+
+          <a href="https://twitter.com">
+            <i class="fa fa-twitter"></i>
+          </a>
+
+          <a href="https://plus.google.com">
+            <i class="fa fa-google-plus"></i>
+          </a>
+
+          <a href="mailto:">
+            <i class="fa fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+      <footer class="footer">
+        <div class="container">
+          <div class="row">
+            <p class="text-muted text-center">Droney 2.0
+              <i class="fa fa-facebook"></i>
+              <i class="fa fa-twitter"></i>
+              <i class="fa fa-hacker-news"></i>
+              <i class="fa fa-reddit-alien"></i>
+            </p>
+          </div>
+        </div>
+      </footer>
+    <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/js/standalone/selectize.min.js" type="text/javascript"></script>
+    <script src="../js/bundle.js"></script>
+  </body>
+</html>

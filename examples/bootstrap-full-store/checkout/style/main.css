@@ -1,0 +1,45 @@
+.info {
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.co {
+  margin-bottom: 20px;
+}
+
+.head {
+  padding-bottom: 10px;
+}
+
+input {
+  margin-bottom: 5px;
+  margin-left: 2%;
+  width: 96%;
+}
+
+h2 {
+  margin-left: 20px;
+}
+
+.footer i {
+  padding-left: 10px;
+  font-size: 1.5em;
+}
+.footer {
+  border-top: 1px solid #E7E7E7;
+  background-color: #F8F8F8;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.loading {
+  display: none;
+}
+.text-danger {
+  padding-left: 20px;
+  font-weight: bold;
+}
+
+.thanks {
+  font-size: 2.5rem;
+}
