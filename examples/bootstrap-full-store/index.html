@@ -26,7 +26,7 @@
             <a class="navbar-brand" href="#">Droney 2.0</a>
           </li>
           <li>
-            <button class="btn btn-muted navbar-btn buy-button">Get Droney 2.0!</button>
+            <button class="btn btn-muted navbar-btn shop-button">Shop</button>
           </li>
         </ul>
       </div>
@@ -37,106 +37,6 @@
 
       <!-- Droney logo -->
       <img alt="Droney 2.0" src="/img/drone.svg" height="550" width="600">
-
-      <!-- Side cart modal. Hidden until .buy-button is pressed -->
-      <div class="side-cart hidden modal right" role="dialog">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-
-            <!-- <Cart> container. Provides custom tags, and access to order/cart data. -->
-            <cart empty-message="Add something to your cart.">
-
-              <!-- Cart nav bar/buttons -->
-              <div class="nav">
-                <button class="btn btn-muted back-button">
-                  <i class="fa fa-arrow-left"></i>
-                  Back
-                </button>
-                <button class="btn btn-muted checkout-button" __disabled="{ isEmpty() }">
-                  <i class="fa fa-arrow-right"></i>
-                  Checkout
-                </button>
-              </div>
-              <!-- End Cart nav -->
-
-              <h2 class="text-muted">Your Cart</h2>
-              <div class="cart-empty-message" if="{ isEmpty() }">
-                Add something to your cart.
-              </div>
-
-              <!-- If the cart isn't empty, display the contents -->
-              <lineitems if="{ !isEmpty() }"></lineitems>
-
-              <div if="{ !isEmpty() }">
-                <hr/>
-                <div class="promo">
-                  <div>
-                    <text-control placeholder="Promo/Coupon Code" input="{ inputs['order.promoCode'] }"></text-control>
-                  </div>
-                  <div>
-                    <button class="btn" onClick="{ applyPromoCode }">Apply</button>
-                  </div>
-                  <div class="promo-message" if="{ data.get('order.promoCode') && !promoMessage && !applying}">
-                    Don't forget to apply your code!
-                  </div>
-                  <div class="promo-message" if="{ promoMessage }">
-                    { promoMessage }
-                  </div>
-                </div>
-                <div if="{ data.get('order.discount') > 0}">
-                  <div>
-                    Discount:
-                  </div>
-                  <div>
-                    { renderCurrency(data.get('order.currency'), data.get('order.discount'))}&nbsp;{data.get('order.currency').toUpperCase() }
-                  </div>
-                </div>
-                <hr>
-                <div class="invoice-line">
-                  <div>
-                    Subtotal:
-                  </div>
-                  <div>
-                    { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                  </div>
-                </div>
-                <div class="invoice-line">
-                  <div>
-                    Shipping (billed later):
-                  </div>
-                  <div>
-                    - -
-                  </div>
-                </div>
-                <div class="invoice-line">
-                  <div>
-                    Tax ({ data.get('order.taxRate') * 100 }%);
-                  </div>
-                  <div>
-                    { renderCurrency(data.get('order.currency'), data.get('order.tax'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                  </div>
-                </div>
-                <hr>
-                <div class="invoice-line">
-                  <div>
-                    Total:
-                  </div>
-                  <div>
-                    { renderCurrency(data.get('order.currency'), data.get('order.total'))}&nbsp;{ data.get('order.currency').toUpperCase() }
-                  </div>
-                </div>
-                <div class="checkout-button">
-                  <!-- Press button to go to /checkout.html -->
-                  <button class="btn btn-muted checkout-button">checkout</button>
-                </div>
-              </div>
-            </cart>
-            <!-- End Cart container -->
-
-          </div>
-        </div>
-      </div>
-      <!-- end side cart modal -->
 
       <!-- Press image strips -->
       <div class="press">
