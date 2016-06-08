@@ -1,0 +1,65 @@
+.footer {
+  border-top: 1px solid #E7E7E7;
+  padding-top: 20px;
+  background-color: #F8F8F8;
+}
+
+.press img {
+  width: calc(99.99% * 1/5 - (30px - 30px * 1/5));
+}
+
+.about p {
+  font-size: 2em;
+}
+
+.footer i {
+  padding-left: 10px;
+  font-size: 1.5em;
+}
+
+.modal.right .modal-dialog {
+  position: fixed;
+  margin: auto;
+  width: 320px;
+  height: 100%;
+  -webkit-transform: translate3d(0%, 0, 0);
+      -ms-transform: translate3d(0%, 0, 0);
+       -o-transform: translate3d(0%, 0, 0);
+          transform: translate3d(0%, 0, 0);
+}
+
+.modal.right .modal-content {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.modal.right .modal-body {
+  padding: 15px 15px 80px;
+}
+
+/*Right*/
+.modal.right .modal-dialog {
+  -webkit-transition: opacity 0.3s linear, right 0.3s ease-out;
+     -moz-transition: opacity 0.3s linear, right 0.3s ease-out;
+       -o-transition: opacity 0.3s linear, right 0.3s ease-out;
+          transition: opacity 0.3s linear, right 0.3s ease-out;
+}
+
+.modal {
+  right: 0px !important;
+  display: inline-block;
+}
+
+
+/* ----- MODAL STYLE ----- */
+.modal-content {
+  border-radius: 0;
+  border: none;
+}
+
+
+/* ----- OVERRIDE SELECTIZE Z-INDEX (quantity dropdown in sidecart) ----- */
+
+.selectize-dropdown {
+  z-index: 2000;
+}
