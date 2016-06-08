@@ -1,0 +1,19 @@
+.press img {
+  width: calc(99.99% * 1/5 - (30px - 30px * 1/5));
+}
+
+.about p {
+  font-size: 2em;
+}
+
+.footer {
+  border-top: 1px solid #E7E7E7;
+  padding-top: 20px;
+  background-color: #F8F8F8;
+}
+
+.footer i {
+  padding-left: 10px;
+  font-size: 1.5em;
+}
+
