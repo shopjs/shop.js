@@ -1,4 +1,5 @@
 Promise = require 'broken'
+Payment = require 'payment'
 requestAnimationFrame = require 'raf'
 countryUtils = require '../utils/country'
 
@@ -76,7 +77,7 @@ middleware =
 
     return new Promise (resolve, reject)->
       requestAnimationFrame ()->
-        if $('input[name=number]').hasClass('jp-card-invalid')
+        if $('input[name=number]').hasClass('jp-card-invalid') || !Payment.fns.validateCardNumber value
           reject new Error('Enter a valid card number')
         resolve value
 
@@ -90,12 +91,15 @@ middleware =
     if date.length < 2
       throw new Error('Enter a valid expiration date')
 
-    @set('payment.account.month', (date[0]).trim?())
-    @set('payment.account.year', ('' + (new Date()).getFullYear()).substr(0, 2) + (date[1]).trim?())
+    month = (date[0]).trim?()
+    year = ('' + (new Date()).getFullYear()).substr(0, 2) + (date[1]).trim?()
+
+    @set 'payment.account.month', month
+    @set 'payment.account.year', year
 
     return new Promise (resolve, reject)->
       requestAnimationFrame ()->
-        if $('input[name=expiry]').hasClass('jp-card-invalid')
+        if $('input[name=expiry]').hasClass('jp-card-invalid') || !Payment.fns.validateCardExpiry month, year
           reject new Error('Enter a valid expiration date')
         resolve value
 
@@ -105,9 +109,11 @@ middleware =
     if @('order.type') != 'stripe'
       return value
 
+    type = Payment.fns.cardType(@get 'payment.account.number')
+
     return new Promise (resolve, reject)->
       requestAnimationFrame ()->
-        if $('input[name=cvc]').hasClass('jp-card-invalid')
+        if $('input[name=cvc]').hasClass('jp-card-invalid') || !Payment.fns.validateCardCVC value, type
           reject new Error('Enter a valid CVC number')
         resolve value
 
