@@ -95,5 +95,5 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | ProfileUpdateSuccess | profile-update-success | User | fired on successful profile update   |
 | ProfileUpdateFailed | profile-update-failed | Error | fired on unsuccessful profile update |
 | ShippingAddressUpdate | shipping-address-update | n/a | fired when an order container's shipping address is updated |
-| ShippingAddressUpdateSuccess | shipping-address-update-success | fired on successful order shipping address update |
-| ShippingAddressUpdateFailed | shipping-address-update-failed | fired on unsuccessful order shipping address update |
+| ShippingAddressUpdateSuccess | shipping-address-update-success | Order | fired on successful order shipping address update|
+| ShippingAddressUpdateFailed | shipping-address-update-failed | Error | fired on unsuccessful order shipping address update |
