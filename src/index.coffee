@@ -17,6 +17,7 @@ analytics       = require './utils/analytics'
 
 Shop                = require './shop'
 Shop.Forms          = require './forms'
+Shop.Events         = Events
 Shop.Widgets        = require './widgets'
 Shop.Controls       = require './controls'
 Shop.CrowdControl   = require 'crowdcontrol'
@@ -127,6 +128,7 @@ Shop.start = (opts = {}) ->
 
   @data.set data
 
+  # load multipage partial checkout data
   checkoutUser = store.get 'checkout-user'
   checkoutShippingAddress = store.get 'checkout-shippingAddress'
 
