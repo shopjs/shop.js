@@ -7,7 +7,7 @@ Events = require '../events'
   isPostalRequired,
 } = require './middleware'
 
-module.exports = class AddressForm extends CrowdControl.Views.Form
+module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
   html: '''
     <form onsubmit={submit}>
@@ -23,32 +23,5 @@ module.exports = class AddressForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-  errorMessage: ''
-
-  init: ()->
-    if @orderData?
-      @data = @orderData
-
-    super
-
-    @on 'update', ()=>
-      if @orderData?
-        @data = @orderData
-
   _submit: ()->
-    opts =
-      id:  @data.get 'order.id'
-      shippingAddress: @data.get 'order.shippingAddress'
-
-    @errorMessage = ''
-
-    @update()
-    m.trigger Events.ShippingAddressUpdate
-    @client.account.updateOrder(opts).then((res)=>
-      m.trigger Events.ShippingAddressUpdateSuccess, res
-      @update()
-    ).catch (err)=>
-      @errorMessage = err.message
-      m.trigger Events.ShippingAddressUpdateFailed, err
-      @update()
-
+    m.trigger Events.ShippingAddressValidated
