@@ -44,8 +44,7 @@ Cart renders cart items and promotional code.
 | Field | Type | Notes |
 | --- | --- | --- |
 | promoMessage | string | current status of the promotional code |
-| order.items | LineItem[] | cart's current line items, automatically picked up
-by child container lineitems |
+| order.items | LineItem[] | cart's current line items, automatically picked up by child container lineitems |
 
 ###### Services ######
 | Service | Signature | Description |
