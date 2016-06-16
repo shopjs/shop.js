@@ -32,7 +32,7 @@ else
 
     set: (k, v)->
       k += "_" + postFix
-      keys = cookie.get('_keys') ? ''
+      keys = cookie.get('_keys' + postFix) ? ''
       cookie.set '_keys', keys += ' ' + k
       return cookie.set k, JSON.stringify(v)
 
@@ -41,7 +41,7 @@ else
       cookie.remove k
 
     clear: ->
-      keys = cookie.get('_keys') ? ''
+      keys = cookie.get('_keys' + postFix) ? ''
       ks = keys.split ' '
       for k in ks
         cookie.remove k

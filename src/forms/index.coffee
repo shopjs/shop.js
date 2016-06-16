@@ -1,5 +1,7 @@
 module.exports =
-  Checkout:         require './checkout'
+  Checkout:                 require './checkout'
+  CheckoutShippingAddress:  require './checkout-shippingaddress'
+
   Cart:             require './cart'
   LineItem:         require './lineitem'
   LineItems:        require './lineitems'

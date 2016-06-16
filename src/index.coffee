@@ -127,6 +127,17 @@ Shop.start = (opts = {}) ->
 
   @data.set data
 
+  checkoutUser = store.get 'checkout-user'
+  checkoutShippingAddress = store.get 'checkout-shippingAddress'
+
+  if checkoutUser
+    @data.set 'user', checkoutUser
+    store.remove 'checkout-user'
+
+  if checkoutShippingAddress
+    @data.set 'order.shippingAddress', checkoutShippingAddress
+    store.remove 'checkout-shippingAddress'
+
   @client = new Crowdstart.Api
     key:      opts.key
     endpoint: opts.endpoint

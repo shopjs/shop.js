@@ -23,6 +23,11 @@ module.exports =
 
   Submit:
     'submit'
+  SubmitShippingAddress:
+    'submit-shipping-address'
+  SubmitCard:
+    'submit-card'
+
   SubmitSuccess:
     'submit-success'
   SubmitFailed:

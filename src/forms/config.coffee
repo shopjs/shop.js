@@ -14,7 +14,7 @@
 module.exports =
   'user.email':       [ isRequired, isEmail ]
   'user.name':        [ isRequired, splitName ]
-  'user.password':    null
+  # 'user.password':    null
 
   'order.shippingAddress.line1':      [ isRequired ]
   'order.shippingAddress.line2':      null
