@@ -13,3 +13,5 @@ Shopping framework for JavaScript.
 [downloads-url]: http://badge.fury.io/js/shop.js
 [gitter-url]: https://gitter.im/crowdstart/chat
 [gitter-image]: https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
+
+##Containers##
