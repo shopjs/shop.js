@@ -20,7 +20,9 @@ module.exports = class CartForm extends CrowdControl.Views.Form
       @applyPromoCode()
       @update()
 
-  configs: require './config'
+  configs: [
+    'order.promoCode':      null
+  ]
 
   applying: false
   promoMessage: ''
@@ -40,7 +42,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
     @applying = true
     promoCode = promoCode.toUpperCase()
 
-    m.trigger Events.ApplyCoupon, promoCode
+    m.trigger Events.ApplyPromoCode, promoCode
     @cart.promoCode(promoCode).then(=>
       @applying = false
 
@@ -50,7 +52,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
       else
         @promoMessage = promoCode + ' Applied!'
 
-      m.trigger Events.ApplyCouponSuccess, coupon
+      m.trigger Events.ApplyPromoCodeSuccess, coupon
       @update()
     ).catch (err)=>
       store.remove 'promoCode'
@@ -62,5 +64,5 @@ module.exports = class CartForm extends CrowdControl.Views.Form
       else
         @promoMessage = 'This code is invalid.'
 
-      m.trigger Events.ApplyCouponFailed, err
+      m.trigger Events.ApplyPromoCodeFailed, err
       @update()

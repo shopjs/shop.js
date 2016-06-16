@@ -18,27 +18,22 @@ module.exports =
   ChangeFailed:
     'change-failed'
 
-  DeleteLineItem:
-    'delete-line-item'
-
   Submit:
     'submit'
   SubmitShippingAddress:
     'submit-shipping-address'
-  SubmitCard:
-    'submit-card'
 
   SubmitSuccess:
     'submit-success'
   SubmitFailed:
     'submit-failed'
 
-  ApplyCoupon:
-    'apply-coupon'
-  ApplyCouponSuccess:
-    'apply-coupon-success'
-  ApplyCouponFailed:
-    'apply-coupon-failed'
+  ApplyPromoCode:
+    'apply-promocode'
+  ApplyPromoCodeSuccess:
+    'apply-promocode-success'
+  ApplyPromoCodeFailed:
+    'apply-promocode-failed'
 
   Login:
     'login'
@@ -75,6 +70,9 @@ module.exports =
   ShippingAddressUpdateFailed:
     'shipping-address-update-failed'
 
+  # Internal
+  DeleteLineItem:
+    'delete-line-item'
   CreateReferralProgram:
     'create-referral-program'
   CreateReferralProgramSuccess:

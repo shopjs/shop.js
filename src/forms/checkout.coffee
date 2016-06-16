@@ -41,7 +41,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           console.log "checkout submit Error: #{err}"
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-          m.trigger Events.SubmitFailed, @tag
+          m.trigger Events.SubmitFailed
           @update()
 
         hasErrored = false
@@ -54,7 +54,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
             @update()
         , 200
 
-        m.trigger Events.SubmitSuccess, @tag
+        m.trigger Events.SubmitSuccess
 
       ).catch (err)=>
         @loading = false
@@ -66,7 +66,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           window?.Raven?.captureException(err)
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-        m.trigger Events.SubmitFailed, @tag
+        m.trigger Events.SubmitFailed, err
         @update()
     ).catch (err)->
       @loading = false
@@ -78,5 +78,5 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         window?.Raven?.captureException(err)
         @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-      m.trigger Events.SubmitFailed, @tag
+      m.trigger Events.SubmitFailed, err
       @update()
