@@ -18,6 +18,7 @@ Shopping framework for JavaScript.
 ##Containers##
 
 ###### All Containers Read-Only Data Fields ######
+Read-only data fields should not be modified.
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -40,13 +41,17 @@ Cart renders cart items and promotional code.
 | order.promoCode | string | promotional code (coupon) |
 | order.items | lineitem[] | |
 
+###### Read-only Data Fields ######
+| Field | Type | Notes |
+| --- | --- | --- |
+| promoMessage | string | current status of the promotional code |
+
 ###### Services ######
 | Service | Signature | Description |
 | --- | --- | --- |
 | isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
-| applyPromoCode | ()&nbsp;&#8209;>&nbsp; | issues Events.
-
-###### 
+| applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for disccount
+adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
 
 ### checkout ###
 
@@ -67,8 +72,8 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 
 | EventName | String Value | Payload | Description |
 | --- | --- | --- | --- |
-| Ready | ready | n/a |fired when containers are done initializing | 
-| SetData | set-data | ReferrentialTree | fired when data is loaded into containers | 
+| Ready | ready | n/a |fired when containers are done initializing |
+| SetData | set-data | ReferrentialTree | fired when data is loaded into containers |
 | TryUpdateItem | try-update-item | string | fired when setItem is called with the id specified |
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
@@ -79,7 +84,7 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | SubmitShippingAddress | submit-shipping-address | n/a | fired when a checkout-shippingaddress container submits |
 | SubmitSuccess | submit-success | n/a | fired on a successful checkout |
 | SubmitFailed | submit-failed | Error | fired on an unsuccessful checkout |
-| ApplyPromoCode | apply-promocode | string | fired when a cart containter submits its promo code |
+| ApplyPromoCode | apply-promocode | string | fired when a cart container submits its promo code |
 | ApplyPromoCodeSuccess | apply-promocode-success | string | fired when a promo code is applicable |
 | ApplyPromoCodeFailed | apply-promocode-failed | Error | fired when a promo code is not applicable |
 | Login | login | n/a | fired when a login container submits login credentials |
