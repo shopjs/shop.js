@@ -39,19 +39,19 @@ Cart renders cart items and promotional code.
 | Field | Type | Notes |
 | --- | --- | --- |
 | order.promoCode | string | promotional code (coupon) |
-| order.items | lineitem[] | |
 
 ###### Read-only Data Fields ######
 | Field | Type | Notes |
 | --- | --- | --- |
 | promoMessage | string | current status of the promotional code |
+| order.items | LineItem[] | cart's current line items, automatically picked up
+by child container lineitems |
 
 ###### Services ######
 | Service | Signature | Description |
 | --- | --- | --- |
 | isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
-| applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for disccount
-adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
+| applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for discount adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
 
 ### checkout ###
 
