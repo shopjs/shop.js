@@ -16,6 +16,8 @@ Shopping framework for JavaScript.
 
 ---
 ##Containers##
+Containers are Custom HTML tags that define a section of dynamic content that
+can contain other containers or controls.
 
 ###### All Containers Read-Only Data Fields ######
 Read-only data fields should not be modified.
@@ -31,9 +33,8 @@ Read-only data fields should not be modified.
 | renderCurrency | (code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code, **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
 
-
 ### cart ###
-Cart renders cart items and promotional code.
+Cart renders cart items and handles the processing of promotional codes.
 
 ###### Data Fields ######
 | Field | Type | Notes |
@@ -44,7 +45,7 @@ Cart renders cart items and promotional code.
 | Field | Type | Notes |
 | --- | --- | --- |
 | promoMessage | string | current status of the promotional code |
-| order.items | LineItem[] | cart's current line items, automatically picked up by child container lineitems |
+| applying | string | true when applyPromoCode is processing, false otherwise |
 
 ###### Services ######
 | Service | Signature | Description |
@@ -52,7 +53,20 @@ Cart renders cart items and promotional code.
 | isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
 | applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for discount adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
 
+###### Events ######
+| Event | Condition |
+| --- | --- |
+| ApplyPromoCode | fired when applyPromoCode() is called |
+| ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
+| ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result,
+promoMessage is set to the error in this case |
+
+###### Child Containers ######
+LineItems
+
 ### checkout ###
+Checkout validates the customers shipping and billing information and handles
+submitting the customer's card to complete the checkout step.
 
 ###### Data Fields ######
 | Field | Type | Notes |
@@ -62,7 +76,75 @@ Cart renders cart items and promotional code.
 | user.firstName | string | derived from user.name  |
 | user.lastName | string | derived from user.name  |
 | order.shippingAddress.line1 | string | required, street address |
-| order.shippingAddress.line2 | string | Apartment Number, Suit Number, PO Box etc. |
+| order.shippingAddress.line2 | string | apartment number, suit number, PO box etc. |
+| order.shippingAddress.city | string | required, city |
+| order.shippingAddress.isPostalRequired | string | required only if postal
+codes are required for the user's country |
+| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country
+codes |
+| payment.account.number | string | required, valid credit card number |
+| payment.account.expiry | string | required, valid expiration number in either
+MM/YYYY or MM/YY|
+| payment.account.cvc | string | required, valid card security code number |
+| terms | bool | required, whether or not the user agrees to
+the terms |
+
+###### Read-only Data Fields ######
+| Field | Type | Notes |
+| --- | --- | --- |
+| errorMessage | string | error from the last attempted checkout submit if there
+was one |
+| loading | bool | true when checkout submit is processing, false otherwise
+| checkedOut | bool | true when checkout submit is successful |
+
+###### Services ######
+| Service | Signature | Description |
+| --- | --- | --- |
+| submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's
+information |
+
+###### Events ######
+| Event | Condition |
+| --- | --- |
+| Submit | fired when submit() is called |
+| SubmitSuccess | fired when submit() gets a successful result |
+| SuccessFailed | fired when submit() gets a failed result,
+errorMessage is set to the error in this case |
+
+### checkout-shippingaddress ###
+Checkout-shippingaddress handles just the parts of checkout related to the
+customer's shipping address.  This is useful when doing a multi-page checkout
+flow with checkout-shipping on the first page and checkout on the second page.
+Shipping data will propagate from checkout-shipping to checkout.
+
+###### Data Fields ######
+| Field | Type | Notes |
+| --- | --- | --- |
+| user.email | string | required, must be an email |
+| user.name | string | required, splits on first space to populate user.firstName and user.lastName |
+| user.firstName | string | derived from user.name  |
+| user.lastName | string | derived from user.name  |
+| order.shippingAddress.line1 | string | required, street address |
+| order.shippingAddress.line2 | string | apartment number, suit number, PO box etc. |
+| order.shippingAddress.city | string | required, city |
+| order.shippingAddress.isPostalRequired | string | required only if postal
+codes are required for the user's country |
+| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country
+codes |
+
+###### Read-only Data Fields ######
+N/A
+
+###### Services ######
+| Service | Signature | Description |
+| --- | --- | --- |
+| submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information
+information |
+
+
+---
+
+## Controls ##
 
 ---
 
