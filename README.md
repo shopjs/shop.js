@@ -1,5 +1,5 @@
 # Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
-Shopping framework for JavaScript.
+A shopping framework for JavaScript built using the Container Pattern on top of (riotjs) http://riotjs.com
 
 [crowdstart]: https://crowdstart.com
 [shop.js]: https://cdn.rawgit.com/crowdstart/shop.js/v0.0.1/shop.min.js
@@ -16,14 +16,16 @@ Shopping framework for JavaScript.
 
 ---
 ##Containers and Controls##
-Containers are Custom HTML tags that define a section of dynamic content.
+Containers are Custom HTML tags that define a section of embeddable dynamic content.
 Controls are very simple composeable widgets that provide ui inputs and outputs
 for users.  Containers can contain other containers or controls.
 
 Containers also expose data fields from the global data
 [referrential tree](https://github.com/zeekay/referential) passed into
 Shop.start and services.  Data fields are accessed using the 'data' special
-variable (see below) and services which are accessed by their varaible name.
+variable (see below) and services which are accessed by their name.  Services
+are either functions or read-only fields.
+
 For example a submit() service can be invoked by calling 'submit()' directly or
 binding an event 'onclick="submit"' for invokation by user when they interact
 with an element on the page.
@@ -53,7 +55,7 @@ Be aware that the root container has no parent set.
 
 ### Services Available to All Containers ###
 
-| Service | Type | Description |
+| Name | Type | Description |
 | --- | --- | --- |
 | renderCurrency |(code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code (typically set to data.get('order.currency')), **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
@@ -65,12 +67,12 @@ Be aware that the root container has no parent set.
 The cart container renders cart items and handles the processing of promotional codes.
 
 ###### Data Fields ######
-| Field | Type | Notes |
+| Name | Type | Description |
 | --- | --- | --- |
 | order.promoCode | string | promotional code (coupon) |
 
 ###### Services ######
-| Service | Type | Description |
+| Name | Type | Description |
 | --- | --- | --- |
 | applying | string | true when applyPromoCode is processing, false otherwise |
 | applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for discount adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
@@ -78,11 +80,11 @@ The cart container renders cart items and handles the processing of promotional 
 | promoMessage | string | current status of the promotional code |
 
 ###### Events ######
-| Event | Condition |
+| Name | Description |
 | --- | --- |
 | ApplyPromoCode | fired when applyPromoCode() is called |
-| ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
 | ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result, promoMessage is set to the error in this case |
+| ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
 
 ###### Child Containers ######
 lineitems
@@ -92,7 +94,7 @@ The checkout container validates the customers shipping and billing information 
 submitting the customer's card to complete the checkout step.
 
 ###### Data Fields ######
-| Field | Type | Notes |
+| Name | Type | Description |
 | --- | --- | --- |
 | user.email | string | required, must be an email |
 | user.name | string | required, splits on first space to populate user.firstName and user.lastName |
@@ -109,7 +111,7 @@ submitting the customer's card to complete the checkout step.
 | terms | bool | required, whether or not the user agrees to the terms |
 
 ###### Services ######
-| Service | Type | Description |
+| Name | Type | Description |
 | --- | --- | --- |
 | checkedOut | bool | true when checkout submit is successful |
 | errorMessage | string | error from the last attempted checkout submit if there was one |
@@ -117,11 +119,11 @@ submitting the customer's card to complete the checkout step.
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's information |
 
 ###### Events ######
-| Event | Condition |
+| Name | Description |
 | --- | --- |
 | Submit | fired when submit() is called |
+| SuccessFailed | fired when submit() gets a failed result, errorMessage is setto the error-category in this case |
 | SubmitSuccess | fired when submit() gets a successful result |
-| SuccessFailed | fired when submit() gets a failed result, errorMessage is set to the error in this case |
 
 ### checkout-shippingaddress ###
 The checkout-shippingaddress container handles just the parts of checkout related to the
@@ -130,7 +132,7 @@ flow with checkout-shipping on the first page and checkout on the second page.
 Shipping data will propagate from checkout-shipping to checkout.
 
 ###### Data Fields ######
-| Field | Type | Notes |
+| Name | Type | Description|
 | --- | --- | --- |
 | user.email | string | required, must be an email |
 | user.name | string | required, splits on first space to populate user.firstName and user.lastName |
@@ -143,7 +145,7 @@ Shipping data will propagate from checkout-shipping to checkout.
 | order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country codes |
 
 ###### Services ######
-| Service | Type | Description |
+| Name | Type | Description |
 | --- | --- | --- |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information information |
 
@@ -168,7 +170,7 @@ n/a
 These constants can be accessed via Shop.Events.<EventName> or the string value can be used instead
 
 
-| EventName | String Value | Payload | Description |
+| Name | String Value | Payload | Description |
 | --- | --- | --- | --- |
 | ApplyPromoCode | apply-promocode | string | fired when a cart container submits its promo code |
 | ApplyPromoCodeFailed | apply-promocode-failed | Error | fired when a promo code is not applicable |
