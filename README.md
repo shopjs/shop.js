@@ -20,10 +20,18 @@ Containers are Custom HTML tags that define a section of dynamic content.
 Controls are very simple composeable widgets that provide ui inputs and outputs
 for users.  Containers can contain other containers or controls.
 
+Containers also expose data fields from the global data
+[referrential tree](https://github.com/zeekay/referential) passed into
+Shop.start and services.  Data fields are accessed using the 'data' special
+variable (see below) and services which are accessed by their varaible name.
+For example a submit() service can be invoked by calling 'submit()' directly or
+binding an event 'onclick="submit"' for invokation by user when they interact
+with an element on the page.
+
 ## Special Variables ##
 
 ### data ###
-A reference to the global data [referrential tree](https://github.com/zeekay/referential)
+A reference to the global data referrential tree.
 that's passed into the Shop.start function can be referenced from most
 containers by using the 'data' variable.
 
@@ -43,18 +51,13 @@ The 'parent' variable references the parent container of the current container.
 It is useful for using data fields or invoking services of a parent container.
 Be aware that the root container has no parent set.
 
-## All Containers Read-Only Data Fields ##
-Read-only data fields should not be modified.
+### Services Available to All Containers ###
 
-| Field | Type | Notes |
+| Service | Type | Description |
 | --- | --- | --- |
-| order.currency | string | 3 character ISO 4217 code |
-
-## All Containers Services ##
-
-| Service | Signature | Description |
-| --- | --- | --- |
-| renderCurrency | (code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code, **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
+| renderCurrency |
+(code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code**
+is a currency's ISO 4217 code (typically set to data.get('order.currency')), **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
 
 ---
@@ -68,17 +71,13 @@ The cart container renders cart items and handles the processing of promotional 
 | --- | --- | --- |
 | order.promoCode | string | promotional code (coupon) |
 
-###### Read-only Data Fields ######
-| Field | Type | Notes |
-| --- | --- | --- |
-| promoMessage | string | current status of the promotional code |
-| applying | string | true when applyPromoCode is processing, false otherwise |
-
 ###### Services ######
-| Service | Signature | Description |
+| Service | Type | Description |
 | --- | --- | --- |
-| isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
+| applying | string | true when applyPromoCode is processing, false otherwise |
 | applyPromoCode | ()&nbsp;&#8209;>&nbsp; | submits promo code for discount adjustment, issues ApplyPromoCode, ApplyPromoCodeSuccessful, and ApplyPromoCodeFailed |
+| isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
+| promoMessage | string | current status of the promotional code |
 
 ###### Events ######
 | Event | Condition |
@@ -116,17 +115,13 @@ MM/YYYY or MM/YY|
 | terms | bool | required, whether or not the user agrees to
 the terms |
 
-###### Read-only Data Fields ######
-| Field | Type | Notes |
+###### Services ######
+| Service | Type | Description |
 | --- | --- | --- |
+| checkedOut | bool | true when checkout submit is successful |
 | errorMessage | string | error from the last attempted checkout submit if there
 was one |
 | loading | bool | true when checkout submit is processing, false otherwise
-| checkedOut | bool | true when checkout submit is successful |
-
-###### Services ######
-| Service | Signature | Description |
-| --- | --- | --- |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's
 information |
 
@@ -159,11 +154,8 @@ codes are required for the user's country |
 | order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country
 codes |
 
-###### Read-only Data Fields ######
-n/a
-
 ###### Services ######
-| Service | Signature | Description |
+| Service | Type | Description |
 | --- | --- | --- |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information
 information |
@@ -174,9 +166,6 @@ The lineitems must be used inside of either a cart or orders container.
 Internally, a lineitems container simply wraps a lineitem container in a loop.
 
 ###### Data Fields ######
-n/a
-
-###### Read-only Fields ######
 n/a
 
 ###### Services ######
