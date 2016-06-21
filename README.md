@@ -36,26 +36,29 @@ to the specific item that's currently being looped over.  For example a lineitem
 
 Both lineitem and order both have a 'parent-data' variable that refer to their
 immediate parents's for composeability reasons, namely to get fields like
-'currency' relatively the parent order for rendering items.
+'currency' relatively from the parent order or user.
 
 ### parent ###
 The 'parent' variable references the parent container of the current container.
 It is useful for using data fields or invoking services of a parent container.
 Be aware that the root container has no parent set.
 
-###### All Containers Read-Only Data Fields ######
+## All Containers Read-Only Data Fields ##
 Read-only data fields should not be modified.
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | order.currency | string | 3 character ISO 4217 code |
 
-###### All Containers Services ######
+## All Containers Services ##
 
 | Service | Signature | Description |
 | --- | --- | --- |
 | renderCurrency | (code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code, **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
+
+---
+##Containers##
 
 ### cart ###
 The cart container renders cart items and handles the processing of promotional codes.
