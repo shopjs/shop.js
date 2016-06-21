@@ -15,9 +15,33 @@ Shopping framework for JavaScript.
 [gitter-image]: https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
 
 ---
-##Containers##
-Containers are Custom HTML tags that define a section of dynamic content that
-can contain other containers or controls.
+##Containers and Controls##
+Containers are Custom HTML tags that define a section of dynamic content.
+Controls are very simple composeable widgets that provide ui inputs and outputs
+for users.  Containers can contain other containers or controls.
+
+## Special Variables ##
+
+### data ###
+A reference to the global data [referrential tree](https://github.com/zeekay/referential)
+that's passed into the Shop.start function can be referenced from most
+containers by using the 'data' variable.
+
+The exceptions to this rule are lineitem and order which are used internally by
+the looping containers lineitems and orders respectively.  The 'data' in these containers refer
+to the specific item that's currently being looped over.  For example a lineitems container loops over order.items, a lineitem container's
+'data' variable refers to the specific item being looped over.
+
+### parent-data ###
+
+Both lineitem and order both have a 'parent-data' variable that refer to their
+immediate parents's for composeability reasons, namely to get fields like
+'currency' relatively the parent order for rendering items.
+
+### parent ###
+The 'parent' variable references the parent container of the current container.
+It is useful for using data fields or invoking services of a parent container.
+Be aware that the root container has no parent set.
 
 ###### All Containers Read-Only Data Fields ######
 Read-only data fields should not be modified.
@@ -34,7 +58,7 @@ Read-only data fields should not be modified.
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
 
 ### cart ###
-Cart renders cart items and handles the processing of promotional codes.
+The cart container renders cart items and handles the processing of promotional codes.
 
 ###### Data Fields ######
 | Field | Type | Notes |
@@ -62,10 +86,10 @@ Cart renders cart items and handles the processing of promotional codes.
 promoMessage is set to the error in this case |
 
 ###### Child Containers ######
-LineItems
+lineitems
 
 ### checkout ###
-Checkout validates the customers shipping and billing information and handles
+The checkout container validates the customers shipping and billing information and handles
 submitting the customer's card to complete the checkout step.
 
 ###### Data Fields ######
@@ -112,7 +136,7 @@ information |
 errorMessage is set to the error in this case |
 
 ### checkout-shippingaddress ###
-Checkout-shippingaddress handles just the parts of checkout related to the
+The checkout-shippingaddress container handles just the parts of checkout related to the
 customer's shipping address.  This is useful when doing a multi-page checkout
 flow with checkout-shipping on the first page and checkout on the second page.
 Shipping data will propagate from checkout-shipping to checkout.
@@ -133,7 +157,7 @@ codes are required for the user's country |
 codes |
 
 ###### Read-only Data Fields ######
-N/A
+n/a
 
 ###### Services ######
 | Service | Signature | Description |
@@ -141,6 +165,19 @@ N/A
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information
 information |
 
+### lineitems ###
+The lineitems container loops over and displays an order's or cart's line items (usually the order.items field).
+The lineitems must be used inside of either a cart or orders container.
+Internally, a lineitems container simply wraps a lineitem container in a loop.
+
+###### Data Fields ######
+n/a
+
+###### Read-only Fields ######
+n/a
+
+###### Services ######
+n/a
 
 ---
 
@@ -150,6 +187,7 @@ information |
 
 ## Event Reference ##
 These constants can be accessed via Shop.Events.<EventName> or the string value can be used instead
+
 
 | EventName | String Value | Payload | Description |
 | --- | --- | --- | --- |
