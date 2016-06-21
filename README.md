@@ -15,6 +15,15 @@ A shopping framework for JavaScript built using the Container Pattern on top of 
 [gitter-image]: https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
 
 ---
+
+## Shop.js Reference ##
+
+---
+
+## Examples ##
+
+---
+
 ##Containers and Controls##
 Containers are Custom HTML tags that define a section of embeddable dynamic content.
 Controls are very simple composeable widgets that provide ui inputs and outputs
