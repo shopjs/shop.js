@@ -55,9 +55,7 @@ Be aware that the root container has no parent set.
 
 | Service | Type | Description |
 | --- | --- | --- |
-| renderCurrency |
-(code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code**
-is a currency's ISO 4217 code (typically set to data.get('order.currency')), **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
+| renderCurrency |(code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code (typically set to data.get('order.currency')), **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
 
 ---
@@ -84,8 +82,7 @@ The cart container renders cart items and handles the processing of promotional 
 | --- | --- |
 | ApplyPromoCode | fired when applyPromoCode() is called |
 | ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
-| ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result,
-promoMessage is set to the error in this case |
+| ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result, promoMessage is set to the error in this case |
 
 ###### Child Containers ######
 lineitems
@@ -104,34 +101,27 @@ submitting the customer's card to complete the checkout step.
 | order.shippingAddress.line1 | string | required, street address |
 | order.shippingAddress.line2 | string | apartment number, suit number, PO box etc. |
 | order.shippingAddress.city | string | required, city |
-| order.shippingAddress.isPostalRequired | string | required only if postal
-codes are required for the user's country |
-| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country
-codes |
+| order.shippingAddress.isPostalRequired | string | required only if postal codes are required for the user's country |
+| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country codes |
 | payment.account.number | string | required, valid credit card number |
-| payment.account.expiry | string | required, valid expiration number in either
-MM/YYYY or MM/YY|
+| payment.account.expiry | string | required, valid expiration number in either MM/YYYY or MM/YY|
 | payment.account.cvc | string | required, valid card security code number |
-| terms | bool | required, whether or not the user agrees to
-the terms |
+| terms | bool | required, whether or not the user agrees to the terms |
 
 ###### Services ######
 | Service | Type | Description |
 | --- | --- | --- |
 | checkedOut | bool | true when checkout submit is successful |
-| errorMessage | string | error from the last attempted checkout submit if there
-was one |
-| loading | bool | true when checkout submit is processing, false otherwise
-| submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's
-information |
+| errorMessage | string | error from the last attempted checkout submit if there was one |
+| loading | bool | true when checkout submit is processing, false otherwise |
+| submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's information |
 
 ###### Events ######
 | Event | Condition |
 | --- | --- |
 | Submit | fired when submit() is called |
 | SubmitSuccess | fired when submit() gets a successful result |
-| SuccessFailed | fired when submit() gets a failed result,
-errorMessage is set to the error in this case |
+| SuccessFailed | fired when submit() gets a failed result, errorMessage is set to the error in this case |
 
 ### checkout-shippingaddress ###
 The checkout-shippingaddress container handles just the parts of checkout related to the
@@ -149,16 +139,13 @@ Shipping data will propagate from checkout-shipping to checkout.
 | order.shippingAddress.line1 | string | required, street address |
 | order.shippingAddress.line2 | string | apartment number, suit number, PO box etc. |
 | order.shippingAddress.city | string | required, city |
-| order.shippingAddress.isPostalRequired | string | required only if postal
-codes are required for the user's country |
-| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country
-codes |
+| order.shippingAddress.isPostalRequired | string | required only if postal codes are required for the user's country |
+| order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country codes |
 
 ###### Services ######
 | Service | Type | Description |
 | --- | --- | --- |
-| submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information
-information |
+| submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information information |
 
 ### lineitems ###
 The lineitems container loops over and displays an order's or cart's line items (usually the order.items field).
@@ -183,33 +170,34 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 
 | EventName | String Value | Payload | Description |
 | --- | --- | --- | --- |
+| ApplyPromoCode | apply-promocode | string | fired when a cart container submits its promo code |
+| ApplyPromoCodeFailed | apply-promocode-failed | Error | fired when a promo code is not applicable |
+| ApplyPromoCodeSuccess | apply-promocode-success | string | fired when a promo code is applicable |
+| Change | change | string, any | fired when any data field changes with the string name and original value |
+| ChangeFailed | change-failed | string, any |  fired when any data field change fails with the string name and original value |
+| ChangeSuccess | change-success | string, any | fired when any data field change finishes with the string name and new value |
+| Login | login | n/a | fired when a login container submits login credentials |
+| LoginFailed | login-failed | Error | fired when login is unsuccessful |
+| LoginSuccess | login-success | AccessToken | fired when login is successful with accessToken |
+| ProfileLoad | profile-load | n/a | fired when profile is initialized |  |
+| ProfileLoadFailed | profile-load-failed | Error | fired when profile is unsuccessfully loaded |
+| ProfileLoadSuccess |profile-load-success | User | fired when profile is successfully loaded |
+| ProfileUpdate | profile-update | n/a | fired when profile is submitted |
+| ProfileUpdateFailed | profile-update-failed | Error | fired on unsuccessful profile update |
+| ProfileUpdateSuccess | profile-update-success | User | fired on successful profile update   |
 | Ready | ready | n/a |fired when containers are done initializing |
+| Register | register | n/a | fired when a register container submits registration data |
+| RegisterFailed | register-failed | Error | fired when a registration is unsuccessful |
+| RegisterSuccess | register-success | RegistrationResponse | fired when a registration is successful |
 | SetData | set-data | ReferrentialTree | fired when data is loaded into containers |
+| ShippingAddressUpdateFailed | shipping-address-update-failed | Error | fired on unsuccessful order shipping address update |
+| ShippingAddressUpdate | shipping-address-update | n/a | fired when an order container's shipping address is updated |
+| ShippingAddressUpdateSuccess | shipping-address-update-success | Order | fired on successful order shipping address update|
+| Submit | submit | n/a | fired when a checkout container issues a checkout command to the backend |
+| SubmitFailed | submit-failed | Error | fired on an unsuccessful checkout |
+| SubmitShippingAddress | submit-shipping-address | n/a | fired when a checkout-shippingaddress container submits |
+| SubmitSuccess | submit-success | n/a | fired on a successful checkout |
 | TryUpdateItem | try-update-item | string | fired when setItem is called with the id specified |
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
-| Change | change | string, any | fired when any data field changes with the string name and original value |
-| ChangeSuccess | change-success | string, any | fired when any data field change finishes with the string name and new value |
-| ChangeFailed | change-failed | string, any |  fired when any data field change fails with the string name and original value |
-| Submit | submit | n/a | fired when a checkout container issues a checkout command to the backend |
-| SubmitShippingAddress | submit-shipping-address | n/a | fired when a checkout-shippingaddress container submits |
-| SubmitSuccess | submit-success | n/a | fired on a successful checkout |
-| SubmitFailed | submit-failed | Error | fired on an unsuccessful checkout |
-| ApplyPromoCode | apply-promocode | string | fired when a cart container submits its promo code |
-| ApplyPromoCodeSuccess | apply-promocode-success | string | fired when a promo code is applicable |
-| ApplyPromoCodeFailed | apply-promocode-failed | Error | fired when a promo code is not applicable |
-| Login | login | n/a | fired when a login container submits login credentials |
-| LoginSuccess | login-success | AccessToken | fired when login is successful with accessToken |
-| LoginFailed | login-failed | Error | fired when login is unsuccessful |
-| Register | register | n/a | fired when a register container submits registration data |
-| RegisterSuccess | register-success | RegistrationResponse | fired when a registration is successful |
-| RegisterFailed | register-failed | Error | fired when a registration is unsuccessful |
-| ProfileLoad | profile-load | n/a | fired when profile is initialized |  |
-| ProfileLoadSuccess |profile-load-success | User | fired when profile is successfully loaded |
-| ProfileLoadFailed | profile-load-failed | Error | fired when profile is unsuccessfully loaded |
-| ProfileUpdate | profile-update | n/a | fired when profile is submitted |
-| ProfileUpdateSuccess | profile-update-success | User | fired on successful profile update   |
-| ProfileUpdateFailed | profile-update-failed | Error | fired on unsuccessful profile update |
-| ShippingAddressUpdate | shipping-address-update | n/a | fired when an order container's shipping address is updated |
-| ShippingAddressUpdateSuccess | shipping-address-update-success | Order | fired on successful order shipping address update|
-| ShippingAddressUpdateFailed | shipping-address-update-failed | Error | fired on unsuccessful order shipping address update |
+
