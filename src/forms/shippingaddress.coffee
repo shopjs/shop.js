@@ -23,5 +23,32 @@ module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
+  errorMessage: ''
+
+  init: ()->
+    if @parentData?
+      @data = @parentData
+
+    super
+
+    @on 'update', ()=>
+      if @parentData?
+        @data = @parentData
+
   _submit: ()->
-    m.trigger Events.ShippingAddressValidated
+    opts =
+      id:  @data.get 'order.id'
+      shippingAddress: @data.get 'order.shippingAddress'
+
+    @errorMessage = ''
+
+    @update()
+    m.trigger Events.ShippingAddressUpdate
+    @client.account.updateOrder(opts).then((res)=>
+      m.trigger Events.ShippingAddressUpdateSuccess, res
+      @update()
+    ).catch (err)=>
+      @errorMessage = err.message
+      m.trigger Events.ShippingAddressUpdateFailed, err
+      @update()
+
