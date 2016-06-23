@@ -225,6 +225,12 @@ on the skins available here.
 | read-only | set to anything to make the select readOnly |
 | selectOptions | a map of values to names to render as the select options |
 
+###### Variants ######
+| Name | Description |
+| --- | --- |
+| quantity | lookup = quantity, options are a list of numbers from 0 to 99, use in lineitem |
+| shippingaddress-country | lookup = order.shippingaddress-country, options are a list of countries |
+
 ### text-control ###
 The text control creates and binds a text-input.
 
