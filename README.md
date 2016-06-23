@@ -95,9 +95,6 @@ The cart container renders cart items and handles the processing of promotional 
 | ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result, promoMessage is set to the error in this case |
 | ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
 
-###### Child Containers ######
-lineitems
-
 ### checkout ###
 The checkout container validates the customers shipping and billing information and handles
 submitting the customer's card to complete the checkout step.
@@ -158,10 +155,19 @@ Shipping data will propagate from checkout-shipping to checkout.
 | --- | --- | --- |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information information |
 
+###### Events ######
+n/a
+
 ### lineitems ###
 The lineitems container loops over and displays an order's or cart's line items (usually the order.items field).
 The lineitems must be used inside of either a cart or orders container.
 Internally, a lineitems container simply wraps a lineitem container in a loop.
+
+Template data inside of a lineitems container's HTML tags are passed onto
+each lineitem container and will be transcluded in lineitem.
+
+It is best to use this container inside another container instead of at the top
+level so it can be rendered along side other order information.
 
 ###### Data Fields ######
 n/a
@@ -169,9 +175,82 @@ n/a
 ###### Services ######
 n/a
 
+### lineitem ###
+The lineitem container exposes an item and records quantity data. It is not used
+directly in most cases. It should be used implicitly as part of the lineitems
+container instead. When using lineitem containers directly, parentData (via parent-data
+attribute, e.g. <lineitem parent-data="{ data.get('order') }" /> ) must be set to the order data.
+
+###### Data Fields ######
+| Name | Type | Description |
+| --- | --- | --- |
+| quantity | integer | required, number of a particular item |
+
+###### Services ######
+n/a
+
+###### Events ######
+n/a
+
 ---
 
 ## Controls ##
+
+### checkbox-control ###
+The checkbox control creates and binds a checkbox.
+
+###### Attributes ######
+
+| Name | Description |
+| --- | --- |
+| lookup | data field to bind to e.g. <checkbox-control lookup="{ terms }"/> |
+
+###### Variants ######
+
+| Name | Description |
+| --- | --- |
+| terms | lookup = terms |
+
+### select-control ###
+The select control creates and binds a platform-agnostic select based on
+[selectize.js](http://selectize.github.io/selectize.js/).  It is simplist to base custom styling
+on the skins available here.
+
+###### Attributes ######
+
+| Name | Description |
+| --- | --- |
+| lookup | data field to bind to e.g. <select-control lookup="{ order.shippingaddress.country }"/> |
+| placeholder | input's placeholder text |
+| read-only | set to anything to make the select readOnly |
+| selectOptions | a map of values to names to render as the select options |
+
+### text-control ###
+The text control creates and binds a text-input.
+
+###### Attributes ######
+
+| Name | Description |
+| --- | --- |
+| auto-complete | on to enable input auto-complete or off to disable it |
+| lookup | data field to bind to e.g. <text-control lookup="{ user.name }"/> |
+| placeholder | input's placeholder text |
+| type | input's type |
+
+###### Variants ######
+
+| Name | Description |
+| --- | --- |
+| card-number | lookup = payment.account.number, formats as card number |
+| card-expiry | lookup = payment.account.expiry, formats as a date |
+| card-cvc | lookup = payment.account.cvc, formats as a CVC |
+| promocode | lookup = order.promoCode |
+| shippingaddress-line1 | lookup = order.shippingAddress.line1 |
+| shippingaddress-line2 | lookup = order.shippingAddress.line2 |
+| shippingaddress-city | lookup = order.shippingAddress.city |
+| shippingaddress-postalcode | lookup = order.shippingAddress.postalCode |
+| shippingaddress-state | lookup = order.shippingAddress.state |
+| user-name | lookup = user.email |
 
 ---
 

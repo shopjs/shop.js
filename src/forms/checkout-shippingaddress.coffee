@@ -34,14 +34,7 @@ module.exports = class CheckoutShippingAddressForm extends CrowdControl.Views.Fo
     'order.shippingAddress.country':    [ isRequired ]
 
   init: ()->
-    if @orderData?
-      @data = @orderData
-
     super
-
-    @on 'update', ()=>
-      if @orderData?
-        @data = @orderData
 
   _submit: ()->
     m.trigger Events.SubmitShippingAddress
