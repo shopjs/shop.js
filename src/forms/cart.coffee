@@ -20,9 +20,8 @@ module.exports = class CartForm extends CrowdControl.Views.Form
       @applyPromoCode()
       @update()
 
-  configs: [
-    'order.promoCode':      null
-  ]
+  configs:
+    'order.promoCode': null
 
   applying: false
   promoMessage: ''
