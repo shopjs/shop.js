@@ -17,6 +17,7 @@ analytics       = require './utils/analytics'
 
 Shop                = require './shop'
 Shop.Forms          = require './forms'
+Shop.Events         = Events
 Shop.Widgets        = require './widgets'
 Shop.Controls       = require './controls'
 Shop.CrowdControl   = require 'crowdcontrol'
@@ -126,6 +127,18 @@ Shop.start = (opts = {}) ->
         extend data[k], opts[k]
 
   @data.set data
+
+  # load multipage partial checkout data
+  checkoutUser = store.get 'checkout-user'
+  checkoutShippingAddress = store.get 'checkout-shippingAddress'
+
+  if checkoutUser
+    @data.set 'user', checkoutUser
+    store.remove 'checkout-user'
+
+  if checkoutShippingAddress
+    @data.set 'order.shippingAddress', checkoutShippingAddress
+    store.remove 'checkout-shippingAddress'
 
   @client = new Crowdstart.Api
     key:      opts.key

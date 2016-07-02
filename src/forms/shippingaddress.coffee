@@ -7,7 +7,7 @@ Events = require '../events'
   isPostalRequired,
 } = require './middleware'
 
-module.exports = class AddressForm extends CrowdControl.Views.Form
+module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
   html: '''
     <form onsubmit={submit}>
@@ -26,14 +26,14 @@ module.exports = class AddressForm extends CrowdControl.Views.Form
   errorMessage: ''
 
   init: ()->
-    if @orderData?
-      @data = @orderData
+    if @parentData?
+      @data = @parentData
 
     super
 
     @on 'update', ()=>
-      if @orderData?
-        @data = @orderData
+      if @parentData?
+        @data = @parentData
 
   _submit: ()->
     opts =
