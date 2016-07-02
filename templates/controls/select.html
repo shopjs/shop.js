@@ -1,0 +1,8 @@
+<select id="{ input.name }" style="{ style }" name="{ input.name }" onchange="{ change }" onblur="{ change }" value="{ model.value }" data-placeholder="{ placeholder }">
+  <option if="{ model.placeholder }">
+    <option each="{ value, name in options() }" value="{value}" __selected="{ this.parent.model.value == value }">{name}</option>
+  </option>
+  <optgroup if="{ tags &amp;&amp; isCustom() }" label="Custom Events">
+    <option value="{ model.value }" selected="true">{ model.value }</option>
+  </optgroup>
+</select>
