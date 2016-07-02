@@ -7,20 +7,20 @@ refer = require 'referential'
 module.exports = class OrderForm extends CrowdControl.Views.Form
   tag:  'order'
   html: require '../../templates/forms/order'
-  orderData: null
+  parentData: null
 
   init: ()->
     super
-    @orderData = refer {}
+    @parentData = refer {}
 
     @on 'update', ()=>
       if @data?
-        @orderData.set 'order', @data.get()
+        @parentData.set 'order', @data.get()
         items = @data.get 'items'
         if !items?
           return
         for item, i in items
-          @orderData.set 'order.items.' + i + '.locked', true
+          @parentData.set 'order.items.' + i + '.locked', true
 
   isEmpty: ()->
     return @data.get('items').length == 0
