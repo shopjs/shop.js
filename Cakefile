@@ -5,6 +5,8 @@ use 'cake-publish'
 
 fs        = require 'mz/fs'
 requisite = require 'requisite'
+glob      = require 'glob'
+path      = require 'path'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -24,6 +26,17 @@ task 'build', 'build project', ->
 
   js = bundle.toString stripDebug: true
   yield fs.writeFile 'shop.js', js, 'utf8'
+  glob 'templates/**/*.jade', (err, files) ->
+    for file in files
+      do (file) ->
+        console.log file
+        dst = file.replace /\.jade/, '.js'
+                  .replace /^/, 'lib/'
+        console.log dst
+        requisite.bundle sourceMap: false, bare: true, naked: true, entry: file, (err, js) ->
+          exec "mkdir -p #{path.dirname dst}", (err, sout, serr) ->
+            console.log err, sout, serr, js.toString()
+            fs.writeFile dst, js.toString()
 
 task 'build-min', 'build project', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
