@@ -5,8 +5,8 @@ use 'cake-publish'
 
 fs        = require 'mz/fs'
 requisite = require 'requisite'
-glob = require 'glob'
-path = require 'path'
+glob      = require 'glob'
+path      = require 'path'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -18,23 +18,22 @@ task 'clean', 'clean project', ->
 
 task 'build', 'build project', ->
   # Compile src/ to lib/
-  yield exec 'coffee -bcm -o lib/ src/'
+  #yield exec 'coffee -bcm -o lib/ src/'
 
   # Create shop.js bundle
-  bundle = yield requisite.bundle
-    entry:      'src/index.coffee'
+  #bundle = yield requisite.bundle
+  #  entry:      'src/index.coffee'
 
-  js = bundle.toString stripDebug: true
-  yield fs.writeFile 'shop.js', js, 'utf8'
-
-  glob 'src/templates/**/*.jade', (err, files) ->
+  #js = bundle.toString stripDebug: true
+  #yield fs.writeFile 'shop.js', js, 'utf8'
+  glob 'templates/**/*.jade', (err, files) ->
     for file in files
       do (file) ->
         console.log file
         dst = file.replace /\.jade/, '.js'
-                  .replace /^src\//, 'lib/'
+                  .replace /^/, 'lib/'
         console.log dst
-        requisite.bundle sourceMap: false, bare:true, naked: true, entry: file, (err, js) ->
+        requisite.bundle sourceMap: false, bare: true, naked: true, entry: file, (err, js) ->
           exec "mkdir -p #{path.dirname dst}", (err, sout, serr) ->
             console.log err, sout, serr, js.toString()
             fs.writeFile dst, js.toString()
