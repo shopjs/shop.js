@@ -18,14 +18,14 @@ task 'clean', 'clean project', ->
 
 task 'build', 'build project', ->
   # Compile src/ to lib/
-  yield exec 'coffee -bcm -o lib/ src/'
+  #yield exec 'coffee -bcm -o lib/ src/'
 
   # Create shop.js bundle
-  bundle = yield requisite.bundle
-    entry:      'src/index.coffee'
+  #bundle = yield requisite.bundle
+  #  entry:      'src/index.coffee'
 
-  js = bundle.toString stripDebug: true
-  yield fs.writeFile 'shop.js', js, 'utf8'
+  #js = bundle.toString stripDebug: true
+  #yield fs.writeFile 'shop.js', js, 'utf8'
   glob 'templates/**/*.jade', (err, files) ->
     for file in files
       do (file) ->
