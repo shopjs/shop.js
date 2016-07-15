@@ -29,6 +29,8 @@ $(window).load(() => {
   //
   const m = Shop.start(require('./settings'));
 
+  var $shopButton = $('.shop-button');
+
   //
   // The 'submit-success' event is sent when the user successfully submits a payment and it is successfully charged.
   //
@@ -54,7 +56,7 @@ $(window).load(() => {
   //
   // When the user clicks the .checkout-btn, redirect the user to the checkout page.
   //
-  $checkoutButton.on('click', event => {
-    window.location = 'checkout';
+  $shopButton.on('click', event => {
+    window.location = 'shop';
   })
 });

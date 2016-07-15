@@ -3,7 +3,7 @@ require '../utils/patches'
 
 module.exports = class CartCounterForm extends CrowdControl.Views.View
   tag:  'cart-counter'
-  html: require '../templates/widgets/cart-counter'
+  html: require '../../templates/widgets/cart-counter.jade'
 
   init: ()->
     super
