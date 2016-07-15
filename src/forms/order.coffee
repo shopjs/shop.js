@@ -6,7 +6,7 @@ refer = require 'referential'
 
 module.exports = class OrderForm extends CrowdControl.Views.Form
   tag:  'order'
-  html: require '../../templates/forms/order'
+  html: require '../../templates/forms/order.jade'
   parentData: null
 
   init: ()->
