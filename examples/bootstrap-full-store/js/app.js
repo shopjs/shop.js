@@ -29,6 +29,9 @@ $(window).load(() => {
   //
   const m = Shop.start(require('./settings'));
 
+  //
+  // .shop-button directs the user to the /shop/index.html page from the index page.
+  //
   var $shopButton = $('.shop-button');
 
   //
@@ -54,7 +57,7 @@ $(window).load(() => {
   }
 
   //
-  // When the user clicks the .checkout-btn, redirect the user to the checkout page.
+  // When the $shopButton is clicked, redirect the user to /shop/index.html
   //
   $shopButton.on('click', event => {
     window.location = 'shop';
