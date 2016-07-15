@@ -30,7 +30,15 @@ $(window).load(() => {
   //
   const m = Shop.start(require('./settings'));
 
+  //
+  // .shop-button directs the user to the /shop/index.html page from the index page.
+  //
   var $shopButton = $('.shop-button');
+
+  //
+  // .checkout-button directs the user to the /checkout/index.html page from the shop page.
+  //
+  var $checkoutButton = $('.checkout-button');
 
   //
   // The 'submit-success' event is sent when the user successfully submits a payment and it is successfully charged.
@@ -55,11 +63,18 @@ $(window).load(() => {
   }
 
   //
-  // When the user clicks the .checkout-btn, redirect the user to the checkout page.
+  // When the $shopButton is clicked, redirect the user to /shop/index.html
   //
   $shopButton.on('click', event => {
-    window.location = 'shop';
-  })
+    window.location = '/shop';
+  });
+
+  //
+  // When the $checkoutButton is clicked, redirect the user to /checkout/index.html
+  //
+  $checkoutButton.on('click', event => {
+    window.location = '/checkout';
+  });
 });
 
 },{"./settings":2,"shop.js":40}],2:[function(require,module,exports){
