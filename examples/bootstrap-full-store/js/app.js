@@ -30,14 +30,15 @@ $(window).load(() => {
   const m = Shop.start(require('./settings'));
 
   //
-  // .shop-button directs the user to the /shop/index.html page from the index page.
+  // The 'ready' event is sent when Shop.js has finished its first rendering and all the dynamic content is loaded
   //
-  var $shopButton = $('.shop-button');
+  m.on('ready', () => {
+    //
+    // Remove the content loading class to hide the loading spinner and show the dynamic content.
+    //
+    $('.loading').removeClass('loading');
+  });
 
-  //
-  // .checkout-button directs the user to the /checkout/index.html page from the shop page.
-  //
-  var $checkoutButton = $('.checkout-button');
 
   //
   // The 'submit-success' event is sent when the user successfully submits a payment and it is successfully charged.
@@ -60,6 +61,16 @@ $(window).load(() => {
       window.location = '/';
     }
   }
+
+  //
+  // .shop-button directs the user to the /shop/index.html page from the index page.
+  //
+  var $shopButton = $('.shop-button');
+
+  //
+  // .checkout-button directs the user to the /checkout/index.html page from the shop page.
+  //
+  var $checkoutButton = $('.checkout-button');
 
   //
   // When the $shopButton is clicked, redirect the user to /shop/index.html
