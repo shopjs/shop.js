@@ -35,6 +35,11 @@ $(window).load(() => {
   var $shopButton = $('.shop-button');
 
   //
+  // .checkout-button directs the user to the /checkout/index.html page from the shop page.
+  //
+  var $checkoutButton = $('.checkout-button');
+
+  //
   // The 'submit-success' event is sent when the user successfully submits a payment and it is successfully charged.
   //
   m.on('submit-success', () => {
@@ -60,6 +65,13 @@ $(window).load(() => {
   // When the $shopButton is clicked, redirect the user to /shop/index.html
   //
   $shopButton.on('click', event => {
-    window.location = 'shop';
-  })
+    window.location = '/shop';
+  });
+
+  //
+  // When the $checkoutButton is clicked, redirect the user to /checkout/index.html
+  //
+  $checkoutButton.on('click', event => {
+    window.location = '/checkout';
+  });
 });
