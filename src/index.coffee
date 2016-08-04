@@ -101,6 +101,7 @@ Shop.start = (opts = {}) ->
   referrer = getReferrer() ? opts.order?.referrer
 
   items = store.get 'items'
+  cartId = store.get 'cartId'
 
   @data = refer
     taxRates:       opts.taxRates || []
@@ -118,6 +119,8 @@ Shop.start = (opts = {}) ->
       subtotal: 0
       total: 0
       items: items ? []
+      cartId: cartId ? null
+
   data = @data.get()
   for k, v of opts
     if opts[k]
@@ -145,6 +148,9 @@ Shop.start = (opts = {}) ->
     endpoint: opts.endpoint
 
   @cart = new Cart @client, @data
+
+  @cart.onCart = ()=>
+    store.set 'cartId', @data.get 'order.cartId'
 
   tagNames = []
   for k, v of Shop.Forms
@@ -208,6 +214,9 @@ Shop.start = (opts = {}) ->
 
 waits           = 0
 itemUpdateQueue = []
+
+Shop.initCart = ()->
+  @cart.initCart()
 
 Shop.setItem = (id, quantity, locked=false)->
   m.trigger Events.TryUpdateItem, id
