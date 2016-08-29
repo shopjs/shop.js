@@ -39,6 +39,7 @@ Shop.use = (templates) ->
 #   currency:           string (3 letter ISO code)
 #   taxRate:            number (decimal) taxRate, overridden by opts.taxRates
 #   shippingRate:       number (per item cost in cents or base unit for zero decimal currencies)
+#   checkoutUrl:        string checkoutUrl for marketing emails
 # }
 #
 # Format of opts.taxRates
@@ -69,7 +70,7 @@ Shop.isEmpty = ->
   items = @data.get 'order.items'
   return items.length == 0
 
-getReferrer = ->
+getQueries = ()->
   search = /([^&=]+)=?([^&]*)/g
   q = window.location.href.split('?')[1]
   qs = {}
@@ -84,11 +85,17 @@ getReferrer = ->
       catch err
       qs[k] = v
 
+  return qs
+
+getReferrer = (qs)->
   if qs.referrer?
     store.set 'referrer', qs.referrer
     return q.referrer
   else
     return store.get 'referrer'
+
+getMCIds = (qs)->
+  return [qs['mc_eid'], qs['mc_cid']]
 
 Shop.start = (opts = {}) ->
   unless opts.key?
@@ -98,7 +105,8 @@ Shop.start = (opts = {}) ->
   Shop.Widgets.register()
   Shop.Controls.register()
 
-  referrer = getReferrer() ? opts.order?.referrer
+  queries = getQueries()
+  referrer = getReferrer(queries) ? opts.order?.referrer
 
   items = store.get 'items'
   cartId = store.get 'cartId'
@@ -151,6 +159,17 @@ Shop.start = (opts = {}) ->
 
   @cart.onCart = ()=>
     store.set 'cartId', @data.get 'order.cartId'
+    [_, mcCId] = getMCIds queries
+    @cart._cartUpdate
+      mailchimp:
+        campaignId:     mcCId
+        checkoutUrl:    opts.config?.checkoutUrl
+
+    # try get userId
+    @client.account.get().then (res)=>
+      @cart._cartUpdate
+        userId:     res.email
+        userEmail:  res.email
 
   tagNames = []
   for k, v of Shop.Forms

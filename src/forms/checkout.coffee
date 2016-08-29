@@ -17,6 +17,14 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
   configs: require './config'
 
+  init: ()->
+    super
+
+    m.on Events.ChangeSuccess, (name, value)=>
+      if name == 'user.email'
+        @cart._cartUpdate
+          userEmail:    value
+
   _submit: (event)->
     if @loading || @checkedOut
       return
@@ -27,9 +35,14 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     @errorMessage = ''
 
     @update()
+    userEmail = ''
     @client.account.exists(@data.get 'user.email').then((res)=>
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
+
+        userEmail = @data.get 'user.email'
+        @cart._cartUpdate
+          userId: userEmail
 
       @update()
       @cart.checkout().then((pRef)=>
@@ -41,7 +54,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           console.log "checkout submit Error: #{err}"
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-          m.trigger Events.SubmitFailed
+          m.trigger Events.SubmitFailed, err
           @update()
 
         hasErrored = false
