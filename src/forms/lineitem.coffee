@@ -5,7 +5,7 @@ Events = require '../events'
 
 module.exports = class LineItemForm extends CrowdControl.Views.Form
   tag:  'lineitem'
-  html: require '../../templates/forms/lineitem'
+  html: require '../../templates/forms/lineitem.jade'
   configs:
     'quantity': null
 

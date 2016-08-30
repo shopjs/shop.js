@@ -3,7 +3,7 @@ states = require('../data/states')
 
 module.exports = class StateSelect extends Select
   tag: 'state-select-control'
-  html: require '../../templates/controls/state-select'
+  html: require '../../templates/controls/state-select.jade'
   options: ->
     return states.data
   countryField: 'order.shippingAddress.country'
