@@ -23,7 +23,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     m.on Events.ChangeSuccess, (name, value)=>
       if name == 'user.email'
         @cart._cartUpdate
-          userEmail:    value
+          email:    value
 
   _submit: (event)->
     if @loading || @checkedOut
@@ -35,14 +35,17 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     @errorMessage = ''
 
     @update()
-    userEmail = ''
+    email = ''
     @client.account.exists(@data.get 'user.email').then((res)=>
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
 
-        userEmail = @data.get 'user.email'
+        email = @data.get 'user.email'
         @cart._cartUpdate
-          userId: userEmail
+          userId:   email
+          email:    email
+
+      @data.set 'order.email', email
 
       @update()
       @cart.checkout().then((pRef)=>

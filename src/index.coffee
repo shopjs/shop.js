@@ -157,19 +157,22 @@ Shop.start = (opts = {}) ->
 
   @cart = new Cart @client, @data
 
-  @cart.onCart = ()=>
+  @cart.onCart = =>
     store.set 'cartId', @data.get 'order.cartId'
     [_, mcCId] = getMCIds queries
     @cart._cartUpdate
       mailchimp:
         campaignId:     mcCId
         checkoutUrl:    opts.config?.checkoutUrl
+      currency: @data.get 'order.currency'
 
     # try get userId
-    @client.account.get().then (res)=>
+    @client.account.get().then((res)=>
       @cart._cartUpdate
-        userId:     res.email
-        userEmail:  res.email
+        userId: res.email
+        email:  res.email
+    ).catch ->
+      # ignore error, does not matter
 
   tagNames = []
   for k, v of Shop.Forms
@@ -187,6 +190,10 @@ Shop.start = (opts = {}) ->
   @cart.onUpdate = (item)=>
     items = @data.get 'order.items'
     store.set 'items', items
+    @cart._cartUpdate
+      tax: @data.get 'order.tax'
+      total: @data.get 'order.total'
+
     if item?
       m.trigger Events.UpdateItem, item
     riot.update()
