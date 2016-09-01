@@ -159,12 +159,16 @@ Shop.start = (opts = {}) ->
 
   @cart.onCart = =>
     store.set 'cartId', @data.get 'order.cartId'
-    [_, mcCId] = getMCIds queries
     @cart._cartUpdate
       mailchimp:
-        campaignId:     mcCId
         checkoutUrl:    opts.config?.checkoutUrl
       currency: @data.get 'order.currency'
+
+    [_, mcCId] = getMCIds queries
+    if mcCId
+      @cart._cartUpdate
+        mailchimp:
+          campaignId:     mcCId
 
     # try get userId
     @client.account.get().then((res)=>
