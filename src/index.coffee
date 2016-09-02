@@ -90,7 +90,7 @@ getQueries = ()->
 getReferrer = (qs)->
   if qs.referrer?
     store.set 'referrer', qs.referrer
-    return q.referrer
+    return qs.referrer
   else
     return store.get 'referrer'
 
