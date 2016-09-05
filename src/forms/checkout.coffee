@@ -24,6 +24,9 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
       if name == 'user.email'
         @cart._cartUpdate
           email:    value
+          mailchimp:
+            checkoutUrl: @data.get 'order.checkoutUrl'
+          currency: @data.get 'order.currency'
 
   _submit: (event)->
     if @loading || @checkedOut
@@ -37,13 +40,20 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
     @update()
     email = ''
     @client.account.exists(@data.get 'user.email').then((res)=>
+
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
 
-        email = @data.get 'user.email'
-        @cart._cartUpdate
-          userId:   email
-          email:    email
+        email =         @data.get 'user.email'
+
+        cart =
+          userId: email
+          email:  email
+          mailchimp:
+            checkoutUrl: @data.get 'order.checkoutUrl'
+          currency: @data.get 'order.currency'
+
+        @cart._cartUpdate cart
 
       @data.set 'order.email', email
 
