@@ -199,6 +199,8 @@ Shop.start = (opts = {}) ->
 
     if item?
       m.trigger Events.UpdateItem, item
+
+    @cart.invoice()
     riot.update()
 
   ps = []
