@@ -9,7 +9,7 @@ refer           = require 'referential'
 store           = require './utils/store'
 {Cart}          = require 'commerce.js'
 
-Crowdstart      = require 'hanzo.js'
+window.Crowdstart      = require 'hanzo.js'
 
 m               = require './mediator'
 Events          = require './events'
@@ -152,7 +152,7 @@ Shop.start = (opts = {}) ->
     @data.set 'order.shippingAddress', checkoutShippingAddress
     store.remove 'checkout-shippingAddress'
 
-  @client = new Crowdstart.Api
+  @client = new window.Crowdstart.Api
     key:      opts.key
     endpoint: opts.endpoint
 
@@ -263,4 +263,4 @@ Shop.setItem = (id, quantity, locked=false)->
 Shop.getItem = (id)->
   return @cart.get id
 
-module.exports = Crowdstart.Shop = Shop
+module.exports = window.Crowdstart.Shop = Shop
