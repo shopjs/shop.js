@@ -32,6 +32,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       lastName:         @data.get 'user.lastName'
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
+      referrerId:       @data.get 'order.referrerId'
 
     @errorMessage = ''
 
