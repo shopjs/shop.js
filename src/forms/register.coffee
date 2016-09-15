@@ -44,21 +44,23 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       @update()
 
       if @immediateLogin
-        opts =
-          email:    @data.get 'user.email'
-          password: @data.get 'user.password'
+        setTimeout =>
+          opts =
+            email:    @data.get 'user.email'
+            password: @data.get 'user.password'
 
-        @errorMessage = ''
+          @errorMessage = ''
 
-        @update()
-        m.trigger Events.Login
-        @client.account.login(opts).then((res)=>
-          m.trigger Events.LoginSuccess, res
           @update()
-        ).catch (err)=>
-          @errorMessage = err.message
-          m.trigger Events.LoginFailed, err
-          @update()
+          m.trigger Events.Login
+          @client.account.login(opts).then((res)=>
+            m.trigger Events.LoginSuccess, res
+            @update()
+          ).catch (err)=>
+            @errorMessage = err.message
+            m.trigger Events.LoginFailed, err
+            @update()
+        , 500
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.RegisterFailed, err
