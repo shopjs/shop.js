@@ -40,6 +40,7 @@ Shop.use = (templates) ->
 #   taxRate:            number (decimal) taxRate, overridden by opts.taxRates
 #   shippingRate:       number (per item cost in cents or base unit for zero decimal currencies)
 #   checkoutUrl:        string checkoutUrl for marketing emails
+#   hasReferrer:        bool use hash for referrer, defaults to false
 # }
 #
 # Format of opts.taxRates
@@ -106,7 +107,12 @@ Shop.start = (opts = {}) ->
   Shop.Controls.register()
 
   queries = getQueries()
-  referrer = getReferrer(queries) ? opts.order?.referrer
+  if opts.config?.hashReferrer
+    r = window.location.hash.replace('#','')
+    if r != ''
+      referrer = r
+  else
+    referrer = getReferrer(queries) ? opts.order?.referrer
 
   items = store.get 'items'
   cartId = store.get 'cartId'

@@ -16,6 +16,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       <yield/>
     </form>
   '''
+  immediateLogin: false
 
   configs:
     'user.email':               [ isRequired, isEmail ]
@@ -41,6 +42,23 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
     @client.account.create(opts).then((res)=>
       m.trigger Events.RegisterSuccess, res
       @update()
+
+      if @immediateLogin
+        opts =
+          email:    @data.get 'user.email'
+          password: @data.get 'user.password'
+
+        @errorMessage = ''
+
+        @update()
+        m.trigger Events.Login
+        @client.account.login(opts).then((res)=>
+          m.trigger Events.LoginSuccess, res
+          @update()
+        ).catch (err)=>
+          @errorMessage = err.message
+          m.trigger Events.LoginFailed, err
+          @update()
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.RegisterFailed, err
