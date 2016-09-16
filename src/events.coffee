@@ -49,6 +49,27 @@ module.exports =
   RegisterFailed:
     'register-failed'
 
+  RegisterComplete:
+    'register-complete'
+  RegisterCompleteSuccess:
+    'register-complete-success'
+  RegisterCompleteFailed:
+    'register-complete-failed'
+
+  ResetPassword:
+    'reset-password'
+  ResetPasswordSuccess:
+    'reset-password-success'
+  ResetPasswordFailed:
+    'reset-password-failed'
+
+  ResetPasswordComplete:
+    'reset-password-complete'
+  ResetPasswordCompleteSuccess:
+    'reset-password-complete-success'
+  ResetPasswordCompleteFailed:
+    'reset-password-complete-failed'
+
   ProfileLoad:
     'profile-load'
   ProfileLoadSuccess:
