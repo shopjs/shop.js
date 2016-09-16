@@ -17,6 +17,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
     </form>
   '''
   immediateLogin: false
+  immediateLoginLatency: 400
 
   configs:
     'user.email':               [ isRequired, isEmail ]
@@ -25,6 +26,9 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
     'user.passwordConfirm':     [ isPassword, matchesPassword ]
 
   errorMessage: ''
+
+  init: ()->
+    super
 
   _submit: (event)->
     opts =
@@ -43,24 +47,17 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       m.trigger Events.RegisterSuccess, res
       @update()
 
-      if @immediateLogin
+      if @immediateLogin && res.token
+        @client.setCustomerToken res.token
+        latency = @immediateLoginLatency / 2
+        # simulate login with a little bit of latency for page transitions
         setTimeout =>
-          opts =
-            email:    @data.get 'user.email'
-            password: @data.get 'user.password'
-
-          @errorMessage = ''
-
-          @update()
           m.trigger Events.Login
-          @client.account.login(opts).then((res)=>
+          setTimeout =>
             m.trigger Events.LoginSuccess, res
             @update()
-          ).catch (err)=>
-            @errorMessage = err.message
-            m.trigger Events.LoginFailed, err
-            @update()
-        , 500
+          , latency
+        , latency
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.RegisterFailed, err
