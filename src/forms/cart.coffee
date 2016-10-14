@@ -29,6 +29,12 @@ module.exports = class CartForm extends CrowdControl.Views.Form
   isEmpty: ()->
     return @data('order.items').length == 0
 
+  count: ()->
+    count = 0
+    for item in @data('order.items')
+      count += item.quantity
+    return count
+
   applyPromoCode: ()->
     @promoMessage = ''
     promoCode = @data.get 'order.promoCode'
