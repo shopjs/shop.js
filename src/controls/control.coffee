@@ -41,3 +41,6 @@ module.exports = class Control extends CrowdControl.Views.Input
   changed: (value)->
     m.trigger Events.ChangeSuccess, @input.name, value
     riot.update()
+
+  value: ()->
+    return @input.ref @input.name

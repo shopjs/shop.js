@@ -114,8 +114,9 @@ Shop.start = (opts = {}) ->
   else
     referrer = getReferrer(queries) ? opts.order?.referrer
 
-  items = store.get 'items'
-  cartId = store.get 'cartId'
+  items     = store.get 'items'
+  cartId    = store.get 'cartId'
+  meta      = store.get 'order.metadata'
 
   @data = refer
     taxRates:       opts.taxRates || []
@@ -136,6 +137,7 @@ Shop.start = (opts = {}) ->
       items: items ? []
       cartId: cartId ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
+      metadata: meta ? {}
 
   data = @data.get()
   for k, v of opts
@@ -143,7 +145,9 @@ Shop.start = (opts = {}) ->
       if !data[k]?
         data[k] = opts[k]
       else
-        extend data[k], opts[k]
+        for k2, v2 of data[k]
+          extend data[k][k2], opts[k][k2]
+
 
   @data.set data
 
@@ -207,6 +211,9 @@ Shop.start = (opts = {}) ->
     if item?
       m.trigger Events.UpdateItem, item
 
+    meta = @data.get 'order.metadata'
+    store.set 'order.metadata', meta
+
     @cart.invoice()
     riot.update()
 
@@ -229,6 +236,10 @@ Shop.start = (opts = {}) ->
 
   m.on Events.DeleteLineItem, (item)->
     id = item.get 'id'
+    if !id
+      id = item.get 'productId'
+    if !id
+      id = item.get 'productSlug'
     Shop.setItem id, 0
 
   m.trigger Events.SetData, @data
