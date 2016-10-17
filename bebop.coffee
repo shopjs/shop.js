@@ -1,6 +1,6 @@
 fs        = require 'fs'
 path      = require 'path'
-exec      = require('executive').interactive
+exec      = require('shortcake').exec
 requisite = require 'requisite'
 
 require 'broken'
@@ -9,13 +9,7 @@ Promise.suppressUncaughtRejectionError = false
 compileCoffee = (src) ->
   return unless /^src|src\/index.coffee$/.test src
 
-  requisite.bundle
-    entry: 'src/index.coffee'
-    globalRequire: true
-  , (err, bundle) ->
-    return console.error err if err?
-    fs.writeFileSync 'shop.js', bundle.toString(), 'utf8'
-    console.log 'compiled shop.js'
+  exec 'cake build'
 
 module.exports =
   port: 4242
