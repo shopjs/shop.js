@@ -26,8 +26,8 @@
     "node": ">=4.0.0"
   },
   "scripts": {
-    "prepublish": "cake build-min",
-    "test": "cake build && cake test"
+    "prepublish": "cake build:min",
+    "test": "cake build:dev && cake test"
   },
   "author": "Crowdstart, LLC <hi@crowdstart.com> (http://crowdstart.com)",
   "licenses": [
