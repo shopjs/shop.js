@@ -16,13 +16,13 @@ task 'clean', 'clean project', ->
 
 task 'build', 'build project', ->
   # Compile src/ to lib/
-  yield exec 'coffee -bcm -o lib/ src/'
+  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
 
   # Create shop.js bundle
   bundle = yield requisite.bundle
-    entry:      'src/index.coffee'
+    entry: 'src/index.coffee'
 
-  js = bundle.toString stripDebug: true
+  js = bundle.toString stripDebug: false
   yield fs.writeFile 'shop.js', js, 'utf8'
 
 task 'build-min', 'build project', ['build'], ->
@@ -78,8 +78,8 @@ task 'coverage', 'Process coverage statistics', ->
     '''
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec 'coffee -bcmw -o lib/ src/'
-  exec 'bebop -o'
+  exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
+  exec 'node_modules/.bin/bebop -o'
 
 task 'watch:test', 'watch for changes and re-run tests', ->
   invoke 'watch'
