@@ -48,7 +48,6 @@ module.exports = class Select extends Text
       labelField: 'name'
       searchField: 'name'
       items: [@input.ref.get(@input.name)] || []
-      options: options
     ).on 'change', (event)=>
       # This isn't working right, sometimes you have one change firing events on unrelated fields
       if coolDown != -1
@@ -62,6 +61,8 @@ module.exports = class Select extends Text
       event.preventDefault()
       event.stopPropagation()
       return false
+
+    $select.selectize.addOption options
 
     #support auto fill
     $input = $select.parent().find('.selectize-input input:first')
@@ -92,6 +93,7 @@ module.exports = class Select extends Text
           @initSelect $select
           @initialized = true
       else
+        select.selectize.refreshOptions false
         select.selectize.clear true
         select.selectize.addItem @input.ref.get(@input.name), true
     else
