@@ -37,17 +37,16 @@ module.exports = class Select extends Text
     invertedOptions = {}
     for value, name of @options()
       options.push
-        name: name
+        text: name
         value: value
 
       invertedOptions[name] = value
 
     $select.selectize(
       dropdownParent: 'body'
-      valueField: 'value'
-      labelField: 'name'
-      searchField: 'name'
-      items: [@input.ref.get(@input.name)] || []
+      # valueField: 'value'
+      # labelField: 'text'
+      # searchField: 'text'
     ).on 'change', (event)=>
       # This isn't working right, sometimes you have one change firing events on unrelated fields
       if coolDown != -1
@@ -62,7 +61,10 @@ module.exports = class Select extends Text
       event.stopPropagation()
       return false
 
-    $select.selectize.addOption options
+    select = $select[0]
+    select.selectize.addOption options
+    select.selectize.addItem [@input.ref.get(@input.name)] || [], false
+    select.selectize.refreshOptions false
 
     #support auto fill
     $input = $select.parent().find('.selectize-input input:first')
@@ -93,7 +95,6 @@ module.exports = class Select extends Text
           @initSelect $select
           @initialized = true
       else
-        select.selectize.refreshOptions false
         select.selectize.clear true
         select.selectize.addItem @input.ref.get(@input.name), true
     else
