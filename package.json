@@ -44,7 +44,7 @@
   "dependencies": {
     "address-validator": "0.2.2",
     "broken": "0.1.4",
-    "commerce.js": "1.0.21",
+    "commerce.js": "1.0.23",
     "crowdcontrol": "2.0.12",
     "crypto-js": "3.1.7",
     "es5-shim": "4.5.9",
@@ -54,7 +54,7 @@
     "moment": "2.15.1",
     "payment": "2.1.3",
     "raf": "3.3.0",
-    "referential": "0.4.5",
+    "referential": "0.4.6",
     "riot": "2.3.18",
     "selectize": "0.12.4",
     "store": "1.3.20"
