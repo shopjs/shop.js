@@ -1,15 +1,10 @@
-fs        = require 'fs'
-path      = require 'path'
-exec      = require('shortcake').exec
-requisite = require 'requisite'
-
-require 'broken'
-Promise.suppressUncaughtRejectionError = false
+fs   = require 'fs'
+path = require 'path'
+exec = require('shortcake').exec
 
 compileCoffee = (src) ->
   return unless /^src|src\/index.coffee$/.test src
-
-  exec 'cake build'
+  exec 'cake build:dev'
 
 module.exports =
   port: 4242
