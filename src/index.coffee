@@ -106,6 +106,8 @@ Shop.start = (opts = {}) ->
   Shop.Widgets.register()
   Shop.Controls.register()
 
+  referrer = ''
+
   queries = getQueries()
   if opts.config?.hashReferrer
     r = window.location.hash.replace('#','')
@@ -216,6 +218,13 @@ Shop.start = (opts = {}) ->
 
     @cart.invoice()
     riot.update()
+
+  if referrer != ''
+    @client.referrer.get(referrer).then((res)=>
+      promoCode = res.affiliate.couponId
+      @data.set 'order.promoCode', promoCode
+      m.trigger Events.ForceApplyPromoCode
+    ).catch ->
 
   ps = []
   for tag in tags
