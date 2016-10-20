@@ -14,19 +14,22 @@ option '-v', '--verbose',           'enable verbose test logging'
 task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
-task 'build', 'build project', ->
-  # Compile src/ to lib/
-  yield exec 'coffee -bcm -o lib/ src/'
-
-  # Create shop.js bundle
+task 'build', 'build js', ->
+  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
   bundle = yield requisite.bundle
-    entry:      'src/index.coffee'
-
+    entry: 'src/index.coffee'
   js = bundle.toString stripDebug: true
   yield fs.writeFile 'shop.js', js, 'utf8'
 
-task 'build-min', 'build project', ['build'], ->
+task 'build:min', 'build js for production', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
+
+task 'build:dev', 'build js for development', ->
+  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
+  bundle = yield requisite.bundle
+    entry:  'src/index.coffee'
+    global: true
+  yield fs.writeFile 'shop.js', bundle.toString(), 'utf8'
 
 server = do require 'connect'
 
@@ -78,8 +81,8 @@ task 'coverage', 'Process coverage statistics', ->
     '''
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec 'coffee -bcmw -o lib/ src/'
-  exec 'bebop -o'
+  exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
+  exec 'node_modules/.bin/bebop -o'
 
 task 'watch:test', 'watch for changes and re-run tests', ->
   invoke 'watch'
