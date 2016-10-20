@@ -28,6 +28,8 @@ module.exports =
   SubmitFailed:
     'submit-failed'
 
+  ForceApplyPromoCode:
+    'force-apply-promocode'
   ApplyPromoCode:
     'apply-promocode'
   ApplyPromoCodeSuccess:
