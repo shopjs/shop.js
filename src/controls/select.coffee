@@ -63,7 +63,7 @@ module.exports = class Select extends Text
 
     select = $select[0]
     select.selectize.addOption options
-    select.selectize.addItem [@input.ref.get(@input.name)] || [], false
+    select.selectize.addItem [@input.ref.get(@input.name)] || [], true
     select.selectize.refreshOptions false
 
     #support auto fill
