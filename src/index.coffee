@@ -219,7 +219,7 @@ Shop.start = (opts = {}) ->
     @cart.invoice()
     riot.update()
 
-  if referrer != ''
+  if referrer? && referrer != ''
     @client.referrer.get(referrer).then((res)=>
       promoCode = res.affiliate.couponId
       @data.set 'order.promoCode', promoCode
