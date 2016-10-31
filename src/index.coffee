@@ -122,6 +122,7 @@ Shop.start = (opts = {}) ->
 
   @data = refer
     taxRates:       opts.taxRates || []
+    shippingRates:  opts.shippingRates || []
     tokenId:        queries.tokenid
     order:
       giftType:     'physical'
