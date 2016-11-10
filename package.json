@@ -70,7 +70,7 @@
     "coffee-script": "1.11.1",
     "connect": "3.5.0",
     "coveralls": "2.11.14",
-    "debug": "^2.2.0",
+    "debug": "^2.3.2",
     "es5-shim": "^4.1.13",
     "istanbul": "0.4.5",
     "jade": "1.11.0",
