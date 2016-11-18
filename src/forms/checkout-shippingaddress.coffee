@@ -26,6 +26,7 @@ module.exports = class CheckoutShippingAddressForm extends CrowdControl.Views.Fo
     'user.email':       [ isRequired, isEmail ]
     'user.name':        [ isRequired, splitName ]
 
+    'order.shippingAddress.name':       [ isRequired ]
     'order.shippingAddress.line1':      [ isRequired ]
     'order.shippingAddress.line2':      null
     'order.shippingAddress.city':       [ isRequired ]

@@ -16,6 +16,7 @@ module.exports =
   'user.name':        [ isRequired, splitName ]
   # 'user.password':    null
 
+  'order.shippingAddress.name':       [ isRequired ]
   'order.shippingAddress.line1':      [ isRequired ]
   'order.shippingAddress.line2':      null
   'order.shippingAddress.city':       [ isRequired ]
@@ -29,6 +30,7 @@ module.exports =
   'order.giftMessage':    null
   'order.promoCode':      null
 
+  'payment.account.name':     [ isRequired ]
   'payment.account.number':   [ requiresStripe, cardNumber]
   'payment.account.expiry':   [ requiresStripe, expiration ]
   'payment.account.cvc':      [ requiresStripe, cvc ]
