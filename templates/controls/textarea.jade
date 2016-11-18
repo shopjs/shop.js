@@ -1,4 +1,4 @@
-textarea(id="{ input.name }",name="{ name || input.name }",rows="{ rows }",cols="{ cols }",type="text",onchange="{ change }",onblur="{ change }",placeholder="{ placeholder }")
+textarea(id="{ input.name }",name="{ name || input.name }",rows="{ rows }",cols="{ cols }",type="text",onchange="{ change }",onblur="{ change }",placeholder="{ placeholder }",class="{invalid: errorMessage}")
   | { input.ref(input.name) }
 #{ 'yield' }
 
