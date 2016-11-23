@@ -114,7 +114,9 @@ Shop.start = (opts = {}) ->
     if r != ''
       referrer = r
   else
-    referrer = getReferrer(queries) ? opts.order?.referrer
+    referrer = getreferrer(queries) ? opts.order?.referrer
+
+  promo = queries.promo ? ''
 
   items     = store.get 'items'
   cartId    = store.get 'cartId'
@@ -223,9 +225,12 @@ Shop.start = (opts = {}) ->
   if referrer? && referrer != ''
     @client.referrer.get(referrer).then((res)=>
       promoCode = res.affiliate.couponId
-      @data.set 'order.promoCode', promoCode
+      @data.set 'order.promocode', promocode
       m.trigger Events.ForceApplyPromoCode
     ).catch ->
+  else if promo != ''
+    @data.set 'order.promocode', promo
+    m.trigger Events.ForceApplyPromoCode
 
   ps = []
   for tag in tags
