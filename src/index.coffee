@@ -126,6 +126,7 @@ Shop.start = (opts = {}) ->
     taxRates:       opts.taxRates || []
     shippingRates:  opts.shippingRates || []
     tokenId:        queries.tokenid
+    terms:          opts.terms ? false
     order:
       giftType:     'physical'
       type:         'stripe'
