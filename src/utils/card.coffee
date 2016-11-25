@@ -140,16 +140,3 @@ module.exports =
     # Char is a number or a space
     return e.preventDefault() if !/[\d\s]/.test(input)
 
-  validateCardCVC: (cvc, num)->
-    cvc = cvc.trim()
-    return false unless /^\d+$/.test(cvc)
-
-    if num and @cardType(num)
-      # Check against a explicit card type
-      cvc.length in @cardType(num)?.cvcLength
-    else
-      # Check against all types
-      cvc.length >= 3 and cvc.length <= 4
-
-
-
