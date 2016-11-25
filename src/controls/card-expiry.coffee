@@ -1,5 +1,5 @@
 Text = require './text'
-Payment = require 'payment'
+cardUtils = require '../utils/card'
 
 module.exports = class CardExpiry extends Text
   tag:  'card-expiry'
@@ -14,7 +14,16 @@ module.exports = class CardExpiry extends Text
 
   onUpdated: ()->
     if !@first
-      input = $(@root).find('input')[0]
-      Payment.restrictNumeric input
-      Payment.formatCardExpiry input
+      $input = $($(@root).find('input')[0])
+      $input.on 'keypress', cardUtils.restrictNumeric
+      $input.on 'keypress', (e)->
+        value = $input.val() + String.fromCharCode e.which
+
+        if /^\d$/.test(value) and value not in ['0', '1']
+          $input.val '0' + value + ' / '
+          e.preventDefault()
+        else if /^\d\d$/.test(value)
+          $input.val value + ' / '
+          e.preventDefault()
+
       @first = true

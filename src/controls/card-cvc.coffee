@@ -1,5 +1,5 @@
 Text = require './text'
-Payment = require 'payment'
+cardUtils = require '../utils/card'
 
 module.exports = class CardCVC extends Text
   tag:  'card-cvc'
@@ -14,7 +14,12 @@ module.exports = class CardCVC extends Text
 
   onUpdated: ()->
     if !@first
-      input = $(@root).find('input')[0]
-      Payment.restrictNumeric input
-      Payment.formatCardCVC input
+      $input = $($(@root).find('input')[0])
+      $input.on 'keypress', cardUtils.restrictNumeric
+      $input.on 'keypress', (e)->
+        value = $input.val() + String.fromCharCode e.which
+
+        if value.length > 4
+          return false
+
       @first = true
