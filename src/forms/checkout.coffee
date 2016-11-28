@@ -94,7 +94,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
         m.trigger Events.SubmitFailed, err
         @update()
-    ).catch (err)->
+    ).catch (err)=>
       @loading = false
       console.log "authorize submit Error: #{err}"
 
