@@ -42,8 +42,8 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
         requestAnimationFrame ()=>
           m.trigger Events.CreateReferralProgram
           @client.referrer.create({
-            program:
-              @data.get 'referralProgram'
+            program:   @data.get 'referralProgram'
+            programId: @data.get 'referralProgram.id'
             userId: res.id,
           }).then((res2)=>
             refrs = [res2]
