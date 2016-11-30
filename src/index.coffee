@@ -90,7 +90,6 @@ getQueries = ()->
 
 getReferrer = (qs)->
   if qs.referrer?
-    store.set 'referrer', qs.referrer
     return qs.referrer
   else
     return store.get 'referrer'
@@ -115,6 +114,8 @@ Shop.start = (opts = {}) ->
       referrer = r
   else
     referrer = getreferrer(queries) ? opts.order?.referrer
+
+  store.set 'referrer', referrer
 
   promo = queries.promo ? ''
 
