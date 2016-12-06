@@ -227,11 +227,11 @@ Shop.start = (opts = {}) ->
   if referrer? && referrer != ''
     @client.referrer.get(referrer).then((res)=>
       promoCode = res.affiliate.couponId
-      @data.set 'order.promocode', promocode
+      @data.set 'order.promoCode', promocode
       m.trigger Events.ForceApplyPromoCode
     ).catch ->
   else if promo != ''
-    @data.set 'order.promocode', promo
+    @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
 
   ps = []

@@ -14189,13 +14189,13 @@
           return function (res) {
             var promoCode;
             promoCode = res.affiliate.couponId;
-            _this.data.set('order.promocode', promocode);
+            _this.data.set('order.promoCode', promocode);
             return m.trigger(Events.ForceApplyPromoCode)
           }
         }(this))['catch'](function () {
         })
       } else if (promo !== '') {
-        this.data.set('order.promocode', promo);
+        this.data.set('order.promoCode', promo);
         m.trigger(Events.ForceApplyPromoCode)
       }
       ps = [];
