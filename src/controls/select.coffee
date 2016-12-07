@@ -90,13 +90,14 @@ module.exports = class Select extends Text
     $select = $(@root).find('select')
     select = $select[0]
     if select?
+      v = @input.ref.get @input.name
       if !@initialized
         requestAnimationFrame ()=>
           @initSelect $select
           @initialized = true
-      else
+      else if v != select.selectize.getValue()
         select.selectize.clear true
-        select.selectize.addItem @input.ref.get(@input.name), true
+        select.selectize.addItem v, true
     else
       $control = $(@root).find('.selectize-control')
       if !$control[0]?
