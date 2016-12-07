@@ -242,7 +242,8 @@ Shop.start = (opts = {}) ->
     ps.push p
 
   Promise.settle(ps).then(->
-    m.trigger Events.Ready
+    requestAnimationFrame ->
+      m.trigger Events.Ready
   ).catch (err)->
     window?.Raven?.captureException err
 
