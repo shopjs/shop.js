@@ -19,6 +19,9 @@ module.exports = class CardExpiry extends Text
       $input.on 'keypress', (e)->
         value = $input.val() + String.fromCharCode e.which
 
+        if value.length > 7
+          return false
+
         if /^\d$/.test(value) and value not in ['0', '1']
           $input.val '0' + value + ' / '
           e.preventDefault()
