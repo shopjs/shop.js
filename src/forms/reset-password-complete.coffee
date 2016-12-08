@@ -38,6 +38,6 @@ module.exports = class ResetPasswordCompleteForm extends CrowdControl.Views.Form
       m.trigger Events.ResetPasswordCompleteSuccess, res
       @update()
     ).catch (err)=>
-      @errorMessage = err.message
+      @errorMessage = err.message.replace 'Token', 'Link'
       m.trigger Events.ResetPasswordCompleteFailed, err
       @update()
