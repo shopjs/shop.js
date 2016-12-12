@@ -1,5 +1,6 @@
 Text = require './text'
 cardUtils = require '../utils/card'
+keys = require '../utils/keys'
 
 module.exports = class CardNumber extends Text
   tag:  'card-number'
@@ -18,6 +19,8 @@ module.exports = class CardNumber extends Text
       $input = $($(@root).find('input')[0])
       $input.on 'keypress', cardUtils.restrictNumeric
       $input.on 'keypress', (e)=>
+        return true if e.which not in keys.numeric
+
         $input.removeClass @cardType + ' identified unknown'
 
         value = $input.val() + String.fromCharCode e.which

@@ -1,5 +1,6 @@
 Text = require './text'
 cardUtils = require '../utils/card'
+keys = require '../utils/keys'
 
 module.exports = class CardExpiry extends Text
   tag:  'card-expiry'
@@ -17,6 +18,8 @@ module.exports = class CardExpiry extends Text
       $input = $($(@root).find('input')[0])
       $input.on 'keypress', cardUtils.restrictNumeric
       $input.on 'keypress', (e)->
+        return true if e.which not in keys.numeric
+
         value = $input.val() + String.fromCharCode e.which
 
         if value.length > 7
