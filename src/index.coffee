@@ -112,6 +112,8 @@ Shop.start = (opts = {}) ->
     r = window.location.hash.replace('#','')
     if r != ''
       referrer = r
+    else
+      referrer = store.get 'referrer'
   else
     referrer = getreferrer(queries) ? opts.order?.referrer
 
