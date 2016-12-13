@@ -102,8 +102,17 @@ middleware =
     if date.length < 2
       throw new Error('Enter a valid date')
 
+    now = new Date()
+    nowYear = now.getFullYear()
+    nowMonth = now.getMonth() + 1
+
     month = (date[0]).trim?()
-    year = ('' + (new Date()).getFullYear()).substr(0, 2) + (date[1]).trim?()
+    year = ('' + nowYear).substr(0, 2) + (date[1]).trim?()
+
+    if parseInt(year, 10) < nowYear
+      throw new Error('Your card is expired')
+    else if parseInt(year, 10) == nowYear && parseInt(month, 10) < nowMonth
+      throw new Error('Your card is expired')
 
     @set 'payment.account.month', month
     @set 'payment.account.year', year
