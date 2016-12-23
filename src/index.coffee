@@ -97,6 +97,29 @@ getReferrer = (qs) ->
 getMCIds = (qs)->
   return [qs['mc_eid'], qs['mc_cid']]
 
+tagNames = []
+for k, v of Shop.Forms
+  tagNames.push(v.prototype.tag.toUpperCase()) if v.prototype.tag?
+
+searchQueue = [document.body]
+elementsToMount = []
+loop
+  if searchQueue.length == 0
+    break
+
+  root = searchQueue.shift()
+
+  if !root?
+    continue
+
+  if root.tagName? && root.tagName in tagNames
+    elementsToMount.push root
+  else if root.children?.length > 0
+    children = Array.prototype.slice.call root.children
+    children.unshift 0
+    children.unshift searchQueue.length
+    searchQueue.splice.apply searchQueue, children
+
 Shop.start = (opts = {}) ->
   unless opts.key?
     throw new Error 'Please specify your API Key'
@@ -197,11 +220,7 @@ Shop.start = (opts = {}) ->
     ).catch ->
       # ignore error, does not matter
 
-  tagNames = []
-  for k, v of Shop.Forms
-    tagNames.push(v.prototype.tag) if v.prototype.tag?
-
-  tags = riot.mount tagNames.join(', '),
+  tags = riot.mount elementsToMount,
     data:   @data
     cart:   @cart
     client: @client
