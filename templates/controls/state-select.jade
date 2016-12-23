@@ -1,7 +1,4 @@
 input(if='{ input.ref(countryField) !== "us" }',id="{ input.name }",name="{ name || input.name }",type="text",onchange="{ change }",onblur="{ change }",value="{ input.ref(input.name) }",placeholder="{ placeholder }",class="{invalid: errorMessage, valid: valid}")
 select(if='{ input.ref(countryField) == "us" }',id='{ input.name }', style='{ style }', name='{ name || input.name }', onchange='{ change }', onblur='{ change }', value='{ input.ref(input.name) }', data-placeholder='{ placeholder }',class="{invalid: errorMessage, valid: valid}")
-  option(if='{ placeholder }')
-  option(each='{ value, name in options }', value='{value}', __selected='{ this.parent.input.ref(input.name) == value }')
-    | {name}
 #{ 'yield' }
 

@@ -9,7 +9,7 @@ coolDown = -1
 
 module.exports = class Select extends Text
   tag: 'select-control'
-  html: require '../../templates/controls/select.jade'
+  html: require '../../templates/controls/select'
   tags: false
   min: 10
 
