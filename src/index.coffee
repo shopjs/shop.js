@@ -265,6 +265,10 @@ Shop.start = (opts = {}) ->
   Promise.settle(ps).then(->
     requestAnimationFrame ->
       m.trigger Events.Ready
+    #try to deal with long running stuff
+    setTimeout ()->
+      riot.update()
+    , 1000
   ).catch (err)->
     window?.Raven?.captureException err
 
