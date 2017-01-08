@@ -95,7 +95,7 @@ module.exports = class Select extends Text
         requestAnimationFrame ()=>
           @initSelect $select
           @initialized = true
-      else if v != select.selectize.getValue()
+      else if select.selectize? && v != select.selectize.getValue()
         select.selectize.clear true
         select.selectize.addItem v, true
     else
