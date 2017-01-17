@@ -26,6 +26,8 @@ Shop.Referential    = refer
 # Monkey Patch common utils onto every View/Instance
 Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
 Shop.CrowdControl.Views.View.prototype.renderDate = require('./utils/dates')
+Shop.CrowdControl.Views.View.prototype.isEmpty = ->
+  return Shop.isEmpty()
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
