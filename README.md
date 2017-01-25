@@ -1,4 +1,6 @@
 # Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
 A shopping framework for JavaScript built using the Container Pattern on top of (riotjs) http://riotjs.com
 
 [crowdstart]: https://crowdstart.com
