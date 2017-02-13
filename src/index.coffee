@@ -201,7 +201,7 @@ Shop.start = (opts = {}) ->
     key:      opts.key
     endpoint: opts.endpoint
 
-  @cart = new Cart @client, @data
+  @cart = new Cart @client, @data, opts.cartOptions
 
   @cart.onCart = =>
     store.set 'cartId', @data.get 'order.cartId'
