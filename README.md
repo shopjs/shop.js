@@ -1,19 +1,13 @@
 # Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
-Reactive, front-end framework for ecommerce powered by [Hanzo][hanzo].
+Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. Built
+on top of [Riot][riot], it supports a fully customizable look and feel with many
+built-in reactive components.
 
-[hanzo]:           https://hanzo.io
-[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
-[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
-[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
-[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
-[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
-[npm-url]:         https://www.npmjs.com/package/shop.js
-[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
-[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
-[downloads-url]:   http://badge.fury.io/js/shop.js
-[gitter-url]:      https://gitter.im/hanzo-io/chat
-[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
-
+## Examples
+You can see a great example of Shop.js in action at
+[stoned.audio](https://stoned.audio). It powers the complete shopping experience
+from their referral program and user signup flows to checkout and customer
+portal.
 
 ## Containers and Controls
 Containers are Custom HTML tags that define a section of embeddable dynamic content.
@@ -282,3 +276,19 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | TryUpdateItem | try-update-item | string | fired when setItem is called with the id specified |
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
+
+[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
+[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
+[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
+[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
+[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
+[npm-url]:         https://www.npmjs.com/package/shop.js
+[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
+[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
+[downloads-url]:   http://badge.fury.io/js/shop.js
+[gitter-url]:      https://gitter.im/hanzo-io/chat
+[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
+
+[hanzo]:           https://hanzo.io
+[riot]:            http://riotjs.com
+
