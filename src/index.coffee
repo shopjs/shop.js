@@ -26,6 +26,8 @@ Shop.Referential    = refer
 # Monkey Patch common utils onto every View/Instance
 Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
 Shop.CrowdControl.Views.View.prototype.renderDate = require('./utils/dates')
+Shop.CrowdControl.Views.View.prototype.isEmpty = ->
+  return Shop.isEmpty()
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -96,6 +98,29 @@ getReferrer = (qs) ->
 
 getMCIds = (qs)->
   return [qs['mc_eid'], qs['mc_cid']]
+
+tagNames = []
+for k, v of Shop.Forms
+  tagNames.push(v.prototype.tag.toUpperCase()) if v.prototype.tag?
+
+searchQueue = [document.body]
+elementsToMount = []
+loop
+  if searchQueue.length == 0
+    break
+
+  root = searchQueue.shift()
+
+  if !root?
+    continue
+
+  if root.tagName? && root.tagName in tagNames
+    elementsToMount.push root
+  else if root.children?.length > 0
+    children = Array.prototype.slice.call root.children
+    children.unshift 0
+    children.unshift searchQueue.length
+    searchQueue.splice.apply searchQueue, children
 
 Shop.start = (opts = {}) ->
   unless opts.key?
@@ -176,7 +201,7 @@ Shop.start = (opts = {}) ->
     key:      opts.key
     endpoint: opts.endpoint
 
-  @cart = new Cart @client, @data
+  @cart = new Cart @client, @data, opts.cartOptions
 
   @cart.onCart = =>
     store.set 'cartId', @data.get 'order.cartId'
@@ -197,11 +222,7 @@ Shop.start = (opts = {}) ->
     ).catch ->
       # ignore error, does not matter
 
-  tagNames = []
-  for k, v of Shop.Forms
-    tagNames.push(v.prototype.tag) if v.prototype.tag?
-
-  tags = riot.mount tagNames.join(', '),
+  tags = riot.mount elementsToMount,
     data:   @data
     cart:   @cart
     client: @client
@@ -246,6 +267,10 @@ Shop.start = (opts = {}) ->
   Promise.settle(ps).then(->
     requestAnimationFrame ->
       m.trigger Events.Ready
+    #try to deal with long running stuff
+    setTimeout ()->
+      riot.update()
+    , 1000
   ).catch (err)->
     window?.Raven?.captureException err
 
