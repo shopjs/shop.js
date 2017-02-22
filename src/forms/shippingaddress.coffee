@@ -16,6 +16,7 @@ module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
   '''
 
   configs:
+    'order.shippingAddress.name':       [ isRequired ]
     'order.shippingAddress.line1':      [ isRequired ]
     'order.shippingAddress.line2':      null
     'order.shippingAddress.city':       [ isRequired ]

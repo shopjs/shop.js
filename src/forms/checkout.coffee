@@ -59,29 +59,29 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
       @update()
       @cart.checkout().then((pRef)=>
-        pRef.p.catch (err)=>
-          window?.Raven?.captureException(err)
+        pRef.p
+          .then ()=>
+            hasErrored = false
+            setTimeout =>
+              if !hasErrored
+                @loading = false
+                store.clear()
 
-          hasErrored = true
-          @loading = false
-          console.log "checkout submit Error: #{err}"
-          @errorMessage = 'Unable to complete your transaction. Please try again later.'
+                @checkedOut = true
+                @update()
+            , 200
 
-          m.trigger Events.SubmitFailed, err
-          @update()
+            m.trigger Events.SubmitSuccess
+          .catch (err)=>
+            window?.Raven?.captureException(err)
 
-        hasErrored = false
-        setTimeout =>
-          if !hasErrored
+            hasErrored = true
             @loading = false
-            store.clear()
+            console.log "checkout submit Error: #{err}"
+            @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-            @checkedOut = true
+            m.trigger Events.SubmitFailed, err
             @update()
-        , 200
-
-        m.trigger Events.SubmitSuccess
-
       ).catch (err)=>
         @loading = false
         console.log "authorize submit Error: #{err}"

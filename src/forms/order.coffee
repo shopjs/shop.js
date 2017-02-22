@@ -22,8 +22,5 @@ module.exports = class OrderForm extends CrowdControl.Views.Form
         for item, i in items
           @parentData.set 'order.items.' + i + '.locked', true
 
-  isEmpty: ()->
-    return @data.get('items').length == 0
-
   delete: (event)->
     m.trigger Events.DeleteLineItem, @data

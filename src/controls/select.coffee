@@ -9,7 +9,7 @@ coolDown = -1
 
 module.exports = class Select extends Text
   tag: 'select-control'
-  html: require '../../templates/controls/select.jade'
+  html: require '../../templates/controls/select'
   tags: false
   min: 10
 
@@ -95,7 +95,7 @@ module.exports = class Select extends Text
         requestAnimationFrame ()=>
           @initSelect $select
           @initialized = true
-      else if v != select.selectize.getValue()
+      else if select.selectize? && v != select.selectize.getValue()
         select.selectize.clear true
         select.selectize.addItem v, true
     else

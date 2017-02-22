@@ -45,6 +45,8 @@ middleware =
     parts     = value.trim().split ' '
     firstName = parts.shift()
     lastName  = parts.join ' '
+    if !lastName
+      lastName = ' '
 
     @set 'user.firstName', firstName
     @set 'user.lastName',  lastName

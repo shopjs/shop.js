@@ -48,7 +48,6 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
     @promoMessage = 'Applying...'
     @applying = true
-    promoCode = promoCode.toUpperCase()
 
     m.trigger Events.ApplyPromoCode, promoCode
     @cart.promoCode(promoCode).then(=>
