@@ -1,12 +1,11 @@
 # Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
-Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. Built
-on top of [Riot][riot], it supports a fully customizable look and feel with many
-built-in reactive components.
+Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
+a fully customizable look and feel with many built-in reactive components.
 
 ## Examples
 You can see a great example of Shop.js in action at
 [stoned.audio](https://stoned.audio). It powers the complete shopping experience
-from their referral program and user signup flows to checkout and customer
+from their referral program and user signup to checkout and customer
 portal.
 
 ## Containers and Controls
