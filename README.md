@@ -1,18 +1,18 @@
 # Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
-A shopping framework for JavaScript built using the Container Pattern on top of (riotjs) http://riotjs.com
+Reactive, front-end framework for ecommerce powered by [Hanzo][hanzo].
 
-[crowdstart]: https://crowdstart.com
-[shop.js]: https://cdn.rawgit.com/crowdstart/shop.js/v0.0.1/shop.min.js
-[travis-url]: https://travis-ci.org/crowdstart/shop.js
-[travis-image]: https://img.shields.io/travis/crowdstart/shop.js.svg
-[coveralls-url]: https://coveralls.io/r/crowdstart/shop.js/
-[coveralls-image]: https://img.shields.io/coveralls/crowdstart/shop.js.svg
-[npm-url]: https://www.npmjs.com/package/shop.js
-[npm-image]: https://img.shields.io/npm/v/shop.js.svg
+[hanzo]:           https://hanzo.io
+[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
+[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
+[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
+[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
+[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
+[npm-url]:         https://www.npmjs.com/package/shop.js
+[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
 [downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
-[downloads-url]: http://badge.fury.io/js/shop.js
-[gitter-url]: https://gitter.im/crowdstart/chat
-[gitter-image]: https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
+[downloads-url]:   http://badge.fury.io/js/shop.js
+[gitter-url]:      https://gitter.im/hanzo-io/chat
+[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
 
 ---
 
@@ -296,4 +296,3 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | TryUpdateItem | try-update-item | string | fired when setItem is called with the id specified |
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
-
