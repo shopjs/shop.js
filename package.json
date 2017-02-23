@@ -80,7 +80,7 @@
     "mocha-lcov-reporter": "1.2.0",
     "moment": "^2.10.6",
     "mz": "2.4.0",
-    "nightmare": "2.0.9",
+    "nightmare": "2.9.1",
     "postmortem": "^0.2.3",
     "random-token": "0.0.8",
     "requisite": "1.19.0",
