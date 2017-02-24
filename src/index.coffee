@@ -1,33 +1,30 @@
 import './utils/patches'
 
-import * as Promise from 'broken'
-import * as refer from 'referential'
+import Promise from 'broken'
+import extend  from 'extend'
+import refer   from 'referential'
+import riot    from 'riot'
+import {Api}   from 'hanzo.js'
+import {Cart}  from 'commerce.js'
 
-import 'riot'
-import 'extend'
-import './utils/store'
-import {Cart} from 'commerce.js'
+import Events    from './events'
+import analytics from './utils/analytics'
+import m         from './mediator'
+import store     from './utils/store'
 
-window?.riot = riot
-window.Hanzo      = require 'hanzo.js'
-
-m               = require './mediator'
-Events          = require './events'
-analytics       = require './utils/analytics'
-
-Shop                = require './shop'
-Shop.Forms          = require './forms'
-Shop.Events         = Events
-Shop.Widgets        = require './widgets'
-Shop.Controls       = require './controls'
-Shop.CrowdControl   = require 'crowdcontrol'
-Shop.Referential    = refer
+import Shop      from './shop'
+import Forms     from './forms'
+import Widgets        from './widgets'
+import Controls       from './controls'
 
 # Monkey Patch common utils onto every View/Instance
-Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
-Shop.CrowdControl.Views.View.prototype.renderDate = require('./utils/dates')
-Shop.CrowdControl.Views.View.prototype.isEmpty = ->
-  return Shop.isEmpty()
+import crowdcontrol from 'crowdcontrol'
+import {renderUICurrencyFromJSON} from './utils/currency'
+import {renderDate} from './utils/dates'
+crowdcontrol.Views.View::renderCurrency = renderUICurrencyFromJSON
+crowdcontrol.Views.View::renderDate = require('./utils/dates')
+crowdcontrol.Views.View::isEmpty = ->
+  Shop.isEmpty()
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -62,16 +59,15 @@ Shop.use = (templates) ->
 #   }
 # ]
 #
-#Format of opts.referralProgram
+# Format of opts.referralProgram
 # Referral Program Object
 
 Shop.riot = riot
-
 Shop.analytics = analytics
 
 Shop.isEmpty = ->
   items = @data.get 'order.items'
-  return items.length == 0
+  items.length == 0
 
 getQueries = ()->
   search = /([^&=]+)=?([^&]*)/g
@@ -88,20 +84,20 @@ getQueries = ()->
       catch err
       qs[k] = v
 
-  return qs
+  qs
 
 getReferrer = (qs) ->
   if qs.referrer?
-    return qs.referrer
+    qs.referrer
   else
-    return store.get 'referrer'
+    store.get 'referrer'
 
-getMCIds = (qs)->
-  return [qs['mc_eid'], qs['mc_cid']]
+getMCIds = (qs) ->
+  [qs['mc_eid'], qs['mc_cid']]
 
 tagNames = []
 for k, v of Shop.Forms
-  tagNames.push(v.prototype.tag.toUpperCase()) if v.prototype.tag?
+  tagNames.push(v::tag.toUpperCase()) if v::tag?
 
 searchQueue = [document.body]
 elementsToMount = []
@@ -197,7 +193,7 @@ Shop.start = (opts = {}) ->
     @data.set 'order.shippingAddress', checkoutShippingAddress
     store.remove 'checkout-shippingAddress'
 
-  @client = new window.Crowdstart.Api
+  @client = new Api
     key:      opts.key
     endpoint: opts.endpoint
 
@@ -312,7 +308,7 @@ itemUpdateQueue = []
 Shop.initCart = ()->
   @cart.initCart()
 
-Shop.setItem = (id, quantity, locked=false)->
+Shop.setItem = (id, quantity, locked=false) ->
   m.trigger Events.TryUpdateItem, id
   p = @cart.set id, quantity, locked
   if @promise != p
@@ -323,7 +319,7 @@ Shop.setItem = (id, quantity, locked=false)->
     ).catch (err)->
       window?.Raven?.captureException err
 
-Shop.getItem = (id)->
+Shop.getItem = (id) ->
   return @cart.get id
 
-module.exports = window.Crowdstart.Shop = Shop
+export default Shop
