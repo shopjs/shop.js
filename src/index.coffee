@@ -1,15 +1,15 @@
-require './utils/patches'
+import './utils/patches'
 
-Promise         = require 'broken'
-riot            = require 'riot'
-extend          = require 'extend'
-window?.riot    = riot
+import * as Promise from 'broken'
+import * as refer from 'referential'
 
-refer           = require 'referential'
-store           = require './utils/store'
-{Cart}          = require 'commerce.js'
+import 'riot'
+import 'extend'
+import './utils/store'
+import {Cart} from 'commerce.js'
 
-window.Crowdstart      = require 'hanzo.js'
+window?.riot = riot
+window.Hanzo      = require 'hanzo.js'
 
 m               = require './mediator'
 Events          = require './events'

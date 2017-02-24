@@ -1,49 +1,38 @@
-store = require 'store'
-cookie = require 'js-cookie'
+import * as store from 'store'
+import * as cookie from 'js-cookie'
+import * as md5 from 'blueimp-md5'
 
-md5 = require 'crypto-js/md5'
-postFix = md5 window.location.host
+export default do ->
+  postFix = md5 window.location.host
+  key = (k) -> "#{k}_#{postFix}"
 
-if store.enabled
-  module.exports =
-    get: (k)->
-      k += "_" + postFix
-      store.get k
-    set: (k, v)->
-      k += "_" + postFix
-      store.set k, v
+  if store.enabled
+      get: (k) ->
+        store.get key k
 
-    remove: (k)->
-      k += "_" + postFix
-      store.remove k
+      set: (k, v) ->
+        store.set (key k), v
 
-    clear: ->
-      store.clear()
-else
-  module.exports =
-    get: (k)->
-      k += "_" + postFix
-      v = cookie.get(k)
-      try
-        v = JSON.parse v
-      catch e
+      remove: (k) ->
+        store.remove key k
 
-      return v
+      clear: ->
+        store.clear()
+  else
+      get: (k) ->
+        cookie.getJSON key k
 
-    set: (k, v)->
-      k += "_" + postFix
-      keys = cookie.get('_keys' + postFix) ? ''
-      cookie.set '_keys', keys += ' ' + k
-      return cookie.set k, JSON.stringify(v)
+      set: (k, v) ->
+        ks = (cookie.getJSON key '_keys') ? []
+        ks.push k
+        cookie.set (key '_keys'), ks
+        cookie.set (key k), v
 
-    remove: (k)->
-      k+= "_" + postFix
-      cookie.remove k
+      remove: (k) ->
+        cookie.remove key k
 
-    clear: ->
-      keys = cookie.get('_keys' + postFix) ? ''
-      ks = keys.split ' '
-      for k in ks
-        cookie.remove k
-
-      cookie.remove '_keys'
+      clear: ->
+        ks = (cookie.getJSON key '_keys') ? []
+        for k in ks
+          cookie.remove k
+        cookie.remove key '_keys'
