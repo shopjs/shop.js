@@ -43,10 +43,10 @@
   },
   "dependencies": {
     "address-validator": "0.2.2",
+    "blueimp-md5": "2.7.0",
     "broken": "0.1.4",
     "commerce.js": "1.0.33",
     "crowdcontrol": "2.0.18",
-    "crypto-js": "3.1.7",
     "es5-shim": "4.5.9",
     "extend": "3.0.0",
     "hanzo.js": "2.2.25",
