@@ -3,8 +3,6 @@ require 'shortcake'
 use 'cake-version'
 use 'cake-publish'
 
-fs        = require 'mz/fs'
-requisite = require 'requisite'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -15,21 +13,42 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ->
-  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
-  bundle = yield requisite.bundle
-    entry: 'src/index.coffee'
-  js = bundle.toString stripDebug: true
-  yield fs.writeFile 'shop.js', js, 'utf8'
+  rollup      = require 'rollup'
+  coffee      = require 'rollup-plugin-coffee-script'
+  commonjs    = require 'rollup-plugin-commonjs'
+  nodeResolve = require 'rollup-plugin-node-resolve'
+  pug         = require 'rollup-plugin-pug'
+
+  bundle = yield rollup.rollup
+    entry: 'src/index.coffee',
+    plugins: [
+      coffee()
+      pug
+        pretty: true
+      nodeResolve
+        browser: true
+        extensions: ['.js', '.coffee', '.pug']
+        module:  true
+      commonjs
+        extensions: ['.js', '.coffee']
+        sourceMap: true
+    ]
+
+  bundle.write
+    format: 'es'
+    dest:   'lib/index.mjs'
+
+  bundle.write
+    format: 'cjs'
+    dest:   'lib/index.js'
+
+  yield bundle.write
+    format: 'iife'
+    dest:   'shop.js'
+    moduleName: 'Shop'
 
 task 'build:min', 'build js for production', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
-
-task 'build:dev', 'build js for development', ->
-  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
-  bundle = yield requisite.bundle
-    entry:  'src/index.coffee'
-    global: true
-  yield fs.writeFile 'shop.js', bundle.toString(), 'utf8'
 
 server = do require 'connect'
 
