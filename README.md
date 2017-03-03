@@ -1,4 +1,4 @@
-# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
+# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url] [![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
 Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
 a fully customizable look and feel with many built-in reactive components.
 
