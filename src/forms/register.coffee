@@ -39,6 +39,11 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       passwordConfirm:  @data.get 'user.passwordConfirm'
       referrerId:       @data.get 'order.referrerId'
 
+    #optional captcha
+    captcha = @data.get 'user.g-recaptcha-response'
+    if captcha
+      opts['g-recaptcha-response'] = captcha
+
     @errorMessage = ''
 
     @update()

@@ -1,32 +1,14 @@
-# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
+# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url] [![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
+Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
+a fully customizable look and feel with many built-in reactive components.
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
-A shopping framework for JavaScript built using the Container Pattern on top of (riotjs) http://riotjs.com
+## Examples
+You can see a great example of Shop.js in action at
+[stoned.audio](https://stoned.audio). It powers the complete shopping experience
+from their referral program and user signup to checkout and customer
+portal.
 
-[crowdstart]: https://crowdstart.com
-[shop.js]: https://cdn.rawgit.com/crowdstart/shop.js/v0.0.1/shop.min.js
-[travis-url]: https://travis-ci.org/crowdstart/shop.js
-[travis-image]: https://img.shields.io/travis/crowdstart/shop.js.svg
-[coveralls-url]: https://coveralls.io/r/crowdstart/shop.js/
-[coveralls-image]: https://img.shields.io/coveralls/crowdstart/shop.js.svg
-[npm-url]: https://www.npmjs.com/package/shop.js
-[npm-image]: https://img.shields.io/npm/v/shop.js.svg
-[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
-[downloads-url]: http://badge.fury.io/js/shop.js
-[gitter-url]: https://gitter.im/crowdstart/chat
-[gitter-image]: https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
-
----
-
-## Shop.js Reference ##
-
----
-
-## Examples ##
-
----
-
-##Containers and Controls##
+## Containers and Controls
 Containers are Custom HTML tags that define a section of embeddable dynamic content.
 Controls are very simple composeable widgets that provide ui inputs and outputs
 for users.  Containers can contain other containers or controls.
@@ -41,9 +23,9 @@ For example a submit() service can be invoked by calling 'submit()' directly or
 binding an event 'onclick="submit"' for invokation by user when they interact
 with an element on the page.
 
-## Special Variables ##
+## Special Variables
 
-### data ###
+### data
 A reference to the global data referrential tree.
 that's passed into the Shop.start function can be referenced from most
 containers by using the 'data' variable.
@@ -53,36 +35,35 @@ the looping containers lineitems and orders respectively.  The 'data' in these c
 to the specific item that's currently being looped over.  For example a lineitems container loops over order.items, a lineitem container's
 'data' variable refers to the specific item being looped over.
 
-### parent-data ###
+### parent-data
 
 Both lineitem and order both have a 'parent-data' variable that refer to their
 immediate parents's for composeability reasons, namely to get fields like
 'currency' relatively from the parent order or user.
 
-### parent ###
+### parent
 The 'parent' variable references the parent container of the current container.
 It is useful for using data fields or invoking services of a parent container.
 Be aware that the root container has no parent set.
 
-### Services Available to All Containers ###
+### Services Available to All Containers
 
 | Name | Type | Description |
 | --- | --- | --- |
 | renderCurrency |(code&nbsp;string,&nbsp;cents&nbsp;number)&nbsp;&#8209;>&nbsp;string |  **code** is a currency's ISO 4217 code (typically set to data.get('order.currency')), **cents** is the currency in cents (or lowest unit in the case of zero decimal currencies like JPY), returns a localized value with currency symbol |
 | renderDate | (date time,&nbsp;format string)&nbsp;&#8209;>&nbsp;string | refer to moment(...).format(...) documentation [here](http://momentjs.com/docs/#/parsing/string-format/)
 
----
-##Containers##
+## Containers
 
-### cart ###
+### cart
 The cart container renders cart items and handles the processing of promotional codes.
 
-###### Data Fields ######
+###### Data Fields
 | Name | Type | Description |
 | --- | --- | --- |
 | order.promoCode | string | promotional code (coupon) |
 
-###### Services ######
+###### Services
 | Name | Type | Description |
 | --- | --- | --- |
 | applying | string | true when applyPromoCode is processing, false otherwise |
@@ -90,18 +71,18 @@ The cart container renders cart items and handles the processing of promotional 
 | isEmpty | ()&nbsp;&#8209;>&nbsp;bool | returns if order.items.length == 0 |
 | promoMessage | string | current status of the promotional code |
 
-###### Events ######
+###### Events
 | Name | Description |
 | --- | --- |
 | ApplyPromoCode | fired when applyPromoCode() is called |
 | ApplyPromoCodeFailed | fired when applyPromoCode() gets a failed result, promoMessage is set to the error in this case |
 | ApplyPromoCodeSuccess | fired when applyPromoCode() gets a successful result |
 
-### checkout ###
+### checkout
 The checkout container validates the customers shipping and billing information and handles
 submitting the customer's card to complete the checkout step.
 
-###### Data Fields ######
+###### Data Fields
 | Name | Type | Description |
 | --- | --- | --- |
 | user.email | string | required, must be an email |
@@ -118,7 +99,7 @@ submitting the customer's card to complete the checkout step.
 | payment.account.cvc | string | required, valid card security code number |
 | terms | bool | required, whether or not the user agrees to the terms |
 
-###### Services ######
+###### Services
 | Name | Type | Description |
 | --- | --- | --- |
 | checkedOut | bool | true when checkout submit is successful |
@@ -126,20 +107,20 @@ submitting the customer's card to complete the checkout step.
 | loading | bool | true when checkout submit is processing, false otherwise |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a charge request with the customer's information |
 
-###### Events ######
+###### Events
 | Name | Description |
 | --- | --- |
 | Submit | fired when submit() is called |
 | SuccessFailed | fired when submit() gets a failed result, errorMessage is setto the error-category in this case |
 | SubmitSuccess | fired when submit() gets a successful result |
 
-### checkout-shippingaddress ###
+### checkout-shippingaddress
 The checkout-shippingaddress container handles just the parts of checkout related to the
 customer's shipping address.  This is useful when doing a multi-page checkout
 flow with checkout-shipping on the first page and checkout on the second page.
 Shipping data will propagate from checkout-shipping to checkout.
 
-###### Data Fields ######
+###### Data Fields
 | Name | Type | Description|
 | --- | --- | --- |
 | user.email | string | required, must be an email |
@@ -152,15 +133,15 @@ Shipping data will propagate from checkout-shipping to checkout.
 | order.shippingAddress.isPostalRequired | string | required only if postal codes are required for the user's country |
 | order.shippingAddress.country | string | required, ISO 3166-1 alpha-2 country codes |
 
-###### Services ######
+###### Services
 | Name | Type | Description |
 | --- | --- | --- |
 | submit | ()&nbsp;&#8209;>&nbsp; | submit a user's shipping information information |
 
-###### Events ######
+###### Events
 n/a
 
-### lineitems ###
+### lineitems
 The lineitems container loops over and displays an order's or cart's line items (usually the order.items field).
 The lineitems must be used inside of either a cart or orders container.
 Internally, a lineitems container simply wraps a lineitem container in a loop.
@@ -171,54 +152,52 @@ each lineitem container and will be transcluded in lineitem.
 It is best to use this container inside another container instead of at the top
 level so it can be rendered along side other order information.
 
-###### Data Fields ######
+###### Data Fields
 n/a
 
-###### Services ######
+###### Services
 n/a
 
-### lineitem ###
+### lineitem
 The lineitem container exposes an item and records quantity data. It is not used
 directly in most cases. It should be used implicitly as part of the lineitems
 container instead. When using lineitem containers directly, parentData (via parent-data
 attribute, e.g. <lineitem parent-data="{ data.get('order') }" /> ) must be set to the order data.
 
-###### Data Fields ######
+###### Data Fields
 | Name | Type | Description |
 | --- | --- | --- |
 | quantity | integer | required, number of a particular item |
 
-###### Services ######
+###### Services
 n/a
 
-###### Events ######
+###### Events
 n/a
 
----
+## Controls
 
-## Controls ##
-
-### checkbox-control ###
+### checkbox-control
 The checkbox control creates and binds a checkbox.
 
-###### Attributes ######
+###### Attributes
 
 | Name | Description |
 | --- | --- |
 | lookup | data field to bind to e.g. <checkbox-control lookup="{ terms }"/> |
 
-###### Variants ######
+###### Variants
 
 | Name | Description |
 | --- | --- |
 | terms | lookup = terms |
 
-### select-control ###
+### select-control
 The select control creates and binds a platform-agnostic select based on
 [selectize.js](http://selectize.github.io/selectize.js/).  It is simplist to base custom styling
 on the skins available here.
 
-###### Attributes ######
+###### Attributes
 
 | Name | Description |
 | --- | --- |
@@ -227,7 +206,7 @@ on the skins available here.
 | read-only | set to anything to make the select readOnly |
 | selectOptions | a map of values to names to render as the select options |
 
-###### Variants ######
+###### Variants
 | Name | Description |
 | --- | --- |
 | quantity | lookup = quantity, options are a list of numbers from 0 to 99, use in lineitem |
@@ -259,8 +238,6 @@ The text control creates and binds a text-input.
 | shippingaddress-postalcode | lookup = order.shippingAddress.postalCode |
 | shippingaddress-state | lookup = order.shippingAddress.state |
 | user-name | lookup = user.email |
-
----
 
 ## Event Reference ##
 These constants can be accessed via Shop.Events.<EventName> or the string value can be used instead
@@ -298,4 +275,19 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | TryUpdateItem | try-update-item | string | fired when setItem is called with the id specified |
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
+
+[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
+[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
+[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
+[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
+[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
+[npm-url]:         https://www.npmjs.com/package/shop.js
+[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
+[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
+[downloads-url]:   http://badge.fury.io/js/shop.js
+[gitter-url]:      https://gitter.im/hanzo-io/chat
+[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
+
+[hanzo]:           https://hanzo.io
+[riot]:            http://riotjs.com
 
