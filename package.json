@@ -62,7 +62,7 @@
     "store": "1.3.20"
   },
   "devDependencies": {
-    "bebop": "1.9.4",
+    "bebop": "1.10.0",
     "cake-publish": "0.1.5",
     "cake-version": "0.1.9",
     "chai": "3.5.0",
