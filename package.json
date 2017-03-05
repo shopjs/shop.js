@@ -86,6 +86,6 @@
     "requisite": "1.19.1",
     "serve-static": "1.11.2",
     "shortcake": "1.1.18",
-    "uglify-js": "2.7.5"
+    "uglify-js": "2.8.7"
   }
 }
