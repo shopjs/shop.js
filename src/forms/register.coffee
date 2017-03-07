@@ -25,6 +25,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
     'user.password':            [ isPassword ]
     'user.passwordConfirm':     [ isPassword, matchesPassword ]
 
+  source: ''
   errorMessage: ''
 
   init: ()->
@@ -38,6 +39,8 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
       referrerId:       @data.get 'order.referrerId'
+      metadata:
+        source: @source
 
     #optional captcha
     captcha = @data.get 'user.g-recaptcha-response'
