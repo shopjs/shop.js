@@ -85,7 +85,7 @@
     "pug": "2.0.0-beta11",
     "random-token": "0.0.8",
     "requisite": "1.19.12",
-    "serve-static": "1.11.2",
+    "serve-static": "1.12.1",
     "shortcake": "1.2.5",
     "uglify-js": "2.7.5"
   }
