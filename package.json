@@ -46,16 +46,16 @@
     "akasha": "0.1.0",
     "broken": "0.1.10",
     "commerce.js": "1.0.33",
-    "crowdcontrol": "2.1.12",
     "debug": "2.6.2",
     "es-is": "3.2.1",
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
     "es-selectize": "0.12.8",
+    "crowdcontrol": "2.1.13",
     "es5-shim": "4.5.9",
     "hanzo.js": "2.3.5",
     "moment": "2.17.1",
-    "referential": "0.5.12",
+    "referential": "0.5.13",
     "riot": "3.3.2"
   },
   "devDependencies": {
