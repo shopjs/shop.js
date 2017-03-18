@@ -6,8 +6,10 @@ Events = require '../events'
   isRequired,
   isEmail,
   splitName,
-  isRequired,
-  isPostalRequired,
+  requiredStripe,
+  cardNumber,
+  expiration,
+  cvc
 } = require './middleware'
 store = require '../utils/store'
 
@@ -22,21 +24,18 @@ module.exports = class CheckoutShippingAddressForm extends CrowdControl.Views.Fo
     'user.email':       [ isRequired, isEmail ]
     'user.name':        [ isRequired, splitName ]
 
-    'order.shippingAddress.name':       [ isRequired ]
-    'order.shippingAddress.line1':      [ isRequired ]
-    'order.shippingAddress.line2':      null
-    'order.shippingAddress.city':       [ isRequired ]
-    'order.shippingAddress.state':      [ isRequired ]
-    'order.shippingAddress.postalCode': [ isPostalRequired ]
-    'order.shippingAddress.country':    [ isRequired ]
+    'payment.account.name':     [ isRequired ]
+    'payment.account.number':   [ requiresStripe, cardNumber]
+    'payment.account.expiry':   [ requiresStripe, expiration ]
+    'payment.account.cvc':      [ requiresStripe, cvc ]
 
   init: ()->
     super
 
   _submit: ()->
-    m.trigger Events.SubmitShippingAddress
+    m.trigger Events.SubmitCard
 
     # Store partial pieces of checkout data.
     store.set 'checkout-user', @data.get 'user'
-    store.set 'checkout-shippingAddress', @data.get 'order.shippingAddress'
+    store.set 'checkout-payment', @data.get 'order.payment'
     @update()

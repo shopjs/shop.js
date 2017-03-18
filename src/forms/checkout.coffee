@@ -5,17 +5,14 @@ store = require '../utils/store'
 
 module.exports = class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
 
   errorMessage: ''
   loading: false
   checkedOut: false
+  termsUrl: 'terms'
 
-  configs: require './config'
+  configs: require './checkout-configs'
 
   init: ()->
     super

@@ -8,11 +8,8 @@ Events = require '../events'
 
 module.exports = class ResetPasswordForm extends CrowdControl.Views.Form
   tag: 'reset-password'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
+
   configs:
     'user.email':               [ isRequired, isEmail ]
 

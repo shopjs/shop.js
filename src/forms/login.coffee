@@ -9,11 +9,7 @@ Events = require '../events'
 
 module.exports = class LoginForm extends CrowdControl.Views.Form
   tag: 'login'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
 
   configs:
     'user.email':       [ isRequired, isEmail ]

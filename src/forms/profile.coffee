@@ -11,11 +11,7 @@ Events = require '../events'
 
 module.exports = class ProfileForm extends CrowdControl.Views.Form
   tag: 'profile'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
 
   configs:
     'user.email':               [ isRequired, isEmail ]

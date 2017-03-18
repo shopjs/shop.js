@@ -10,11 +10,8 @@ Events = require '../events'
 
 module.exports = class RegisterComplete extends CrowdControl.Views.Form
   tag: 'register-complete'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
+
   twoStageSignUp: false
 
   configs:

@@ -188,6 +188,7 @@ Shop.start = (opts = {}) ->
   # load multipage partial checkout data
   checkoutUser = store.get 'checkout-user'
   checkoutShippingAddress = store.get 'checkout-shippingAddress'
+  checkoutPayment = store.get 'checkout-payment'
 
   if checkoutUser
     @data.set 'user', checkoutUser
@@ -196,6 +197,10 @@ Shop.start = (opts = {}) ->
   if checkoutShippingAddress
     @data.set 'order.shippingAddress', checkoutShippingAddress
     store.remove 'checkout-shippingAddress'
+
+  if checkoutPayment
+    @data.set 'payment', checkoutPayment
+    store.remove 'checkout-payment'
 
   @client = new window.Crowdstart.Api
     key:      opts.key

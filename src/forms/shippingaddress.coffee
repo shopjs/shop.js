@@ -9,11 +9,7 @@ Events = require '../events'
 
 module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
 
   configs:
     'order.shippingAddress.name':       [ isRequired ]
