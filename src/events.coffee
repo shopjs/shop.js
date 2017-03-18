@@ -20,6 +20,8 @@ module.exports =
 
   Submit:
     'submit'
+  SubmitCart:
+    'submit-card'
   SubmitShippingAddress:
     'submit-shipping-address'
 

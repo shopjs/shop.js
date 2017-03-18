@@ -11,11 +11,8 @@ Events = require '../events'
 
 module.exports = class RegisterForm extends CrowdControl.Views.Form
   tag: 'register'
-  html: '''
-    <form onsubmit={submit}>
-      <yield/>
-    </form>
-  '''
+  html: require '../../templates/forms/form'
+
   immediateLogin: false
   immediateLoginLatency: 400
 

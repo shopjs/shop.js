@@ -5,11 +5,7 @@ store = require '../utils/store'
 
 module.exports = class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
-  html: '''
-    <yield>
-      <lineitems if="{ !isEmpty() }"></lineitems>
-    </yield>
-  '''
+  html: require '../../templates/forms/cart'
 
   init: ()->
     super
