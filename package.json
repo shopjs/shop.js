@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "bebop": "1.11.5",
-    "cake-bundle": "0.1.20",
+    "cake-bundle": "0.1.21",
     "cake-outdated": "0.1.12",
     "cake-publish": "0.1.5",
     "cake-version": "0.1.11",
