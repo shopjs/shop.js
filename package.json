@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "address-validator": "0.2.2",
-    "akasha": "0.1.0",
     "broken": "0.1.10",
     "commerce.js": "1.0.33",
     "debug": "2.6.2",
