@@ -1,8 +1,8 @@
-Text = require './text'
-cardUtils = require '../utils/card'
-keys = require '../utils/keys'
+import Text from './text'
+import cardUtils from '../utils/card'
+import keys from '../utils/keys'
 
-module.exports = class CardNumber extends Text
+export default class CardNumber extends Text
   tag:  'card-number'
   lookup: 'payment.account.number'
   cardType: ''

@@ -1,6 +1,6 @@
-Select = require './state-select'
+export Select from './state-select'
 
-module.exports = class GiftType extends Select
+export default class GiftType extends Select
   tag:  'gift-type'
   lookup: 'order.giftType'
 

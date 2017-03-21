@@ -1,18 +1,28 @@
-CrowdControl = require 'crowdcontrol'
-m = require '../mediator'
-Events = require '../events'
-riot = require 'riot'
+import CrowdControl from 'crowdcontrol'
+import Events       from  '../events'
+import m            from  '../mediator'
 
 scrolling = false
 
-module.exports = class Control extends CrowdControl.Views.Input
+export default class Control extends CrowdControl.Input
   init: ()->
+    if !@input? && !@lookup?
+      throw new Error 'No input or lookup provided'
+
     if !@input? && @inputs?
       @input = @inputs[@lookup]
+
+    if !@input?
+      @input =
+        name:       @lookup
+        ref:        @data.ref @lookup
+        validate:   (ref, name)->
+          return Promise.resolve [ref, name]
 
     # prevent weird yield bug
     if @input?
       super
+
   getValue: (event)->
     return $(event.target).val()?.trim()
 
@@ -40,7 +50,4 @@ module.exports = class Control extends CrowdControl.Views.Input
 
   changed: (value)->
     m.trigger Events.ChangeSuccess, @input.name, value
-    riot.update()
 
-  value: ()->
-    return @input.ref @input.name

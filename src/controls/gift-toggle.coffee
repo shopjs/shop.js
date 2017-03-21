@@ -1,6 +1,6 @@
-Checkbox = require './checkbox'
+import Checkbox from './checkbox'
 
-module.exports = class GiftToggle extends Checkbox
+export default class GiftToggle extends Checkbox
   tag:  'gift-toggle'
   lookup: 'order.gift'
 

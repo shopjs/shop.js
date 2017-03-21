@@ -1,6 +1,6 @@
-Control = require './control'
+import Control from './control'
 
-module.exports = class Checkbox extends Control
+export default class Checkbox extends Control
   tag: 'checkbox-control'
   html: require '../../templates/controls/checkbox'
   getValue: (event)->

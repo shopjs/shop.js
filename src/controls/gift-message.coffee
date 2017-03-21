@@ -1,6 +1,6 @@
-TextArea = require './textarea'
+import TextArea from './textarea'
 
-module.exports = class GiftMessage extends TextArea
+export default class GiftMessage extends TextArea
   tag:  'gift-message'
   lookup: 'order.giftMessage'
 

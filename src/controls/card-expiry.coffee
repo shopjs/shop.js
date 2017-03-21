@@ -1,8 +1,8 @@
-Text = require './text'
-cardUtils = require '../utils/card'
-keys = require '../utils/keys'
+import Text from './text'
+import cardUtils from '../utils/card'
+import keys from '../utils/keys'
 
-module.exports = class CardExpiry extends Text
+export default class CardExpiry extends Text
   tag:  'card-expiry'
   lookup: 'payment.account.expiry'
 

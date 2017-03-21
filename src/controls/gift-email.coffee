@@ -1,5 +1,5 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class GiftEmail extends Text
+exports default class GiftEmail extends Text
   tag:  'gift-email'
   lookup: 'order.giftEmail'
