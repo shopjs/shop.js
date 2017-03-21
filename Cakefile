@@ -14,14 +14,20 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ->
-  yield bundle.write
+  b = new Bundle
     entry: 'src/index.coffee'
+    compilers:
+      coffee:
+        version: 1
+
+  yield b.write
     formats: ['es', 'cjs']
 
-  yield bundle.write
-    entry: 'src/index.coffee'
-    external: false
-    format:   'web'
+  yield b.write
+    format:    'web'
+    external:  false
+    minify:    true
+    sourceMap: false
 
 task 'build:min', 'build js for production', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
