@@ -5,7 +5,6 @@ use 'cake-outdated'
 use 'cake-publish'
 use 'cake-version'
 
-
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
 option '-t', '--test [test]',       'specify test to run'
@@ -15,39 +14,14 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ->
-  rollup      = require 'rollup'
-  coffee      = require 'rollup-plugin-coffee-script'
-  commonjs    = require 'rollup-plugin-commonjs'
-  nodeResolve = require 'rollup-plugin-node-resolve'
-  pug         = require 'rollup-plugin-pug'
-
-  bundle = yield rollup.rollup
-    entry: 'src/index.coffee',
-    plugins: [
-      coffee()
-      pug
-        pretty: true
-      nodeResolve
-        browser: true
-        extensions: ['.js', '.coffee', '.pug']
-        module:  true
-      commonjs
-        extensions: ['.js', '.coffee']
-        sourceMap: true
-    ]
-
-  bundle.write
-    format: 'es'
-    dest:   'lib/index.mjs'
-
-  bundle.write
-    format: 'cjs'
-    dest:   'lib/index.js'
+  yield bundle.write
+    entry: 'src/index.coffee'
+    formats: ['es', 'cjs']
 
   yield bundle.write
-    format: 'iife'
-    dest:   'shop.js'
-    moduleName: 'Shop'
+    entry: 'src/index.coffee'
+    external: false
+    format:   'web'
 
 task 'build:min', 'build js for production', ['build'], ->
   exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'

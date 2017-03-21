@@ -1,4 +1,4 @@
-moment = require 'moment'
+import moment from 'moment'
 
-module.exports = (date, format)->
-  return moment(date).format format
+export renderDate = (date, format) ->
+  moment(date).format format

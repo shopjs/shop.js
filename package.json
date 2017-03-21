@@ -2,16 +2,16 @@
   "name": "shop.js",
   "version": "1.1.22",
   "description": "Shopping Framework for JavaScript.",
-  "homepage": "http://github.com/crowdstart/shop.js",
-  "bugs": "http://github.com/crowdstart/shop.js/issues",
+  "homepage": "http://github.com/hanzo-io/shop.js",
+  "bugs": "http://github.com/hanzo-io/shop.js/issues",
   "keywords": [
     "browser",
     "checkout",
     "commerce",
     "crowdfunding",
-    "crowdstart",
     "ecommerce",
     "fulfillment",
+    "hanzo",
     "orders",
     "payments",
     "preorders",
@@ -21,25 +21,26 @@
     "site",
     "subscriptions"
   ],
-  "main": "lib/",
+  "main": "dist/lib.js",
+  "module": "dist/lib.mjs",
+  "js:next": "dist/lib.mjs",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist/"
+  ],
   "engines": {
     "node": ">=4.0.0"
   },
   "scripts": {
     "prepublish": "cake build:min",
-    "test": "cake build:dev && cake test"
+    "test": "cake build && cake test"
   },
-  "author": "Crowdstart, LLC <hi@crowdstart.com> (http://crowdstart.com)",
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/crowdstart/shop.js/blob/master/LICENSE"
-    }
-  ],
+  "author": "Hanzo, Inc <hi@hanzo.io> (http://hanzo.io)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "http://github.com/crowdstart/shop.js"
+    "url": "http://github.com/hanzo-io/shop.js"
   },
   "dependencies": {
     "address-validator": "0.2.2",

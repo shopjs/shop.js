@@ -1,1 +1,1 @@
-module.exports = class Shop
+export default class Shop

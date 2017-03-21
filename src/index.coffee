@@ -1,28 +1,28 @@
 import './utils/patches'
 
-import Promise from 'broken'
-import extend  from 'extend'
-import refer   from 'referential'
-import riot    from 'riot'
-import {Api}   from 'hanzo.js'
-import {Cart}  from 'commerce.js'
+import Promise      from 'broken'
+import crowdcontrol from 'crowdcontrol'
+import objectAssign from 'es-object-assign'
+import refer        from 'referential'
+import riot         from 'riot'
+import store        from 'akasha'
+import {Api}        from 'hanzo.js'
+import {Cart}       from 'commerce.js'
 
+import Controls  from './controls'
 import Events    from './events'
+import Forms     from './forms'
+import Shop      from './shop'
+import Widgets   from './widgets'
 import analytics from './utils/analytics'
 import m         from './mediator'
-import store     from './utils/store'
-
-import Shop      from './shop'
-import Forms     from './forms'
-import Widgets        from './widgets'
-import Controls       from './controls'
 
 # Monkey Patch common utils onto every View/Instance
-import crowdcontrol from 'crowdcontrol'
 import {renderUICurrencyFromJSON} from './utils/currency'
 import {renderDate} from './utils/dates'
+
 crowdcontrol.Views.View::renderCurrency = renderUICurrencyFromJSON
-crowdcontrol.Views.View::renderDate = require('./utils/dates')
+crowdcontrol.Views.View::renderDate = renderDate
 crowdcontrol.Views.View::isEmpty = ->
   Shop.isEmpty()
 

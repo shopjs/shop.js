@@ -1,3 +1,3 @@
-riot = require 'riot'
+import observable from 'riot-observable'
 
-module.exports = riot.observable {}
+export default observable {}
