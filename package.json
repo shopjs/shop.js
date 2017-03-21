@@ -46,7 +46,7 @@
     "broken": "0.1.10",
     "commerce.js": "1.0.33",
     "debug": "2.6.2",
-    "es-is": "3.2.1",
+    "es-is": "3.2.2",
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
     "es-selectize": "0.12.8",
@@ -54,7 +54,7 @@
     "es5-shim": "4.5.9",
     "hanzo.js": "2.3.5",
     "moment": "2.17.1",
-    "referential": "0.5.13",
+    "referential": "0.5.15",
     "riot": "3.3.2"
   },
   "devDependencies": {
@@ -62,7 +62,7 @@
     "cake-bundle": "0.1.20",
     "cake-outdated": "0.1.12",
     "cake-publish": "0.1.5",
-    "cake-version": "0.1.9",
+    "cake-version": "0.1.11",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
     "co-mocha": "1.2.0",
