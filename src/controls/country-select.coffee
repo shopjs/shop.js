@@ -1,7 +1,7 @@
-Select = require './select'
-countries = require('../data/countries')
+import Select from './select'
+import countries from '../data/countries'
 
-module.exports = class CountrySelect extends Select
+export default class CountrySelect extends Select
   tag: 'country-select-control'
   options: ->
     return countries.data

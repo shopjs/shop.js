@@ -1,17 +1,16 @@
-Text = require './text'
-riot = require 'riot'
-isObject = require 'is-object'
-requestAnimationFrame = require 'raf'
+import selectize from 'es-selectize'
+import {raf}     from 'es-raf'
+
+import Text from './text'
+import html from '../../templates/controls/select'
 
 isABrokenBrowser = (window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0)
 
 coolDown = -1
 
-module.exports = class Select extends Text
+export default class Select extends Text
   tag: 'select-control'
-  html: require '../../templates/controls/select'
-  tags: false
-  min: 10
+  html: html
 
   selectOptions: {}
 
@@ -24,13 +23,11 @@ module.exports = class Select extends Text
   events:
     updated: ()->
       @onUpdated()
+    mount: ()->
+      @onUpdated()
 
   getValue: (event)->
     return $(event.target).val()?.trim().toLowerCase()
-
-  change: ()->
-    super
-    riot.update()
 
   initSelect: ($select)->
     options = []
@@ -42,24 +39,24 @@ module.exports = class Select extends Text
 
       invertedOptions[name] = value
 
-    $select.selectize(
+    selectize $select,
       dropdownParent: 'body'
       # valueField: 'value'
       # labelField: 'text'
       # searchField: 'text'
-    ).on 'change', (event)=>
+    .on 'change', (event) =>
       # This isn't working right, sometimes you have one change firing events on unrelated fields
       if coolDown != -1
         return
 
-      coolDown = setTimeout ()->
+      coolDown = setTimeout ->
         coolDown = -1
       , 100
 
-      @change(event)
+      @change event
       event.preventDefault()
       event.stopPropagation()
-      return false
+      false
 
     select = $select[0]
     select.selectize.addOption options
@@ -68,11 +65,10 @@ module.exports = class Select extends Text
 
     #support auto fill
     $input = $select.parent().find('.selectize-input input:first')
-    $input.on('change', (event)->
+    $input.on 'change', (event) ->
       val = $(event.target).val()
       if invertedOptions[val]?
         $select[0].selectize.setValue(invertedOptions[val])
-    )
 
     #support read only
     if @readOnly
@@ -92,7 +88,7 @@ module.exports = class Select extends Text
     if select?
       v = @input.ref.get @input.name
       if !@initialized
-        requestAnimationFrame ()=>
+        raf =>
           @initSelect $select
           @initialized = true
       else if select.selectize? && v != select.selectize.getValue()
@@ -101,8 +97,8 @@ module.exports = class Select extends Text
     else
       $control = $(@root).find('.selectize-control')
       if !$control[0]?
-        requestAnimationFrame ()=>
-          @update()
+        raf =>
+          @scheduleUpdate()
 
     # @on 'unmount', ()=>
     #   $select = $(@root).find('select')
