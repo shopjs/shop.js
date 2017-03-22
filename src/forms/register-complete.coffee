@@ -1,16 +1,16 @@
 import CrowdControl from 'crowdcontrol'
-import {
-  isRequired,
-  isPassword,
-  splitName,
-  matchesPassword
-} from './middleware'
-import m from '../mediator'
+
 import Events from '../events'
+import html   from '../../templates/forms/form'
+import m      from '../mediator'
+import {
+  isPassword,
+  isRequired,
+  matchesPassword
+  splitName,
+} from './middleware'
 
-import html from '../../templates/forms/form'
-
-export default class RegisterComplete extends CrowdControl.Views.Form
+class RegisterComplete extends CrowdControl.Views.Form
   tag: 'register-complete'
   html: html
 
@@ -23,13 +23,13 @@ export default class RegisterComplete extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     super
 
     if !@twoStageSignUp
       @_submit()
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
@@ -47,13 +47,14 @@ export default class RegisterComplete extends CrowdControl.Views.Form
 
     @scheduleUpdate()
     m.trigger Events.RegisterComplete
-    @client.account.enable(opts).then((res)=>
+    @client.account.enable(opts).then (res) =>
       if res.token
         @client.setCustomerToken res.token
       m.trigger Events.RegisterCompleteSuccess, res
       @scheduleUpdate()
-    ).catch (err)=>
+    .catch (err)=>
       @errorMessage = err.message
       m.trigger Events.RegisterCompleteFailed, err
       @scheduleUpdate()
 
+export default RegisterComplete

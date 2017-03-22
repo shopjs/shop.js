@@ -1,14 +1,16 @@
 import CrowdControl from 'crowdcontrol'
+
+import Events from '../events'
+import html   from '../../templates/forms/form'
+import m      from '../mediator'
 import {
-  isRequired,
+  isRequired
   isPostalRequired
 } from './middleware'
-import m from '../mediator'
-import Events from '../events'
 
-export default class ShippingAddressForm extends CrowdControl.Views.Form
+class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
-  html: require '../../templates/forms/form'
+  html: html
 
   configs:
     'order.shippingAddress.name':       [ isRequired ]
@@ -21,30 +23,31 @@ export default class ShippingAddressForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     if @parentData?
       @data = @parentData
 
     super
 
-    @on 'update', ()=>
+    @on 'update', =>
       if @parentData?
         @data = @parentData
 
-  _submit: ()->
+  _submit: ->
     opts =
-      id:  @data.get 'order.id'
+      id:              @data.get 'order.id'
       shippingAddress: @data.get 'order.shippingAddress'
 
     @errorMessage = ''
 
     @scheduleUpdate()
     m.trigger Events.ShippingAddressUpdate
-    @client.account.updateOrder(opts).then((res)=>
+    @client.account.updateOrder(opts).then (res) =>
       m.trigger Events.ShippingAddressUpdateSuccess, res
       @scheduleUpdate()
-    ).catch (err)=>
+    .catch (err)=>
       @errorMessage = err.message
       m.trigger Events.ShippingAddressUpdateFailed, err
       @scheduleUpdate()
 
+export default ShippingAddressForm

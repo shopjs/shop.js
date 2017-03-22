@@ -1,15 +1,15 @@
 import CrowdControl from 'crowdcontrol'
-import {
-  isRequired,
-  isEmail,
-  isPassword,
-} from './middleware'
-import m from '../mediator'
+
 import Events from '../events'
+import m      from '../mediator'
+import html   from '../../templates/forms/from'
+import {
+  isEmail
+  isPassword
+  isRequired
+} from './middleware'
 
-import html from '../../templates/forms/from'
-
-export default class LoginForm extends CrowdControl.Views.Form
+class LoginForm extends CrowdControl.Views.Form
   tag: 'login'
   html: html
 
@@ -19,7 +19,7 @@ export default class LoginForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       email:    @data.get 'user.email'
       password: @data.get 'user.password'
@@ -28,10 +28,12 @@ export default class LoginForm extends CrowdControl.Views.Form
 
     @scheduleUpdate()
     m.trigger Events.Login
-    @client.account.login(opts).then((res)=>
+    @client.account.login(opts).then (res) =>
       m.trigger Events.LoginSuccess, res
       @scheduleUpdate()
-    ).catch (err)=>
+    .catch (err)=>
       @errorMessage = err.message
       m.trigger Events.LoginFailed, err
       @scheduleUpdate()
+
+export default LoginForm

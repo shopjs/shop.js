@@ -1,33 +1,30 @@
-require './utils/patches'
+import './utils/patches'
 
-Promise         = require 'broken'
-riot            = require 'riot'
-extend          = require 'extend'
-window?.riot    = riot
+import Promise      from 'broken'
+import crowdcontrol from 'crowdcontrol'
+import objectAssign from 'es-object-assign'
+import refer        from 'referential'
+import riot         from 'riot'
+import store        from 'akasha'
+import {Api}        from 'hanzo.js'
+import {Cart}       from 'commerce.js'
 
-refer           = require 'referential'
-store           = require './utils/store'
-{Cart}          = require 'commerce.js'
-
-window.Crowdstart      = require 'hanzo.js'
-
-m               = require './mediator'
-Events          = require './events'
-analytics       = require './utils/analytics'
-
-Shop                = require './shop'
-Shop.Forms          = require './forms'
-Shop.Events         = Events
-Shop.Widgets        = require './widgets'
-Shop.Controls       = require './controls'
-Shop.CrowdControl   = require 'crowdcontrol'
-Shop.Referential    = refer
+import Controls  from './controls'
+import Events    from './events'
+import Forms     from './forms'
+import Shop      from './shop'
+import Widgets   from './widgets'
+import analytics from './utils/analytics'
+import m         from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
-Shop.CrowdControl.Views.View.prototype.renderCurrency = require('./utils/currency').renderUICurrencyFromJSON
-Shop.CrowdControl.Views.View.prototype.renderDate = require('./utils/dates')
-Shop.CrowdControl.Views.View.prototype.isEmpty = ->
-  return Shop.isEmpty()
+import {renderUICurrencyFromJSON} from './utils/currency'
+import {renderDate} from './utils/dates'
+
+Shop.Crowdcontrol.Views.View::renderCurrency = renderUICurrencyFromJSON
+Shop.Crowdcontrol.Views.View::renderDate = renderDate
+Shop.Crowdcontrol.Views.View::isEmpty = ->
+  Shop.isEmpty()
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -62,18 +59,16 @@ Shop.use = (templates) ->
 #   }
 # ]
 #
-#Format of opts.referralProgram
+# Format of opts.referralProgram
 # Referral Program Object
 
-Shop.riot = riot
-
+Shop.riot      = riot
 Shop.analytics = analytics
-
-Shop.isEmpty = ->
+Shop.isEmpty   = ->
   items = @data.get 'order.items'
-  return items.length == 0
+  items.length == 0
 
-getQueries = ()->
+getQueries = ->
   search = /([^&=]+)=?([^&]*)/g
   q = window.location.href.split('?')[1]
   qs = {}
@@ -88,23 +83,24 @@ getQueries = ()->
       catch err
       qs[k] = v
 
-  return qs
+  qs
 
 getReferrer = (qs) ->
   if qs.referrer?
-    return qs.referrer
+    qs.referrer
   else
-    return store.get 'referrer'
+    store.get 'referrer'
 
-getMCIds = (qs)->
-  return [qs['mc_eid'], qs['mc_cid']]
+getMCIds = (qs) ->
+  [qs['mc_eid'], qs['mc_cid']]
 
 tagNames = []
 for k, v of Shop.Forms
-  tagNames.push(v.prototype.tag.toUpperCase()) if v.prototype.tag?
+  tagNames.push(v::tag.toUpperCase()) if v::tag?
 
-searchQueue = [document.body]
+searchQueue     = [document.body]
 elementsToMount = []
+
 loop
   if searchQueue.length == 0
     break
@@ -144,11 +140,10 @@ Shop.start = (opts = {}) ->
 
   store.set 'referrer', referrer
 
-  promo = queries.promo ? ''
-
-  items     = store.get 'items'
-  cartId    = store.get 'cartId'
-  meta      = store.get 'order.metadata'
+  promo  = queries.promo ? ''
+  items  = store.get 'items'
+  cartId = store.get 'cartId'
+  meta   = store.get 'order.metadata'
 
   @data = refer
     taxRates:       opts.taxRates || []
@@ -164,14 +159,14 @@ Shop.start = (opts = {}) ->
       referrerId:   referrer
       shippingAddress:
         country: 'us'
-      discount: 0
-      tax: 0
-      subtotal: 0
-      total: 0
-      items: items ? []
-      cartId: cartId ? null
+      discount:    0
+      tax:         0
+      subtotal:    0
+      total:       0
+      items:       items                    ? []
+      cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
-      metadata: meta ? {}
+      metadata:    meta                     ? {}
 
   data = @data.get()
   for k, v of opts
@@ -186,9 +181,9 @@ Shop.start = (opts = {}) ->
   @data.set data
 
   # load multipage partial checkout data
-  checkoutUser = store.get 'checkout-user'
+  checkoutUser            = store.get 'checkout-user'
   checkoutShippingAddress = store.get 'checkout-shippingAddress'
-  checkoutPayment = store.get 'checkout-payment'
+  checkoutPayment         = store.get 'checkout-payment'
 
   if checkoutUser
     @data.set 'user', checkoutUser
@@ -220,11 +215,11 @@ Shop.start = (opts = {}) ->
       cart.mailchimp.campaignId = mcCId
 
     # try get userId
-    @client.account.get().then((res)=>
+    @client.account.get().then (res) =>
       @cart._cartUpdate
         userId: res.email
         email:  res.email
-    ).catch ->
+    .catch ->
       # ignore error, does not matter
 
   tags = riot.mount elementsToMount,
@@ -236,11 +231,11 @@ Shop.start = (opts = {}) ->
     for tag in tags
       tag.update()
 
-  @cart.onUpdate = (item)=>
+  @cart.onUpdate = (item) =>
     items = @data.get 'order.items'
     store.set 'items', items
     @cart._cartUpdate
-      tax: @data.get 'order.tax'
+      tax:   @data.get 'order.tax'
       total: @data.get 'order.total'
 
     if item?
@@ -253,38 +248,38 @@ Shop.start = (opts = {}) ->
     riot.update()
 
   if referrer? && referrer != ''
-    @client.referrer.get(referrer).then((res)=>
+    @client.referrer.get(referrer).then (res) =>
       promoCode = res.affiliate.couponId
       @data.set 'order.promoCode', promocode
       m.trigger Events.ForceApplyPromoCode
-    ).catch ->
+    .catch ->
   else if promo != ''
     @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
 
   ps = []
   for tag in tags
-    p = new Promise (resolve)->
+    p = new Promise (resolve) ->
       tag.one 'updated', ->
         resolve()
     ps.push p
 
-  Promise.settle(ps).then(->
+  Promise.settle(ps).then ->
     requestAnimationFrame ->
       m.trigger Events.Ready
     #try to deal with long running stuff
-    setTimeout ()->
+    setTimeout ->
       riot.update()
     , 1000
-  ).catch (err)->
+  .catch (err) ->
     window?.Raven?.captureException err
 
   # quite hacky
   m.data = @data
-  m.on Events.SetData, (@data)=>
+  m.on Events.SetData, (@data) =>
     @cart.invoice()
 
-  m.on Events.DeleteLineItem, (item)->
+  m.on Events.DeleteLineItem, (item) ->
     id = item.get 'id'
     if !id
       id = item.get 'productId'
@@ -294,7 +289,7 @@ Shop.start = (opts = {}) ->
 
   m.trigger Events.SetData, @data
 
-  m.on 'error', (err)->
+  m.on 'error', (err) ->
     console.log err
     window?.Raven?.captureException err
 
@@ -314,21 +309,21 @@ Shop.start = (opts = {}) ->
 waits           = 0
 itemUpdateQueue = []
 
-Shop.initCart = ()->
+Shop.initCart = ->
   @cart.initCart()
 
-Shop.setItem = (id, quantity, locked=false)->
+Shop.setItem = (id, quantity, locked=false) ->
   m.trigger Events.TryUpdateItem, id
   p = @cart.set id, quantity, locked
   if @promise != p
     @promise = p
-    @promise.then(=>
+    @promise.then =>
       riot.update()
       m.trigger Events.UpdateItems, @data.get 'order.items'
-    ).catch (err)->
+    .catch (err) ->
       window?.Raven?.captureException err
 
-Shop.getItem = (id)->
+Shop.getItem = (id) ->
   return @cart.get id
 
-module.exports = window.Crowdstart.Shop = Shop
+export default Shop

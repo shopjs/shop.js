@@ -1,4 +1,4 @@
 import moment from 'moment'
 
-export default (date, format)->
-  return moment(date).format format
+export renderDate = (date, format) ->
+  moment(date).format format

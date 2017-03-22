@@ -1,17 +1,19 @@
 import CrowdControl from 'crowdcontrol'
-import {
-  isRequired,
-  isEmail,
-  isNewPassword,
-  splitName,
-  matchesPassword
-} from './middleware'
-import m from '../mediator'
+import raf          from 'es-raf'
+
 import Events from '../events'
+import html   from '../../templates/forms/from'
+import m      from '../mediator'
+import {
+  isEmail
+  isNewPassword
+  isRequired
+  matchesPassword
+  splitName
+} from './middleware'
 
-import html from '../../templates/forms/from'
 
-export default class ProfileForm extends CrowdControl.Views.Form
+class ProfileForm extends CrowdControl.Views.Form
   tag: 'profile'
   html: html
 
@@ -24,33 +26,33 @@ export default class ProfileForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  hasOrders: ()->
+  hasOrders: ->
     orders = @data.get('user.orders')
     return orders && orders.length > 0
 
-  init: ()->
+  init: ->
     m.trigger Events.ProfileLoad
-    @client.account.get().then((res)=>
+    @client.account.get().then (res) =>
       @data.set 'user', res
       firstName = @data.get 'user.firstName'
       lastName = @data.get 'user.lastName'
       @data.set 'user.name', firstName + ' ' + lastName
 
       if @data.get('referralProgram') && (!res.referrers? || res.referrers.length == 0)
-        requestAnimationFrame ()=>
+        raf =>
           m.trigger Events.CreateReferralProgram
           @client.referrer.create({
             program:   @data.get 'referralProgram'
             programId: @data.get 'referralProgram.id'
             userId: res.id,
-          }).then((res2)=>
+          }).then (res2) =>
             refrs = [res2]
             @data.set 'user.referrers', refrs
             m.trigger Events.CreateReferralProgramSuccess, refrs
             m.trigger Events.ProfileLoadSuccess, res
             CrowdControl.scheduleUpdate()
 
-          ).catch (err)=>
+          .catch (err) =>
             @errorMessage = err.message
             m.trigger Events.CreateReferralProgramFailed, err
             m.trigger Events.ProfileLoadSuccess, res
@@ -59,14 +61,14 @@ export default class ProfileForm extends CrowdControl.Views.Form
         m.trigger Events.ProfileLoadSuccess, res
         CrowdControl.scheduleUpdate()
 
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ProfileLoadFailed, err
       CrowdControl.scheduleUpdate()
 
     super
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       email:            @data.get 'user.email'
       firstName:        @data.get 'user.firstName'
@@ -79,14 +81,16 @@ export default class ProfileForm extends CrowdControl.Views.Form
 
     @scheduleUpdate()
     m.trigger Events.ProfileUpdate
-    @client.account.update(opts).then((res)=>
+    @client.account.update(opts).then (res) =>
       @data.set 'user.currentPassword', null
       @data.set 'user.password', null
       @data.set 'user.passwordConfirm', null
       m.trigger Events.ProfileUpdateSuccess, res
       @scheduleUpdate()
-    ).catch (err)=>
+    .catch (err)=>
       @errorMessage = err.message
       m.trigger Events.ProfileUpdateFailed, err
       @scheduleUpdate()
 
+
+export default ProfileForm

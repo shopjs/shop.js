@@ -1,11 +1,20 @@
-module.exports =
-  CartCounter:      require './cart-counter'
-  CheckoutModal:    require './checkout-modal'
-  CheckoutPage:     require './checkout-page'
-  Modal:            require './modal'
-  NestedForm:       require './nested-form'
-  SideCart:         require './side-cart'
+import CartCounter   from './cart-counter'
+import CheckoutModal from './checkout-modal'
+import CheckoutPage  from './checkout-page'
+import Modal         from './modal'
+import NestedForm    from './nested-form'
+import NestedForm    from './nested-form'
+import SideCart      from './side-cart'
 
-  register: ()->
-    @CartCounter.register()
-    @NestedForm.register()
+export default Widgets =
+  CartCounter:   CartCounter
+  CheckoutModal: CheckoutModal
+  CheckoutPage:  CheckoutPage
+  Modal:         Modal
+  NestedForm:    NestedForm
+  NestedForm:    NestedForm
+  SideCart:      SideCart
+
+  register: ->
+    CartCounter.register()
+    NestedForm.register()
