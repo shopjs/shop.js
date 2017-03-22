@@ -15,8 +15,21 @@ import ShippingAddressName from './shippingaddress-name.coffee'
 import ShippingAddressLine1 from './shippingaddress-line1.coffee'
 import ShippingAddressLine2 from './shippingaddress-line2.coffee'
 import ShippingAddressCity from './shippingaddress-city'
+import ShippingAddressPostalCode from './shippingaddress-postalcode.coffee'
+import ShippingAddressState from './shippingaddress-state'
+import ShippingAddressCountry from './shippingaddress-country'
+import CardName from './card-name'
+import CardNumber from './card-number'
+import CardExpiry from './card-expiry'
+import CardCVC from './card-cvc'
+import Terms from './terms'
+import GiftToggle from './gift-toggle'
+import GiftType from './gift-type'
+import GiftEmail from './gift-email'
+import GiftMessage from './gift-message'
+import PromoCode from './promocode'
 
-module.exports =
+export default {
   #Generic Control
   Control:          Control
   Text:             Text
@@ -36,20 +49,20 @@ module.exports =
   ShippingAddressName:          ShippingAddressName
   ShippingAddressLine1:         ShippingAddressLine1
   ShippingAddressLine2:         ShippingAddressLine2
-  ShippingAddressCity:          require
-  ShippingAddressPostalCode:    require './shippingaddress-postalcode'
-  ShippingAddressState:         require './shippingaddress-state'
-  ShippingAddressCountry:       require './shippingaddress-country'
-  CardName:                     require './card-name'
-  CardNumber:                   require './card-number'
-  CardExpiry:                   require './card-expiry'
-  CardCVC:                      require './card-cvc'
-  Terms:                        require './terms'
-  GiftToggle:                   require './gift-toggle'
-  GiftType:                     require './gift-type'
-  GiftEmail:                    require './gift-email'
-  GiftMessage:                  require './gift-message'
-  PromoCode:                    require './promocode'
+  ShippingAddressCity:          ShippingAddressCity
+  ShippingAddressPostalCode:    ShippingAddressPostalCode
+  ShippingAddressState:         ShippingAddressState
+  ShippingAddressCountry:       ShippingAddressCountry
+  CardName:                     CardName
+  CardNumber:                   CardNumber
+  CardExpiry:                   CardExpiry
+  CardCVC:                      CardCVC
+  Terms:                        Terms
+  GiftToggle:                   GiftToggle
+  GiftType:                     GiftType
+  GiftEmail:                    GiftEmail
+  GiftMessage:                  GiftMessage
+  PromoCode:                    PromoCode
 
   register: ()->
     Text.register()
@@ -82,3 +95,4 @@ module.exports =
     GiftEmail.register()
     GiftMessage.register()
     PromoCode.register()
+}

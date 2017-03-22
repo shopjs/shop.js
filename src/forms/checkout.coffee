@@ -1,11 +1,13 @@
-CrowdControl = require 'crowdcontrol'
-m = require '../mediator'
-Events = require '../events'
-store = require '../utils/store'
+import CrowdControl from 'crowdcontrol'
+import m from '../mediator'
+import Events from '../events'
+import store from 'akasha'
 
-module.exports = class CheckoutForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/form'
+
+export default class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
-  html: require '../../templates/forms/form'
+  html: html
 
   errorMessage: ''
   loading: false
@@ -34,7 +36,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
     @errorMessage = ''
 
-    @update()
+    @scheduleUpdate()
     email = ''
     @client.account.exists(@data.get 'user.email').then((res)=>
 
@@ -54,7 +56,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
 
       @data.set 'order.email', email
 
-      @update()
+      @scheduleUpdate()
       @cart.checkout().then((pRef)=>
         pRef.p
           .then ()=>
@@ -65,7 +67,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
                 store.clear()
 
                 @checkedOut = true
-                @update()
+                @scheduleUpdate()
             , 200
 
             m.trigger Events.SubmitSuccess
@@ -78,7 +80,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
             @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
             m.trigger Events.SubmitFailed, err
-            @update()
+            @scheduleUpdate()
       ).catch (err)=>
         @loading = false
         console.log "authorize submit Error: #{err}"
@@ -90,7 +92,7 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
         m.trigger Events.SubmitFailed, err
-        @update()
+        @scheduleUpdate()
     ).catch (err)=>
       @loading = false
       console.log "authorize submit Error: #{err}"
@@ -102,4 +104,4 @@ module.exports = class CheckoutForm extends CrowdControl.Views.Form
         @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
       m.trigger Events.SubmitFailed, err
-      @update()
+      @scheduleUpdate()

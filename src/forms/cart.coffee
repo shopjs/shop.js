@@ -1,11 +1,13 @@
-CrowdControl = require 'crowdcontrol'
-m = require '../mediator'
-Events = require '../events'
-store = require '../utils/store'
+import CrowdControl from 'crowdcontrol'
+import m from '../mediator'
+import Events from '../events'
+import store from 'akasha'
 
-module.exports = class CartForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/cart'
+
+export default class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
-  html: require '../../templates/forms/cart'
+  html: html
 
   init: ()->
     super
@@ -14,7 +16,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
     if promoCode
       @data.set 'order.promoCode', promoCode
       @applyPromoCode()
-      @update()
+      @scheduleUpdate()
 
     m.on Events.ForceApplyPromoCode, ()=>
       @applyPromoCode()
@@ -56,7 +58,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
         @promoMessage = promoCode + ' Applied!'
 
       m.trigger Events.ApplyPromoCodeSuccess, coupon
-      @update()
+      @scheduleUpdate()
     ).catch (err)=>
       store.remove 'promoCode'
       @applying = false
@@ -68,4 +70,4 @@ module.exports = class CartForm extends CrowdControl.Views.Form
         @promoMessage = 'This code is invalid.'
 
       m.trigger Events.ApplyPromoCodeFailed, err
-      @update()
+      @scheduleUpdate()

@@ -1,6 +1,8 @@
-Text = require './text'
+export Text from './text'
 
-module.exports = class TextArea extends Text
+import html from '../../templates/controls/textarea'
+
+export default class TextArea extends Text
   tag:  'textarea-control'
-  html: require '../../templates/controls/textarea'
+  html: html
   formElement: 'textarea'

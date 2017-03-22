@@ -1,6 +1,6 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class UserEmail extends Text
+export default class UserEmail extends Text
   tag:  'user-email'
   lookup: 'user.email'
 

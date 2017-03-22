@@ -1,6 +1,6 @@
-CountrySelect = require './country-select'
+import CountrySelect from './country-select'
 
-module.exports = class ShippingAddressCountry extends CountrySelect
+export default class ShippingAddressCountry extends CountrySelect
   tag:  'shippingaddress-country'
   lookup: 'order.shippingAddress.country'
 

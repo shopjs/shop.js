@@ -99,7 +99,7 @@ cards = [
   }
 ]
 
-module.exports =
+export default {
   luhnCheck: (num) ->
     odd = true
     sum = 0
@@ -139,4 +139,4 @@ module.exports =
 
     # Char is a number or a space
     return e.preventDefault() if !/[\d\s]/.test(input)
-
+}

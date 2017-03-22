@@ -1,6 +1,6 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class UserCurrentPassword extends Text
+export default class UserCurrentPassword extends Text
   tag:      'user-current-password'
   lookup:   'user.currentPassword'
   type:     'password'

@@ -1,17 +1,19 @@
-CrowdControl    = require 'crowdcontrol'
-{
+import CrowdControl from 'crowdcontrol'
+import {
   isRequired,
   isEmail,
   isPassword,
   splitName,
   matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+} from './middleware'
+import m from '../mediator'
+import Events from '../events'
 
-module.exports = class RegisterForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/form'
+
+export default class RegisterForm extends CrowdControl.Views.Form
   tag: 'register'
-  html: require '../../templates/forms/form'
+  html: form
 
   immediateLogin: false
   immediateLoginLatency: 400
@@ -46,11 +48,11 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
 
     @errorMessage = ''
 
-    @update()
+    @scheduleUpdate()
     m.trigger Events.Register
     @client.account.create(opts).then((res)=>
       m.trigger Events.RegisterSuccess, res
-      @update()
+      @scheduleUpdate()
 
       if @immediateLogin && res.token
         @client.setCustomerToken res.token
@@ -60,10 +62,10 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
           m.trigger Events.Login
           setTimeout =>
             m.trigger Events.LoginSuccess, res
-            @update()
+            @scheduleUpdate()
           , latency
         , latency
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.RegisterFailed, err
-      @update()
+      @scheduleUpdate()

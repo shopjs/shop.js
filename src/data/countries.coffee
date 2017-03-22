@@ -1,4 +1,4 @@
-module.exports =
+export default {
   data:
     af: "Afghanistan"
     ax: "Åland Islands"
@@ -249,3 +249,4 @@ module.exports =
     ye: "Yemen"
     zm: "Zambia"
     zw: "Zimbabwe"
+}

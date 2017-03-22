@@ -1,15 +1,17 @@
-CrowdControl    = require 'crowdcontrol'
-{
+import CrowdControl from 'crowdcontrol'
+import {
   isRequired,
   isEmail,
   isPassword,
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+} from './middleware'
+import m from '../mediator'
+import Events from '../events'
 
-module.exports = class LoginForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/from'
+
+export default class LoginForm extends CrowdControl.Views.Form
   tag: 'login'
-  html: require '../../templates/forms/form'
+  html: html
 
   configs:
     'user.email':       [ isRequired, isEmail ]
@@ -24,12 +26,12 @@ module.exports = class LoginForm extends CrowdControl.Views.Form
 
     @errorMessage = ''
 
-    @update()
+    @scheduleUpdate()
     m.trigger Events.Login
     @client.account.login(opts).then((res)=>
       m.trigger Events.LoginSuccess, res
-      @update()
+      @scheduleUpdate()
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.LoginFailed, err
-      @update()
+      @scheduleUpdate()

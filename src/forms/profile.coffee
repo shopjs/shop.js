@@ -1,17 +1,19 @@
-CrowdControl = require 'crowdcontrol'
-{
+import CrowdControl from 'crowdcontrol'
+import {
   isRequired,
   isEmail,
   isNewPassword,
   splitName,
   matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+} from './middleware'
+import m from '../mediator'
+import Events from '../events'
 
-module.exports = class ProfileForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/from'
+
+export default class ProfileForm extends CrowdControl.Views.Form
   tag: 'profile'
-  html: require '../../templates/forms/form'
+  html: html
 
   configs:
     'user.email':               [ isRequired, isEmail ]
@@ -46,21 +48,21 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
             @data.set 'user.referrers', refrs
             m.trigger Events.CreateReferralProgramSuccess, refrs
             m.trigger Events.ProfileLoadSuccess, res
-            riot.update()
+            CrowdControl.scheduleUpdate()
 
           ).catch (err)=>
             @errorMessage = err.message
             m.trigger Events.CreateReferralProgramFailed, err
             m.trigger Events.ProfileLoadSuccess, res
-            riot.update()
+            CrowdControl.scheduleUpdate()
       else
         m.trigger Events.ProfileLoadSuccess, res
-        riot.update()
+        CrowdControl.scheduleUpdate()
 
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.ProfileLoadFailed, err
-      riot.update()
+      CrowdControl.scheduleUpdate()
 
     super
 
@@ -75,16 +77,16 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
 
     @errorMessage = ''
 
-    @update()
+    @scheduleUpdate()
     m.trigger Events.ProfileUpdate
     @client.account.update(opts).then((res)=>
       @data.set 'user.currentPassword', null
       @data.set 'user.password', null
       @data.set 'user.passwordConfirm', null
       m.trigger Events.ProfileUpdateSuccess, res
-      @update()
+      @scheduleUpdate()
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.ProfileUpdateFailed, err
-      @update()
+      @scheduleUpdate()
 

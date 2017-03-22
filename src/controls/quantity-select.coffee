@@ -1,13 +1,13 @@
-Select = require './select'
-Events = require '../events'
-m = require '../mediator'
+import Select from './select'
+import Events from '../events'
+import m from '../mediator'
 
 opts = {}
 
 for i in [1...100]
   opts[i] = i
 
-module.exports = class QuantitySelect extends Select
+export default class QuantitySelect extends Select
   tag: 'quantity-select-control'
   lookup: 'quantity'
   options: ->

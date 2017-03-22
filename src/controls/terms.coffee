@@ -1,6 +1,6 @@
-Checkbox = require './checkbox'
+import Checkbox from './checkbox'
 
-module.exports = class Terms extends Checkbox
+export default class Terms extends Checkbox
   tag:  'terms'
   lookup: 'terms'
 

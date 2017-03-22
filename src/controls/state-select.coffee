@@ -1,9 +1,11 @@
-Select = require './select'
-states = require('../data/states')
+import Select from './select'
+import states from '../data/states'
 
-module.exports = class StateSelect extends Select
+import html from '../../templates/controls/state-select'
+
+export default class StateSelect extends Select
   tag: 'state-select-control'
-  html: require '../../templates/controls/state-select'
+  html: html
   options: ->
     return states.data
   countryField: 'order.shippingAddress.country'
