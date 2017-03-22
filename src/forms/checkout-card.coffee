@@ -1,23 +1,23 @@
-import El from 'el.js'
-import m from '../mediator'
-import Events from '../events'
-import {
-  isRequired,
-  isEmail,
-  splitName,
-  requiredStripe,
-  cardNumber,
-  expiration,
-  cvc
-} from './middleware'
+import El    from 'el.js'
 import store from 'akasha'
 
-import html from '../../templates/forms/form'
+import Events from '../events'
+import html   from '../../templates/forms/form'
+import m      from '../mediator'
+import {
+  cardNumber
+  cvc
+  expiration
+  isEmail
+  isRequired
+  requiresStripe
+  splitName
+} from './middleware'
 
 # Render this form first if using a multipage flow where shipping data is entered first
 # followed by credit card info on different pages.  Then use the CheckoutForm to
 # collect the credit card data, user and order data should be autofilled for it.
-export default class CheckoutShippingAddressForm extends El.Views.Form
+class CheckoutShippingAddressForm extends El.Views.Form
   tag:  'checkout-shippingaddress'
   html: html
 
@@ -30,13 +30,15 @@ export default class CheckoutShippingAddressForm extends El.Views.Form
     'payment.account.expiry':   [ requiresStripe, expiration ]
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
-  init: ()->
+  init: ->
     super
 
-  _submit: ()->
+  _submit: ->
     m.trigger Events.SubmitCard
 
     # Store partial pieces of checkout data.
-    store.set 'checkout-user', @data.get 'user'
+    store.set 'checkout-user',    @data.get 'user'
     store.set 'checkout-payment', @data.get 'order.payment'
     @scheduleUpdate()
+
+export default CheckoutShippingAddressForm
