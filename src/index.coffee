@@ -201,8 +201,8 @@ Shop.start = (opts = {}) ->
     store.remove 'checkout-payment'
 
   settings = {}
-  settings.key = opts?.key
-  settings.endpoint = opts?.endpoint
+  settings.key = opts.key if opts.key
+  settings.endpoint = opts.endpoint if opts.endpoint
 
   @client = new Api settings
 
