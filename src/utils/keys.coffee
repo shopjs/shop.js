@@ -1,4 +1,4 @@
-module.exports =
+export default {
   ignore: [
     8 #backspace
     9 #tab
@@ -30,3 +30,4 @@ module.exports =
     56 #8
     57 #9
   ]
+}

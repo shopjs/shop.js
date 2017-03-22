@@ -1,7 +1,9 @@
-CrowdControl = require 'crowdcontrol'
-require '../utils/patches'
+import CrowdControl from 'crowdcontrol'
+import _ from '../utils/patches'
 
-module.exports = class CartCounterForm extends CrowdControl.Views.View
+import html from '../../templates/widgets/cart-counter'
+
+export default class CartCounterForm extends CrowdControl.Views.View
   tag:  'cart-counter'
   html: require '../../templates/widgets/cart-counter'
 

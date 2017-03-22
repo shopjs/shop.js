@@ -1,13 +1,15 @@
-currencySigns = require('../data/currencies').data
+import currencies from '../data/currencies'
 currencySeparator = '.'
 digitsOnlyRe = new RegExp('[^\\d.-]', 'g')
+
+currencySigns = currencies.data
 
 isZeroDecimal = (code)->
   if code == 'bif' || code == 'clp' || code == 'djf' || code == 'gnf' || code == 'jpy' || code == 'kmf' || code == 'krw' || code == 'mga' || code == 'pyg' || code == 'rwf' || code == 'vnd' || code == 'vuv' || code == 'xaf' || code == 'xof' || code == 'xpf'
     return true
   return false
 
-module.exports =
+export default {
   renderUpdatedUICurrency: (code, uiCurrency)->
     currentCurrencySign = currencySigns[code]
 
@@ -45,4 +47,4 @@ module.exports =
     else
       parts[1] = '00'
     return parseInt(parseFloat(parts[0].replace(digitsOnlyRe, '')) * 100 + parseFloat(parts[1].replace(digitsOnlyRe, '')), 10)
-
+}

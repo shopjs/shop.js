@@ -1,3 +1,5 @@
+import raf from 'es-raf'
+
 agent = navigator.userAgent
 reg = /MSIE\s?(\d+)(?:\.(\d+))?/i
 matches = agent.match(reg)
@@ -11,11 +13,11 @@ if matches?
 window.Promise ?= require 'broken'
 
 #requestAnimationFrame
-raf = require 'raf'
 window.requestAnimationFrame ?= raf
 window.cancelAnimationFrame ?= raf.cancel
 
-module.exports =
+export default {
   ieVersion:
     major: ieMajor
     minor: ieMinor
+}
