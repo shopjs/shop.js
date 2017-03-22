@@ -4,7 +4,6 @@ import Promise      from 'broken'
 import El           from 'el.js'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
-import riot         from 'riot'
 import store        from 'akasha'
 import {Api}        from 'hanzo.js'
 import {Cart}       from 'commerce.js'
@@ -12,7 +11,6 @@ import {Cart}       from 'commerce.js'
 import Controls  from './controls'
 import Events    from './events'
 import Forms     from './forms'
-import Shop      from './shop'
 import Widgets   from './widgets'
 import analytics from './utils/analytics'
 import m         from './mediator'
@@ -21,9 +19,14 @@ import m         from './mediator'
 import {renderUICurrencyFromJSON} from './utils/currency'
 import {renderDate} from './utils/dates'
 
-El.Views.View::renderCurrency = renderUICurrencyFromJSON
-El.Views.View::renderDate = renderDate
-El.Views.View::isEmpty = ->
+Shop.Controls = Controls
+Shop.Events = Events
+Shop.Forms = Forms
+Shop.Widgets = Widgets
+
+El.View::renderCurrency = renderUICurrencyFromJSON
+El.View::renderDate = renderDate
+El.View::isEmpty = ->
   Shop.isEmpty()
 
 Shop.use = (templates) ->
@@ -62,7 +65,6 @@ Shop.use = (templates) ->
 # Format of opts.referralProgram
 # Referral Program Object
 
-Shop.riot      = riot
 Shop.analytics = analytics
 Shop.isEmpty   = ->
   items = @data.get 'order.items'
@@ -101,6 +103,7 @@ for k, v of Shop.Forms
 searchQueue     = [document.body]
 elementsToMount = []
 
+# move to El
 loop
   if searchQueue.length == 0
     break
@@ -222,12 +225,12 @@ Shop.start = (opts = {}) ->
     .catch ->
       # ignore error, does not matter
 
-  tags = riot.mount elementsToMount,
+  tags = El.mount elementsToMount,
     data:   @data
     cart:   @cart
     client: @client
 
-  riot.update = ->
+  El.update = ->
     for tag in tags
       tag.update()
 
@@ -245,7 +248,7 @@ Shop.start = (opts = {}) ->
     store.set 'order.metadata', meta
 
     @cart.invoice()
-    riot.update()
+    El.scheduleUpdate()
 
   if referrer? && referrer != ''
     @client.referrer.get(referrer).then (res) =>
@@ -268,9 +271,7 @@ Shop.start = (opts = {}) ->
     requestAnimationFrame ->
       m.trigger Events.Ready
     #try to deal with long running stuff
-    setTimeout ->
-      riot.update()
-    , 1000
+    El.scheduleUpdate()
   .catch (err) ->
     window?.Raven?.captureException err
 
@@ -302,7 +303,7 @@ Shop.start = (opts = {}) ->
         @cart.refresh item.productId
 
   # Force update
-  riot.update()
+  El.scheduleUpdate()
 
   return m
 
@@ -318,7 +319,7 @@ Shop.setItem = (id, quantity, locked=false) ->
   if @promise != p
     @promise = p
     @promise.then =>
-      riot.update()
+      El.scheduleUpdate()
       m.trigger Events.UpdateItems, @data.get 'order.items'
     .catch (err) ->
       window?.Raven?.captureException err

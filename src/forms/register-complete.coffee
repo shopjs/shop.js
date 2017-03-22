@@ -10,7 +10,7 @@ import {
   splitName,
 } from './middleware'
 
-class RegisterComplete extends El.Views.Form
+class RegisterComplete extends El.Form
   tag: 'register-complete'
   html: html
 

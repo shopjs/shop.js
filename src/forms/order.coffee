@@ -5,7 +5,7 @@ import Events from '../events'
 import html   from '../../templates/forms/order'
 import m      from '../mediator'
 
-class OrderForm extends El.Views.Form
+class OrderForm extends El.Form
   tag:  'order'
   html: html
   parentData: null

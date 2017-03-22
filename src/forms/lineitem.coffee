@@ -4,7 +4,7 @@ import Events from '../events'
 import html   from '../../templates/forms/lineitem'
 import m      from '../mediator'
 
-class LineItemForm extends El.Views.Form
+class LineItemForm extends El.Form
   tag:  'lineitem'
   html: html
   configs:

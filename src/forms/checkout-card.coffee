@@ -17,7 +17,7 @@ import {
 # Render this form first if using a multipage flow where shipping data is entered first
 # followed by credit card info on different pages.  Then use the CheckoutForm to
 # collect the credit card data, user and order data should be autofilled for it.
-class CheckoutShippingAddressForm extends El.Views.Form
+class CheckoutShippingAddressForm extends El.Form
   tag:  'checkout-shippingaddress'
   html: html
 

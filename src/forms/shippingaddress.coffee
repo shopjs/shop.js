@@ -8,7 +8,7 @@ import {
   isPostalRequired
 } from './middleware'
 
-class ShippingAddressForm extends El.Views.Form
+class ShippingAddressForm extends El.Form
   tag:  'shippingaddress'
   html: html
 
