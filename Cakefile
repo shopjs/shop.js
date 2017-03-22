@@ -70,7 +70,7 @@ task 'test', 'Run tests', ['build', 'static-server'], (opts) ->
   server.close()
   process.exit status
 
-task 'test-ci', 'Run tests', (opts) ->
+task 'test:ci', 'Run tests', (opts) ->
   invoke 'test', bail: true, coverage: true
 
 task 'coverage', 'Process coverage statistics', ->
@@ -81,8 +81,6 @@ task 'coverage', 'Process coverage statistics', ->
     '''
 
 task 'watch', 'watch for changes and recompile project', ->
-  exec 'node_modules/.bin/coffee -bcmw -o lib/ src/'
-  exec 'node_modules/.bin/bebop -o'
 
 task 'watch:test', 'watch for changes and re-run tests', ->
   invoke 'watch'
