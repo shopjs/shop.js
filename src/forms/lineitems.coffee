@@ -1,10 +1,10 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/lineitems'
 import m      from '../mediator'
 
-class LineItems extends CrowdControl.Views.View
+class LineItems extends El.Views.View
   tag:  'lineitems'
   html: html
 

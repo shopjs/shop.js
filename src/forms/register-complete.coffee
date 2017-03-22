@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -10,7 +10,7 @@ import {
   splitName,
 } from './middleware'
 
-class RegisterComplete extends CrowdControl.Views.Form
+class RegisterComplete extends El.Views.Form
   tag: 'register-complete'
   html: html
 

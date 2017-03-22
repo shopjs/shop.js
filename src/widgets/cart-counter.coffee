@@ -1,9 +1,9 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 import '../utils/patches'
 
 import html from '../../templates/widgets/cart-counter'
 
-class CartCounterForm extends CrowdControl.Views.View
+class CartCounterForm extends El.Views.View
   tag:  'cart-counter'
   html: html
 

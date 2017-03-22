@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 import store        from 'akasha'
 
 import Events  from '../events'
@@ -6,7 +6,7 @@ import configs from './configs'
 import html    from '../../templates/forms/form'
 import m       from '../mediator'
 
-class CheckoutForm extends CrowdControl.Views.Form
+class CheckoutForm extends El.Views.Form
   tag:  'checkout'
   html: html
 

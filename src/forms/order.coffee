@@ -1,11 +1,11 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 import refer from 'referential'
 
 import Events from '../events'
 import html   from '../../templates/forms/order'
 import m      from '../mediator'
 
-class OrderForm extends CrowdControl.Views.Form
+class OrderForm extends El.Views.Form
   tag:  'order'
   html: html
   parentData: null

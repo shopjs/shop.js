@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -8,7 +8,7 @@ import {
   matchesPassword
 } from './middleware'
 
-class ResetPasswordCompleteForm extends CrowdControl.Views.Form
+class ResetPasswordCompleteForm extends El.Views.Form
   tag: 'reset-password-complete'
   html: html
 
