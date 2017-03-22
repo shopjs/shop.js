@@ -3,7 +3,7 @@ import '../utils/patches'
 
 import html from '../../templates/widgets/cart-counter'
 
-class CartCounterForm extends El.Views.View
+class CartCounter extends El.View
   tag:  'cart-counter'
   html: html
 
@@ -28,4 +28,4 @@ class CartCounterForm extends El.Views.View
 
     price
 
-export default CartCounterForm
+export default CartCounter

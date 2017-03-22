@@ -81,6 +81,7 @@ task 'coverage', 'Process coverage statistics', ->
     '''
 
 task 'watch', 'watch for changes and recompile project', ->
+  watch 'src/*', -> invoke 'build'
 
 task 'watch:test', 'watch for changes and re-run tests', ->
   invoke 'watch'

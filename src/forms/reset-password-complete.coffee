@@ -8,7 +8,7 @@ import {
   matchesPassword
 } from './middleware'
 
-class ResetPasswordCompleteForm extends El.Views.Form
+class ResetPasswordCompleteForm extends El.Form
   tag: 'reset-password-complete'
   html: html
 

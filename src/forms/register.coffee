@@ -12,9 +12,9 @@ import {
 } from './middleware'
 
 
-class RegisterForm extends El.Views.Form
+class RegisterForm extends El.Form
   tag: 'register'
-  html: form
+  html: html
 
   immediateLogin: false
   immediateLoginLatency: 400

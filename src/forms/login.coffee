@@ -9,7 +9,7 @@ import {
   isRequired
 } from './middleware'
 
-class LoginForm extends El.Views.Form
+class LoginForm extends El.Form
   tag: 'login'
   html: html
 

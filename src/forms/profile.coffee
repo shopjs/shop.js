@@ -12,7 +12,7 @@ import {
 } from './middleware'
 
 
-class ProfileForm extends El.Views.Form
+class ProfileForm extends El.Form
   tag: 'profile'
   html: html
 

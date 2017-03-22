@@ -8,7 +8,7 @@ import {
   isEmail
 } from './middleware'
 
-class ResetPasswordForm extends El.Views.Form
+class ResetPasswordForm extends El.Form
   tag: 'reset-password'
   html: html
 

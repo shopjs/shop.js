@@ -5,7 +5,7 @@ import Events from '../events'
 import html from '../../templates/forms/cart'
 import m from '../mediator'
 
-class CartForm extends El.Views.Form
+class CartForm extends El.Form
   tag:  'cart'
   html: html
 

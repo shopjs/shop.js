@@ -2,7 +2,6 @@ import Text from './text'
 import keys from '../utils/keys'
 import {cardFromNumber, restrictNumeric} from '../utils/card'
 
-
 class CardNumber extends Text
   tag:      'card-number'
   lookup:   'payment.account.number'

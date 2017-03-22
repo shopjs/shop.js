@@ -6,7 +6,7 @@ import configs from './configs'
 import html    from '../../templates/forms/form'
 import m       from '../mediator'
 
-class CheckoutForm extends El.Views.Form
+class CheckoutForm extends El.Form
   tag:  'checkout'
   html: html
 
