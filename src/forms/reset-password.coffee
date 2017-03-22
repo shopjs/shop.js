@@ -1,12 +1,14 @@
-CrowdControl    = require 'crowdcontrol'
-{
-  isRequired,
-  isEmail
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
 
-module.exports = class ResetPasswordForm extends CrowdControl.Views.Form
+import m      from '../mediator'
+import Events from '../events'
+import {
+  isRequired
+  isEmail
+} from './middleware'
+
+
+class ResetPasswordForm extends CrowdControl.Views.Form
   tag: 'reset-password'
   html: '''
     <form onsubmit={submit}>
@@ -14,25 +16,27 @@ module.exports = class ResetPasswordForm extends CrowdControl.Views.Form
     </form>
   '''
   configs:
-    'user.email':               [ isRequired, isEmail ]
+    'user.email': [ isRequired, isEmail ]
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     super
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
-      email:            @data.get 'user.email'
+      email: @data.get 'user.email'
 
     @errorMessage = ''
 
     @update()
     m.trigger Events.ResetPassword
-    @client.account.reset(opts).then((res)=>
+    @client.account.reset(opts).then (res) =>
       m.trigger Events.ResetPasswordSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ResetPasswordFailed, err
       @update()
+
+export default ResetPasswordForm

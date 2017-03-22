@@ -1,13 +1,15 @@
-CrowdControl    = require 'crowdcontrol'
-{
-  isRequired,
-  isEmail,
-  isPassword,
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
 
-module.exports = class LoginForm extends CrowdControl.Views.Form
+import {
+  isRequired
+  isEmail
+  isPassword
+} from './middleware'
+
+import Events from '../events'
+import m      from '../mediator'
+
+class LoginForm extends CrowdControl.Views.Form
   tag: 'login'
   html: '''
     <form onsubmit={submit}>
@@ -21,7 +23,7 @@ module.exports = class LoginForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       email:    @data.get 'user.email'
       password: @data.get 'user.password'
@@ -30,10 +32,12 @@ module.exports = class LoginForm extends CrowdControl.Views.Form
 
     @update()
     m.trigger Events.Login
-    @client.account.login(opts).then((res)=>
+    @client.account.login(opts).then (res) =>
       m.trigger Events.LoginSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.LoginFailed, err
       @update()
+
+export default LoginForm

@@ -1,9 +1,10 @@
-CrowdControl = require 'crowdcontrol'
-m = require '../mediator'
-Events = require '../events'
-store = require '../utils/store'
+import CrowdControl from 'crowdcontrol'
+import store        from 'akasha'
 
-module.exports = class CartForm extends CrowdControl.Views.Form
+import m      from '../mediator'
+import Events from '../events'
+
+class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
   html: '''
     <yield>
@@ -11,7 +12,7 @@ module.exports = class CartForm extends CrowdControl.Views.Form
     </yield>
   '''
 
-  init: ()->
+  init: ->
     super
     promoCode = store.get 'promoCode'
 
@@ -29,16 +30,16 @@ module.exports = class CartForm extends CrowdControl.Views.Form
   applying: false
   promoMessage: ''
 
-  isEmpty: ()->
+  isEmpty: ->
     return @data('order.items').length == 0
 
-  count: ()->
+  count: ->
     count = 0
     for item in @data('order.items')
       count += item.quantity
     return count
 
-  applyPromoCode: ()->
+  applyPromoCode: ->
     @promoMessage = ''
     promoCode = @data.get 'order.promoCode'
     if !promoCode
@@ -73,3 +74,5 @@ module.exports = class CartForm extends CrowdControl.Views.Form
 
       m.trigger Events.ApplyPromoCodeFailed, err
       @update()
+
+export default CartForm

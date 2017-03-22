@@ -1,9 +1,11 @@
-CrowdControl = require 'crowdcontrol'
+import CrowdControl from 'crowdcontrol'
 
-module.exports = class NestedForm extends CrowdControl.Views.View
+class NestedForm extends CrowdControl.Views.View
   tag:  'nested-form'
   html: '''
     <form method="{ method }" action="{ action }">
       <yield></yield>
     </form>
   '''
+
+export default NestedForm

@@ -1,4 +1,4 @@
-module.exports =
+export default Controls =
   #Generic Control
   Control:          require './control'
   Text:             require './text'

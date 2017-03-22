@@ -1,14 +1,15 @@
-CrowdControl = require 'crowdcontrol'
-{
-  isRequired,
-  isPassword,
-  splitName,
+import CrowdControl from 'crowdcontrol'
+import {
+  isRequired
+  isPassword
+  splitName
   matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+} from './middleware'
 
-module.exports = class RegisterComplete extends CrowdControl.Views.Form
+import Events from '../events'
+import m      from  '../mediator'
+
+class RegisterComplete extends CrowdControl.Views.Form
   tag: 'register-complete'
   html: '''
     <form onsubmit={submit}>
@@ -24,13 +25,13 @@ module.exports = class RegisterComplete extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     super
 
     if !@twoStageSignUp
       @_submit()
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
@@ -48,13 +49,14 @@ module.exports = class RegisterComplete extends CrowdControl.Views.Form
 
     @update()
     m.trigger Events.RegisterComplete
-    @client.account.enable(opts).then((res)=>
+    @client.account.enable(opts).then (res) =>
       if res.token
         @client.setCustomerToken res.token
       m.trigger Events.RegisterCompleteSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.RegisterCompleteFailed, err
       @update()
 
+export default RegisterComplete

@@ -1,17 +1,21 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
+import riot         from 'riot'
 
-module.exports = class LineItems extends CrowdControl.Views.View
+import Events from '../events'
+import m      from '../mediator'
+import html   from '../../templates/forms/lineitems'
+
+class LineItems extends CrowdControl.Views.View
   tag:  'lineitems'
-  html: require '../../templates/forms/lineitems'
-  init: ()->
+  html: html
+  init: ->
     if @parentData?
       @data = @parentData
 
     super
 
-    @on 'update', ()=>
+    @on 'update', =>
       if @parentData?
         @data = @parentData
+
+export default LineItems
