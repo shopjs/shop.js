@@ -1,4 +1,4 @@
-import El from 'el.js'
+import El           from 'el.js'
 import Events       from  '../events'
 import m            from  '../mediator'
 
