@@ -200,9 +200,11 @@ Shop.start = (opts = {}) ->
     @data.set 'payment', checkoutPayment
     store.remove 'checkout-payment'
 
-  @client = new Api
-    key:      opts.key
-    endpoint: opts.endpoint
+  settings = {}
+  settings.key = opts?.key
+  settings.endpoint = opts?.endpoint
+
+  @client = new Api settings
 
   @cart = new Cart @client, @data, opts.cartOptions
 
