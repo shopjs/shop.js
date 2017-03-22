@@ -201,12 +201,11 @@ Shop.start = (opts = {}) ->
     store.remove 'checkout-payment'
 
   settings = {}
-  settings.key = opts?.key
-  settings.endpoint = opts?.endpoint
+  settings.key      = opts.key
+  settings.endpoint = opts.endpoint
 
   @client = new Api settings
-
-  @cart = new Cart @client, @data, opts.cartOptions
+  @cart   = new Cart @client, @data, opts.cartOptions
 
   @cart.onCart = =>
     store.set 'cartId', @data.get 'order.cartId'
@@ -222,15 +221,15 @@ Shop.start = (opts = {}) ->
     # try get userId
     @client.account.get().then (res) =>
       @cart._cartUpdate
-        userId: res.email
         email:  res.email
+        userId: res.email
     .catch ->
       # ignore error, does not matter
 
   tags = El.mount elementsToMount,
-    data:   @data
     cart:   @cart
     client: @client
+    data:   @data
 
   El.update = ->
     for tag in tags
