@@ -7,6 +7,8 @@ import m      from '../mediator'
 class LineItems extends CrowdControl.Views.View
   tag:  'lineitems'
   html: html
+
+  init: ->
     if @parentData?
       @data = @parentData
 

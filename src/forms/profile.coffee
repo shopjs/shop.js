@@ -1,8 +1,7 @@
 import CrowdControl from 'crowdcontrol'
-import raf          from 'es-raf'
 
 import Events from '../events'
-import html   from '../../templates/forms/from'
+import html   from '../../templates/forms/form'
 import m      from '../mediator'
 import {
   isEmail

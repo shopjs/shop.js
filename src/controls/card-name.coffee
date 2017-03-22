@@ -1,5 +1,7 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class CardName extends Text
-  tag:  'card-name'
+class CardName extends Text
+  tag:    'card-name'
   lookup: 'payment.account.name'
+
+export default CardName

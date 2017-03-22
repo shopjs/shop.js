@@ -2,7 +2,7 @@ import CrowdControl from 'crowdcontrol'
 import store        from 'akasha'
 
 import Events  from '../events'
-import configs from './config'
+import configs from './configs'
 import html    from '../../templates/forms/form'
 import m       from '../mediator'
 
@@ -14,7 +14,6 @@ class CheckoutForm extends CrowdControl.Views.Form
   loading:      false
   checkedOut:   false
   configs:      configs
->>>>>>> master
 
   init: ->
     super()

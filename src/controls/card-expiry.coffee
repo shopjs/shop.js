@@ -1,23 +1,23 @@
-import Text from './text'
-import cardUtils from '../utils/card'
-import keys from '../utils/keys'
+import Text              from './text'
+import keys              from '../utils/keys'
+import {restrictNumeric} from '../utils/card'
 
-export default class CardExpiry extends Text
-  tag:  'card-expiry'
+class CardExpiry extends Text
+  tag:    'card-expiry'
   lookup: 'payment.account.expiry'
 
   events:
-    updated: ()->
+    updated: ->
       @onUpdated()
 
-  init: ()->
+  init: ->
     super
 
-  onUpdated: ()->
+  onUpdated: ->
     if !@first
       $input = $($(@root).find('input')[0])
-      $input.on 'keypress', cardUtils.restrictNumeric
-      $input.on 'keypress', (e)->
+      $input.on 'keypress', restrictNumeric
+      $input.on 'keypress', (e) ->
         return true if e.which not in keys.numeric
 
         value = $input.val() + String.fromCharCode e.which
@@ -33,3 +33,5 @@ export default class CardExpiry extends Text
           e.preventDefault()
 
       @first = true
+
+export default CardExpiry
