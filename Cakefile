@@ -23,14 +23,13 @@ task 'build', 'build js', ->
   yield b.write
     formats: ['es', 'cjs']
 
-  yield b.write
+task 'build:min', 'build js for production', ['build'], ->
+  yield bundle.write
+    entry:     'src/index.coffee'
     format:    'web'
     external:  false
     minify:    true
     sourceMap: false
-
-task 'build:min', 'build js for production', ['build'], ->
-  exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
 
 server = do require 'connect'
 
