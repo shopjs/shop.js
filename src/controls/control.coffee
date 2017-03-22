@@ -1,10 +1,10 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 import Events       from  '../events'
 import m            from  '../mediator'
 
 scrolling = false
 
-export default class Control extends CrowdControl.Input
+export default class Control extends El.Input
   init: ()->
     if !@input? && !@lookup?
       throw new Error 'No input or lookup provided'

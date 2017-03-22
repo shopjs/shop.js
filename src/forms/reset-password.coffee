@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -8,7 +8,7 @@ import {
   isEmail
 } from './middleware'
 
-class ResetPasswordForm extends CrowdControl.Views.Form
+class ResetPasswordForm extends El.Views.Form
   tag: 'reset-password'
   html: html
 

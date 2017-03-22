@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -12,7 +12,7 @@ import {
 } from './middleware'
 
 
-class ProfileForm extends CrowdControl.Views.Form
+class ProfileForm extends El.Views.Form
   tag: 'profile'
   html: html
 
@@ -49,21 +49,21 @@ class ProfileForm extends CrowdControl.Views.Form
             @data.set 'user.referrers', refrs
             m.trigger Events.CreateReferralProgramSuccess, refrs
             m.trigger Events.ProfileLoadSuccess, res
-            CrowdControl.scheduleUpdate()
+            El.scheduleUpdate()
 
           .catch (err) =>
             @errorMessage = err.message
             m.trigger Events.CreateReferralProgramFailed, err
             m.trigger Events.ProfileLoadSuccess, res
-            CrowdControl.scheduleUpdate()
+            El.scheduleUpdate()
       else
         m.trigger Events.ProfileLoadSuccess, res
-        CrowdControl.scheduleUpdate()
+        El.scheduleUpdate()
 
     .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ProfileLoadFailed, err
-      CrowdControl.scheduleUpdate()
+      El.scheduleUpdate()
 
     super
 

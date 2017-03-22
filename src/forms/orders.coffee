@@ -1,8 +1,8 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import html from '../../templates/forms/orders'
 
-class Orders extends CrowdControl.Views.View
+class Orders extends El.Views.View
   tag:  'orders'
   html: html
   init: ->

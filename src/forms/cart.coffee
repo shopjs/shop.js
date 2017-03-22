@@ -1,11 +1,11 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 import store        from 'akasha'
 
 import Events from '../events'
 import html from '../../templates/forms/cart'
 import m from '../mediator'
 
-class CartForm extends CrowdControl.Views.Form
+class CartForm extends El.Views.Form
   tag:  'cart'
   html: html
 

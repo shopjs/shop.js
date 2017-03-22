@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -9,7 +9,7 @@ import {
   isRequired
 } from './middleware'
 
-class LoginForm extends CrowdControl.Views.Form
+class LoginForm extends El.Views.Form
   tag: 'login'
   html: html
 

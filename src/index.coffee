@@ -1,7 +1,7 @@
 import './utils/patches'
 
 import Promise      from 'broken'
-import crowdcontrol from 'crowdcontrol'
+import El           from 'el.js'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
 import riot         from 'riot'
@@ -21,9 +21,9 @@ import m         from './mediator'
 import {renderUICurrencyFromJSON} from './utils/currency'
 import {renderDate} from './utils/dates'
 
-Shop.Crowdcontrol.Views.View::renderCurrency = renderUICurrencyFromJSON
-Shop.Crowdcontrol.Views.View::renderDate = renderDate
-Shop.Crowdcontrol.Views.View::isEmpty = ->
+El.Views.View::renderCurrency = renderUICurrencyFromJSON
+El.Views.View::renderDate = renderDate
+El.Views.View::isEmpty = ->
   Shop.isEmpty()
 
 Shop.use = (templates) ->
@@ -197,7 +197,7 @@ Shop.start = (opts = {}) ->
     @data.set 'payment', checkoutPayment
     store.remove 'checkout-payment'
 
-  @client = new window.Crowdstart.Api
+  @client = new Api
     key:      opts.key
     endpoint: opts.endpoint
 

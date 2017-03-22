@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -12,7 +12,7 @@ import {
 } from './middleware'
 
 
-class RegisterForm extends CrowdControl.Views.Form
+class RegisterForm extends El.Views.Form
   tag: 'register'
   html: form
 

@@ -1,4 +1,4 @@
-import CrowdControl from 'crowdcontrol'
+import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
@@ -8,7 +8,7 @@ import {
   isPostalRequired
 } from './middleware'
 
-class ShippingAddressForm extends CrowdControl.Views.Form
+class ShippingAddressForm extends El.Views.Form
   tag:  'shippingaddress'
   html: html
 
