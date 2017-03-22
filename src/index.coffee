@@ -1,7 +1,7 @@
 import './utils/patches'
 
-import Promise      from 'broken'
 import El           from 'el.js'
+import Promise      from 'broken'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
 import store        from 'akasha'
