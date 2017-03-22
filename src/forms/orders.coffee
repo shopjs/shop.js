@@ -2,8 +2,10 @@ import CrowdControl from 'crowdcontrol'
 
 import html from '../../templates/forms/orders'
 
-export default class Orders extends CrowdControl.Views.View
+class Orders extends CrowdControl.Views.View
   tag:  'orders'
   html: html
-  init: ()->
+  init: ->
     super
+
+export default Orders

@@ -2,21 +2,20 @@ import Checkout                 from './checkout'
 import CheckoutCard             from './checkout-card'
 import CheckoutShippingAddress  from './checkout-shippingaddress'
 
-import Cart                     from './cart'
-import LineItem                 from './lineitem'
-import LineItems                from './lineitems'
-import Login                    from './login'
-import Order                    from './order'
-import Orders                   from './orders'
-import Profile                  from './profile'
-import Register                 from './register'
-import RegisterComplete         from './register-complete'
-import ResetPassword            from './reset-password'
-import ResetPasswordComplete    from './reset-password-complete'
-import ShippingAddress          from './shippingaddress'
+import Cart                    from './cart'
+import LineItem                from './lineitem'
+import LineItems               from './lineitems'
+import Login                   from './login'
+import Order                   from './order'
+import Orders                  from './orders'
+import Profile                 from './profile'
+import Register                from './register'
+import RegisterComplete        from './register-complete'
+import ResetPassword           from './reset-password'
+import ResetPasswordComplete   from './reset-password-complete'
+import ShippingAddress         from './shippingaddress'
 
-
-module.exports =
+export default Forms =
   Checkout:                 Checkout
   CheckoutCard:             CheckoutCard
   CheckoutShippingAddress:  CheckoutShippingAddress
@@ -34,7 +33,7 @@ module.exports =
   ResetPasswordComplete:    ResetPasswordComplete
   ShippingAddress:          ShippingAddress
 
-  register: ()->
+  register: ->
     Checkout.register()
     Cart.register()
     CheckoutCard.register()

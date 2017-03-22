@@ -1,17 +1,19 @@
 import CrowdControl from 'crowdcontrol'
-import m from '../mediator'
+
 import Events from '../events'
+import html   from '../../templates/forms/lineitem'
+import m      from '../mediator'
 
-import html from '../../templates/forms/lineitem'
-
-export default class LineItemForm extends CrowdControl.Views.Form
+class LineItemForm extends CrowdControl.Views.Form
   tag:  'lineitem'
   html: html
   configs:
     'quantity': null
 
-  init: ()->
+  init: ->
     super
 
-  delete: (event)->
+  delete: (event) ->
     m.trigger Events.DeleteLineItem, @data
+
+export default LineItemForm

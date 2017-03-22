@@ -1,10 +1,9 @@
 require 'shortcake'
 
-use 'cake-version'
+use 'cake-bundle'
+use 'cake-outdated'
 use 'cake-publish'
-
-fs        = require 'mz/fs'
-requisite = require 'requisite'
+use 'cake-version'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -15,21 +14,22 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ->
-  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
-  bundle = yield requisite.bundle
+  b = new Bundle
     entry: 'src/index.coffee'
-  js = bundle.toString stripDebug: true
-  yield fs.writeFile 'shop.js', js, 'utf8'
+    compilers:
+      coffee:
+        version: 1
+
+  yield b.write
+    formats: ['es', 'cjs']
 
 task 'build:min', 'build js for production', ['build'], ->
-  exec 'uglifyjs shop.js --compress --mangle --lint=false > shop.min.js'
-
-task 'build:dev', 'build js for development', ->
-  yield exec 'node_modules/.bin/coffee -bcm -o lib/ src/'
-  bundle = yield requisite.bundle
-    entry:  'src/index.coffee'
-    global: true
-  yield fs.writeFile 'shop.js', bundle.toString(), 'utf8'
+  yield bundle.write
+    entry:     'src/index.coffee'
+    format:    'web'
+    external:  false
+    minify:    true
+    sourceMap: false
 
 server = do require 'connect'
 

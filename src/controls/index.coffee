@@ -29,7 +29,7 @@ import GiftEmail from './gift-email'
 import GiftMessage from './gift-message'
 import PromoCode from './promocode'
 
-export default {
+export default Controls =
   #Generic Control
   Control:          Control
   Text:             Text
@@ -95,4 +95,3 @@ export default {
     GiftEmail.register()
     GiftMessage.register()
     PromoCode.register()
-}

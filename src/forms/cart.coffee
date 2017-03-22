@@ -1,15 +1,15 @@
 import CrowdControl from 'crowdcontrol'
-import m from '../mediator'
+import store        from 'akasha'
+
 import Events from '../events'
-import store from 'akasha'
-
 import html from '../../templates/forms/cart'
+import m from '../mediator'
 
-export default class CartForm extends CrowdControl.Views.Form
+class CartForm extends CrowdControl.Views.Form
   tag:  'cart'
   html: html
 
-  init: ()->
+  init: ->
     super
     promoCode = store.get 'promoCode'
 
@@ -27,16 +27,16 @@ export default class CartForm extends CrowdControl.Views.Form
   applying: false
   promoMessage: ''
 
-  isEmpty: ()->
+  isEmpty: ->
     return @data('order.items').length == 0
 
-  count: ()->
+  count: ->
     count = 0
     for item in @data('order.items')
       count += item.quantity
     return count
 
-  applyPromoCode: ()->
+  applyPromoCode: ->
     @promoMessage = ''
     promoCode = @data.get 'order.promoCode'
     if !promoCode
@@ -71,3 +71,5 @@ export default class CartForm extends CrowdControl.Views.Form
 
       m.trigger Events.ApplyPromoCodeFailed, err
       @scheduleUpdate()
+
+export default CartForm

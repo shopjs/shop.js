@@ -1,35 +1,34 @@
 import CrowdControl from 'crowdcontrol'
-import m from '../mediator'
-import Events from '../events'
-import store from 'akasha'
+import store        from 'akasha'
 
-import html from '../../templates/forms/form'
+import Events  from '../events'
+import configs from './config'
+import html    from '../../templates/forms/form'
+import m       from '../mediator'
 
-export default class CheckoutForm extends CrowdControl.Views.Form
+class CheckoutForm extends CrowdControl.Views.Form
   tag:  'checkout'
   html: html
 
   errorMessage: ''
-  loading: false
-  checkedOut: false
-  termsUrl: 'terms'
+  loading:      false
+  checkedOut:   false
+  configs:      configs
+>>>>>>> master
 
-  configs: require './checkout-configs'
+  init: ->
+    super()
 
-  init: ()->
-    super
-
-    m.on Events.ChangeSuccess, (name, value)=>
+    m.on Events.ChangeSuccess, (name, value) =>
       if name == 'user.email'
         @cart._cartUpdate
           email:    value
+          currency: @data.get 'order.currency'
           mailchimp:
             checkoutUrl: @data.get 'order.checkoutUrl'
-          currency: @data.get 'order.currency'
 
-  _submit: (event)->
-    if @loading || @checkedOut
-      return
+  _submit: (event) ->
+    return if @loading or @checkedOut
 
     @loading = true
     m.trigger Events.Submit, @tag
@@ -38,7 +37,7 @@ export default class CheckoutForm extends CrowdControl.Views.Form
 
     @scheduleUpdate()
     email = ''
-    @client.account.exists(@data.get 'user.email').then((res)=>
+    @client.account.exists(@data.get 'user.email').then (res) =>
 
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
@@ -57,9 +56,9 @@ export default class CheckoutForm extends CrowdControl.Views.Form
       @data.set 'order.email', email
 
       @scheduleUpdate()
-      @cart.checkout().then((pRef)=>
+      @cart.checkout().then (pRef) =>
         pRef.p
-          .then ()=>
+          .then =>
             hasErrored = false
             setTimeout =>
               if !hasErrored
@@ -71,7 +70,8 @@ export default class CheckoutForm extends CrowdControl.Views.Form
             , 200
 
             m.trigger Events.SubmitSuccess
-          .catch (err)=>
+
+          .catch (err) =>
             window?.Raven?.captureException(err)
 
             hasErrored = true
@@ -81,7 +81,8 @@ export default class CheckoutForm extends CrowdControl.Views.Form
 
             m.trigger Events.SubmitFailed, err
             @scheduleUpdate()
-      ).catch (err)=>
+
+      .catch (err) =>
         @loading = false
         console.log "authorize submit Error: #{err}"
 
@@ -92,8 +93,9 @@ export default class CheckoutForm extends CrowdControl.Views.Form
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
         m.trigger Events.SubmitFailed, err
-        @scheduleUpdate()
-    ).catch (err)=>
+        @update()
+
+    .catch (err) =>
       @loading = false
       console.log "authorize submit Error: #{err}"
 
@@ -105,3 +107,5 @@ export default class CheckoutForm extends CrowdControl.Views.Form
 
       m.trigger Events.SubmitFailed, err
       @scheduleUpdate()
+
+export default CheckoutForm

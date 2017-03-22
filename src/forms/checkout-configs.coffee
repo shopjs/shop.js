@@ -11,7 +11,7 @@ import {
   agreeToTerms,
 } from './middleware'
 
-export default {
+export default config =
   'user.email':       [ isRequired, isEmail ]
   'user.name':        [ isRequired, splitName ]
   # 'user.password':    null
@@ -36,4 +36,3 @@ export default {
   'payment.account.cvc':      [ requiresStripe, cvc ]
 
   'terms':                    [ agreeToTerms ]
-}
