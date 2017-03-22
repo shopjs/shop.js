@@ -62,14 +62,13 @@ Shop.use = (templates) ->
 # Format of opts.referralProgram
 # Referral Program Object
 
-Shop.riot = riot
+Shop.riot      = riot
 Shop.analytics = analytics
-
-Shop.isEmpty = ->
+Shop.isEmpty   = ->
   items = @data.get 'order.items'
   items.length == 0
 
-getQueries = ()->
+getQueries = ->
   search = /([^&=]+)=?([^&]*)/g
   q = window.location.href.split('?')[1]
   qs = {}
@@ -99,8 +98,9 @@ tagNames = []
 for k, v of Shop.Forms
   tagNames.push(v::tag.toUpperCase()) if v::tag?
 
-searchQueue = [document.body]
+searchQueue     = [document.body]
 elementsToMount = []
+
 loop
   if searchQueue.length == 0
     break
@@ -140,11 +140,10 @@ Shop.start = (opts = {}) ->
 
   store.set 'referrer', referrer
 
-  promo = queries.promo ? ''
-
-  items     = store.get 'items'
-  cartId    = store.get 'cartId'
-  meta      = store.get 'order.metadata'
+  promo  = queries.promo ? ''
+  items  = store.get 'items'
+  cartId = store.get 'cartId'
+  meta   = store.get 'order.metadata'
 
   @data = refer
     taxRates:       opts.taxRates || []
@@ -160,14 +159,14 @@ Shop.start = (opts = {}) ->
       referrerId:   referrer
       shippingAddress:
         country: 'us'
-      discount: 0
-      tax: 0
-      subtotal: 0
-      total: 0
-      items: items ? []
-      cartId: cartId ? null
+      discount:    0
+      tax:         0
+      subtotal:    0
+      total:       0
+      items:       items                    ? []
+      cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
-      metadata: meta ? {}
+      metadata:    meta                     ? {}
 
   data = @data.get()
   for k, v of opts
@@ -211,11 +210,11 @@ Shop.start = (opts = {}) ->
       cart.mailchimp.campaignId = mcCId
 
     # try get userId
-    @client.account.get().then((res)=>
+    @client.account.get().then (res) =>
       @cart._cartUpdate
         userId: res.email
         email:  res.email
-    ).catch ->
+    .catch ->
       # ignore error, does not matter
 
   tags = riot.mount elementsToMount,
@@ -227,11 +226,11 @@ Shop.start = (opts = {}) ->
     for tag in tags
       tag.update()
 
-  @cart.onUpdate = (item)=>
+  @cart.onUpdate = (item) =>
     items = @data.get 'order.items'
     store.set 'items', items
     @cart._cartUpdate
-      tax: @data.get 'order.tax'
+      tax:   @data.get 'order.tax'
       total: @data.get 'order.total'
 
     if item?
@@ -244,38 +243,38 @@ Shop.start = (opts = {}) ->
     riot.update()
 
   if referrer? && referrer != ''
-    @client.referrer.get(referrer).then((res)=>
+    @client.referrer.get(referrer).then (res) =>
       promoCode = res.affiliate.couponId
       @data.set 'order.promoCode', promocode
       m.trigger Events.ForceApplyPromoCode
-    ).catch ->
+    .catch ->
   else if promo != ''
     @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
 
   ps = []
   for tag in tags
-    p = new Promise (resolve)->
+    p = new Promise (resolve) ->
       tag.one 'updated', ->
         resolve()
     ps.push p
 
-  Promise.settle(ps).then(->
+  Promise.settle(ps).then ->
     requestAnimationFrame ->
       m.trigger Events.Ready
     #try to deal with long running stuff
-    setTimeout ()->
+    setTimeout ->
       riot.update()
     , 1000
-  ).catch (err)->
+  .catch (err) ->
     window?.Raven?.captureException err
 
   # quite hacky
   m.data = @data
-  m.on Events.SetData, (@data)=>
+  m.on Events.SetData, (@data) =>
     @cart.invoice()
 
-  m.on Events.DeleteLineItem, (item)->
+  m.on Events.DeleteLineItem, (item) ->
     id = item.get 'id'
     if !id
       id = item.get 'productId'
@@ -285,7 +284,7 @@ Shop.start = (opts = {}) ->
 
   m.trigger Events.SetData, @data
 
-  m.on 'error', (err)->
+  m.on 'error', (err) ->
     console.log err
     window?.Raven?.captureException err
 
@@ -305,7 +304,7 @@ Shop.start = (opts = {}) ->
 waits           = 0
 itemUpdateQueue = []
 
-Shop.initCart = ()->
+Shop.initCart = ->
   @cart.initCart()
 
 Shop.setItem = (id, quantity, locked=false) ->
@@ -313,10 +312,10 @@ Shop.setItem = (id, quantity, locked=false) ->
   p = @cart.set id, quantity, locked
   if @promise != p
     @promise = p
-    @promise.then(=>
+    @promise.then =>
       riot.update()
       m.trigger Events.UpdateItems, @data.get 'order.items'
-    ).catch (err)->
+    .catch (err) ->
       window?.Raven?.captureException err
 
 Shop.getItem = (id) ->
