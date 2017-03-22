@@ -1,15 +1,19 @@
 {
   "name": "shop.js",
   "version": "1.2.0",
-  "description": "Shopping Framework for JavaScript.",
+  "description": "Ecommerce UI components and framework powered by Hanzo.",
   "homepage": "http://github.com/hanzo-io/shop.js",
+  "repository": "github:hanzo-io/shop.js",
   "bugs": "http://github.com/hanzo-io/shop.js/issues",
+  "author": "Hanzo, Inc <hi@hanzo.io>",
+  "license": "MIT",
   "keywords": [
     "browser",
     "checkout",
     "commerce",
     "crowdfunding",
     "ecommerce",
+    "el.js",
     "fulfillment",
     "hanzo",
     "orders",
@@ -25,8 +29,6 @@
   "module": "dist/lib.mjs",
   "js:next": "dist/lib.mjs",
   "files": [
-    "README.md",
-    "LICENSE",
     "dist/",
     "src/"
   ],
@@ -34,26 +36,18 @@
     "node": ">=4.0.0"
   },
   "scripts": {
-    "prepublish": "cake build:min",
-    "test": "cake build && cake test"
-  },
-  "author": "Hanzo, Inc <hi@hanzo.io> (http://hanzo.io)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/hanzo-io/shop.js"
+    "prepublishOnly": "cake build:min",
+    "test": "cake test"
   },
   "dependencies": {
     "address-validator": "0.2.2",
     "broken": "0.1.10",
     "commerce.js": "1.0.35",
-    "debug": "2.6.2",
+    "el.js": "2.1.14",
     "es-is": "3.2.2",
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
     "es-selectize": "0.12.8",
-    "crowdcontrol": "2.1.13",
-    "es5-shim": "4.5.9",
     "hanzo.js": "2.3.6",
     "moment": "2.18.1",
     "referential": "0.5.15",
