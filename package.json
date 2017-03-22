@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "address-validator": "0.2.2",
-    "akasha": "0.1.0",
+    "akasha": "0.1.1",
     "broken": "0.1.11",
     "commerce.js": "1.0.35",
     "el.js": "2.1.15",
