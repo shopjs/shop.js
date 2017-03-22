@@ -1,13 +1,14 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
-{
-  isRequired,
-  isPostalRequired,
-} = require './middleware'
+import CrowdControl from 'crowdcontrol'
+import riot         from 'riot'
 
-module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
+import m      from '../mediator'
+import Events from '../events'
+import {
+  isRequired
+  isPostalRequired
+} from './middleware'
+
+class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
   html: '''
     <form onsubmit={submit}>
@@ -26,30 +27,31 @@ module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     if @parentData?
       @data = @parentData
 
     super
 
-    @on 'update', ()=>
+    @on 'update', =>
       if @parentData?
         @data = @parentData
 
-  _submit: ()->
+  _submit: ->
     opts =
-      id:  @data.get 'order.id'
+      id:              @data.get 'order.id'
       shippingAddress: @data.get 'order.shippingAddress'
 
     @errorMessage = ''
 
     @update()
     m.trigger Events.ShippingAddressUpdate
-    @client.account.updateOrder(opts).then((res)=>
+    @client.account.updateOrder(opts).then (res) =>
       m.trigger Events.ShippingAddressUpdateSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ShippingAddressUpdateFailed, err
       @update()
 
+export default ShippingAddressForm

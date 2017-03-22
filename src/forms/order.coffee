@@ -1,19 +1,21 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
-refer = require 'referential'
+import CrowdControl from 'crowdcontrol'
+import refer        from 'referential'
+import riot         from 'riot'
 
-module.exports = class OrderForm extends CrowdControl.Views.Form
+import m      from '../mediator'
+import Events from '../events'
+import html   from '../../templates/forms/order'
+
+class OrderForm extends CrowdControl.Views.Form
   tag:  'order'
-  html: require '../../templates/forms/order'
+  html: html
   parentData: null
 
-  init: ()->
+  init: ->
     super
     @parentData = refer {}
 
-    @on 'update', ()=>
+    @on 'update', =>
       if @data?
         @parentData.set 'order', @data.get()
         items = @data.get 'items'
@@ -22,5 +24,7 @@ module.exports = class OrderForm extends CrowdControl.Views.Form
         for item, i in items
           @parentData.set 'order.items.' + i + '.locked', true
 
-  delete: (event)->
+  delete: (event) ->
     m.trigger Events.DeleteLineItem, @data
+
+export default OrderForm

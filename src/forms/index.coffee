@@ -1,21 +1,37 @@
-module.exports =
-  Checkout:                 require './checkout'
-  CheckoutShippingAddress:  require './checkout-shippingaddress'
+import Checkout                from './checkout'
+import CheckoutShippingAddress from './checkout-shippingaddress'
 
-  Cart:                     require './cart'
-  LineItem:                 require './lineitem'
-  LineItems:                require './lineitems'
-  Login:                    require './login'
-  Order:                    require './order'
-  Orders:                   require './orders'
-  Profile:                  require './profile'
-  Register:                 require './register'
-  RegisterComplete:         require './register-complete'
-  ResetPassword:            require './reset-password'
-  ResetPasswordComplete:    require './reset-password-complete'
-  ShippingAddress:          require './shippingaddress'
+import Cart                    from './cart'
+import LineItem                from './lineitem'
+import LineItems               from './lineitems'
+import Login                   from './login'
+import Order                   from './order'
+import Orders                  from './orders'
+import Profile                 from './profile'
+import Register                from './register'
+import RegisterComplete        from './register-complete'
+import ResetPassword           from './reset-password'
+import ResetPasswordComplete   from './reset-password-complete'
+import ShippingAddress         from './shippingaddress'
 
-  register: ()->
+export default Forms =
+  Checkout:                 Checkout
+  CheckoutShippingAddress:  CheckoutShippingAddress
+
+  Cart:                     Cart
+  LineItem:                 LineItem
+  LineItems:                LineItems
+  Login:                    Login
+  Order:                    Order
+  Orders:                   Orders
+  Profile:                  Profile
+  Register:                 Register
+  RegisterComplete:         RegisterComplete
+  ResetPassword:            ResetPassword
+  ResetPasswordComplete:    ResetPasswordComplete
+  ShippingAddress:          ShippingAddress
+
+  register: ->
     @Checkout.register()
     @Cart.register()
     @LineItem.register()

@@ -1,44 +1,45 @@
-CrowdControl    = require 'crowdcontrol'
-{
-  isRequired,
-  isEmail,
-  isPassword,
-  splitName,
-  matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
 
-module.exports = class RegisterForm extends CrowdControl.Views.Form
+import Events from '../events'
+import m      from '../mediator'
+import {
+  isRequired
+  isEmail
+  isPassword
+  splitName
+  matchesPassword
+} from './middleware'
+
+class RegisterForm extends CrowdControl.Views.Form
   tag: 'register'
   html: '''
     <form onsubmit={submit}>
       <yield/>
     </form>
   '''
-  immediateLogin: false
+  immediateLogin:        false
   immediateLoginLatency: 400
 
   configs:
-    'user.email':               [ isRequired, isEmail ]
-    'user.name':                [ isRequired, splitName ]
-    'user.password':            [ isPassword ]
-    'user.passwordConfirm':     [ isPassword, matchesPassword ]
+    'user.email':           [ isRequired, isEmail ]
+    'user.name':            [ isRequired, splitName ]
+    'user.password':        [ isPassword ]
+    'user.passwordConfirm': [ isPassword, matchesPassword ]
 
   source: ''
   errorMessage: ''
 
-  init: ()->
+  init: ->
     super
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
-      email:            @data.get 'user.email'
-      firstName:        @data.get 'user.firstName'
-      lastName:         @data.get 'user.lastName'
-      password:         @data.get 'user.password'
-      passwordConfirm:  @data.get 'user.passwordConfirm'
-      referrerId:       @data.get 'order.referrerId'
+      email:           @data.get 'user.email'
+      firstName:       @data.get 'user.firstName'
+      lastName:        @data.get 'user.lastName'
+      password:        @data.get 'user.password'
+      passwordConfirm: @data.get 'user.passwordConfirm'
+      referrerId:      @data.get 'order.referrerId'
       metadata:
         source: @source
 
@@ -51,7 +52,7 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
 
     @update()
     m.trigger Events.Register
-    @client.account.create(opts).then((res)=>
+    @client.account.create(opts).then (res) =>
       m.trigger Events.RegisterSuccess, res
       @update()
 
@@ -66,7 +67,9 @@ module.exports = class RegisterForm extends CrowdControl.Views.Form
             @update()
           , latency
         , latency
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.RegisterFailed, err
       @update()
+
+export default RegisterForm

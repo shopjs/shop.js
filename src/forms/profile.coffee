@@ -1,15 +1,16 @@
-CrowdControl = require 'crowdcontrol'
-{
-  isRequired,
-  isEmail,
-  isNewPassword,
-  splitName,
-  matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
 
-module.exports = class ProfileForm extends CrowdControl.Views.Form
+import m      from '../mediator'
+import Events from '../events'
+import {
+  isEmail
+  isNewPassword
+  isRequired
+  matchesPassword
+  splitName
+} from './middleware'
+
+class ProfileForm extends CrowdControl.Views.Form
   tag: 'profile'
   html: '''
     <form onsubmit={submit}>
@@ -26,33 +27,33 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
 
   errorMessage: ''
 
-  hasOrders: ()->
+  hasOrders: ->
     orders = @data.get('user.orders')
     return orders && orders.length > 0
 
-  init: ()->
+  init: ->
     m.trigger Events.ProfileLoad
-    @client.account.get().then((res)=>
+    @client.account.get().then (res) =>
       @data.set 'user', res
       firstName = @data.get 'user.firstName'
       lastName = @data.get 'user.lastName'
       @data.set 'user.name', firstName + ' ' + lastName
 
       if @data.get('referralProgram') && (!res.referrers? || res.referrers.length == 0)
-        requestAnimationFrame ()=>
+        requestAnimationFrame =>
           m.trigger Events.CreateReferralProgram
           @client.referrer.create({
             program:   @data.get 'referralProgram'
             programId: @data.get 'referralProgram.id'
             userId: res.id,
-          }).then((res2)=>
+          }).then (res2) =>
             refrs = [res2]
             @data.set 'user.referrers', refrs
             m.trigger Events.CreateReferralProgramSuccess, refrs
             m.trigger Events.ProfileLoadSuccess, res
             riot.update()
 
-          ).catch (err)=>
+          .catch (err) =>
             @errorMessage = err.message
             m.trigger Events.CreateReferralProgramFailed, err
             m.trigger Events.ProfileLoadSuccess, res
@@ -61,14 +62,14 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
         m.trigger Events.ProfileLoadSuccess, res
         riot.update()
 
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ProfileLoadFailed, err
       riot.update()
 
     super
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       email:            @data.get 'user.email'
       firstName:        @data.get 'user.firstName'
@@ -81,14 +82,16 @@ module.exports = class ProfileForm extends CrowdControl.Views.Form
 
     @update()
     m.trigger Events.ProfileUpdate
-    @client.account.update(opts).then((res)=>
+    @client.account.update(opts).then (res) =>
       @data.set 'user.currentPassword', null
       @data.set 'user.password', null
       @data.set 'user.passwordConfirm', null
       m.trigger Events.ProfileUpdateSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message
       m.trigger Events.ProfileUpdateFailed, err
       @update()
 
+
+export default ProfileForm

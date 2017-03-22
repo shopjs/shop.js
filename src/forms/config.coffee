@@ -1,4 +1,4 @@
-{
+import {
   isRequired,
   isEmail,
   splitName,
@@ -9,9 +9,9 @@
   cvc,
   isEcardGiftRequired,
   agreeToTerms,
-} = require './middleware'
+} from './middleware'
 
-module.exports =
+export default config =
   'user.email':       [ isRequired, isEmail ]
   'user.name':        [ isRequired, splitName ]
   # 'user.password':    null
@@ -36,4 +36,3 @@ module.exports =
   'payment.account.cvc':      [ requiresStripe, cvc ]
 
   'terms':                    [ agreeToTerms ]
-

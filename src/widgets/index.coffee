@@ -1,7 +1,10 @@
-module.exports =
-  CartCounter:  require './cart-counter'
-  NestedForm:  require './nested-form'
+import CartCounter from './cart-counter'
+import NestedForm  from './nested-form'
 
-  register: ()->
+export default Widgets =
+  CartCounter: CartCounter
+  NestedForm:  NestedForm
+
+  register: ->
     @CartCounter.register()
     @NestedForm.register()

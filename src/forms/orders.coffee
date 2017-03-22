@@ -1,11 +1,15 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
-refer = require 'referential'
+import CrowdControl from 'crowdcontrol'
+import riot         from 'riot'
+import refer        from 'referential'
 
-module.exports = class Orders extends CrowdControl.Views.View
+import Events from '../events'
+import html   from '../../templates/forms/orders'
+import m      from '../mediator'
+
+class Orders extends CrowdControl.Views.View
   tag:  'orders'
-  html: require '../../templates/forms/orders'
-  init: ()->
+  html: html
+  init: ->
     super
+
+export default Orders

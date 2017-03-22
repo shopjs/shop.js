@@ -1,12 +1,14 @@
-CrowdControl    = require 'crowdcontrol'
-{
+import CrowdControl from 'crowdcontrol'
+
+import m      from'../mediator'
+import Events from '../events'
+import {
   isPassword,
   matchesPassword
-} = require './middleware'
-m = require '../mediator'
-Events = require '../events'
+} from './middleware'
 
-module.exports = class ResetPasswordCompleteForm extends CrowdControl.Views.Form
+
+class ResetPasswordCompleteForm extends CrowdControl.Views.Form
   tag: 'reset-password-complete'
   html: '''
     <form onsubmit={submit}>
@@ -14,15 +16,15 @@ module.exports = class ResetPasswordCompleteForm extends CrowdControl.Views.Form
     </form>
   '''
   configs:
-    'user.password':            [ isPassword ]
-    'user.passwordConfirm':     [ isPassword, matchesPassword ]
+    'user.password':        [ isPassword ]
+    'user.passwordConfirm': [ isPassword, matchesPassword ]
 
   errorMessage: ''
 
-  init: ()->
+  init: ->
     super
 
-  _submit: (event)->
+  _submit: (event) ->
     opts =
       password:         @data.get 'user.password'
       passwordConfirm:  @data.get 'user.passwordConfirm'
@@ -32,12 +34,14 @@ module.exports = class ResetPasswordCompleteForm extends CrowdControl.Views.Form
 
     @update()
     m.trigger Events.ResetPasswordComplete
-    @client.account.confirm(opts).then((res)=>
+    @client.account.confirm(opts).then (res) =>
       if res.token
         @client.setCustomerToken res.token
       m.trigger Events.ResetPasswordCompleteSuccess, res
       @update()
-    ).catch (err)=>
+    .catch (err) =>
       @errorMessage = err.message.replace 'Token', 'Link'
       m.trigger Events.ResetPasswordCompleteFailed, err
       @update()
+
+export default ResetPasswordCompleteForm
