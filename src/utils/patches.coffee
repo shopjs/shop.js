@@ -1,4 +1,4 @@
-import raf from 'es-raf'
+import {raf} from 'es-raf'
 
 # Shims/Polyfills
 window.Promise               ?= require 'broken'
