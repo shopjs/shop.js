@@ -1,6 +1,6 @@
 {
   "name": "shop.js",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Ecommerce UI components and framework powered by Hanzo.",
   "homepage": "http://github.com/hanzo-io/shop.js",
   "repository": "github:hanzo-io/shop.js",
@@ -45,7 +45,6 @@
     "broken": "0.1.10",
     "commerce.js": "1.0.35",
     "el.js": "2.1.14",
-    "es-is": "3.2.2",
     "es-is": "3.2.2",
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
