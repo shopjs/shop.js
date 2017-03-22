@@ -1,5 +1,5 @@
-import El from 'el.js'
-import store        from 'akasha'
+import El    from 'el.js'
+import store from 'akasha'
 
 import Events  from '../events'
 import configs from './configs'
