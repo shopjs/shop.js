@@ -1,23 +1,24 @@
 import Text from './text'
-import cardUtils from '../utils/card'
 import keys from '../utils/keys'
+import {cardFromNumber, restrictNumeric} from '../utils/card'
 
-export default class CardNumber extends Text
-  tag:  'card-number'
-  lookup: 'payment.account.number'
+
+class CardNumber extends Text
+  tag:      'card-number'
+  lookup:   'payment.account.number'
   cardType: ''
 
   events:
-    updated: ()->
+    updated: ->
       @onUpdated()
 
-  init: ()->
+  init: ->
     super
 
-  onUpdated: ()->
+  onUpdated: ->
     if !@first
       $input = $($(@root).find('input')[0])
-      $input.on 'keypress', cardUtils.restrictNumeric
+      $input.on 'keypress', restrictNumeric
       $input.on 'keypress', (e)=>
         return true if e.which not in keys.numeric
 
@@ -29,7 +30,7 @@ export default class CardNumber extends Text
         length  = value.length
         upperLength = 16
 
-        card = cardUtils.cardFromNumber value
+        card = cardFromNumber value
         if card
           upperLength = card.length[card.length.length - 1]
 
@@ -64,3 +65,4 @@ export default class CardNumber extends Text
 
       @first = true
 
+export default CardNumber

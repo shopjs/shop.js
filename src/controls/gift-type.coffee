@@ -1,6 +1,7 @@
-export Select from './state-select'
+import Select from './state-select'
 
-export default class GiftType extends Select
-  tag:  'gift-type'
+class GiftType extends Select
+  tag:    'gift-type'
   lookup: 'order.giftType'
 
+export default GiftType

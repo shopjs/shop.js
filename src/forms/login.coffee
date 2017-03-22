@@ -1,8 +1,8 @@
 import CrowdControl from 'crowdcontrol'
 
 import Events from '../events'
+import html   from '../../templates/forms/form'
 import m      from '../mediator'
-import html   from '../../templates/forms/from'
 import {
   isEmail
   isPassword

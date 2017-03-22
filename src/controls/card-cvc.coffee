@@ -1,23 +1,23 @@
 import Text from './text'
-import cardUtils from '../utils/card'
 import keys from '../utils/keys'
+import {restrictNumeric} from '../utils/card'
 
-export default class CardCVC extends Text
-  tag:  'card-cvc'
+class CardCVC extends Text
+  tag:    'card-cvc'
   lookup: 'payment.account.cvc'
 
   events:
-    updated: ()->
+    updated: ->
       @onUpdated()
 
-  init: ()->
+  init: ->
     super
 
-  onUpdated: ()->
+  onUpdated: ->
     if !@first
       $input = $($(@root).find('input')[0])
-      $input.on 'keypress', cardUtils.restrictNumeric
-      $input.on 'keypress', (e)->
+      $input.on 'keypress', restrictNumeric
+      $input.on 'keypress', (e) ->
         return true if e.which not in keys.numeric
 
         value = $input.val() + String.fromCharCode e.which
@@ -26,3 +26,5 @@ export default class CardCVC extends Text
           return false
 
       @first = true
+
+export default CardCVC
