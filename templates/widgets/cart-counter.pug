@@ -1,4 +1,5 @@
-.cart-count
-  | ({ countItems() })
-.cart-price
-  | ({ renderCurrency(data.get('order.currency'), totalPrice()) })
+#{ 'yield' }
+  .cart-count
+    | ({ countItems() })
+  .cart-price
+    | ({ renderCurrency(data.get('order.currency'), totalPrice()) })

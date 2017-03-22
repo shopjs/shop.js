@@ -1,7 +1,7 @@
 import CrowdControl from 'crowdcontrol'
 import {
   isRequired,
-  isPostalRequired,
+  isPostalRequired
 } from './middleware'
 import m from '../mediator'
 import Events from '../events'

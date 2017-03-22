@@ -1,3 +1,1 @@
-form(method='{ method }' action='{ action }')
-  <yield></yield>
-
+export default {}
