@@ -45,7 +45,7 @@
   "dependencies": {
     "address-validator": "0.2.2",
     "broken": "0.1.10",
-    "commerce.js": "1.0.34",
+    "commerce.js": "1.0.35",
     "debug": "2.6.2",
     "es-is": "3.2.2",
     "es-md5": "2.7.2",
