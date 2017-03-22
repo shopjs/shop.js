@@ -1,5 +1,5 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class PromoCode extends Text
+export default class PromoCode extends Text
   tag:  'promocode'
   lookup: 'order.promoCode'

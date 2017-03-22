@@ -1,13 +1,12 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
-{
+import CrowdControl from 'crowdcontrol'
+import {
   isRequired,
   isPostalRequired,
-} = require './middleware'
+} from './middleware'
+import m from '../mediator'
+import Events from '../events'
 
-module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
+export default class ShippingAddressForm extends CrowdControl.Views.Form
   tag:  'shippingaddress'
   html: require '../../templates/forms/form'
 
@@ -39,13 +38,13 @@ module.exports = class ShippingAddressForm extends CrowdControl.Views.Form
 
     @errorMessage = ''
 
-    @update()
+    @scheduleUpdate()
     m.trigger Events.ShippingAddressUpdate
     @client.account.updateOrder(opts).then((res)=>
       m.trigger Events.ShippingAddressUpdateSuccess, res
-      @update()
+      @scheduleUpdate()
     ).catch (err)=>
       @errorMessage = err.message
       m.trigger Events.ShippingAddressUpdateFailed, err
-      @update()
+      @scheduleUpdate()
 

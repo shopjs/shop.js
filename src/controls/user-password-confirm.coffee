@@ -1,6 +1,6 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class UserPasswordConfirm extends Text
+export default class UserPasswordConfirm extends Text
   tag:          'user-password-confirm'
   lookup:       'user.passwordConfirm'
   type:         'password'

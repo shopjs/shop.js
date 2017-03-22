@@ -1,11 +1,12 @@
-CrowdControl = require 'crowdcontrol'
-riot = require 'riot'
-m = require '../mediator'
-Events = require '../events'
+import CrowdControl from 'crowdcontrol'
+import m from '../mediator'
+import Events from '../events'
 
-module.exports = class LineItemForm extends CrowdControl.Views.Form
+import html from '../../templates/forms/lineitem'
+
+export default class LineItemForm extends CrowdControl.Views.Form
   tag:  'lineitem'
-  html: require '../../templates/forms/lineitem'
+  html: html
   configs:
     'quantity': null
 

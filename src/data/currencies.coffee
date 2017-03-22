@@ -1,4 +1,4 @@
-module.exports =
+export default {
   data:
     'aud':'$'
     'cad':'$'
@@ -114,3 +114,4 @@ module.exports =
     'inr':''
     'try':''
     ''   : ''
+}

@@ -1,6 +1,6 @@
-Text = require './text'
+import Text from './text'
 
-module.exports = class ShippingAddressCity extends Text
+export default class ShippingAddressCity extends Text
   tag:  'shippingaddress-city'
   lookup: 'order.shippingAddress.city'
 

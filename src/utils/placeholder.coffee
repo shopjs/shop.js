@@ -1,4 +1,4 @@
-# contians parts of Input Placeholder Polyfill
+# contains parts of Input Placeholder Polyfill
 # MIT Licensed
 # Created by Christopher Rolfe
 
@@ -20,10 +20,10 @@ unfocusOnAnElement = (event) ->
   if target.value == ''
     target.value = target.getAttribute 'placeholder'
 
-if document.createElement("input").placeholder?
-  module.exports = ()->
-else
-  module.exports = (input)->
+exports = ()->
+
+if !document.createElement("input").placeholder?
+  exports = (input)->
     #jquery case
     input = input[0] ? input
 
@@ -48,3 +48,5 @@ else
     else if input.attachEvent
       input.attachEvent 'onclick', hidePlaceholderOnFocus
       input.attachEvent 'onblur', unfocusOnAnElement
+
+export default exports

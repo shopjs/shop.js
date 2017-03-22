@@ -1,6 +1,6 @@
-StateSelect = require './state-select'
+import StateSelect from './state-select'
 
-module.exports = class ShippingAddressState extends StateSelect
+export default class ShippingAddressState extends StateSelect
   tag:  'shippingaddress-state'
   lookup: 'order.shippingAddress.state'
 

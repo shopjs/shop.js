@@ -1,4 +1,4 @@
-module.exports =
+export default {
   data:
     ak: 'Alaska'
     al: 'Alabama'
@@ -54,3 +54,4 @@ module.exports =
     aa: 'U.S. Armed Forces – Americas'
     ae: 'U.S. Armed Forces – Europe'
     ap: 'U.S. Armed Forces – Pacific'
+}

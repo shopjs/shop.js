@@ -1,9 +1,11 @@
-Control = require './control'
-placeholder = require '../utils/placeholder'
+import Control from './control'
+import placeholder from '../utils/placeholder'
 
-module.exports = class Text extends Control
+import html from '../../templates/controls/text'
+
+export default class Text extends Control
   tag:          'text-control'
-  html:         require '../../templates/controls/text'
+  html:         html
   type:         'text'
   formElement:  'input'
   autoComplete: 'on'
