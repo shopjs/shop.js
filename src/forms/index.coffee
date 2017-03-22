@@ -1,6 +1,6 @@
-import Checkout                 from './checkout'
-import CheckoutCard             from './checkout-card'
-import CheckoutShippingAddress  from './checkout-shippingaddress'
+import Checkout                from './checkout'
+import CheckoutCard            from './checkout-card'
+import CheckoutShippingAddress from './checkout-shippingaddress'
 
 import Cart                    from './cart'
 import LineItem                from './lineitem'
@@ -35,9 +35,10 @@ export default Forms =
 
   register: ->
     Checkout.register()
-    Cart.register()
     CheckoutCard.register()
     CheckoutShippingAddress.register()
+
+    Cart.register()
     LineItem.register()
     LineItems.register()
     Login.register()
