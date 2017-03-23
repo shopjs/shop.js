@@ -1,7 +1,5 @@
 import './utils/patches'
 
-console.log 'hi from shop.js local'
-
 import El           from 'el.js'
 import Promise      from 'broken'
 import objectAssign from 'es-object-assign'
