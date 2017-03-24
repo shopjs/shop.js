@@ -6,7 +6,7 @@
   lineitems(if='{ !isEmpty() }')
     .animated.fadeIn
       .product-image-container(if='{ images }')
-        img(href='{ images[data.get().productName] }')
+        img(src='{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }')
       .product-text-container
         span.product-description
           span.product-name { data.get('productName') }
@@ -22,16 +22,48 @@
           | { renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }
         .product-list-price.invoice-amount(if='{ data.get().listPrice > data.get().price }')
           | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }
+
+
   div(if='{ !isEmpty() }')
-    .invoice-line.invoice-total
+    .promo
+      .promo-label
+        | Coupon
+      .promo-row(class='{ applied: applied, applying: applying, failed: failed }')
+        promocode.input(placeholder='Coupon')
+        button(disabled='{ applying }', onclick='{ applyPromoCode }')
+          span(if='{ !applied && !applying && !failed }') +
+          span(if='{ applied }' ) &#10003;
+          span(if='{ failed }' ) &#10005;
+          span(if='{ applying }') ...
+    .invoice-discount.invoice-line.animated.fadeIn(if="{ data.get('order.discount') > 0 }")
+      .invoice-label
+        | Discount
+      .invoice-amount
+        | { renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }
+    .invoice-line
       .invoice-label
         | Subtotal
       .invoice-amount
         | { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }
+    .invoice-line
+      .invoice-label
+        | Shipping
+      .invoice-amount.not-bold
+        | { data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }
+    .invoice-line
+      .invoice-label
+        | Tax ({ data.get('order.taxRate') * 100 }%)
+      .invoice-amount
+        | { renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }
+    .invoice-line.invoice-total
+      .invoice-label
+        | Total
+      .invoice-amount
+        | { renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }
 
-    a.button.submit(onclick='{ checkout }')
+    button.submit(onclick='{ checkout }', if='{ showButtons }')
       | Checkout
 
   div(if='{ isEmpty() }')
-    a.button.submit(onclick='{ submit }')
+    button.submit(onclick='{ submit }', if='{ showButtons }')
       | Continue Shopping

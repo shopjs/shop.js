@@ -10,6 +10,7 @@ class CartForm extends El.Form
   html: html
   # passed in image dict
   images: null
+  showButtons: true
 
   init: ->
     super
@@ -18,15 +19,18 @@ class CartForm extends El.Form
     if promoCode
       @data.set 'order.promoCode', promoCode
       @applyPromoCode()
-      @scheduleUpdate()
 
     m.on Events.ForceApplyPromoCode, ()=>
       @applyPromoCode()
 
+    @data.on 'set', (k, v)=>
+      if k == 'order.promoCode' && @applied
+        @applyPromoCode()
+
   configs:
     'order.promoCode': null
 
-  applying: false
+
   promoMessage: ''
 
   isEmpty: ->
@@ -48,10 +52,19 @@ class CartForm extends El.Form
 
     @promoMessage = 'Applying...'
     @applying = true
+    @applied = false
+    @failed = false
+
+    # TODO: Move to commerce.js
+    @data.set 'order.coupon', {}
+
+    @scheduleUpdate()
 
     m.trigger Events.ApplyPromoCode, promoCode
     @cart.promoCode(promoCode).then(=>
       @applying = false
+      @applied = true
+      @failed = false
 
       coupon = @data.get 'order.coupon'
       if coupon?.freeProductId? && coupon.freeProductId != "" && coupon.freeQuantity > 0
@@ -64,6 +77,8 @@ class CartForm extends El.Form
     ).catch (err)=>
       store.remove 'promoCode'
       @applying = false
+      @applied = false
+      @failed = true
 
       coupon = @data.get 'order.coupon'
       if coupon?.enabled
