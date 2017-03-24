@@ -18,6 +18,11 @@ export default events =
   ChangeFailed:
     'change-failed'
 
+  Checkout:
+    'checkout'
+  ContinueShopping:
+    'continue-shopping'
+
   Submit:
     'submit'
   SubmitCart:

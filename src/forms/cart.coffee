@@ -8,6 +8,8 @@ import m from '../mediator'
 class CartForm extends El.Form
   tag:  'cart'
   html: html
+  # passed in image dict
+  images: null
 
   init: ->
     super
@@ -71,5 +73,11 @@ class CartForm extends El.Form
 
       m.trigger Events.ApplyPromoCodeFailed, err
       @scheduleUpdate()
+
+  checkout: ()->
+    m.trigger Events.Checkout
+
+  continueShopping: ()->
+    m.trigger Events.ContinueShopping
 
 export default CartForm
