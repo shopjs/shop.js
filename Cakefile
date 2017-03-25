@@ -80,7 +80,7 @@ task 'coverage', 'Process coverage statistics', ->
     rm -rf coverage/
     '''
 
-task 'watch', 'watch for changes and recompile project', ->
+task 'watch', 'watch for changes and recompile project', ['build'], ->
   watch 'src/*', -> invoke 'build'
 
 task 'watch:test', 'watch for changes and re-run tests', ->

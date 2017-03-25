@@ -23,8 +23,8 @@ class CartForm extends El.Form
     m.on Events.ForceApplyPromoCode, ()=>
       @applyPromoCode()
 
-    @data.on 'set', (k, v)=>
-      if k == 'order.promoCode' && @applied
+    @data.on 'set', (name, value)=>
+      if name == 'order.promoCode' && @applied
         @applyPromoCode()
 
   configs:

@@ -270,9 +270,11 @@ Shop.start = (opts = {}) ->
 
   Promise.settle(ps).then ->
     requestAnimationFrame ->
+      for tag in tags
+        $(tag.root).addClass 'ready'
       m.trigger Events.Ready
     #try to deal with long running stuff
-    El.scheduleUpdate()
+    El.update()
   .catch (err) ->
     window?.Raven?.captureException err
 

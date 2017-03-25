@@ -81,7 +81,7 @@ export cardNumber = (value) ->
   length = number.length
 
   throw new Error('Enter a valid card number') unless /^\d+$/.test(number)
-  throw new Error('Enter a valid card number') unless number.length in card.length and card.luhn is false or luhnCheck(cardNumber)
+  throw new Error('Enter a valid card number') unless length in card.length and (card.luhn is false or luhnCheck(number))
 
   value
 
