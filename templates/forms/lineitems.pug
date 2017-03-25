@@ -1,2 +1,21 @@
 lineitem(each="{ item, v in data('order.items') }", parent-data="{ this.parent.data.ref('order') }", data="{ this.parent.data.ref('order.items.' + v) }", no-reorder)
   #{ 'yield' }
+    .animated.fadeIn
+      .product-image-container(if='{ images }')
+        img(src='{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }')
+      .product-text-container
+        span.product-description
+          span.product-name { data.get('productName') }
+          p { data.get('description') }
+      span.product-quantity-container.locked(if="{ data.get('locked') }")
+        | { data.get('quantity') }
+      span.product-quantity-container(if="{ !data.get('locked') }")
+        quantity-select-control
+      .product-delete(onclick="{ delete }")
+        | Remove
+      .product-price-container.invoice-amount
+        .product-price
+          | { renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }
+        .product-list-price.invoice-amount(if='{ data.get().listPrice > data.get().price }')
+          | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }
+

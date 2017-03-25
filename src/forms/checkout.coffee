@@ -3,12 +3,14 @@ import store from 'akasha'
 
 import Events  from '../events'
 import configs from './configs'
-import html    from '../../templates/forms/form'
+import html    from '../../templates/forms/checkout'
 import m       from '../mediator'
 
 class CheckoutForm extends El.Form
   tag:  'checkout'
   html: html
+
+  termsUrl: ''
 
   errorMessage: ''
   loading:      false
@@ -18,13 +20,21 @@ class CheckoutForm extends El.Form
   init: ->
     super()
 
-    m.on Events.ChangeSuccess, (name, value) =>
+    @data.on 'set', (name, value) =>
       if name == 'user.email'
         @cart._cartUpdate
           email:    value
           currency: @data.get 'order.currency'
           mailchimp:
             checkoutUrl: @data.get 'order.checkoutUrl'
+
+    @data.on 'set', (name, value) =>
+      if name == 'user.name'
+        if !@data.get 'payment.account.name'
+          @data.set 'payment.account.name', value
+        if !@data.get 'order.shippingAddress.name'
+          @data.set 'order.shippingAddress.name', value
+      El.scheduleUpdate()
 
   _submit: (event) ->
     return if @loading or @checkedOut
@@ -92,7 +102,7 @@ class CheckoutForm extends El.Form
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
         m.trigger Events.SubmitFailed, err
-        @update()
+        @scheduleUpdate()
 
     .catch (err) =>
       @loading = false
