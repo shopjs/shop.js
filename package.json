@@ -59,7 +59,7 @@
   "devDependencies": {
     "bebop": "1.11.5",
     "cake-bundle": "0.2.9",
-    "cake-outdated": "0.1.15",
+    "cake-outdated": "0.1.16",
     "cake-publish": "0.1.10",
     "cake-version": "0.1.11",
     "chai": "3.5.0",
