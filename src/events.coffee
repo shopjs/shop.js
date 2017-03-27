@@ -100,6 +100,24 @@ export default events =
   ShippingAddressUpdateFailed:
     'shipping-address-update-failed'
 
+  SidePaneOpen:
+    'side-pane-open'
+  SidePaneOpened:
+    'side-pane-opened'
+  SidePaneClose:
+    'side-pane-close'
+  SidePaneClosed:
+    'side-pane-closed'
+
+  ModalOpen:
+    'modal-open'
+  ModalOpened:
+    'modal-opened'
+  ModalClose:
+    'modal-close'
+  ModalClosed:
+    'modal-closed'
+
   # Internal
   DeleteLineItem:
     'delete-line-item'
