@@ -99,6 +99,8 @@ getMCIds = (qs) ->
 tagNames = []
 for k, v of Shop.Forms
   tagNames.push(v::tag.toUpperCase()) if v::tag?
+for k, v of Shop.Widgets
+  tagNames.push(v::tag.toUpperCase()) if v::tag?
 
 searchQueue     = [document.body]
 elementsToMount = []
@@ -270,8 +272,13 @@ Shop.start = (opts = {}) ->
 
   Promise.settle(ps).then ->
     requestAnimationFrame ->
+      tagSelectors = tagNames.join ', '
       for tag in tags
-        $(tag.root).addClass 'ready'
+        $(tag.root)
+          .addClass 'ready'
+          .find tagSelectors
+          .addClass 'ready'
+
       m.trigger Events.Ready
     #try to deal with long running stuff
     El.update()

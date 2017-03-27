@@ -1,8 +1,11 @@
 import El from 'el.js'
-import html from '../../templates/widgets/modal'
 
-class Modal extends El.View
-  tag:  'modal'
+import Events  from '../events'
+import html from '../../templates/widgets/side-pane'
+import m       from '../mediator'
+
+class SidePane extends El.View
+  tag:  'side-pane'
   html: html
 
   opened: false
@@ -10,9 +13,9 @@ class Modal extends El.View
   init: ->
     super
 
-    m.on Events.ModalOpen, =>
+    m.on Events.SidePaneOpen, =>
       @toggle true
-    m.on Events.ModalClose, =>
+    m.on Events.SidePaneClose, =>
       @toggle false
 
   open: ()->
@@ -28,10 +31,11 @@ class Modal extends El.View
       @opened = !@opened
 
     if @opened
-      m.trigger Events.ModalOpened
+      m.trigger Events.SidePaneOpened
     else
-      m.trigger Events.ModalClosed
+      m.trigger Events.SidePaneClosed
 
     @scheduleUpdate()
 
-export default Modal
+export default SidePane
+

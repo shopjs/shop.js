@@ -1,0 +1,4 @@
+.side-pane(class='{ opened: opened, closed: !opened }')
+  .side-pane-close(onclick='{ close }') &#10140;
+  .side-pane-content
+    #{ 'yield' }
