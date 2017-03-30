@@ -1,10 +1,10 @@
 sudo: false
 language: node_js
 node_js:
-- 4
-- 5
+- 6
+- 7
 script:
-- node_modules/.bin/shortcake test-ci
+- node_modules/.bin/shortcake test
 after_success:
 - node_modules/.bin/shortcake coverage
 cache:
