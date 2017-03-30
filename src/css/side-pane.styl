@@ -1,0 +1,27 @@
+side-pane
+  .side-pane
+    width: 300px
+    position: fixed
+    top: 0
+    left: initial !important
+    right: -300px !important
+    z-index: 1000
+    transition: background-color 420ms ease-in-out, right 420ms ease-in-out
+    overflow: auto
+    background-color: $themeBGColor
+    height: 100vh
+
+    &:hover:not('.closed')
+      right: 0 !important
+
+    &.opened
+      right: 0 !important
+
+  .side-pane-close
+    transform: rotate(180deg)
+    display: table
+    color: $themeTextColor
+    padding-left: $themeElementPadding
+    padding-bottom: $themeElementPadding * 0.5
+    float: right
+    cursor: pointer

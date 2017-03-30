@@ -1,0 +1,143 @@
+// Modal Popup
+.checkout-modal-close
+  height $themeElementHeight
+  position absolute
+  right $themeElementPadding
+  top $themeElementPadding * .75
+  cursor pointer
+
+.checkout-modal
+  opacity: 0
+  width: 100vw
+  height: 100vh
+  position: fixed
+  top: -200vh
+  left: 0
+  z-index: 1001
+  background-color: $themeModalColor
+  transition opacity $themeTransitionTime ease-in-out
+
+  &.opened
+    top: 0
+    opacity: 1
+
+// Checkout Widget
+.checkout-container
+  display: table
+  max-width: 800px
+  width: 100vw
+  background-color: $themeBGColor
+  z-index: 1002
+  color: $themeTextColor
+  position: absolute
+  left: 0
+  right: 0
+  top: -2000px
+  margin: 40px auto 0
+  transition top $themeTransitionTime ease-in-out
+
+.checkout-header
+  display: table
+  width: 100%
+  position: relative
+
+  .checkout-steps
+    list-style-type: none
+    background-color: $themeAccentColor
+    display: table
+    width: 100%
+
+    .checkout-step
+      column 1/3 3 0
+      padding: $themeElementPadding
+      text-align: center
+      font-size: .8em
+      font-weight: bold
+      text-transform: uppercase
+      color: $themeTextColorInverted
+      position: relative
+      transition background-color $themeTransitionTime ease-in-out
+      height: 100%
+      display: inline-block
+
+      +below(800px)
+        font-size: .5em
+        width: 100%
+
+      &:not(:last-child):after
+        content: ''
+        position: absolute
+        top: 0
+        right: -2px
+        width: 2px
+        height: 100%
+        background-color: transparent
+        transition background-color $themeTransitionTime ease-in-out
+
+      & > *
+        display: inline-block
+
+      &.active ~ .checkout-step
+        background-color: $themeTextColor
+
+        &:not(:last-child):after
+          background-color: $themeTextColor
+
+  .checkout-back
+    position: absolute
+    top: $themeElementPadding * .5
+    right: $themeElementPadding
+    color: $themeTextColorInverted
+    transform: rotate(180deg)
+    cursor: pointer
+
+.checkout-content
+  display: table
+  padding: $themeElementPadding
+  position: relative
+
+  +below(800px)
+    font-size: .8em
+
+  .checkout-form
+  cart
+    column 1/2 3 $themeElementPadding
+    overflow: hidden
+
+    +below(800px)
+      width: 100%
+
+  cart
+  checkout
+  checkout-card
+    padding-top: 0
+
+    & > *
+      opacity: 1
+
+    h2
+      font-size: 1.5em
+
+    lineitems
+      margin-top: $themeElementPadding
+
+    .secured-text
+      top: calc(-1.5em - 10px)
+
+  .checkout-form
+    .checkout-form-parts
+      width: 300%
+      transition transform $themeTransitionTime ease-in-out
+
+      .checkout-form-part
+        column 1/3 3 0
+
+    &.step-2
+      .checkout-form-parts
+        transform: translateX(calc(-100% * 1/3))
+
+    &.step-3
+      .checkout-form-parts
+        transform: translateX(calc(-100% * 2/3))
+
+

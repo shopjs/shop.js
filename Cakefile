@@ -13,7 +13,7 @@ option '-v', '--verbose',           'enable verbose test logging'
 task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
-task 'build', 'build js', ->
+task 'build', 'build js', ['build:static'], ->
   b = new Bundle
     entry: 'src/index.coffee'
     compilers:
@@ -30,6 +30,11 @@ task 'build:min', 'build js for production', ['build'], ->
     external:  false
     minify:    true
     sourceMap: false
+
+task 'build:static', 'build static assets', ->
+  exec '''
+    bebop compile'
+  '''
 
 server = do require 'connect'
 

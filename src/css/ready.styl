@@ -1,0 +1,18 @@
+cart
+checkout
+checkout-card
+checkout-shippingaddress
+login
+orders
+profile
+register
+reset-password
+reset-password-complete
+shippingaddress
+  &:not(.ready)
+    & > *
+      opacity: 0
+
+  & > *
+    transition: opacity $themeTransitionTime ease-in
+
