@@ -109,14 +109,14 @@ export default events =
   SidePaneClosed:
     'side-pane-closed'
 
-  ModalOpen:
-    'modal-open'
-  ModalOpened:
-    'modal-opened'
-  ModalClose:
-    'modal-close'
-  ModalClosed:
-    'modal-closed'
+  CheckoutOpen:
+    'checkout-open'
+  CheckoutOpened:
+    'checkout-opened'
+  CheckoutClose:
+    'checkout-close'
+  CheckoutClosed:
+    'checkout-closed'
 
   # Internal
   DeleteLineItem:

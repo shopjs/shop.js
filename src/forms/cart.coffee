@@ -8,9 +8,11 @@ import m from '../mediator'
 class CartForm extends El.Form
   tag:  'cart'
   html: html
+
+  # Support Attrs
   # passed in image dict
-  images: null
-  showButtons: true
+  # images: null
+  # showButtons: true
 
   init: ->
     super

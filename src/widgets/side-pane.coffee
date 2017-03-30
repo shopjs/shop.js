@@ -8,15 +8,18 @@ class SidePane extends El.View
   tag:  'side-pane'
   html: html
 
+  id: ''
   opened: false
 
   init: ->
     super
 
-    m.on Events.SidePaneOpen, =>
-      @toggle true
-    m.on Events.SidePaneClose, =>
-      @toggle false
+    m.on Events.SidePaneOpen, (id)=>
+      if id == @id
+        @toggle true
+    m.on Events.SidePaneClose, (id)=>
+      if id == @id
+        @toggle false
 
   open: ()->
     @toggle true

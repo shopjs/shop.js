@@ -2,7 +2,7 @@ import El    from 'el.js'
 import store from 'akasha'
 
 import Events from '../events'
-import html   from '../../templates/forms/form'
+import html   from '../../templates/forms/checkout-card'
 import m      from '../mediator'
 import {
   cardNumber
@@ -17,9 +17,12 @@ import {
 # Render this form first if using a multipage flow where shipping data is entered first
 # followed by credit card info on different pages.  Then use the CheckoutForm to
 # collect the credit card data, user and order data should be autofilled for it.
-class CheckoutShippingAddressForm extends El.Form
-  tag:  'checkout-shippingaddress'
+class CheckoutCardForm extends El.Form
+  tag:  'checkout-card'
   html: html
+
+  # Support Attrs
+  # paged: false
 
   configs:
     'user.email':       [ isRequired, isEmail ]
@@ -36,9 +39,10 @@ class CheckoutShippingAddressForm extends El.Form
   _submit: ->
     m.trigger Events.SubmitCard
 
-    # Store partial pieces of checkout data.
-    store.set 'checkout-user',    @data.get 'user'
-    store.set 'checkout-payment', @data.get 'order.payment'
+    if @paged
+      # Store partial pieces of checkout data.
+      store.set 'checkout-user',    @data.get 'user'
+      store.set 'checkout-payment', @data.get 'order.payment'
     @scheduleUpdate()
 
-export default CheckoutShippingAddressForm
+export default CheckoutCardForm
