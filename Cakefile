@@ -20,11 +20,11 @@ task 'build', 'build js', ['build:static'], ->
       coffee:
         version: 1
 
-  yield b.write
+  b.write
     formats: ['es', 'cjs']
 
 task 'build:min', 'build js for production', ['build'], ->
-  yield bundle.write
+  bundle.write
     entry:     'src/index.coffee'
     format:    'web'
     external:  false
