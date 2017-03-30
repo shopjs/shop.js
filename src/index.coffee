@@ -19,6 +19,7 @@ import m         from './mediator'
 import {renderUICurrencyFromJSON} from './utils/currency'
 import {renderDate} from './utils/dates'
 
+Shop = {}
 Shop.Controls = Controls
 Shop.Events = Events
 Shop.Forms = Forms
