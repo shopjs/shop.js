@@ -67,7 +67,7 @@
     "codecov.io": "^0.1.6",
     "coffeescript": "1.12.4",
     "connect": "3.6.0",
-    "coveralls": "2.12.0",
+    "coveralls": "2.13.0",
     "debug": "^2.6.3",
     "es5-shim": "^4.5.9",
     "istanbul": "0.4.5",
