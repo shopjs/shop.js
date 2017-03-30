@@ -10,7 +10,8 @@ class CheckoutForm extends El.Form
   tag:  'checkout'
   html: html
 
-  termsUrl: ''
+  # Support Attrs
+  # termsUrl: ''
 
   errorMessage: ''
   loading:      false

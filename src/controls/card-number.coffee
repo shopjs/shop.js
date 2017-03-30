@@ -16,12 +16,13 @@ class CardNumber extends Text
 
   onUpdated: ->
     if !@first
-      $input = $($(@root).find('input')[0])
+      $root = $(@root)
+      $input = $($root.find('input')[0])
       $input.on 'keypress', restrictNumeric
       $input.on 'keypress', (e)=>
         return true if e.which not in keys.numeric
 
-        $input.removeClass @cardType + ' identified unknown'
+        $root.removeClass @cardType + ' identified unknown'
 
         value = $input.val() + String.fromCharCode e.which
 
@@ -36,9 +37,9 @@ class CardNumber extends Text
           @cardType = card.type
 
           if @cardType
-            $input.addClass @cardType + ' identified'
+            $root.addClass @cardType + ' identified'
           else
-            $input.addClass 'unknown'
+            $root.addClass 'unknown'
 
         if length > upperLength
           return false
