@@ -1,0 +1,73 @@
+$checkoutCardHeight = 22px
+
+checkout
+checkout-card
+checkout-shippingaddress
+  width: 100%
+  display: table
+  padding: $themeElementPadding
+  background-color: $themeBGColor
+
+  .checkout-section
+    margin-bottom: $themeElementPadding
+    position: relative
+
+    .secured-text
+      position: relative
+      right: 0
+      height: 0
+      top: calc(-1.75em - 10px)
+      display: block
+      float: right
+
+      .lock-icon
+        height: 16px
+        position: relative
+        top: 2px
+        left: 4px
+
+  shippingaddress-line1.input.input
+    column .6 3 $themeElementPadding
+
+  shippingaddress-line2.input.input
+    column .4 3 $themeElementPadding
+
+  card-expiry.input.input
+    column .7 4 $themeElementPadding
+
+  card-cvc.input.input
+    column .3 4 $themeElementPadding
+
+  card-number
+    input
+      margin-bottom: $themeElementPadding * 0.5
+
+    .cards-accepted
+      display: table
+      width: 100%
+
+      .card-logo
+        height: $checkoutCardHeight
+        margin-right:4px
+        float: left
+        opacity: .5
+        transition opacity $themeTransitionTime ease-in-out
+
+    &.amex .cards-accepted .amex-logo
+        opacity: 1
+
+    &.discover .cards-accepted .discover-logo
+        opacity: 1
+
+    &.jcb .cards-accepted .jcb-logo
+        opacity: 1
+
+    &.mastercard .cards-accepted .mastercard-logo
+      opacity: 1
+
+    &.visa .cards-accepted .visa-logo
+        opacity: 1
+
+  .stripe-logo
+    height: $checkoutCardHeight
+    float: right
