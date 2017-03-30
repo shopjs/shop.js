@@ -2,4 +2,4 @@ coverage/
 node_modules/
 phantomjsdriver.log
 npm-debug.log
-dist/
+lib/
