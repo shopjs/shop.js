@@ -25,11 +25,11 @@
     "site",
     "subscriptions"
   ],
-  "main": "dist/lib.js",
-  "module": "dist/lib.mjs",
-  "js:next": "dist/lib.mjs",
+  "main": "lib/shop.js",
+  "module": "lib/shop.mjs",
+  "js:next": "lib/shop.mjs",
   "files": [
-    "dist/",
+    "lib/",
     "src/"
   ],
   "engines": {
