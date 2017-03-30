@@ -12,7 +12,7 @@ compileCoffee = (src) ->
 
 compileStylus = ->
   src = 'src/css/theme.styl'
-  dst = 'dist/theme.css'
+  dst = 'lib/theme.css'
 
   stylus       = require 'stylus'
   postcss      = require 'poststylus'
