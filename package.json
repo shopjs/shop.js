@@ -58,7 +58,7 @@
     "autoprefixer": "6.7.7",
     "bebop": "1.11.5",
     "cake-bundle": "0.2.18",
-    "cake-outdated": "0.1.16",
+    "cake-outdated": "0.1.17",
     "cake-publish": "0.1.10",
     "cake-version": "0.1.14",
     "chai": "3.5.0",
