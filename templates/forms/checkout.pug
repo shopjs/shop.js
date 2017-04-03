@@ -49,7 +49,7 @@ form(onsubmit='{ submit }')
             | I have read and accept the&nbsp;
             a(href='{ termsUrl }', target='_blank') terms and conditions
 
-        button(class='{ loading: loading || checkedOut }', __disabled='{ loading || checkedOut }', type='submit')
+        button(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
           span Checkout
         .error(if='{ errorMessage }')
           | { errorMessage }
