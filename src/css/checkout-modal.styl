@@ -95,6 +95,7 @@
   display: table
   padding: $themeElementPadding
   position: relative
+  width: 100%
 
   +below(800px)
     font-size: .8em
@@ -121,6 +122,9 @@
     lineitems
       margin-top: $themeElementPadding
 
+      .product-delete
+        display: none
+
     .secured-text
       top: calc(-1.5em - 10px)
 
@@ -132,12 +136,21 @@
       .checkout-form-part
         column 1/3 3 0
 
+    &.step-1
+      .checkout-form-part:not(:nth-child(1)) > *
+        display: none
+
     &.step-2
       .checkout-form-parts
         transform: translateX(calc(-100% * 1/3))
+
+      .checkout-form-part:not(:nth-child(2)) > *
+        display: none
 
     &.step-3
       .checkout-form-parts
         transform: translateX(calc(-100% * 2/3))
 
+      .checkout-form-part:not(:nth-child(3)) > *
+        display: none
 

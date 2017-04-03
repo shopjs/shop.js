@@ -38,7 +38,7 @@ class CheckoutModal extends El.View
   close: ()->
     @toggle false
     if @step == 2
-      @step = 0
+      window.location.reload()
       @scheduleUpdate()
 
   back: ()->

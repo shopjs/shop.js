@@ -45,7 +45,7 @@ class CheckoutForm extends El.Form
 
     @errorMessage = ''
 
-    @scheduleUpdate()
+    El.scheduleUpdate()
     email = ''
     @client.account.exists(@data.get 'user.email').then (res) =>
 
@@ -65,7 +65,7 @@ class CheckoutForm extends El.Form
 
       @data.set 'order.email', email
 
-      @scheduleUpdate()
+      El.scheduleUpdate()
       @cart.checkout().then (pRef) =>
         pRef.p
           .then =>
@@ -76,7 +76,7 @@ class CheckoutForm extends El.Form
                 store.clear()
 
                 @checkedOut = true
-                @scheduleUpdate()
+                El.scheduleUpdate()
             , 200
 
             m.trigger Events.SubmitSuccess
@@ -90,7 +90,7 @@ class CheckoutForm extends El.Form
             @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
             m.trigger Events.SubmitFailed, err
-            @scheduleUpdate()
+            El.scheduleUpdate()
 
       .catch (err) =>
         @loading = false
@@ -103,7 +103,7 @@ class CheckoutForm extends El.Form
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
         m.trigger Events.SubmitFailed, err
-        @scheduleUpdate()
+        El.scheduleUpdate()
 
     .catch (err) =>
       @loading = false
@@ -116,6 +116,6 @@ class CheckoutForm extends El.Form
         @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
       m.trigger Events.SubmitFailed, err
-      @scheduleUpdate()
+      El.scheduleUpdate()
 
 export default CheckoutForm

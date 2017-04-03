@@ -107,7 +107,7 @@
               | I have read and accept the&nbsp;
               a(href='terms', target='_blank') terms and conditions
 
-          button.checkout-next(class='{ loading: loading || checkedOut }', __disabled='{ loading || checkedOut }', type='submit')
+          button.checkout-next(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
             | Checkout
           .error(if='{ errorMessage }')
             | { errorMessage }
