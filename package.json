@@ -51,7 +51,7 @@
     "es-selectize": "0.12.8",
     "hanzo.js": "2.3.11",
     "is-object": "1.0.1",
-    "js-cookie": "2.1.3",
+    "js-cookie": "2.1.4",
     "moment": "2.18.1"
   },
   "devDependencies": {
