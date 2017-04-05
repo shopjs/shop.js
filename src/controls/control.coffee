@@ -5,6 +5,7 @@ import m            from  '../mediator'
 scrolling = false
 
 export default class Control extends El.Input
+  errorHtml: '<div class="error" if="{ errorMessage }">{ errorMessage }</div>'
   init: ->
     if !@input? && !@lookup?
       throw new Error 'No input or lookup provided'
