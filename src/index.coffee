@@ -40,6 +40,7 @@ Shop.use = (templates) ->
 #   ### Order Overrides ####
 #   ########################
 #   currency:           string (3 letter ISO code)
+
 #   taxRate:            number (decimal) taxRate, overridden by opts.taxRates
 #   shippingRate:       number (per item cost in cents or base unit for zero decimal currencies)
 #   checkoutUrl:        string checkoutUrl for marketing emails
