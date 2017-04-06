@@ -1,6 +1,6 @@
+exec = require 'executive'
 fs   = require 'fs'
 path = require 'path'
-exec = require('shortcake').exec
 
 writeFile = (dst, content) ->
   fs.writeFile dst, content, 'utf8', (err) ->
