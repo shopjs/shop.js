@@ -20,12 +20,12 @@ task 'build', 'build js', ['build:static'], ->
       coffee: version: 1
 
 task 'build:min', 'build js for production', ['build'], ->
-  bundle.write
+  yield bundle.write
     entry:     'src/index.coffee'
     format:    'web'
     external:  false
-    minify:    true
     sourceMap: false
+  yield exec 'uglifyjs shop.js -o shop.min.js'
 
 task 'build:static', 'build static assets', ->
   exec '''
