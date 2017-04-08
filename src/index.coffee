@@ -24,6 +24,7 @@ Shop.Controls = Controls
 Shop.Events = Events
 Shop.Forms = Forms
 Shop.Widgets = Widgets
+Shop.El = El
 
 El.View::renderCurrency = renderUICurrencyFromJSON
 El.View::renderDate = renderDate
