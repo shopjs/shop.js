@@ -1,5 +1,5 @@
 import El from 'el.js'
-import riot         from 'riot'
+import riot         from 'riot/lib/riot'
 import store        from 'akasha'
 
 import Events from '../events'
@@ -34,8 +34,7 @@ class CheckoutShippingAddressForm extends El.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-  init: ->
-    super
+  init: -> super()
 
   _submit: ->
     m.trigger Events.SubmitShippingAddress
