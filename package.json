@@ -6,7 +6,7 @@
   "repository": "github:hanzo-io/shop.js",
   "bugs": "http://github.com/hanzo-io/shop.js/issues",
   "author": "Hanzo, Inc <hi@hanzo.io>",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "keywords": [
     "browser",
     "checkout",
