@@ -178,14 +178,12 @@ Shop.start = (opts = {}) ->
 
   data = @data.get()
   for k, v of opts
-    if opts[k]
-      if !data[k]?
-        data[k] = opts[k]
-      else
-        for k2, v2 of data[k]
-          if opts[k]? && opts[k][k2]?
-            objectAssign data[k][k2], opts[k][k2]
-
+    unless data[k]?
+      data[k] = opts[k]
+    else
+      for k2, v2 of data[k]
+        unless v2?
+          data[k][k2] = opts[k]?[k2]
 
   @data.set data
 
