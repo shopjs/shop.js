@@ -182,7 +182,7 @@ Shop.start = (opts = {}) ->
         data[k] = opts[k]
       else
         for k2, v2 of data[k]
-          extend data[k][k2], opts[k][k2]
+          objectAssign data[k][k2], opts[k][k2]
 
 
   @data.set data
