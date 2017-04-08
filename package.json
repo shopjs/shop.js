@@ -44,7 +44,7 @@
     "akasha": "0.1.1",
     "broken": "0.1.13",
     "commerce.js": "1.0.35",
-    "el.js": "2.1.21",
+    "el.js": "2.1.22",
     "es-is": "3.2.2",
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "autoprefixer": "6.7.7",
-    "bebop": "1.12.1",
+    "bebop": "1.12.2",
     "cake-bundle": "0.2.21",
     "cake-outdated": "0.1.18",
     "cake-publish": "0.1.10",
