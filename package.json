@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "address-validator": "0.2.2",
-    "akasha": "0.1.2",
+    "akasha": "0.1.4",
     "broken": "0.1.13",
     "commerce.js": "1.1.1",
     "el.js": "2.1.22",
@@ -49,7 +49,7 @@
     "es-md5": "2.7.2",
     "es-raf": "3.3.1",
     "es-selectize": "0.12.8",
-    "hanzo.js": "2.3.13",
+    "hanzo.js": "2.3.14",
     "moment": "2.18.1"
   },
   "devDependencies": {
