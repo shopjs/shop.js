@@ -1,9 +1,7 @@
-require 'shortcake'
-
-use 'cake-bundle'
-use 'cake-outdated'
-use 'cake-publish'
-use 'cake-version'
+use 'sake-bundle'
+use 'sake-outdated'
+use 'sake-publish'
+use 'sake-version'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -34,13 +32,13 @@ task 'build:static', 'build static assets', ->
 
 server = do require 'connect'
 
-task 'static-server', 'Run static server for tests', (cb) ->
+task 'server', 'Run static server for tests', (cb) ->
   port = process.env.PORT ? 3333
 
   server.use (require 'serve-static') './test/fixtures'
   server = require('http').createServer(server).listen port, cb
 
-task 'test', 'Run tests', ['build', 'static-server'], (opts) ->
+task 'test', 'Run tests', ['build', 'server'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''
