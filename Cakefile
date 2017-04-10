@@ -23,6 +23,9 @@ task 'build:min', 'build js for production', ['build'], ->
     format:    'web'
     external:  false
     sourceMap: false
+    browser:   false
+    compilers:
+      coffee: version: 1
   yield exec 'uglifyjs shop.js -o shop.min.js'
 
 task 'build:static', 'build static assets', ->

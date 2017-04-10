@@ -89,6 +89,7 @@
     "sake-publish": "0.1.10",
     "sake-version": "0.1.16",
     "serve-static": "1.12.1",
-    "stylus": "0.54.5"
+    "stylus": "0.54.5",
+    "uglify-js": "github:mishoo/UglifyJS2#harmony"
   }
 }
