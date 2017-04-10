@@ -3,16 +3,13 @@ language: node_js
 node_js:
 - 7
 script:
-- node_modules/.bin/shortcake test
+- npm test
 # after_success:
 # - node_modules/.bin/shortcake coverage
 cache:
   directories:
   - node_modules
 notifications:
-  email:
-    on_success: change
-    on_failure: always
   slack:
     secure: U/ZMJAeq6AmHSOpQbd2j2GLfq7Y7fBvONcKZcx9KEvh0ANEmeeL+5Gmi9OnQCozbn4CTlkNYvMwKQvZaz0pKmfaB2nrxs8arfJboDSoF+VVBIjJMvdAmZ1xxqeJ8bIVTma4hQ/tT7zjIrHhE6jf4tIwbav2JlMsVo99E+C8H1In10mLVN0FRoqFVnOENpSY89IgqX2SkulmMje92l33polWHHw8RK40CbeWF7fbkQ0Bc1U/0NFU8FSsLh23XxsvyUkeL6+ifNrReZuRTsoL1EGaE9uRJpQKxYLisP9WiXmIUGF2whT7Q8ea5AqBGRy+4fBlZ4J4LAigqaP53bxU4eYUNwOm6qux4JsYDsevLp1tPqQt2op0Rl/UsL0gSc6qcI0zkdNkJB9FrQIs06y4RT1aLP95Cf1GJ3k2JJWvJrttdtXxmBjkJGeyNEQ7ug5BYpYNEvdKtsIk4jZFxpy7sB9J0bsenUs8EC9sT5gyeWlcQDxNzkYruHxOoHW++YAInE5/TEJYag8PDgNUOAohTCR/KLrbppj2uCRYgx3z1EFNWGOVHKH2lz8s4/uUPf+JsDPgNtcyyEU0Hn0m8yYc2KKuZT3loqD1fbxEy7TNxMGhCrjad6xwINe/5zhgPNhHvoXTcm6BJtu2mPez5e8uJMy7+vIF1OBSb3Rubg6fkgYw=
 env:
