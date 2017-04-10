@@ -686,7 +686,7 @@ var index = objectAssign = (function() {
   };
 })();
 
-// node_modules/es-is/dist/index.mjs
+// node_modules/el.js/node_modules/es-is/dist/index.mjs
 // src/index.coffee
 var isActualNaN;
 var isArgs;
@@ -1147,6 +1147,112 @@ Promise$2$1.settle = settle$1;
 
 Promise$2$1.soon = soon$1$2;
 
+// node_modules/referential/node_modules/es-is/dist/index.mjs
+// src/index.coffee
+var isActualNaN$1;
+var isArgs$1;
+var isFn$1;
+var objProto$1;
+var owns$1;
+var symbolValueOf$1;
+var toStr$1;
+
+objProto$1 = Object.prototype;
+
+owns$1 = objProto$1.hasOwnProperty;
+
+toStr$1 = objProto$1.toString;
+
+symbolValueOf$1 = void 0;
+
+if (typeof Symbol === 'function') {
+  symbolValueOf$1 = Symbol.prototype.valueOf;
+}
+
+isActualNaN$1 = function(value) {
+  return value !== value;
+};
+
+var isEqual$1 = function(value, other) {
+  var key, type;
+  if (value === other) {
+    return true;
+  }
+  type = toStr$1.call(value);
+  if (type !== toStr$1.call(other)) {
+    return false;
+  }
+  if (type === '[object Object]') {
+    for (key in value) {
+      if (!isEqual$1(value[key], other[key]) || !(key in other)) {
+        return false;
+      }
+    }
+    for (key in other) {
+      if (!isEqual$1(value[key], other[key]) || !(key in value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (type === '[object Array]') {
+    key = value.length;
+    if (key !== other.length) {
+      return false;
+    }
+    while (key--) {
+      if (!isEqual$1(value[key], other[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (type === '[object Function]') {
+    return value.prototype === other.prototype;
+  }
+  if (type === '[object Date]') {
+    return value.getTime() === other.getTime();
+  }
+  return false;
+};
+
+var isArrayLike$1 = function(value) {
+  return !!value && !isBool$1(value) && owns$1.call(value, 'length') && isFinite(value.length) && isNumber$1(value.length) && value.length >= 0;
+};
+
+var isArguments$1 = isArgs$1 = function(value) {
+  var isOldArguments, isStandardArguments;
+  isStandardArguments = toStr$1.call(value) === '[object Arguments]';
+  isOldArguments = !isArray$2(value) && isArrayLike$1(value) && isObject$2(value) && isFn$1(value.callee);
+  return isStandardArguments || isOldArguments;
+};
+
+var isArray$2 = Array.isArray || function(value) {
+  return toStr$1.call(value) === '[object Array]';
+};
+
+var isBool$1 = function(value) {
+  return toStr$1.call(value) === '[object Boolean]';
+};
+
+var isFunction$1$1 = isFn$1 = function(value) {
+  var isAlert, str;
+  isAlert = typeof window !== 'undefined' && value === window.alert;
+  if (isAlert) {
+    return true;
+  }
+  str = toStr$1.call(value);
+  return str === '[object Function]' || str === '[object GeneratorFunction]' || str === '[object AsyncFunction]';
+};
+
+var isNumber$1 = function(value) {
+  return toStr$1.call(value) === '[object Number]';
+};
+
+var isObject$2 = function(value) {
+  return toStr$1.call(value) === '[object Object]';
+};
+
 // node_modules/referential/dist/referential.mjs
 // src/ref.coffee
 var Ref;
@@ -1240,7 +1346,7 @@ var Ref$1 = Ref = class Ref {
 
   set(key, value) {
     var k, oldValue, v;
-    if (isObject$1(key)) {
+    if (isObject$2(key)) {
       for (k in key) {
         v = key[k];
         this.set(k, v);
@@ -1309,7 +1415,7 @@ var Ref$1 = Ref = class Ref {
     if (value == null) {
       this.value(index(this.value(), key));
     } else {
-      if (isObject$1(value)) {
+      if (isObject$2(value)) {
         this.value(index((this.ref(key)).get(), value));
       } else {
         clone = this.clone();
@@ -1329,7 +1435,7 @@ var Ref$1 = Ref = class Ref {
     if (this.parent) {
       return this.parent.index(this.key + '.' + key, value);
     }
-    if (isNumber(key)) {
+    if (isNumber$1(key)) {
       key = String(key);
     }
     props = key.split('.');
@@ -1514,7 +1620,7 @@ function isReservedName(value) {
   return RE_RESERVED_NAMES.test(value)
 }
 
-var check = {
+var check = Object.freeze({
 	isBoolAttr: isBoolAttr,
 	isFunction: isFunction$1,
 	isObject: isObject$$1,
@@ -1524,7 +1630,7 @@ var check = {
 	isArray: isArray$$1,
 	isWritable: isWritable,
 	isReservedName: isReservedName
-};
+});
 
 // node_modules/riot/lib/browser/common/util/dom.js
 /**
@@ -1668,7 +1774,7 @@ function walkNodes(dom, fn, context) {
   }
 }
 
-var dom = {
+var dom = Object.freeze({
 	$$: $$,
 	$: $$1,
 	createFrag: createFrag,
@@ -1681,7 +1787,7 @@ var dom = {
 	safeInsert: safeInsert,
 	walkAttrs: walkAttrs,
 	walkNodes: walkNodes
-};
+});
 
 // node_modules/riot/lib/browser/tag/styleManager.js
 var styleNode;
@@ -2259,14 +2365,14 @@ function extend(src) {
   return src
 }
 
-var misc = {
+var misc = Object.freeze({
 	each: each,
 	contains: contains,
 	toCamel: toCamel,
 	startsWith: startsWith,
 	defineProperty: defineProperty,
 	extend: extend
-};
+});
 
 // node_modules/riot/lib/settings.js
 var settings$1 = extend(Object.create(brackets.settings), {
@@ -3256,7 +3362,7 @@ function unregister$1(name) {
 const version = 'WIP';
 
 
-var core = {
+var core = Object.freeze({
 	Tag: Tag$2,
 	tag: tag$1,
 	tag2: tag2$1,
@@ -3265,7 +3371,7 @@ var core = {
 	update: update$1,
 	unregister: unregister$1,
 	version: version
-};
+});
 
 // node_modules/riot/lib/browser/tag/tag.js
 // counter to give a unique id to all the Tag instances
@@ -3893,7 +3999,7 @@ function selectTags(tags) {
 }
 
 
-var tags = {
+var tags = Object.freeze({
 	getTag: getTag,
 	inheritFrom: inheritFrom,
 	moveChildTag: moveChildTag,
@@ -3909,7 +4015,7 @@ var tags = {
 	makeVirtual: makeVirtual,
 	moveVirtual: moveVirtual,
 	selectTags: selectTags
-};
+});
 
 // node_modules/riot/lib/riot.js
 /**
@@ -4415,6 +4521,103 @@ for (k$1 in riot$1) {
 
 var El$1 = El;
 
+// node_modules/es-tostring/index.mjs
+var toString = function(obj) {
+  return Object.prototype.toString.call(obj)
+};
+
+// node_modules/es-is/number.js
+// Generated by CoffeeScript 1.12.5
+var isNumber$2;
+
+var isNumber$3 = isNumber$2 = function(value) {
+  return toString(value) === '[object Number]';
+};
+
+// node_modules/es-cookies/node_modules/es-object-assign/lib/es-object-assign.mjs
+// src/index.coffee
+var getOwnSymbols;
+var objectAssign$2;
+var shouldUseNative$1;
+var toObject$1;
+var slice$1 = [].slice;
+
+getOwnSymbols = Object.getOwnPropertySymbols;
+
+toObject$1 = function(val) {
+  if (val === null || val === void 0) {
+    throw new TypeError('Object.assign cannot be called with null or undefined');
+  }
+  return Object(val);
+};
+
+shouldUseNative$1 = function() {
+  var err, i, j, k, len, letter, order2, ref, test1, test2, test3;
+  try {
+    if (!Object.assign) {
+      return false;
+    }
+    test1 = new String('abc');
+    test1[5] = 'de';
+    if (Object.getOwnPropertyNames(test1)[0] === '5') {
+      return false;
+    }
+    test2 = {};
+    for (i = j = 0; j <= 9; i = ++j) {
+      test2['_' + String.fromCharCode(i)] = i;
+    }
+    order2 = Object.getOwnPropertyNames(test2).map(function(n) {
+      return test2[n];
+    });
+    if (order2.join('') !== '0123456789') {
+      return false;
+    }
+    test3 = {};
+    ref = 'abcdefghijklmnopqrst'.split('');
+    for (k = 0, len = ref.length; k < len; k++) {
+      letter = ref[k];
+      test3[letter] = letter;
+    }
+    if (Object.keys(Object.assign({}, test3)).join('') !== 'abcdefghijklmnopqrst') {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    err = error;
+    return false;
+  }
+};
+
+var index$3 = objectAssign$2 = (function() {
+  if (shouldUseNative$1()) {
+    return Object.assign;
+  }
+  return function() {
+    var from, j, k, key, len, len1, ref, source, sources, symbol, target, to;
+    target = arguments[0], sources = 2 <= arguments.length ? slice$1.call(arguments, 1) : [];
+    to = toObject$1(target);
+    for (j = 0, len = sources.length; j < len; j++) {
+      source = sources[j];
+      from = Object(source);
+      for (key in from) {
+        if (Object.prototype.hasOwnProperty.call(from, key)) {
+          to[key] = from[key];
+        }
+      }
+      if (getOwnSymbols) {
+        ref = getOwnSymbols(from);
+        for (k = 0, len1 = ref.length; k < len1; k++) {
+          symbol = ref[k];
+          if (Object.prototype.propIsEnumerable.call(from, symbol)) {
+            to[symbol] = from[symbol];
+          }
+        }
+      }
+    }
+    return to;
+  };
+})();
+
 // node_modules/es-cookies/lib/cookies.mjs
 // src/cookies.coffee
 var Cookies;
@@ -4424,79 +4627,36 @@ Cookies = (function() {
     this.defaults = defaults != null ? defaults : {};
     this.get = (function(_this) {
       return function(key) {
-        return _this.api(key);
+        return _this.read(key);
+      };
+    })(this);
+    this.getJSON = (function(_this) {
+      return function(key) {
+        var err;
+        try {
+          return JSON.parse(_this.read(key));
+        } catch (error) {
+          err = error;
+          return {};
+        }
       };
     })(this);
     this.remove = (function(_this) {
       return function(key, attrs) {
-        return _this.api(key, '', index({
+        return _this.write(key, '', index$3({
           expires: -1
         }, attrs));
       };
     })(this);
     this.set = (function(_this) {
       return function(key, value, attrs) {
-        return _this.api(key, value, attrs);
-      };
-    })(this);
-    this.getJSON = (function(_this) {
-      return function(key) {
-        var err, val;
-        val = _this.api(key);
-        if (val == null) {
-          return {};
-        }
-        try {
-          return JSON.parse(val);
-        } catch (error) {
-          err = error;
-          return val;
-        }
+        return _this.write(key, value, attrs);
       };
     })(this);
   }
 
-  Cookies.prototype.api = function(key, value, attrs) {
-    var attr, cookie, cookies, err, expires, i, kv, len, name, parts, rdecode, result, strAttrs;
-    if (typeof document === 'undefined') {
-      return;
-    }
-    if (arguments.length > 1) {
-      attrs = index({
-        path: '/'
-      }, this.defaults, attrs);
-      if (isNumber(attrs.expires)) {
-        expires = new Date;
-        expires.setMilliseconds(expires.getMilliseconds() + attrs.expires * 864e+5);
-        attrs.expires = expires;
-      }
-      attrs.expires = attrs.expires ? attrs.expires.toUTCString() : '';
-      try {
-        result = JSON.stringify(value);
-        if (/^[\{\[]/.test(result)) {
-          value = result;
-        }
-      } catch (error) {
-        err = error;
-      }
-      value = encodeURIComponent(String(value)).replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
-      key = encodeURIComponent(String(key));
-      key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
-      key = key.replace(/[\(\)]/g, escape);
-      strAttrs = '';
-      for (name in attrs) {
-        attr = attrs[name];
-        if (!attr) {
-          continue;
-        }
-        strAttrs += '; ' + name;
-        if (attr === true) {
-          continue;
-        }
-        strAttrs += '=' + attr;
-      }
-      return document.cookie = key + '=' + value + strAttrs;
-    }
+  Cookies.prototype.read = function(key) {
+    var cookie, cookies, err, i, kv, len, name, parts, rdecode, result;
     if (!key) {
       result = {};
     }
@@ -4523,6 +4683,44 @@ Cookies = (function() {
       }
     }
     return result;
+  };
+
+  Cookies.prototype.write = function(key, value, attrs) {
+    var attr, err, expires, name, result, strAttrs;
+    attrs = index$3({
+      path: '/'
+    }, this.defaults, attrs);
+    if (isNumber$3(attrs.expires)) {
+      expires = new Date;
+      expires.setMilliseconds(expires.getMilliseconds() + attrs.expires * 864e+5);
+      attrs.expires = expires;
+    }
+    attrs.expires = attrs.expires ? attrs.expires.toUTCString() : '';
+    try {
+      result = JSON.stringify(value);
+      if (/^[\{\[]/.test(result)) {
+        value = result;
+      }
+    } catch (error) {
+      err = error;
+    }
+    value = encodeURIComponent(String(value)).replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+    key = encodeURIComponent(String(key));
+    key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
+    key = key.replace(/[\(\)]/g, escape);
+    strAttrs = '';
+    for (name in attrs) {
+      attr = attrs[name];
+      if (!attr) {
+        continue;
+      }
+      strAttrs += '; ' + name;
+      if (attr === true) {
+        continue;
+      }
+      strAttrs += '=' + attr;
+    }
+    return document.cookie = key + '=' + value + strAttrs;
   };
 
   return Cookies;
@@ -4772,7 +4970,7 @@ hexHMACMD5 = function(k, d) {
   return rstr2hex(rawHMACMD5(k, d));
 };
 
-var index$3 = md5 = function(string, key, raw) {
+var index$4 = md5 = function(string, key, raw) {
   if (!key) {
     if (!raw) {
       return hexMD5(string);
@@ -4789,7 +4987,7 @@ var index$3 = md5 = function(string, key, raw) {
 // src/cookie-storage.coffee
 var cookieStorage = (function() {
   var key, postFix;
-  postFix = index$3(window.location.host);
+  postFix = index$4(window.location.host);
   key = function(k) {
     return k + "_" + postFix;
   };
@@ -5244,7 +5442,7 @@ Promise$2$3.soon = soon$1$3;
 
 // node_modules/es-xhr-promise/dist/lib.mjs
 // src/parse-headers.coffee
-var isArray$2;
+var isArray$3;
 var parseHeaders;
 var trim;
 
@@ -5252,7 +5450,7 @@ trim = function(s) {
   return s.replace(/^\s*|\s*$/g, '');
 };
 
-isArray$2 = function(obj) {
+isArray$3 = function(obj) {
   return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
@@ -5270,7 +5468,7 @@ var parseHeaders$1 = parseHeaders = function(headers) {
     value = trim(row.slice(index$$1 + 1));
     if (typeof result[key] === 'undefined') {
       result[key] = value;
-    } else if (isArray$2(result[key])) {
+    } else if (isArray$3(result[key])) {
       result[key].push(value);
     } else {
       result[key] = [result[key], value];
@@ -5502,7 +5700,7 @@ var XhrPromise$1 = XhrPromise;
 // src/utils.coffee
 var updateParam;
 
-var isFunction$1$1 = function(fn) {
+var isFunction$2 = function(fn) {
   return typeof fn === 'function';
 };
 
@@ -5623,7 +5821,7 @@ Api = (function() {
 
   Api.prototype.addBlueprint = function(api, name, bp) {
     var method;
-    if (isFunction$1$1(bp)) {
+    if (isFunction$2(bp)) {
       return this[api][name] = (function(_this) {
         return function() {
           return bp.apply(_this, arguments);
@@ -5686,7 +5884,7 @@ var Api$1 = Api;
 
 // src/client/client.coffee
 var Client$1;
-var slice$1 = [].slice;
+var slice$2 = [].slice;
 
 Client$1 = (function() {
   function Client(opts) {
@@ -5745,7 +5943,7 @@ Client$1 = (function() {
   };
 
   Client.prototype.url = function(url, data, key) {
-    if (isFunction$1$1(url)) {
+    if (isFunction$2(url)) {
       url = url.call(this, data);
     }
     return updateQuery(this.opts.endpoint + url, {
@@ -5755,7 +5953,7 @@ Client$1 = (function() {
 
   Client.prototype.log = function() {
     var args;
-    args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+    args = 1 <= arguments.length ? slice$2.call(arguments, 0) : [];
     args.unshift('hanzo.js>');
     if (this.opts.debug && (typeof console !== "undefined" && console !== null)) {
       return console.log.apply(console, args);
@@ -5844,7 +6042,7 @@ var sp;
 var storePrefixed = sp = function(u) {
   return function(x) {
     var url;
-    if (isFunction$1$1(u)) {
+    if (isFunction$2(u)) {
       url = u(x);
     } else {
       url = u;
@@ -7070,7 +7268,7 @@ function escapeRegex(str) {
     return (str + '').replace(/([.?*+^$[\]\\(){}|-])/g, '\\$1');
 }
 
-const isArray$3 = Array.isArray || (typeof $ !== 'undefined' && $.isArray) || function(object) {
+const isArray$4 = Array.isArray || (typeof $ !== 'undefined' && $.isArray) || function(object) {
     return Object.prototype.toString.call(object) === '[object Array]';
 };
 
@@ -7150,7 +7348,7 @@ Sifter.prototype.tokenize = function(query) {
  */
 Sifter.prototype.iterator = function(object, callback) {
     var iterator;
-    if (isArray$3(object)) {
+    if (isArray$4(object)) {
         iterator = Array.prototype.forEach || function(callback) {
             for (var i = 0, n = this.length; i < n; i++) {
                 callback(this[i], i, this);
@@ -7377,9 +7575,9 @@ Sifter.prototype.prepareSearch = function(query, options) {
     var optionSort       = options.sort;
     var optionSortEmpty = options.sortEmpty;
 
-    if (optionFields && !isArray$3(optionFields)) options.fields = [optionFields];
-    if (optionSort && !isArray$3(optionSort)) options.sort = [optionSort];
-    if (optionSortEmpty && !isArray$3(optionSortEmpty)) options.sortEmpty = [optionSortEmpty];
+    if (optionFields && !isArray$4(optionFields)) options.fields = [optionFields];
+    if (optionSort && !isArray$4(optionSort)) options.sort = [optionSort];
+    if (optionSortEmpty && !isArray$4(optionSortEmpty)) options.sortEmpty = [optionSortEmpty];
 
     return {
         options : options,
@@ -7451,47 +7649,47 @@ Sifter.prototype.search = function(query, options) {
     return search;
 };
 
-var isActualNaN$1;
-var isArgs$1;
-var isFn$1;
-var objProto$1;
-var owns$1;
-var symbolValueOf$1;
-var toStr$1;
+var isActualNaN$2;
+var isArgs$2;
+var isFn$2;
+var objProto$2;
+var owns$2;
+var symbolValueOf$2;
+var toStr$2;
 
-objProto$1 = Object.prototype;
+objProto$2 = Object.prototype;
 
-owns$1 = objProto$1.hasOwnProperty;
+owns$2 = objProto$2.hasOwnProperty;
 
-toStr$1 = objProto$1.toString;
+toStr$2 = objProto$2.toString;
 
-symbolValueOf$1 = void 0;
+symbolValueOf$2 = void 0;
 
 if (typeof Symbol === 'function') {
-  symbolValueOf$1 = Symbol.prototype.valueOf;
+  symbolValueOf$2 = Symbol.prototype.valueOf;
 }
 
-isActualNaN$1 = function(value) {
+isActualNaN$2 = function(value) {
   return value !== value;
 };
 
-var isEqual$1 = function(value, other) {
+var isEqual$2 = function(value, other) {
   var key, type;
   if (value === other) {
     return true;
   }
-  type = toStr$1.call(value);
-  if (type !== toStr$1.call(other)) {
+  type = toStr$2.call(value);
+  if (type !== toStr$2.call(other)) {
     return false;
   }
   if (type === '[object Object]') {
     for (key in value) {
-      if (!isEqual$1(value[key], other[key]) || !(key in other)) {
+      if (!isEqual$2(value[key], other[key]) || !(key in other)) {
         return false;
       }
     }
     for (key in other) {
-      if (!isEqual$1(value[key], other[key]) || !(key in value)) {
+      if (!isEqual$2(value[key], other[key]) || !(key in value)) {
         return false;
       }
     }
@@ -7503,7 +7701,7 @@ var isEqual$1 = function(value, other) {
       return false;
     }
     while (key--) {
-      if (!isEqual$1(value[key], other[key])) {
+      if (!isEqual$2(value[key], other[key])) {
         return false;
       }
     }
@@ -7518,41 +7716,41 @@ var isEqual$1 = function(value, other) {
   return false;
 };
 
-var isArrayLike$1 = function(value) {
-  return !!value && !isBool$1(value) && owns$1.call(value, 'length') && isFinite(value.length) && isNumber$1(value.length) && value.length >= 0;
+var isArrayLike$2 = function(value) {
+  return !!value && !isBool$2(value) && owns$2.call(value, 'length') && isFinite(value.length) && isNumber$4(value.length) && value.length >= 0;
 };
 
-var isArguments$1 = isArgs$1 = function(value) {
+var isArguments$2 = isArgs$2 = function(value) {
   var isOldArguments, isStandardArguments;
-  isStandardArguments = toStr$1.call(value) === '[object Arguments]';
-  isOldArguments = !isArray$1$1(value) && isArrayLike$1(value) && isObject$2(value) && isFn$1(value.callee);
+  isStandardArguments = toStr$2.call(value) === '[object Arguments]';
+  isOldArguments = !isArray$1$1(value) && isArrayLike$2(value) && isObject$3(value) && isFn$2(value.callee);
   return isStandardArguments || isOldArguments;
 };
 
 var isArray$1$1 = Array.isArray || function(value) {
-  return toStr$1.call(value) === '[object Array]';
+  return toStr$2.call(value) === '[object Array]';
 };
 
-var isBool$1 = function(value) {
-  return toStr$1.call(value) === '[object Boolean]';
+var isBool$2 = function(value) {
+  return toStr$2.call(value) === '[object Boolean]';
 };
 
-var isFunction$2 = isFn$1 = function(value) {
+var isFunction$3 = isFn$2 = function(value) {
   var isAlert, str;
   isAlert = typeof window !== 'undefined' && value === window.alert;
   if (isAlert) {
     return true;
   }
-  str = toStr$1.call(value);
+  str = toStr$2.call(value);
   return str === '[object Function]' || str === '[object GeneratorFunction]' || str === '[object AsyncFunction]';
 };
 
-var isNumber$1 = function(value) {
-  return toStr$1.call(value) === '[object Number]';
+var isNumber$4 = function(value) {
+  return toStr$2.call(value) === '[object Number]';
 };
 
-var isObject$2 = function(value) {
-  return toStr$1.call(value) === '[object Object]';
+var isObject$3 = function(value) {
+  return toStr$2.call(value) === '[object Object]';
 };
 
 /**
@@ -12384,7 +12582,7 @@ function isBoolAttr$1(value) {
  * @param   { * } value -
  * @returns { Boolean } -
  */
-function isFunction$3(value) {
+function isFunction$4(value) {
   return typeof value === T_FUNCTION$1
 }
 
@@ -12394,7 +12592,7 @@ function isFunction$3(value) {
  * @param   { * } value -
  * @returns { Boolean } -
  */
-function isObject$3(value) {
+function isObject$4(value) {
   return value && typeof value === T_OBJECT$1 // typeof null is 'object'
 }
 
@@ -12403,7 +12601,7 @@ function isObject$3(value) {
  * @param   { * } value -
  * @returns { Boolean } -
  */
-function isUndefined$2(value) {
+function isUndefined$3(value) {
   return typeof value === T_UNDEF$1
 }
 
@@ -12412,7 +12610,7 @@ function isUndefined$2(value) {
  * @param   { * } value -
  * @returns { Boolean } -
  */
-function isString$2(value) {
+function isString$3(value) {
   return typeof value === T_STRING$1
 }
 
@@ -12422,7 +12620,7 @@ function isString$2(value) {
  * @returns { Boolean } -
  */
 function isBlank$1(value) {
-  return isUndefined$2(value) || value === null || value === ''
+  return isUndefined$3(value) || value === null || value === ''
 }
 
 /**
@@ -12430,7 +12628,7 @@ function isBlank$1(value) {
  * @param   { * } value -
  * @returns { Boolean } -
  */
-function isArray$4(value) {
+function isArray$5(value) {
   return Array.isArray(value) || value instanceof Array
 }
 
@@ -12442,7 +12640,7 @@ function isArray$4(value) {
  */
 function isWritable$1(obj, key) {
   const descriptor = Object.getOwnPropertyDescriptor(obj, key);
-  return isUndefined$2(obj[key]) || descriptor && descriptor.writable
+  return isUndefined$3(obj[key]) || descriptor && descriptor.writable
 }
 
 /**
@@ -12454,17 +12652,17 @@ function isReservedName$1(value) {
   return RE_RESERVED_NAMES$1.test(value)
 }
 
-var check$1 = {
+var check$1 = Object.freeze({
 	isBoolAttr: isBoolAttr$1,
-	isFunction: isFunction$3,
-	isObject: isObject$3,
-	isUndefined: isUndefined$2,
-	isString: isString$2,
+	isFunction: isFunction$4,
+	isObject: isObject$4,
+	isUndefined: isUndefined$3,
+	isString: isString$3,
 	isBlank: isBlank$1,
-	isArray: isArray$4,
+	isArray: isArray$5,
 	isWritable: isWritable$1,
 	isReservedName: isReservedName$1
-};
+});
 
 // node_modules/riot/lib/browser/common/util/dom.js
 /**
@@ -12519,7 +12717,7 @@ function mkEl$1(name) {
  */
 /* istanbul ignore next */
 function setInnerHTML$1(container, html) {
-  if (!isUndefined$2(container.innerHTML))
+  if (!isUndefined$3(container.innerHTML))
     container.innerHTML = html;
     // some browsers do not support innerHTML on the SVGs tags
   else {
@@ -12608,7 +12806,7 @@ function walkNodes$1(dom, fn, context) {
   }
 }
 
-var dom$1 = {
+var dom$1 = Object.freeze({
 	$$: $$$1,
 	$: $$2,
 	createFrag: createFrag$1,
@@ -12621,7 +12819,7 @@ var dom$1 = {
 	safeInsert: safeInsert$1,
 	walkAttrs: walkAttrs$1,
 	walkNodes: walkNodes$1
-};
+});
 
 // node_modules/riot/lib/browser/tag/styleManager.js
 var styleNode$1;
@@ -13199,14 +13397,14 @@ function extend$36(src) {
   return src
 }
 
-var misc$1 = {
+var misc$1 = Object.freeze({
 	each: each$1,
 	contains: contains$1,
 	toCamel: toCamel$1,
 	startsWith: startsWith$1,
 	defineProperty: defineProperty$1,
 	extend: extend$36
-};
+});
 
 // node_modules/riot/lib/settings.js
 var settings$2 = extend$36(Object.create(brackets$1.settings), {
@@ -13347,7 +13545,7 @@ function updateExpression$1(expr) {
 
   if (expr.bool)
     value = value ? attrName : false;
-  else if (isUndefined$2(value) || value === null)
+  else if (isUndefined$3(value) || value === null)
     value = '';
 
   if (expr._riot_id) { // if it's a tag
@@ -13404,7 +13602,7 @@ function updateExpression$1(expr) {
   }
 
   // event handler
-  if (isFunction$3(value)) {
+  if (isFunction$4(value)) {
     setEventHandler$1(attrName, value, dom, this);
   // show / hide
   } else if (isToggle) {
@@ -13685,7 +13883,7 @@ function _each$1(dom, parent, expr) {
     // get the new items collection
     var items = tmpl$1(expr.val, parent),
       frag = createFrag$1(),
-      isObject$$1 = !isArray$4(items) && !isString$2(items),
+      isObject$$1 = !isArray$5(items) && !isString$3(items),
       root = placeholder.parentNode;
 
     // object loop. any changes cause full redraw
@@ -14026,7 +14224,7 @@ function Tag$2$1(el, opts) {
  * @returns { String } name/id of the tag just created
  */
 function tag$1$1(name, tmpl, css, attrs, fn) {
-  if (isFunction$3(attrs)) {
+  if (isFunction$4(attrs)) {
     fn = attrs;
 
     if (/^[\w\-]+\s?=/.test(css)) {
@@ -14037,7 +14235,7 @@ function tag$1$1(name, tmpl, css, attrs, fn) {
   }
 
   if (css) {
-    if (isFunction$3(css))
+    if (isFunction$4(css))
       fn = css;
     else
       styleManager$1.add(css);
@@ -14097,7 +14295,7 @@ function mount$1$1(selector, tagName, opts) {
   // inject styles into DOM
   styleManager$1.inject();
 
-  if (isObject$3(tagName)) {
+  if (isObject$4(tagName)) {
     opts = tagName;
     tagName = 0;
   }
@@ -14106,7 +14304,7 @@ function mount$1$1(selector, tagName, opts) {
   var allTags;
 
   // crawl the DOM to find the tag
-  if (isString$2(selector)) {
+  if (isString$3(selector)) {
     selector = selector === '*' ?
       // select all registered tags
       // & tags found with the riot-tag attribute set
@@ -14160,7 +14358,7 @@ let mixins_id$1 = 0;
  */
 function mixin$1$1(name, mix, g) {
   // Unnamed global
-  if (isObject$3(name)) {
+  if (isObject$4(name)) {
     mixin$1$1(`__unnamed_${mixins_id$1++}`, name, true);
     return
   }
@@ -14169,14 +14367,14 @@ function mixin$1$1(name, mix, g) {
 
   // Getter
   if (!mix) {
-    if (isUndefined$2(store[name]))
+    if (isUndefined$3(store[name]))
       throw new Error('Unregistered mixin: ' + name)
 
     return store[name]
   }
 
   // Setter
-  store[name] = isFunction$3(mix) ?
+  store[name] = isFunction$4(mix) ?
     extend$36(mix.prototype, store[name] || {}) && mix :
     extend$36(store[name] || {}, mix);
 }
@@ -14196,7 +14394,7 @@ function unregister$1$1(name) {
 const version$1 = 'WIP';
 
 
-var core$1 = {
+var core$1 = Object.freeze({
 	Tag: Tag$2$1,
 	tag: tag$1$1,
 	tag2: tag2$1$1,
@@ -14205,7 +14403,7 @@ var core$1 = {
 	update: update$1$1,
 	unregister: unregister$1$1,
 	version: version$1
-};
+});
 
 // node_modules/riot/lib/browser/tag/tag.js
 // counter to give a unique id to all the Tag instances
@@ -14309,7 +14507,7 @@ function Tag$1$1(impl = {}, conf = {}, innerHTML) {
     data = cleanUpData$1(data);
     extend$36(this, data);
     updateOpts$1.apply(this, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
-    if (this.isMounted && isFunction$3(this.shouldUpdate) && !this.shouldUpdate(data, nextOpts)) return this
+    if (this.isMounted && isFunction$4(this.shouldUpdate) && !this.shouldUpdate(data, nextOpts)) return this
 
     // inherit properties from the parent, but only for isAnonymous tags
     if (isLoop && isAnonymous) inheritFrom$1.apply(this, [this.parent, propsInSyncWithParent]);
@@ -14334,10 +14532,10 @@ function Tag$1$1(impl = {}, conf = {}, innerHTML) {
       // properties blacklisted and will not be bound to the tag instance
       const propsBlacklist = ['init', '__proto__'];
 
-      mix = isString$2(mix) ? mixin$1$1(mix) : mix;
+      mix = isString$3(mix) ? mixin$1$1(mix) : mix;
 
       // check if the mixin is a function
-      if (isFunction$3(mix)) {
+      if (isFunction$4(mix)) {
         // create the new mixin instance
         instance = new mix();
       } else instance = mix;
@@ -14361,7 +14559,7 @@ function Tag$1$1(impl = {}, conf = {}, innerHTML) {
           if (!this.hasOwnProperty(key) && hasGetterSetter) {
             Object.defineProperty(this, key, descriptor);
           } else {
-            this[key] = isFunction$3(instance[key]) ?
+            this[key] = isFunction$4(instance[key]) ?
               instance[key].bind(this) :
               instance[key];
           }
@@ -14544,7 +14742,7 @@ function inheritFrom$1(target, propsInSyncWithParent) {
     // some properties must be always in sync with the parent tag
     var mustSync = !isReservedName$1(k) && contains$1(propsInSyncWithParent, k);
 
-    if (isUndefined$2(this[k]) || mustSync) {
+    if (isUndefined$3(this[k]) || mustSync) {
       // track the property to keep in sync
       // so we can keep it updated
       if (!mustSync) propsInSyncWithParent.push(k);
@@ -14567,7 +14765,7 @@ function moveChildTag$1(tagName, newPos) {
 
   tags = parent.tags[tagName];
 
-  if (isArray$4(tags))
+  if (isArray$5(tags))
     tags.splice(newPos, 0, tags.splice(tags.indexOf(this), 1)[0]);
   else arrayishAdd$1(parent.tags, tagName, this);
 }
@@ -14650,7 +14848,7 @@ function getTagName$1(dom, skipDataIs) {
  * @returns { Object } clean object without containing the riot internal reserved words
  */
 function cleanUpData$1(data) {
-  if (!(data instanceof Tag$1$1) && !(data && isFunction$3(data.trigger)))
+  if (!(data instanceof Tag$1$1) && !(data && isFunction$4(data.trigger)))
     return data
 
   var o = {};
@@ -14671,8 +14869,8 @@ function cleanUpData$1(data) {
  */
 function arrayishAdd$1(obj, key, value, ensureArray, index) {
   const dest = obj[key];
-  const isArr = isArray$4(dest);
-  const hasIndex = !isUndefined$2(index);
+  const isArr = isArray$5(dest);
+  const hasIndex = !isUndefined$3(index);
 
   if (dest && dest === value) return
 
@@ -14706,7 +14904,7 @@ function arrayishAdd$1(obj, key, value, ensureArray, index) {
  * @param { Boolean } ensureArray - ensure that the property remains an array
 */
 function arrayishRemove$1(obj, key, value, ensureArray) {
-  if (isArray$4(obj[key])) {
+  if (isArray$5(obj[key])) {
     let index = obj[key].indexOf(value);
     if (index !== -1) obj[key].splice(index, 1);
     if (!obj[key].length) delete obj[key];
@@ -14833,7 +15031,7 @@ function selectTags$1(tags) {
 }
 
 
-var tags$1 = {
+var tags$1 = Object.freeze({
 	getTag: getTag$1,
 	inheritFrom: inheritFrom$1,
 	moveChildTag: moveChildTag$1,
@@ -14849,7 +15047,7 @@ var tags$1 = {
 	makeVirtual: makeVirtual$1,
 	moveVirtual: moveVirtual$1,
 	selectTags: selectTags$1
-};
+});
 
 // node_modules/riot/lib/riot.js
 /**
@@ -16221,12 +16419,12 @@ function setHookCallback (callback) {
 }
 
 // node_modules/moment/src/lib/utils/is-array.js
-function isArray$5(input) {
+function isArray$6(input) {
     return input instanceof Array || Object.prototype.toString.call(input) === '[object Array]';
 }
 
 // node_modules/moment/src/lib/utils/is-object.js
-function isObject$4(input) {
+function isObject$5(input) {
     // IE8 will treat undefined and null as object if it wasn't for
     // input != null
     return input != null && Object.prototype.toString.call(input) === '[object Object]';
@@ -16243,17 +16441,17 @@ function isObjectEmpty(obj) {
 }
 
 // node_modules/moment/src/lib/utils/is-undefined.js
-function isUndefined$3(input) {
+function isUndefined$4(input) {
     return input === void 0;
 }
 
 // node_modules/moment/src/lib/utils/is-number.js
-function isNumber$2(input) {
+function isNumber$5(input) {
     return typeof input === 'number' || Object.prototype.toString.call(input) === '[object Number]';
 }
 
 // node_modules/moment/src/lib/utils/is-date.js
-function isDate$1(input) {
+function isDate$2(input) {
     return input instanceof Date || Object.prototype.toString.call(input) === '[object Date]';
 }
 
@@ -16396,34 +16594,34 @@ var momentProperties = hooks.momentProperties = [];
 function copyConfig(to, from) {
     var i, prop, val;
 
-    if (!isUndefined$3(from._isAMomentObject)) {
+    if (!isUndefined$4(from._isAMomentObject)) {
         to._isAMomentObject = from._isAMomentObject;
     }
-    if (!isUndefined$3(from._i)) {
+    if (!isUndefined$4(from._i)) {
         to._i = from._i;
     }
-    if (!isUndefined$3(from._f)) {
+    if (!isUndefined$4(from._f)) {
         to._f = from._f;
     }
-    if (!isUndefined$3(from._l)) {
+    if (!isUndefined$4(from._l)) {
         to._l = from._l;
     }
-    if (!isUndefined$3(from._strict)) {
+    if (!isUndefined$4(from._strict)) {
         to._strict = from._strict;
     }
-    if (!isUndefined$3(from._tzm)) {
+    if (!isUndefined$4(from._tzm)) {
         to._tzm = from._tzm;
     }
-    if (!isUndefined$3(from._isUTC)) {
+    if (!isUndefined$4(from._isUTC)) {
         to._isUTC = from._isUTC;
     }
-    if (!isUndefined$3(from._offset)) {
+    if (!isUndefined$4(from._offset)) {
         to._offset = from._offset;
     }
-    if (!isUndefined$3(from._pf)) {
+    if (!isUndefined$4(from._pf)) {
         to._pf = getParsingFlags(from);
     }
-    if (!isUndefined$3(from._locale)) {
+    if (!isUndefined$4(from._locale)) {
         to._locale = from._locale;
     }
 
@@ -16431,7 +16629,7 @@ function copyConfig(to, from) {
         for (i = 0; i < momentProperties.length; i++) {
             prop = momentProperties[i];
             val = from[prop];
-            if (!isUndefined$3(val)) {
+            if (!isUndefined$4(val)) {
                 to[prop] = val;
             }
         }
@@ -16554,7 +16752,7 @@ hooks.suppressDeprecationWarnings = false;
 hooks.deprecationHandler = null;
 
 // node_modules/moment/src/lib/utils/is-function.js
-function isFunction$4(input) {
+function isFunction$5(input) {
     return input instanceof Function || Object.prototype.toString.call(input) === '[object Function]';
 }
 
@@ -16563,7 +16761,7 @@ function set (config) {
     var prop, i;
     for (i in config) {
         prop = config[i];
-        if (isFunction$4(prop)) {
+        if (isFunction$5(prop)) {
             this[i] = prop;
         } else {
             this['_' + i] = prop;
@@ -16582,7 +16780,7 @@ function mergeConfigs(parentConfig, childConfig) {
     var res = extend$53({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
-            if (isObject$4(parentConfig[prop]) && isObject$4(childConfig[prop])) {
+            if (isObject$5(parentConfig[prop]) && isObject$5(childConfig[prop])) {
                 res[prop] = {};
                 extend$53(res[prop], parentConfig[prop]);
                 extend$53(res[prop], childConfig[prop]);
@@ -16596,7 +16794,7 @@ function mergeConfigs(parentConfig, childConfig) {
     for (prop in parentConfig) {
         if (hasOwnProp(parentConfig, prop) &&
                 !hasOwnProp(childConfig, prop) &&
-                isObject$4(parentConfig[prop])) {
+                isObject$5(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
             res[prop] = extend$53({}, res[prop]);
         }
@@ -16640,7 +16838,7 @@ var defaultCalendar = {
 
 function calendar (key, mom, now) {
     var output = this._calendar[key] || this._calendar['sameElse'];
-    return isFunction$4(output) ? output.call(mom, now) : output;
+    return isFunction$5(output) ? output.call(mom, now) : output;
 }
 
 // node_modules/moment/src/lib/locale/formats.js
@@ -16703,14 +16901,14 @@ var defaultRelativeTime = {
 
 function relativeTime (number, withoutSuffix, string, isFuture) {
     var output = this._relativeTime[string];
-    return (isFunction$4(output)) ?
+    return (isFunction$5(output)) ?
         output(number, withoutSuffix, string, isFuture) :
         output.replace(/%d/i, number);
 }
 
 function pastFuture (diff, output) {
     var format = this._relativeTime[diff > 0 ? 'future' : 'past'];
-    return isFunction$4(format) ? format(output) : format.replace(/%s/i, output);
+    return isFunction$5(format) ? format(output) : format.replace(/%s/i, output);
 }
 
 // node_modules/moment/src/lib/units/aliases.js
@@ -16788,7 +16986,7 @@ function set$1 (mom, unit, value) {
 
 function stringGet (units) {
     units = normalizeUnits(units);
-    if (isFunction$4(this[units])) {
+    if (isFunction$5(this[units])) {
         return this[units]();
     }
     return this;
@@ -16804,7 +17002,7 @@ function stringSet (units, value) {
         }
     } else {
         units = normalizeUnits(units);
-        if (isFunction$4(this[units])) {
+        if (isFunction$5(this[units])) {
             return this[units](value);
         }
     }
@@ -16876,7 +17074,7 @@ function makeFormatFunction(format) {
     return function (mom) {
         var output = '', i;
         for (i = 0; i < length; i++) {
-            output += isFunction$4(array[i]) ? array[i].call(mom, format) : array[i];
+            output += isFunction$5(array[i]) ? array[i].call(mom, format) : array[i];
         }
         return output;
     };
@@ -16940,7 +17138,7 @@ var matchWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF
 var regexes = {};
 
 function addRegexToken (token, regex, strictRegex) {
-    regexes[token] = isFunction$4(regex) ? regex : function (isStrict, localeData) {
+    regexes[token] = isFunction$5(regex) ? regex : function (isStrict, localeData) {
         return (isStrict && strictRegex) ? strictRegex : regex;
     };
 }
@@ -16972,7 +17170,7 @@ function addParseToken (token, callback) {
     if (typeof token === 'string') {
         token = [token];
     }
-    if (isNumber$2(callback)) {
+    if (isNumber$5(callback)) {
         func = function (input, array) {
             array[callback] = toInt(input);
         };
@@ -17082,20 +17280,20 @@ var MONTHS_IN_FORMAT = /D[oD]?(\[[^\[\]]*\]|\s)+MMMM?/;
 var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
 function localeMonths (m, format) {
     if (!m) {
-        return isArray$5(this._months) ? this._months :
+        return isArray$6(this._months) ? this._months :
             this._months['standalone'];
     }
-    return isArray$5(this._months) ? this._months[m.month()] :
+    return isArray$6(this._months) ? this._months[m.month()] :
         this._months[(this._months.isFormat || MONTHS_IN_FORMAT).test(format) ? 'format' : 'standalone'][m.month()];
 }
 
 var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
 function localeMonthsShort (m, format) {
     if (!m) {
-        return isArray$5(this._monthsShort) ? this._monthsShort :
+        return isArray$6(this._monthsShort) ? this._monthsShort :
             this._monthsShort['standalone'];
     }
-    return isArray$5(this._monthsShort) ? this._monthsShort[m.month()] :
+    return isArray$6(this._monthsShort) ? this._monthsShort[m.month()] :
         this._monthsShort[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
 }
 
@@ -17194,7 +17392,7 @@ function setMonth (mom, value) {
         } else {
             value = mom.localeData().monthsParse(value);
             // TODO: Another silent failure?
-            if (!isNumber$2(value)) {
+            if (!isNumber$5(value)) {
                 return mom;
             }
         }
@@ -17597,10 +17795,10 @@ function parseIsoWeekday(input, locale) {
 var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
 function localeWeekdays (m, format) {
     if (!m) {
-        return isArray$5(this._weekdays) ? this._weekdays :
+        return isArray$6(this._weekdays) ? this._weekdays :
             this._weekdays['standalone'];
     }
-    return isArray$5(this._weekdays) ? this._weekdays[m.day()] :
+    return isArray$6(this._weekdays) ? this._weekdays[m.day()] :
         this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
 }
 
@@ -18079,7 +18277,7 @@ function loadLocale(name) {
 function getSetGlobalLocale (key, values) {
     var data;
     if (key) {
-        if (isUndefined$3(values)) {
+        if (isUndefined$4(values)) {
             data = getLocale(key);
         }
         else {
@@ -18181,7 +18379,7 @@ function getLocale (key) {
         return globalLocale;
     }
 
-    if (!isArray$5(key)) {
+    if (!isArray$6(key)) {
         //short-circuit everything else
         locale = loadLocale(key);
         if (locale) {
@@ -18765,9 +18963,9 @@ function prepareConfig (config) {
 
     if (isMoment(input)) {
         return new Moment(checkOverflow(input));
-    } else if (isDate$1(input)) {
+    } else if (isDate$2(input)) {
         config._d = input;
-    } else if (isArray$5(format)) {
+    } else if (isArray$6(format)) {
         configFromStringAndArray(config);
     } else if (format) {
         configFromStringAndFormat(config);
@@ -18784,20 +18982,20 @@ function prepareConfig (config) {
 
 function configFromInput(config) {
     var input = config._i;
-    if (isUndefined$3(input)) {
+    if (isUndefined$4(input)) {
         config._d = new Date(hooks.now());
-    } else if (isDate$1(input)) {
+    } else if (isDate$2(input)) {
         config._d = new Date(input.valueOf());
     } else if (typeof input === 'string') {
         configFromString(config);
-    } else if (isArray$5(input)) {
+    } else if (isArray$6(input)) {
         config._a = map(input.slice(0), function (obj) {
             return parseInt(obj, 10);
         });
         configFromArray(config);
-    } else if (isObject$4(input)) {
+    } else if (isObject$5(input)) {
         configFromObject(config);
-    } else if (isNumber$2(input)) {
+    } else if (isNumber$5(input)) {
         // from milliseconds
         config._d = new Date(input);
     } else {
@@ -18813,8 +19011,8 @@ function createLocalOrUTC (input, format, locale, strict, isUTC) {
         locale = undefined;
     }
 
-    if ((isObject$4(input) && isObjectEmpty(input)) ||
-            (isArray$5(input) && input.length === 0)) {
+    if ((isObject$5(input) && isObjectEmpty(input)) ||
+            (isArray$6(input) && input.length === 0)) {
         input = undefined;
     }
     // object construction must be done this way.
@@ -18866,7 +19064,7 @@ var prototypeMax = deprecate(
 // first element is an array of moment objects.
 function pickBy(fn, moments) {
     var res, i;
-    if (moments.length === 1 && isArray$5(moments[0])) {
+    if (moments.length === 1 && isArray$6(moments[0])) {
         moments = moments[0];
     }
     if (!moments.length) {
@@ -19038,7 +19236,7 @@ function cloneWithOffset(input, model) {
     var res, diff;
     if (model._isUTC) {
         res = model.clone();
-        diff = (isMoment(input) || isDate$1(input) ? input.valueOf() : createLocal(input).valueOf()) - res.valueOf();
+        diff = (isMoment(input) || isDate$2(input) ? input.valueOf() : createLocal(input).valueOf()) - res.valueOf();
         // Use low-level api, because this fn is low-level api.
         res._d.setTime(res._d.valueOf() + diff);
         hooks.updateOffset(res, false);
@@ -19172,7 +19370,7 @@ function isDaylightSavingTime () {
 }
 
 function isDaylightSavingTimeShifted () {
-    if (!isUndefined$3(this._isDSTShifted)) {
+    if (!isUndefined$4(this._isDSTShifted)) {
         return this._isDSTShifted;
     }
 
@@ -19227,7 +19425,7 @@ function createDuration (input, key) {
             d  : input._days,
             M  : input._months
         };
-    } else if (isNumber$2(input)) {
+    } else if (isNumber$5(input)) {
         duration = {};
         if (key) {
             duration[key] = input;
@@ -19384,7 +19582,7 @@ function calendar$1 (time, formats) {
         sod = cloneWithOffset(now, this).startOf('day'),
         format = hooks.calendarFormat(this, sod) || 'sameElse';
 
-    var output = formats && (isFunction$4(formats[format]) ? formats[format].call(this, now) : formats[format]);
+    var output = formats && (isFunction$5(formats[format]) ? formats[format].call(this, now) : formats[format]);
 
     return this.format(output || this.localeData().calendar(format, this, createLocal(now)));
 }
@@ -19400,7 +19598,7 @@ function isAfter (input, units) {
     if (!(this.isValid() && localInput.isValid())) {
         return false;
     }
-    units = normalizeUnits(!isUndefined$3(units) ? units : 'millisecond');
+    units = normalizeUnits(!isUndefined$4(units) ? units : 'millisecond');
     if (units === 'millisecond') {
         return this.valueOf() > localInput.valueOf();
     } else {
@@ -19413,7 +19611,7 @@ function isBefore (input, units) {
     if (!(this.isValid() && localInput.isValid())) {
         return false;
     }
-    units = normalizeUnits(!isUndefined$3(units) ? units : 'millisecond');
+    units = normalizeUnits(!isUndefined$4(units) ? units : 'millisecond');
     if (units === 'millisecond') {
         return this.valueOf() < localInput.valueOf();
     } else {
@@ -19514,7 +19712,7 @@ function monthDiff (a, b) {
 hooks.defaultFormat = 'YYYY-MM-DDTHH:mm:ssZ';
 hooks.defaultFormatUtc = 'YYYY-MM-DDTHH:mm:ss[Z]';
 
-function toString () {
+function toString$1 () {
     return this.clone().locale('en').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ');
 }
 
@@ -19526,7 +19724,7 @@ function toISOString() {
     if (m.year() < 0 || m.year() > 9999) {
         return formatMoment(m, 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
     }
-    if (isFunction$4(Date.prototype.toISOString)) {
+    if (isFunction$5(Date.prototype.toISOString)) {
         // native implementation is ~50x faster, use it when we can
         return this.toDate().toISOString();
     }
@@ -19705,7 +19903,7 @@ function toArray () {
     return [m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond()];
 }
 
-function toObject$1 () {
+function toObject$2 () {
     var m = this;
     return {
         years: m.year(),
@@ -20088,12 +20286,12 @@ proto.set               = stringSet;
 proto.startOf           = startOf;
 proto.subtract          = subtract;
 proto.toArray           = toArray;
-proto.toObject          = toObject$1;
+proto.toObject          = toObject$2;
 proto.toDate            = toDate;
 proto.toISOString       = toISOString;
 proto.inspect           = inspect;
 proto.toJSON            = toJSON;
-proto.toString          = toString;
+proto.toString          = toString$1;
 proto.unix              = unix;
 proto.valueOf           = valueOf;
 proto.creationData      = creationData;
@@ -20222,7 +20420,7 @@ function get$1 (format, index, field, setter) {
 }
 
 function listMonthsImpl (format, index, field) {
-    if (isNumber$2(format)) {
+    if (isNumber$5(format)) {
         index = format;
         format = undefined;
     }
@@ -20251,7 +20449,7 @@ function listMonthsImpl (format, index, field) {
 // (true, fmt)
 function listWeekdaysImpl (localeSorted, format, index, field) {
     if (typeof localeSorted === 'boolean') {
-        if (isNumber$2(format)) {
+        if (isNumber$5(format)) {
             index = format;
             format = undefined;
         }
@@ -20262,7 +20460,7 @@ function listWeekdaysImpl (localeSorted, format, index, field) {
         index = format;
         localeSorted = false;
 
-        if (isNumber$2(format)) {
+        if (isNumber$5(format)) {
             index = format;
             format = undefined;
         }
@@ -20736,7 +20934,7 @@ hooks.now                   = now;
 hooks.utc                   = createUTC;
 hooks.unix                  = createUnix;
 hooks.months                = listMonths;
-hooks.isDate                = isDate$1;
+hooks.isDate                = isDate$2;
 hooks.locale                = getSetGlobalLocale;
 hooks.invalid               = createInvalid;
 hooks.duration              = createDuration;
