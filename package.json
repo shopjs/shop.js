@@ -27,7 +27,6 @@
   ],
   "main": "lib/shop.js",
   "module": "lib/shop.mjs",
-  "js:next": "lib/shop.mjs",
   "files": [
     "lib/",
     "src/"
@@ -36,6 +35,8 @@
     "node": ">=4.0.0"
   },
   "scripts": {
+    "build": "sake build",
+    "pretest": "sake build",
     "prepublishOnly": "sake build:min",
     "test": "sake test"
   },
