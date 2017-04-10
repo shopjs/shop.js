@@ -3206,7 +3206,7 @@ var riot$1 = extend$1$1({}, core, {
   util,
 });
 
-// node_modules/el.js/node_modules/es-object-assign/lib/es-object-assign.mjs
+// node_modules/es-object-assign/lib/es-object-assign.mjs
 // src/index.coffee
 var getOwnSymbols;
 var objectAssign;
@@ -3305,90 +3305,6 @@ var isObject$1;
 var isObject$2 = isObject$1 = function(value) {
   return toString(value) === '[object Object]';
 };
-
-// node_modules/referential/node_modules/es-object-assign/lib/es-object-assign.mjs
-// src/index.coffee
-var getOwnSymbols$1;
-var objectAssign$2;
-var shouldUseNative$1;
-var toObject$1;
-var slice$1 = [].slice;
-
-getOwnSymbols$1 = Object.getOwnPropertySymbols;
-
-toObject$1 = function(val) {
-  if (val === null || val === void 0) {
-    throw new TypeError('Object.assign cannot be called with null or undefined');
-  }
-  return Object(val);
-};
-
-shouldUseNative$1 = function() {
-  var err, i, j, k, len, letter, order2, ref, test1, test2, test3;
-  try {
-    if (!Object.assign) {
-      return false;
-    }
-    test1 = new String('abc');
-    test1[5] = 'de';
-    if (Object.getOwnPropertyNames(test1)[0] === '5') {
-      return false;
-    }
-    test2 = {};
-    for (i = j = 0; j <= 9; i = ++j) {
-      test2['_' + String.fromCharCode(i)] = i;
-    }
-    order2 = Object.getOwnPropertyNames(test2).map(function(n) {
-      return test2[n];
-    });
-    if (order2.join('') !== '0123456789') {
-      return false;
-    }
-    test3 = {};
-    ref = 'abcdefghijklmnopqrst'.split('');
-    for (k = 0, len = ref.length; k < len; k++) {
-      letter = ref[k];
-      test3[letter] = letter;
-    }
-    if (Object.keys(Object.assign({}, test3)).join('') !== 'abcdefghijklmnopqrst') {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    err = error;
-    return false;
-  }
-};
-
-var index$1 = objectAssign$2 = (function() {
-  if (shouldUseNative$1()) {
-    return Object.assign;
-  }
-  return function() {
-    var from, j, k, key, len, len1, ref, source, sources, symbol, target, to;
-    target = arguments[0], sources = 2 <= arguments.length ? slice$1.call(arguments, 1) : [];
-    to = toObject$1(target);
-    for (j = 0, len = sources.length; j < len; j++) {
-      source = sources[j];
-      from = Object(source);
-      for (key in from) {
-        if (Object.prototype.hasOwnProperty.call(from, key)) {
-          to[key] = from[key];
-        }
-      }
-      if (getOwnSymbols$1) {
-        ref = getOwnSymbols$1(from);
-        for (k = 0, len1 = ref.length; k < len1; k++) {
-          symbol = ref[k];
-          if (Object.prototype.propIsEnumerable.call(from, symbol)) {
-            to[symbol] = from[symbol];
-          }
-        }
-      }
-    }
-    return to;
-  };
-})();
 
 // node_modules/referential/lib/referential.mjs
 // src/ref.coffee
@@ -3493,7 +3409,7 @@ var Ref$1 = Ref = (function() {
     oldValue = this.get(key);
     this._mutate(key);
     if (value == null) {
-      this.value(index$1(this.value(), key));
+      this.value(index(this.value(), key));
     } else {
       this.index(key, value);
     }
@@ -3550,21 +3466,21 @@ var Ref$1 = Ref = (function() {
     var clone;
     this._mutate(key);
     if (value == null) {
-      this.value(index$1(this.value(), key));
+      this.value(index(this.value(), key));
     } else {
       if (isObject$2(value)) {
-        this.value(index$1((this.ref(key)).get(), value));
+        this.value(index((this.ref(key)).get(), value));
       } else {
         clone = this.clone();
         this.set(key, value);
-        this.value(index$1(clone.get(), this.value()));
+        this.value(index(clone.get(), this.value()));
       }
     }
     return this;
   };
 
   Ref.prototype.clone = function(key) {
-    return new Ref(index$1({}, this.get(key)));
+    return new Ref(index({}, this.get(key)));
   };
 
   Ref.prototype.index = function(key, value, obj, prev) {
@@ -4123,179 +4039,6 @@ for (k$1 in riot$1) {
 
 var El$1 = El;
 
-// node_modules/es-object-assign/index.mjs
-var getOwnPropertySymbols;
-var hasOwnProperty;
-var objectAssign$4;
-var propIsEnumerable;
-var shouldUseNative$2;
-var toObject$2;
-var slice$2 = [].slice;
-
-getOwnPropertySymbols = Object.getOwnPropertySymbols;
-
-hasOwnProperty = Object.prototype.hasOwnProperty;
-
-propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-toObject$2 = function(val) {
-  if (val === null || val === void 0) {
-    throw new TypeError('Object.assign cannot be called with null or undefined');
-  }
-  return Object(val);
-};
-
-shouldUseNative$2 = function() {
-  var err, i, j, k, len, letter, order2, ref, test1, test2, test3;
-  try {
-    if (!Object.assign) {
-      return false;
-    }
-    test1 = new String('abc');
-    test1[5] = 'de';
-    if (Object.getOwnPropertyNames(test1)[0] === '5') {
-      return false;
-    }
-    test2 = {};
-    for (i = j = 0; j <= 9; i = ++j) {
-      test2['_' + String.fromCharCode(i)] = i;
-    }
-    order2 = Object.getOwnPropertyNames(test2).map(function(n) {
-      return test2[n];
-    });
-    if (order2.join('') !== '0123456789') {
-      return false;
-    }
-    test3 = {};
-    ref = 'abcdefghijklmnopqrst'.split('');
-    for (k = 0, len = ref.length; k < len; k++) {
-      letter = ref[k];
-      test3[letter] = letter;
-    }
-    if (Object.keys(Object.assign({}, test3)).join('') !== 'abcdefghijklmnopqrst') {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    err = error;
-    return false;
-  }
-};
-
-var index$2 = objectAssign$4 = (function() {
-  if (shouldUseNative$2()) {
-    return Object.assign;
-  }
-  return function() {
-    var from, j, k, key, len, len1, ref, source, sources, symbol, target, to;
-    target = arguments[0], sources = 2 <= arguments.length ? slice$2.call(arguments, 1) : [];
-    to = toObject$2(target);
-    for (j = 0, len = sources.length; j < len; j++) {
-      source = sources[j];
-      from = Object(source);
-      for (key in from) {
-        if (hasOwnProperty.call(from, key)) {
-          to[key] = from[key];
-        }
-      }
-      if (getOwnPropertySymbols) {
-        ref = getOwnPropertySymbols(from);
-        for (k = 0, len1 = ref.length; k < len1; k++) {
-          symbol = ref[k];
-          if (propIsEnumerable.call(from, symbol)) {
-            to[symbol] = from[symbol];
-          }
-        }
-      }
-    }
-    return to;
-  };
-})();
-
-// node_modules/es-cookies/node_modules/es-object-assign/lib/es-object-assign.mjs
-// src/index.coffee
-var getOwnSymbols$2;
-var objectAssign$6;
-var shouldUseNative$3;
-var toObject$3;
-var slice$3 = [].slice;
-
-getOwnSymbols$2 = Object.getOwnPropertySymbols;
-
-toObject$3 = function(val) {
-  if (val === null || val === void 0) {
-    throw new TypeError('Object.assign cannot be called with null or undefined');
-  }
-  return Object(val);
-};
-
-shouldUseNative$3 = function() {
-  var err, i, j, k, len, letter, order2, ref, test1, test2, test3;
-  try {
-    if (!Object.assign) {
-      return false;
-    }
-    test1 = new String('abc');
-    test1[5] = 'de';
-    if (Object.getOwnPropertyNames(test1)[0] === '5') {
-      return false;
-    }
-    test2 = {};
-    for (i = j = 0; j <= 9; i = ++j) {
-      test2['_' + String.fromCharCode(i)] = i;
-    }
-    order2 = Object.getOwnPropertyNames(test2).map(function(n) {
-      return test2[n];
-    });
-    if (order2.join('') !== '0123456789') {
-      return false;
-    }
-    test3 = {};
-    ref = 'abcdefghijklmnopqrst'.split('');
-    for (k = 0, len = ref.length; k < len; k++) {
-      letter = ref[k];
-      test3[letter] = letter;
-    }
-    if (Object.keys(Object.assign({}, test3)).join('') !== 'abcdefghijklmnopqrst') {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    err = error;
-    return false;
-  }
-};
-
-var index$5 = objectAssign$6 = (function() {
-  if (shouldUseNative$3()) {
-    return Object.assign;
-  }
-  return function() {
-    var from, j, k, key, len, len1, ref, source, sources, symbol, target, to;
-    target = arguments[0], sources = 2 <= arguments.length ? slice$3.call(arguments, 1) : [];
-    to = toObject$3(target);
-    for (j = 0, len = sources.length; j < len; j++) {
-      source = sources[j];
-      from = Object(source);
-      for (key in from) {
-        if (Object.prototype.hasOwnProperty.call(from, key)) {
-          to[key] = from[key];
-        }
-      }
-      if (getOwnSymbols$2) {
-        ref = getOwnSymbols$2(from);
-        for (k = 0, len1 = ref.length; k < len1; k++) {
-          symbol = ref[k];
-          if (Object.prototype.propIsEnumerable.call(from, symbol)) {
-            to[symbol] = from[symbol];
-          }
-        }
-      }
-    }
-    return to;
-  };
-})();
-
 // node_modules/es-cookies/lib/cookies.mjs
 // src/cookies.coffee
 var Cookies;
@@ -4321,7 +4064,7 @@ Cookies = (function() {
     })(this);
     this.remove = (function(_this) {
       return function(key, attrs) {
-        return _this.write(key, '', index$5({
+        return _this.write(key, '', index({
           expires: -1
         }, attrs));
       };
@@ -4365,7 +4108,7 @@ Cookies = (function() {
 
   Cookies.prototype.write = function(key, value, attrs) {
     var attr, err, expires, name, result, strAttrs;
-    attrs = index$5({
+    attrs = index({
       path: '/'
     }, this.defaults, attrs);
     if (isNumber$1(attrs.expires)) {
@@ -4408,7 +4151,7 @@ Cookies = (function() {
 var Cookies$1 = Cookies;
 
 // src/index.coffee
-var index$4 = new Cookies$1();
+var index$2 = new Cookies$1();
 
 // node_modules/es-md5/dist/md5.mjs
 var binl2rstr;
@@ -4648,7 +4391,7 @@ hexHMACMD5 = function(k, d) {
   return rstr2hex(rawHMACMD5(k, d));
 };
 
-var index$6 = md5 = function(string, key, raw) {
+var index$3 = md5 = function(string, key, raw) {
   if (!key) {
     if (!raw) {
       return hexMD5(string);
@@ -4665,32 +4408,32 @@ var index$6 = md5 = function(string, key, raw) {
 // src/cookie-storage.coffee
 var cookieStorage = (function() {
   var key, postFix;
-  postFix = index$6(window.location.host);
+  postFix = index$3(window.location.host);
   key = function(k) {
     return k + "_" + postFix;
   };
   return {
     get: function(k) {
-      return index$4.getJSON(key(k));
+      return index$2.getJSON(key(k));
     },
     set: function(k, v) {
       var ks, ref;
-      ks = (ref = index$4.getJSON(key('_keys'))) != null ? ref : [];
+      ks = (ref = index$2.getJSON(key('_keys'))) != null ? ref : [];
       ks.push(k);
-      index$4.set(key('_keys'), ks);
-      return index$4.set(key(k), v);
+      index$2.set(key('_keys'), ks);
+      return index$2.set(key(k), v);
     },
     remove: function(k) {
-      return index$4.remove(key(k));
+      return index$2.remove(key(k));
     },
     clear: function() {
       var i, k, ks, len, ref;
-      ks = (ref = index$4.getJSON(key('_keys'))) != null ? ref : [];
+      ks = (ref = index$2.getJSON(key('_keys'))) != null ? ref : [];
       for (i = 0, len = ks.length; i < len; i++) {
         k = ks[i];
-        index$4.remove(k);
+        index$2.remove(k);
       }
-      return index$4.remove(key('_keys'));
+      return index$2.remove(key('_keys'));
     }
   };
 })();
@@ -4743,7 +4486,7 @@ supported = function(storage) {
   }
 };
 
-var index$3 = (function() {
+var index$1 = (function() {
   if (supported(localStorage)) {
     return localStorage;
   } else {
@@ -5118,6 +4861,95 @@ Promise$2$1.settle = settle$1;
 
 Promise$2$1.soon = soon$1$2;
 
+// node_modules/es-xhr-promise/node_modules/es-object-assign/index.mjs
+var getOwnPropertySymbols;
+var hasOwnProperty;
+var objectAssign$2;
+var propIsEnumerable;
+var shouldUseNative$1;
+var toObject$1;
+var slice$2 = [].slice;
+
+getOwnPropertySymbols = Object.getOwnPropertySymbols;
+
+hasOwnProperty = Object.prototype.hasOwnProperty;
+
+propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+toObject$1 = function(val) {
+  if (val === null || val === void 0) {
+    throw new TypeError('Object.assign cannot be called with null or undefined');
+  }
+  return Object(val);
+};
+
+shouldUseNative$1 = function() {
+  var err, i, j, k, len, letter, order2, ref, test1, test2, test3;
+  try {
+    if (!Object.assign) {
+      return false;
+    }
+    test1 = new String('abc');
+    test1[5] = 'de';
+    if (Object.getOwnPropertyNames(test1)[0] === '5') {
+      return false;
+    }
+    test2 = {};
+    for (i = j = 0; j <= 9; i = ++j) {
+      test2['_' + String.fromCharCode(i)] = i;
+    }
+    order2 = Object.getOwnPropertyNames(test2).map(function(n) {
+      return test2[n];
+    });
+    if (order2.join('') !== '0123456789') {
+      return false;
+    }
+    test3 = {};
+    ref = 'abcdefghijklmnopqrst'.split('');
+    for (k = 0, len = ref.length; k < len; k++) {
+      letter = ref[k];
+      test3[letter] = letter;
+    }
+    if (Object.keys(Object.assign({}, test3)).join('') !== 'abcdefghijklmnopqrst') {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    err = error;
+    return false;
+  }
+};
+
+var index$4 = objectAssign$2 = (function() {
+  if (shouldUseNative$1()) {
+    return Object.assign;
+  }
+  return function() {
+    var from, j, k, key, len, len1, ref, source, sources, symbol, target, to;
+    target = arguments[0], sources = 2 <= arguments.length ? slice$2.call(arguments, 1) : [];
+    to = toObject$1(target);
+    for (j = 0, len = sources.length; j < len; j++) {
+      source = sources[j];
+      from = Object(source);
+      for (key in from) {
+        if (hasOwnProperty.call(from, key)) {
+          to[key] = from[key];
+        }
+      }
+      if (getOwnPropertySymbols) {
+        ref = getOwnPropertySymbols(from);
+        for (k = 0, len1 = ref.length; k < len1; k++) {
+          symbol = ref[k];
+          if (propIsEnumerable.call(from, symbol)) {
+            to[symbol] = from[symbol];
+          }
+        }
+      }
+    }
+    return to;
+  };
+})();
+
 // node_modules/es-xhr-promise/dist/lib.mjs
 // src/parse-headers.coffee
 var isArray$1;
@@ -5199,7 +5031,7 @@ XhrPromise = (function() {
     if (options == null) {
       options = {};
     }
-    options = index$2({}, defaults, options);
+    options = index$4({}, defaults, options);
     return new Promise$2$1((function(_this) {
       return function(resolve, reject) {
         var e, header, ref, value, xhr;
@@ -5562,7 +5394,7 @@ var Api$1 = Api;
 
 // src/client/client.coffee
 var Client$1;
-var slice$4 = [].slice;
+var slice$1 = [].slice;
 
 Client$1 = (function() {
   function Client(opts) {
@@ -5594,7 +5426,7 @@ Client$1 = (function() {
 
   Client.prototype.getCustomerToken = function() {
     var session;
-    if ((session = index$4.getJSON(this.opts.session.name)) != null) {
+    if ((session = index$2.getJSON(this.opts.session.name)) != null) {
       if (session.customerToken != null) {
         this.customerToken = session.customerToken;
       }
@@ -5603,7 +5435,7 @@ Client$1 = (function() {
   };
 
   Client.prototype.setCustomerToken = function(key) {
-    index$4.set(this.opts.session.name, {
+    index$2.set(this.opts.session.name, {
       customerToken: key
     }, {
       expires: this.opts.session.expires
@@ -5612,7 +5444,7 @@ Client$1 = (function() {
   };
 
   Client.prototype.deleteCustomerToken = function() {
-    index$4.set(this.opts.session.name, {
+    index$2.set(this.opts.session.name, {
       customerToken: null
     }, {
       expires: this.opts.session.expires
@@ -5631,7 +5463,7 @@ Client$1 = (function() {
 
   Client.prototype.log = function() {
     var args;
-    args = 1 <= arguments.length ? slice$4.call(arguments, 0) : [];
+    args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
     args.unshift('hanzo.js>');
     if (this.opts.debug && (typeof console !== "undefined" && console !== null)) {
       return console.log.apply(console, args);
@@ -12106,7 +11938,7 @@ CheckoutForm = (function(superClass) {
             setTimeout(function() {
               if (!hasErrored) {
                 _this.loading = false;
-                index$3.clear();
+                index$1.clear();
                 _this.checkedOut = true;
                 return El$1.scheduleUpdate();
               }
@@ -12206,8 +12038,8 @@ CheckoutCardForm = (function(superClass) {
   CheckoutCardForm.prototype._submit = function() {
     m.trigger(Events.SubmitCard);
     if (this.paged) {
-      index$3.set('checkout-user', this.data.get('user'));
-      index$3.set('checkout-payment', this.data.get('order.payment'));
+      index$1.set('checkout-user', this.data.get('user'));
+      index$1.set('checkout-payment', this.data.get('order.payment'));
     }
     return this.scheduleUpdate();
   };
@@ -12258,8 +12090,8 @@ CheckoutShippingAddressForm = (function(superClass) {
   CheckoutShippingAddressForm.prototype._submit = function() {
     m.trigger(Events.SubmitShippingAddress);
     if (this.paged) {
-      index$3.set('checkout-user', this.data.get('user'));
-      index$3.set('checkout-shippingAddress', this.data.get('order.shippingAddress'));
+      index$1.set('checkout-user', this.data.get('user'));
+      index$1.set('checkout-shippingAddress', this.data.get('order.shippingAddress'));
     }
     return this.scheduleUpdate();
   };
@@ -12292,7 +12124,7 @@ CartForm = (function(superClass) {
   CartForm.prototype.init = function() {
     var promoCode;
     CartForm.__super__.init.apply(this, arguments);
-    promoCode = index$3.get('promoCode');
+    promoCode = index$1.get('promoCode');
     if (promoCode) {
       this.data.set('order.promoCode', promoCode);
       this.applyPromoCode();
@@ -12339,7 +12171,7 @@ CartForm = (function(superClass) {
     if (!promoCode) {
       return;
     }
-    index$3.set('promoCode', promoCode);
+    index$1.set('promoCode', promoCode);
     this.promoMessage = 'Applying...';
     this.applying = true;
     this.applied = false;
@@ -12365,7 +12197,7 @@ CartForm = (function(superClass) {
     })(this))["catch"]((function(_this) {
       return function(err) {
         var coupon;
-        index$3.remove('promoCode');
+        index$1.remove('promoCode');
         _this.applying = false;
         _this.applied = false;
         _this.failed = true;
@@ -17038,7 +16870,7 @@ function toArray () {
     return [m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond()];
 }
 
-function toObject$4 () {
+function toObject$2 () {
     var m = this;
     return {
         years: m.year(),
@@ -17421,7 +17253,7 @@ proto.set               = stringSet;
 proto.startOf           = startOf;
 proto.subtract          = subtract;
 proto.toArray           = toArray;
-proto.toObject          = toObject$4;
+proto.toObject          = toObject$2;
 proto.toDate            = toDate;
 proto.toISOString       = toISOString;
 proto.inspect           = inspect;
@@ -18178,7 +18010,7 @@ getReferrer = function(qs) {
   if (qs.referrer != null) {
     return qs.referrer;
   } else {
-    return index$3.get('referrer');
+    return index$1.get('referrer');
   }
 };
 
@@ -18249,11 +18081,11 @@ Shop.start = function(opts) {
   } else {
     referrer = (ref7 = getReferrer(queries)) != null ? ref7 : (ref8 = opts.order) != null ? ref8.referrer : void 0;
   }
-  index$3.set('referrer', referrer);
+  index$1.set('referrer', referrer);
   promo = (ref9 = queries.promo) != null ? ref9 : '';
-  items = index$3.get('items');
-  cartId = index$3.get('cartId');
-  meta = index$3.get('order.metadata');
+  items = index$1.get('items');
+  cartId = index$1.get('cartId');
+  meta = index$1.get('order.metadata');
   this.data = refer$1({
     taxRates: opts.taxRates || [],
     shippingRates: opts.shippingRates || [],
@@ -18295,20 +18127,20 @@ Shop.start = function(opts) {
     }
   }
   this.data.set(data);
-  checkoutUser = index$3.get('checkout-user');
-  checkoutShippingAddress = index$3.get('checkout-shippingAddress');
-  checkoutPayment = index$3.get('checkout-payment');
+  checkoutUser = index$1.get('checkout-user');
+  checkoutShippingAddress = index$1.get('checkout-shippingAddress');
+  checkoutPayment = index$1.get('checkout-payment');
   if (checkoutUser) {
     this.data.set('user', checkoutUser);
-    index$3.remove('checkout-user');
+    index$1.remove('checkout-user');
   }
   if (checkoutShippingAddress) {
     this.data.set('order.shippingAddress', checkoutShippingAddress);
-    index$3.remove('checkout-shippingAddress');
+    index$1.remove('checkout-shippingAddress');
   }
   if (checkoutPayment) {
     this.data.set('payment', checkoutPayment);
-    index$3.remove('checkout-payment');
+    index$1.remove('checkout-payment');
   }
   settings = {};
   if (opts.key) {
@@ -18322,7 +18154,7 @@ Shop.start = function(opts) {
   this.cart.onCart = (function(_this) {
     return function() {
       var _, cart, mcCId, ref21;
-      index$3.set('cartId', _this.data.get('order.cartId'));
+      index$1.set('cartId', _this.data.get('order.cartId'));
       ref21 = getMCIds(queries), _ = ref21[0], mcCId = ref21[1];
       cart = {
         mailchimp: {
@@ -18358,7 +18190,7 @@ Shop.start = function(opts) {
   this.cart.onUpdate = (function(_this) {
     return function(item) {
       items = _this.data.get('order.items');
-      index$3.set('items', items);
+      index$1.set('items', items);
       _this.cart._cartUpdate({
         tax: _this.data.get('order.tax'),
         total: _this.data.get('order.total')
@@ -18367,7 +18199,7 @@ Shop.start = function(opts) {
         m.trigger(Events.UpdateItem, item);
       }
       meta = _this.data.get('order.metadata');
-      index$3.set('order.metadata', meta);
+      index$1.set('order.metadata', meta);
       _this.cart.invoice();
       return El$1.scheduleUpdate();
     };
