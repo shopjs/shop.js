@@ -85,7 +85,7 @@
     "sake-bundle": "0.4.2",
     "sake-cli": "0.3.2",
     "sake-core": "1.3.7",
-    "sake-outdated": "0.1.18",
+    "sake-outdated": "0.1.19",
     "sake-publish": "0.1.10",
     "sake-version": "0.1.16",
     "serve-static": "1.12.1",
