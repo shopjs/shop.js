@@ -7,8 +7,9 @@ writeFile = (dst, content) ->
     console.error err if err?
 
 compileCoffee = (src) ->
+  return
   return unless /^src|src\/index.coffee$/.test src
-  exec 'cake build:dev'
+  exec 'cake build'
 
 compileStylus = ->
   src = 'src/css/theme.styl'

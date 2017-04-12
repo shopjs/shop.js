@@ -1,9 +1,7 @@
-require 'shortcake'
-
-use 'cake-bundle'
-use 'cake-outdated'
-use 'cake-publish'
-use 'cake-version'
+use 'sake-bundle'
+use 'sake-outdated'
+use 'sake-publish'
+use 'sake-version'
 
 option '-b', '--browser [browser]', 'browser to use for tests'
 option '-g', '--grep [filter]',     'test filter'
@@ -14,22 +12,21 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ['build:static'], ->
-  b = new Bundle
+  bundle.write
     entry: 'src/index.coffee'
     compilers:
-      coffee:
-        version: 1
-
-  b.write
-    formats: ['es', 'cjs']
+      coffee: version: 1
 
 task 'build:min', 'build js for production', ['build'], ->
-  bundle.write
+  yield bundle.write
     entry:     'src/index.coffee'
     format:    'web'
     external:  false
-    minify:    true
     sourceMap: false
+    browser:   false
+    compilers:
+      coffee: version: 1
+  yield exec 'uglifyjs shop.js -o shop.min.js'
 
 task 'build:static', 'build static assets', ->
   exec '''
@@ -38,13 +35,13 @@ task 'build:static', 'build static assets', ->
 
 server = do require 'connect'
 
-task 'static-server', 'Run static server for tests', (cb) ->
+task 'server', 'Run static server for tests', (cb) ->
   port = process.env.PORT ? 3333
 
   server.use (require 'serve-static') './test/fixtures'
   server = require('http').createServer(server).listen port, cb
 
-task 'test', 'Run tests', ['build', 'static-server'], (opts) ->
+task 'test', 'Run tests', ['build', 'server'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''
