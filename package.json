@@ -82,21 +82,12 @@
     "referential": "0.5.17",
     "rucksack-css": "0.9.1",
     "rupture": "0.6.2",
-<<<<<<< HEAD
-    "sake-bundle": "0.4.4",
-    "sake-cli": "0.3.2",
-    "sake-core": "1.3.7",
-    "sake-version": "0.1.17",
-    "sake-outdated": "0.1.19",
-    "sake-publish": "0.1.11",
-=======
     "sake-bundle": "0.4.11",
     "sake-cli": "0.3.2",
     "sake-core": "1.3.7",
     "sake-outdated": "0.1.20",
     "sake-publish": "0.1.12",
     "sake-version": "0.1.18",
->>>>>>> Update akasha, commerce.js, es-is, hanzo.js, clean-css, sake-bundle, sake-outdated, sake-publish, sake-version
     "serve-static": "1.12.1",
     "stylus": "0.54.5",
     "uglify-js": "github:mishoo/UglifyJS2#harmony"
