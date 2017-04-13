@@ -5036,6 +5036,120 @@ XhrPromise = (function() {
 
 var XhrPromise$1 = XhrPromise;
 
+// node_modules/hanzo.js/node_modules/es-cookies/lib/cookies.mjs
+// src/cookies.coffee
+var Cookies$1$1;
+
+Cookies$1$1 = (function() {
+  function Cookies(defaults) {
+    this.defaults = defaults != null ? defaults : {};
+    this.get = (function(_this) {
+      return function(key) {
+        return _this.read(key);
+      };
+    })(this);
+    this.getJSON = (function(_this) {
+      return function(key) {
+        var err;
+        try {
+          return JSON.parse(_this.read(key));
+        } catch (error) {
+          err = error;
+          return {};
+        }
+      };
+    })(this);
+    this.remove = (function(_this) {
+      return function(key, attrs) {
+        return _this.write(key, '', index({
+          expires: -1
+        }, attrs));
+      };
+    })(this);
+    this.set = (function(_this) {
+      return function(key, value, attrs) {
+        return _this.write(key, value, attrs);
+      };
+    })(this);
+  }
+
+  Cookies.prototype.read = function(key) {
+    var cookie, cookies, err, i, kv, len, name, parts, rdecode, result;
+    if (!key) {
+      result = {};
+    }
+    cookies = document.cookie ? document.cookie.split('; ') : [];
+    rdecode = /(%[0-9A-Z]{2})+/g;
+    for (i = 0, len = cookies.length; i < len; i++) {
+      kv = cookies[i];
+      parts = kv.split('=');
+      cookie = parts.slice(1).join('=');
+      if (cookie.charAt(0) === '"') {
+        cookie = cookie.slice(1, -1);
+      }
+      try {
+        name = parts[0].replace(rdecode, decodeURIComponent);
+        cookie = cookie.replace(rdecode, decodeURIComponent);
+        if (key === name) {
+          return cookie;
+        }
+        if (!key) {
+          result[name] = cookie;
+        }
+      } catch (error) {
+        err = error;
+      }
+    }
+    return result;
+  };
+
+  Cookies.prototype.write = function(key, value, attrs) {
+    var attr, err, expires, name, result, strAttrs;
+    attrs = index({
+      path: '/'
+    }, this.defaults, attrs);
+    if (isNumber$3(attrs.expires)) {
+      expires = new Date;
+      expires.setMilliseconds(expires.getMilliseconds() + attrs.expires * 864e+5);
+      attrs.expires = expires;
+    }
+    attrs.expires = attrs.expires ? attrs.expires.toUTCString() : '';
+    try {
+      result = JSON.stringify(value);
+      if (/^[\{\[]/.test(result)) {
+        value = result;
+      }
+    } catch (error) {
+      err = error;
+    }
+    value = encodeURIComponent(String(value)).replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+    key = encodeURIComponent(String(key));
+    key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
+    key = key.replace(/[\(\)]/g, escape);
+    strAttrs = '';
+    for (name in attrs) {
+      attr = attrs[name];
+      if (!attr) {
+        continue;
+      }
+      strAttrs += '; ' + name;
+      if (attr === true) {
+        continue;
+      }
+      strAttrs += '=' + attr;
+    }
+    return document.cookie = key + '=' + value + strAttrs;
+  };
+
+  return Cookies;
+
+})();
+
+var Cookies$1$2 = Cookies$1$1;
+
+// src/index.coffee
+var index$4 = new Cookies$1$2();
+
 // node_modules/hanzo.js/lib/hanzo.mjs
 // node_modules/es-tostring/index.mjs
 var toString$1 = function(obj) {
@@ -5276,7 +5390,7 @@ Client$1 = (function() {
 
   Client.prototype.getCustomerToken = function() {
     var session;
-    if ((session = index$2.getJSON(this.opts.session.name)) != null) {
+    if ((session = index$4.getJSON(this.opts.session.name)) != null) {
       if (session.customerToken != null) {
         this.customerToken = session.customerToken;
       }
@@ -5285,7 +5399,7 @@ Client$1 = (function() {
   };
 
   Client.prototype.setCustomerToken = function(key) {
-    index$2.set(this.opts.session.name, {
+    index$4.set(this.opts.session.name, {
       customerToken: key
     }, {
       expires: this.opts.session.expires
@@ -5294,7 +5408,7 @@ Client$1 = (function() {
   };
 
   Client.prototype.deleteCustomerToken = function() {
-    index$2.set(this.opts.session.name, {
+    index$4.set(this.opts.session.name, {
       customerToken: null
     }, {
       expires: this.opts.session.expires
@@ -11746,7 +11860,7 @@ CheckoutForm = (function(superClass) {
         }
       };
     })(this));
-    return this.data.on('set', (function(_this) {
+    this.data.on('set', (function(_this) {
       return function(name, value) {
         if (name === 'user.name') {
           if (!_this.data.get('payment.account.name')) {
@@ -11757,6 +11871,14 @@ CheckoutForm = (function(superClass) {
           }
         }
         return El$1.scheduleUpdate();
+      };
+    })(this));
+    return this.data.on('set', (function(_this) {
+      return function(name, value) {
+        if (name.indexOf('shippingAddress') >= 0) {
+          _this.cart.invoice();
+          return El$1.scheduleUpdate();
+        }
       };
     })(this));
   };
@@ -11942,7 +12064,15 @@ CheckoutShippingAddressForm = (function(superClass) {
   };
 
   CheckoutShippingAddressForm.prototype.init = function() {
-    return CheckoutShippingAddressForm.__super__.init.call(this);
+    CheckoutShippingAddressForm.__super__.init.call(this);
+    return this.data.on('set', (function(_this) {
+      return function(name, value) {
+        if (name.indexOf('shippingAddress') >= 0) {
+          _this.cart.invoice();
+          return El$1.scheduleUpdate();
+        }
+      };
+    })(this));
   };
 
   CheckoutShippingAddressForm.prototype._submit = function() {
