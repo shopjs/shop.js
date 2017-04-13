@@ -37,6 +37,11 @@ class CheckoutForm extends El.Form
           @data.set 'order.shippingAddress.name', value
       El.scheduleUpdate()
 
+    @data.on 'set', (name, value) =>
+      if name.indexOf('shippingAddress') >= 0
+        @cart.invoice()
+        El.scheduleUpdate()
+
   _submit: (event) ->
     return if @loading or @checkedOut
 

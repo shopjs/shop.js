@@ -34,7 +34,13 @@ class CheckoutShippingAddressForm extends El.Form
     'order.shippingAddress.postalCode': [ isPostalRequired ]
     'order.shippingAddress.country':    [ isRequired ]
 
-  init: -> super()
+  init: ->
+    super()
+
+    @data.on 'set', (name, value) =>
+      if name.indexOf('shippingAddress') >= 0
+        @cart.invoice()
+        El.scheduleUpdate()
 
   _submit: ->
     m.trigger Events.SubmitShippingAddress
