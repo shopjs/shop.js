@@ -33,7 +33,7 @@
         | { data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }
     .invoice-line
       .invoice-label
-        | Tax ({ data.get('order.taxRate') * 100 }%)
+        | Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)
       .invoice-amount
         | { renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }
     .invoice-line.invoice-total
