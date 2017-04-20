@@ -3,7 +3,6 @@ import store from 'akasha'
 
 import Events from '../events'
 import html   from '../../templates/forms/checkout-card'
-import m      from '../mediator'
 import {
   cardNumber
   cvc
@@ -37,7 +36,7 @@ class CheckoutCardForm extends El.Form
     super
 
   _submit: ->
-    m.trigger Events.SubmitCard
+    @mediator.trigger Events.SubmitCard
 
     if @paged
       # Store partial pieces of checkout data.

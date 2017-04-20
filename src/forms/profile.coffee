@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
-import m      from '../mediator'
 import {
   isEmail
   isNewPassword
@@ -30,7 +29,7 @@ class ProfileForm extends El.Form
     return orders && orders.length > 0
 
   init: ->
-    m.trigger Events.ProfileLoad
+    @mediator.trigger Events.ProfileLoad
     @client.account.get().then (res) =>
       @data.set 'user', res
       firstName = @data.get 'user.firstName'
@@ -39,7 +38,7 @@ class ProfileForm extends El.Form
 
       if @data.get('referralProgram') && (!res.referrers? || res.referrers.length == 0)
         raf =>
-          m.trigger Events.CreateReferralProgram
+          @mediator.trigger Events.CreateReferralProgram
           @client.referrer.create({
             program:   @data.get 'referralProgram'
             programId: @data.get 'referralProgram.id'
@@ -47,22 +46,22 @@ class ProfileForm extends El.Form
           }).then (res2) =>
             refrs = [res2]
             @data.set 'user.referrers', refrs
-            m.trigger Events.CreateReferralProgramSuccess, refrs
-            m.trigger Events.ProfileLoadSuccess, res
+            @mediator.trigger Events.CreateReferralProgramSuccess, refrs
+            @mediator.trigger Events.ProfileLoadSuccess, res
             El.scheduleUpdate()
 
           .catch (err) =>
             @errorMessage = err.message
-            m.trigger Events.CreateReferralProgramFailed, err
-            m.trigger Events.ProfileLoadSuccess, res
+            @mediator.trigger Events.CreateReferralProgramFailed, err
+            @mediator.trigger Events.ProfileLoadSuccess, res
             El.scheduleUpdate()
       else
-        m.trigger Events.ProfileLoadSuccess, res
+        @mediator.trigger Events.ProfileLoadSuccess, res
         El.scheduleUpdate()
 
     .catch (err) =>
       @errorMessage = err.message
-      m.trigger Events.ProfileLoadFailed, err
+      @mediator.trigger Events.ProfileLoadFailed, err
       El.scheduleUpdate()
 
     super
@@ -79,16 +78,16 @@ class ProfileForm extends El.Form
     @errorMessage = ''
 
     @scheduleUpdate()
-    m.trigger Events.ProfileUpdate
+    @mediator.trigger Events.ProfileUpdate
     @client.account.update(opts).then (res) =>
       @data.set 'user.currentPassword', null
       @data.set 'user.password', null
       @data.set 'user.passwordConfirm', null
-      m.trigger Events.ProfileUpdateSuccess, res
+      @mediator.trigger Events.ProfileUpdateSuccess, res
       @scheduleUpdate()
     .catch (err)=>
       @errorMessage = err.message
-      m.trigger Events.ProfileUpdateFailed, err
+      @mediator.trigger Events.ProfileUpdateFailed, err
       @scheduleUpdate()
 
 

@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
-import m      from '../mediator'
 import {
   isRequired
   isEmail
@@ -50,9 +49,9 @@ class RegisterForm extends El.Form
     @errorMessage = ''
 
     @scheduleUpdate()
-    m.trigger Events.Register
+    @mediator.trigger Events.Register
     @client.account.create(opts).then (res) =>
-      m.trigger Events.RegisterSuccess, res
+      @mediator.trigger Events.RegisterSuccess, res
       @scheduleUpdate()
 
       if @immediateLogin && res.token
@@ -60,15 +59,15 @@ class RegisterForm extends El.Form
         latency = @immediateLoginLatency / 2
         # simulate login with a little bit of latency for page transitions
         setTimeout =>
-          m.trigger Events.Login
+          @mediator.trigger Events.Login
           setTimeout =>
-            m.trigger Events.LoginSuccess, res
+            @mediator.trigger Events.LoginSuccess, res
             @scheduleUpdate()
           , latency
         , latency
     .catch (err) =>
       @errorMessage = err.message
-      m.trigger Events.RegisterFailed, err
+      @mediator.trigger Events.RegisterFailed, err
       @scheduleUpdate()
 
 export default RegisterForm

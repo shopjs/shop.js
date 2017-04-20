@@ -3,7 +3,6 @@ import riot         from 'riot/lib/riot'
 import store        from 'akasha'
 
 import Events from '../events'
-import m      from '../mediator'
 import html   from '../../templates/forms/checkout-shippingaddress'
 import {
   isEmail

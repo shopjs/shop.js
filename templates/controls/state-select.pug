@@ -1,4 +1,0 @@
-input(if='{ input.ref.get(countryField) !== "us" }',id="{ input.name }",name="{ name || input.name }",type="text",onchange="{ change }",onblur="{ change }",riot-value="{ input.ref.get(input.name) }",placeholder="{ placeholder }",class="{invalid: errorMessage, valid: valid}")
-select(if='{ input.ref.get(countryField) == "us" }',id='{ input.name }',name='{ name || input.name }',style='display: none',onchange='{ change }', onblur='{ change }', data-placeholder='{ placeholder }',class="{invalid: errorMessage, valid: valid}")
-#{ 'yield' }
-
