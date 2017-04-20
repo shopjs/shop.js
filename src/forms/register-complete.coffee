@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
-import m      from '../mediator'
 import {
   isPassword,
   isRequired,
@@ -46,15 +45,15 @@ class RegisterComplete extends El.Form
     @errorMessage = ''
 
     @scheduleUpdate()
-    m.trigger Events.RegisterComplete
+    @mediator.trigger Events.RegisterComplete
     @client.account.enable(opts).then (res) =>
       if res.token
         @client.setCustomerToken res.token
-      m.trigger Events.RegisterCompleteSuccess, res
+      @mediator.trigger Events.RegisterCompleteSuccess, res
       @scheduleUpdate()
     .catch (err)=>
       @errorMessage = err.message
-      m.trigger Events.RegisterCompleteFailed, err
+      @mediator.trigger Events.RegisterCompleteFailed, err
       @scheduleUpdate()
 
 export default RegisterComplete

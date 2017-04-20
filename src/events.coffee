@@ -1,4 +1,6 @@
-export default events =
+import { Events as ControlEvents } from 'el-controls'
+
+export default Events =
   Ready:
     'ready'
   SetData:
@@ -11,12 +13,9 @@ export default events =
   UpdateItems:
     'update-items'
 
-  Change:
-    'change'
-  ChangeSuccess:
-    'change-success'
-  ChangeFailed:
-    'change-failed'
+  Change:        ControlEvents.Change
+  ChangeSuccess: ControlEvents.ChangeSuccess
+  ChangeFailed:  ControlEvents.ChangeFailed
 
   Checkout:
     'checkout'

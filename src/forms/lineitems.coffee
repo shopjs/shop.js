@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/lineitems'
-import m      from '../mediator'
 
 class LineItems extends El.View
   tag:  'lineitems'

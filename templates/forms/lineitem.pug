@@ -1,6 +1,6 @@
 #{ 'yield' }
   .product-quantity-container(if="{ !data.get('locked') }")
-    quantity-select-control
+    quantity-select
   .product-quantity-container(if="{ data.get('locked') }", class="locked")
     | { data.get('quantity') }
   .product-text-container
