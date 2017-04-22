@@ -1,4 +1,14 @@
-# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url] [![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
+# Shop.js
+
+[![npm][npm-img]][npm-url]
+[![build][build-img]][build-url]
+[![dependencies][dependencies-img]][dependencies-url]
+[![downloads][downloads-img]][downloads-url]
+[![license][license-img]][license-url]
+[![chat][chat-img]][chat-url]
+
+> Ecommerce UI components and framework powered by Hanzo
+
 Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
 a fully customizable look and feel with many built-in reactive components.
 
@@ -276,18 +286,25 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
 
+## License
+[BSD][license-url]
+
 [shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
-[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
-[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
-[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
-[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
-[npm-url]:         https://www.npmjs.com/package/shop.js
-[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
-[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
-[downloads-url]:   http://badge.fury.io/js/shop.js
-[gitter-url]:      https://gitter.im/hanzo-io/chat
-[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
 
 [hanzo]:           https://hanzo.io
 [riot]:            http://riotjs.com
 
+[build-img]:        https://img.shields.io/travis/hanzo-io/shop.js.svg
+[build-url]:        https://travis-ci.org/hanzo-io/shop.js
+[chat-img]:         https://badges.gitter.im/join-chat.svg
+[chat-url]:         https://gitter.im/hanzo-io/chat
+[coverage-img]:     https://coveralls.io/repos/hanzo-io/shop.js/badge.svg?branch=master&service=github
+[coverage-url]:     https://coveralls.io/github/hanzo-io/shop.js?branch=master
+[dependencies-img]: https://david-dm.org/hanzo-io/shop.js.svg
+[dependencies-url]: https://david-dm.org/hanzo-io/shop.js
+[downloads-img]:    https://img.shields.io/npm/dm/shop.js.svg
+[downloads-url]:    http://badge.fury.io/js/shop.js
+[license-img]:      https://img.shields.io/npm/l/shop.js.svg
+[license-url]:      https://github.com/hanzo-io/shop.js/blob/master/LICENSE
+[npm-img]:          https://img.shields.io/npm/v/shop.js.svg
+[npm-url]:          https://www.npmjs.com/package/shop.js
