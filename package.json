@@ -63,7 +63,7 @@
     "codecov.io": "^0.1.6",
     "coffeescript": "1.12.5",
     "connect": "3.6.0",
-    "coveralls": "2.13.0",
+    "coveralls": "2.13.1",
     "css-mqpacker": "5.0.1",
     "debug": "^2.6.3",
     "es5-shim": "^4.5.9",
