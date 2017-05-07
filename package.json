@@ -64,7 +64,7 @@
     "coffeescript": "1.12.5",
     "connect": "3.6.1",
     "coveralls": "2.13.1",
-    "css-mqpacker": "5.0.1",
+    "css-mqpacker": "6.0.0",
     "debug": "^2.6.3",
     "es5-shim": "^4.5.9",
     "istanbul": "0.4.5",
