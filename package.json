@@ -63,15 +63,9 @@
     "codecov.io": "^0.1.6",
     "coffeescript": "1.12.5",
     "connect": "3.6.1",
-<<<<<<< HEAD
-    "coveralls": "2.13.0",
-    "css-mqpacker": "5.0.1",
-    "debug": "^2.6.3",
-=======
     "coveralls": "2.13.1",
     "css-mqpacker": "6.0.0",
     "debug": "^2.6.6",
->>>>>>> master
     "es5-shim": "^4.5.9",
     "istanbul": "0.4.5",
     "lost": "8.0.0",
@@ -88,21 +82,12 @@
     "referential": "0.5.18",
     "rucksack-css": "0.9.1",
     "rupture": "0.6.2",
-<<<<<<< HEAD
-    "sake-bundle": "0.4.17",
-    "sake-cli": "0.4.12",
-    "sake-outdated": "0.1.21",
-    "sake-publish": "0.1.12",
-    "sake-version": "0.1.18",
-    "serve-static": "1.12.1",
-=======
     "sake-bundle": "^0.5.2",
     "sake-cli": "^0.5.6",
     "sake-outdated": "^0.1.27",
     "sake-publish": "^0.1.16",
     "sake-version": "^0.1.19",
     "serve-static": "^1.12.2",
->>>>>>> master
     "stylus": "0.54.5",
     "uglify-js": "github:mishoo/UglifyJS2#harmony"
   }

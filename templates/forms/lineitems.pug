@@ -10,7 +10,7 @@ lineitem(each="{ item, v in data('order.items') }", parent-data="{ this.parent.d
       span.product-quantity-container.locked(if="{ data.get('locked') }")
         | { data.get('quantity') }
       span.product-quantity-container(if="{ !data.get('locked') }")
-        quantity-select
+        quantity-select.input
       .product-delete(onclick="{ delete }")
         | Remove
       .product-price-container.invoice-amount
