@@ -2,6 +2,17 @@ exec = require 'executive'
 fs   = require 'fs'
 path = require 'path'
 
+debounce = (fn, wait = 500) ->
+  last = (new Date) - wait
+  ->
+    now = new Date
+
+    # Return if we haven't waited long enough
+    return if wait > (now - last)
+
+    fn.apply null, arguments
+    last = now
+
 writeFile = (dst, content) ->
   fs.writeFile dst, content, 'utf8', (err) ->
     console.error err if err?
@@ -58,6 +69,9 @@ compileStylus = ->
     writeFile dst + '.map', JSON.stringify style.sourcemap
   true
 
+coffeeCompiler = debounce compileCoffee
+stylusCompiler = debounce compileStylus
+
 module.exports =
   port: 4242
 
@@ -71,7 +85,6 @@ module.exports =
 
   compilers:
     css: -> false
-    coffee: compileCoffee
-    pug:    compileCoffee
-    styl:   compileStylus
-
+    coffee: coffeeCompiler
+    pug:    coffeeCompiler
+    styl:   coffeeCompiler
