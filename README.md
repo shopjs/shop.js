@@ -1,12 +1,76 @@
-# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url] [![Greenkeeper badge](https://badges.greenkeeper.io/hanzo-io/shop.js.svg)](https://greenkeeper.io/)
-Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
-a fully customizable look and feel with many built-in reactive components.
+# Shop.js
 
-## Examples
-You can see a great example of Shop.js in action at
-[stoned.audio](https://stoned.audio). It powers the complete shopping experience
-from their referral program and user signup to checkout and customer
-portal.
+[![npm][npm-img]][npm-url]
+[![build][build-img]][build-url]
+[![dependencies][dependencies-img]][dependencies-url]
+[![downloads][downloads-img]][downloads-url]
+[![license][license-img]][license-url]
+[![chat][chat-img]][chat-url]
+
+> Ecommerce UI components and framework powered by Hanzo
+
+[Shop.js][getshopjs] is a complete set of reactive Ecommerce components powered
+by [El.js][eljs]. Thanks to [Hanzo][hanzo], it can be easily integrated into any
+website, without any backend necessary.
+
+Shop.js provides countless components which can be mix-and-matched to completely
+customize a unique and branded shopping experience. From `<cart>` to
+`<checkout>`, Shop.js has you covered.
+
+You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
+[around][kpak] [the][ludela] [web][stonedaudio].
+
+## Features
+- Lightweight, complete shopping experience weighs in at 70kb gzipped
+- Core and all dependencies are ES modules, and can be mixed and matched freely
+- Components can be nested and customized with plain HTML/CSS thanks to
+  [El.js][eljs]
+- No backend needed, thanks to [Hanzo][hanzo]
+- Sophisticated analytics support, with support for contextual analytics
+- Bindings for Angular, React, and Vue coming soon!
+
+## Install
+```bash
+$ npm install shop.js --save
+```
+
+## Components
+Shop.js provides components for everything from user signup and login to
+customer portals and sophisticated checkout flows.
+
+- `<cart>`
+- `<checkout>`
+- `<card-cvc>`
+- `<card-expiry>`
+- `<card-name>`
+- `<card-number>`
+- `<checkbox>`
+- `<control>`
+- `<country-select>`
+- `<gift-email>`
+- `<gift-message>`
+- `<gift-toggle>`
+- `<gift-type>`
+- `<lineitem>`
+- `<promocode>`
+- `<quantity-select>`
+- `<select>`
+- `<shippingaddress-city>`
+- `<shippingaddress-country>`
+- `<shippingaddress-line1>`
+- `<shippingaddress-line2>`
+- `<shippingaddress-name>`
+- `<shippingaddress-postalcode>`
+- `<shippingaddress-state>`
+- `<state-select>`
+- `<terms>`
+- `<text>`
+- `<textarea>`
+- `<user-current-password>`
+- `<user-email>`
+- `<user-name>`
+- `<user-password-confirm>`
+- `<user-password>`
 
 ## Containers and Controls
 Containers are Custom HTML tags that define a section of embeddable dynamic content.
@@ -276,18 +340,27 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 | UpdateItem | update-item | Item | fired when setItem is complete |
 | UpdateItems | update-items | Item[] | fired when setItem is complete with all items |
 
-[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
-[travis-url]:      https://travis-ci.org/hanzo-io/shop.js
-[travis-image]:    https://img.shields.io/travis/hanzo-io/shop.js.svg
-[coveralls-url]:   https://coveralls.io/r/hanzo-io/shop.js/
-[coveralls-image]: https://img.shields.io/coveralls/hanzo-io/shop.js.svg
-[npm-url]:         https://www.npmjs.com/package/shop.js
-[npm-image]:       https://img.shields.io/npm/v/shop.js.svg
-[downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
-[downloads-url]:   http://badge.fury.io/js/shop.js
-[gitter-url]:      https://gitter.im/hanzo-io/chat
-[gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
+## License
+[BSD][license-url]
 
-[hanzo]:           https://hanzo.io
-[riot]:            http://riotjs.com
+[eljs]:             https://github.com/hanzo-io/el.js
+[getshopjs]:        https://getshopjs.com
+[hanzo]:            https://hanzo.io
+[kpak]:             https://kpakcase.com
+[ludela]:           https://ludela.com
+[stonedaudio]:      https://stoned.audio
 
+[build-img]:        https://img.shields.io/travis/hanzo-io/shop.js.svg
+[build-url]:        https://travis-ci.org/hanzo-io/shop.js
+[chat-img]:         https://badges.gitter.im/join-chat.svg
+[chat-url]:         https://gitter.im/hanzo-io/chat
+[coverage-img]:     https://coveralls.io/repos/hanzo-io/shop.js/badge.svg?branch=master&service=github
+[coverage-url]:     https://coveralls.io/github/hanzo-io/shop.js?branch=master
+[dependencies-img]: https://david-dm.org/hanzo-io/shop.js.svg
+[dependencies-url]: https://david-dm.org/hanzo-io/shop.js
+[downloads-img]:    https://img.shields.io/npm/dm/shop.js.svg
+[downloads-url]:    http://badge.fury.io/js/shop.js
+[license-img]:      https://img.shields.io/npm/l/shop.js.svg
+[license-url]:      https://github.com/hanzo-io/shop.js/blob/master/LICENSE
+[npm-img]:          https://img.shields.io/npm/v/shop.js.svg
+[npm-url]:          https://www.npmjs.com/package/shop.js
