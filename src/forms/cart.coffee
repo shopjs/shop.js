@@ -1,9 +1,8 @@
-import El from 'el.js'
-import store        from 'akasha'
+import El    from 'el.js'
+import store from 'akasha'
 
 import Events from '../events'
-import html from '../../templates/forms/cart'
-import m from '../mediator'
+import html   from '../../templates/forms/cart'
 
 class CartForm extends El.Form
   tag:  'cart'
@@ -22,7 +21,7 @@ class CartForm extends El.Form
       @data.set 'order.promoCode', promoCode
       @applyPromoCode()
 
-    m.on Events.ForceApplyPromoCode, ()=>
+    @mediator.on Events.ForceApplyPromoCode, ()=>
       @applyPromoCode()
 
     @data.on 'set', (name, value)=>
@@ -62,7 +61,7 @@ class CartForm extends El.Form
 
     @scheduleUpdate()
 
-    m.trigger Events.ApplyPromoCode, promoCode
+    @mediator.trigger Events.ApplyPromoCode, promoCode
     @cart.promoCode(promoCode).then(=>
       @applying = false
       @applied = true
@@ -74,7 +73,7 @@ class CartForm extends El.Form
       else
         @promoMessage = promoCode + ' Applied!'
 
-      m.trigger Events.ApplyPromoCodeSuccess, coupon
+      @mediator.trigger Events.ApplyPromoCodeSuccess, coupon
       @scheduleUpdate()
     ).catch (err)=>
       store.remove 'promoCode'
@@ -88,13 +87,13 @@ class CartForm extends El.Form
       else
         @promoMessage = 'This code is invalid.'
 
-      m.trigger Events.ApplyPromoCodeFailed, err
+      @mediator.trigger Events.ApplyPromoCodeFailed, err
       @scheduleUpdate()
 
   checkout: ()->
-    m.trigger Events.Checkout
+    @mediator.trigger Events.Checkout
 
   continueShopping: ()->
-    m.trigger Events.ContinueShopping
+    @mediator.trigger Events.ContinueShopping
 
 export default CartForm

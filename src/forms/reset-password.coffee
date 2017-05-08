@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
-import m      from '../mediator'
 import {
   isRequired
   isEmail
@@ -27,13 +26,13 @@ class ResetPasswordForm extends El.Form
     @errorMessage = ''
 
     @scheduleUpdate()
-    m.trigger Events.ResetPassword
+    @mediator.trigger Events.ResetPassword
     @client.account.reset(opts).then (res) =>
-      m.trigger Events.ResetPasswordSuccess, res
+      @mediator.trigger Events.ResetPasswordSuccess, res
       @scheduleUpdate()
     .catch (err)=>
       @errorMessage = err.message
-      m.trigger Events.ResetPasswordFailed, err
+      @mediator.trigger Events.ResetPasswordFailed, err
       @scheduleUpdate()
 
 export default ResetPasswordForm

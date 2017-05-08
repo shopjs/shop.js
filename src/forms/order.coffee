@@ -3,7 +3,6 @@ import refer from 'referential'
 
 import Events from '../events'
 import html   from '../../templates/forms/order'
-import m      from '../mediator'
 
 class OrderForm extends El.Form
   tag:  'order'
@@ -24,6 +23,6 @@ class OrderForm extends El.Form
           @parentData.set 'order.items.' + i + '.locked', true
 
   delete: (event) ->
-    m.trigger Events.DeleteLineItem, @data
+    @mediator.trigger Events.DeleteLineItem, @data
 
 export default OrderForm

@@ -87,4 +87,4 @@ module.exports =
     css: -> false
     coffee: coffeeCompiler
     pug:    coffeeCompiler
-    styl:   coffeeCompiler
+    styl:   stylusCompiler

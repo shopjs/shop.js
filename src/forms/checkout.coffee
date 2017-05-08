@@ -4,7 +4,6 @@ import store from 'akasha'
 import Events  from '../events'
 import configs from './configs'
 import html    from '../../templates/forms/checkout'
-import m       from '../mediator'
 
 class CheckoutForm extends El.Form
   tag:  'checkout'
@@ -46,7 +45,7 @@ class CheckoutForm extends El.Form
     return if @loading or @checkedOut
 
     @loading = true
-    m.trigger Events.Submit, @tag
+    @mediator.trigger Events.Submit, @tag
 
     @errorMessage = ''
 
@@ -84,7 +83,7 @@ class CheckoutForm extends El.Form
                 El.scheduleUpdate()
             , 200
 
-            m.trigger Events.SubmitSuccess
+            @mediator.trigger Events.SubmitSuccess
 
           .catch (err) =>
             window?.Raven?.captureException(err)
@@ -94,7 +93,7 @@ class CheckoutForm extends El.Form
             console.log "checkout submit Error: #{err}"
             @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-            m.trigger Events.SubmitFailed, err
+            @mediator.trigger Events.SubmitFailed, err
             El.scheduleUpdate()
 
       .catch (err) =>
@@ -107,7 +106,7 @@ class CheckoutForm extends El.Form
           window?.Raven?.captureException(err)
           @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-        m.trigger Events.SubmitFailed, err
+        @mediator.trigger Events.SubmitFailed, err
         El.scheduleUpdate()
 
     .catch (err) =>
@@ -120,7 +119,7 @@ class CheckoutForm extends El.Form
         window?.Raven?.captureException(err)
         @errorMessage = 'Unable to complete your transaction. Please try again later.'
 
-      m.trigger Events.SubmitFailed, err
+      @mediator.trigger Events.SubmitFailed, err
       El.scheduleUpdate()
 
 export default CheckoutForm
