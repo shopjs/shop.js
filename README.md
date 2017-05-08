@@ -20,16 +20,57 @@ customize a unique and branded shopping experience. From `<cart>` to
 You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
 [around][kpak] [the][ludela] [web][stonedaudio].
 
+## Features
+- Lightweight, complete Ecommerce store weighs in at only 150kb
+- Core and all dependencies are ES modules, and can be mixed and matched freely
+- Components can be nested and customized with plain HTML/CSS thanks to
+  [El.js][eljs]
+- No backend needed, thanks to [Hanzo][hanzo]
+- Sophisticated analytics support, with support for contextual analytics
+- Bindings for Angular, React, and Vue coming soon!
+
 ## Install
 ```bash
 $ npm install shop.js --save
 ```
 
-## Examples
-You can see a great example of Shop.js in action at
-[stoned.audio](https://stoned.audio). It powers the complete shopping experience
-from their referral program and user signup to checkout and customer
-portal.
+## Components
+Shop.js provides components for everything from user signup and login to
+customer portals and sophisticated checkout flows.
+
+- `<cart>`
+- `<checkout>`
+- `<card-cvc>`
+- `<card-expiry>`
+- `<card-name>`
+- `<card-number>`
+- `<checkbox>`
+- `<control>`
+- `<country-select>`
+- `<gift-email>`
+- `<gift-message>`
+- `<gift-toggle>`
+- `<gift-type>`
+- `<lineitem>`
+- `<promocode>`
+- `<quantity-select>`
+- `<select>`
+- `<shippingaddress-city>`
+- `<shippingaddress-country>`
+- `<shippingaddress-line1>`
+- `<shippingaddress-line2>`
+- `<shippingaddress-name>`
+- `<shippingaddress-postalcode>`
+- `<shippingaddress-state>`
+- `<state-select>`
+- `<terms>`
+- `<text>`
+- `<textarea>`
+- `<user-current-password>`
+- `<user-email>`
+- `<user-name>`
+- `<user-password-confirm>`
+- `<user-password>`
 
 ## Containers and Controls
 Containers are Custom HTML tags that define a section of embeddable dynamic content.
