@@ -21,7 +21,7 @@ You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
 [around][kpak] [the][ludela] [web][stonedaudio].
 
 ## Features
-- Lightweight, complete shopping experience weighs in at 50kb gzipped
+- Lightweight, complete shopping experience weighs in at 70kb gzipped
 - Core and all dependencies are ES modules, and can be mixed and matched freely
 - Components can be nested and customized with plain HTML/CSS thanks to
   [El.js][eljs]
