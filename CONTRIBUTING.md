@@ -1,6 +1,6 @@
 # How to contribute
 
-Community involvement is essential to the success of Shop.js and the rest of the Hanzo ecosystem.
+Community involvement is essential to the success of [Shop.js][shopjs] and the rest of the Hanzo ecosystem.
 To make changes and get them into the library, here are some guidelines to make that process
 smooth for all involved.
 
@@ -53,6 +53,7 @@ from your fork to the main shop.js repository on the branch you used in the `Mak
 - Use 2 spaces for tabs, never tab characters.
 - No trailing whitespace, blank lines should have no whitespace.
 
+[shopjs]: https://github.com/hanzo.io/shop.js
 [issues]: https://github.com/hanzo-io/shop.js/issues
 [shop]: https://github.com/hanzo-io/shop.js
 [fiddle]: http://jsfiddle.net
