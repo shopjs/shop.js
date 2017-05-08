@@ -9,9 +9,9 @@
 
 > Ecommerce UI components and framework powered by Hanzo
 
-[Shop.js][getshopjs] is [Hanzo][[hanzo]'s UI library, a complete set of reactive
-Ecommerce components powered by [El.js][eljs]. It has a completely customizable
-look and feel and can be easily integrated into any website.
+[Shop.js][getshopjs] is a complete set of reactive Ecommerce components powered
+by [El.js][eljs]. Thanks to [Hanzo][hanzo], it can be easily integrated into any
+website, without any backend necessary.
 
 Shop.js provides countless components which can be mix-and-matched to completely
 customize a unique and branded shopping experience. From `<cart>` to
