@@ -8,12 +8,12 @@ import store        from 'akasha'
 import {Api}        from 'hanzo.js'
 import {Cart}       from 'commerce.js'
 
-import Controls  from './controls'
-import Events    from './events'
-import Forms     from './forms'
-import Widgets   from './widgets'
-import analytics from './utils/analytics'
-import m         from './mediator'
+import * as Controls from 'el-controls'
+import Events        from './events'
+import Forms         from './forms'
+import Widgets       from './widgets'
+import analytics     from './utils/analytics'
+import m             from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
 import {renderUICurrencyFromJSON} from './utils/currency'
@@ -132,7 +132,8 @@ Shop.start = (opts = {}) ->
 
   Shop.Forms.register()
   Shop.Widgets.register()
-  Shop.Controls.register()
+  # self registering
+  # Shop.Controls.register()
 
   referrer = ''
 
@@ -231,9 +232,10 @@ Shop.start = (opts = {}) ->
       # ignore error, does not matter
 
   tags = El.mount elementsToMount,
-    cart:   @cart
-    client: @client
-    data:   @data
+    cart:     @cart
+    client:   @client
+    data:     @data
+    mediator: m
 
   El.update = ->
     for tag in tags

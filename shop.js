@@ -5964,296 +5964,6 @@ Cart = (function() {
 
 var Cart$1 = Cart;
 
-// src/events.coffee
-var events;
-
-var Events = events = {
-  Ready: 'ready',
-  SetData: 'set-data',
-  TryUpdateItem: 'try-update-item',
-  UpdateItem: 'update-item',
-  UpdateItems: 'update-items',
-  Change: 'change',
-  ChangeSuccess: 'change-success',
-  ChangeFailed: 'change-failed',
-  Checkout: 'checkout',
-  ContinueShopping: 'continue-shopping',
-  Submit: 'submit',
-  SubmitCart: 'submit-card',
-  SubmitShippingAddress: 'submit-shipping-address',
-  SubmitSuccess: 'submit-success',
-  SubmitFailed: 'submit-failed',
-  ForceApplyPromoCode: 'force-apply-promocode',
-  ApplyPromoCode: 'apply-promocode',
-  ApplyPromoCodeSuccess: 'apply-promocode-success',
-  ApplyPromoCodeFailed: 'apply-promocode-failed',
-  Login: 'login',
-  LoginSuccess: 'login-success',
-  LoginFailed: 'login-failed',
-  Register: 'register',
-  RegisterSuccess: 'register-success',
-  RegisterFailed: 'register-failed',
-  RegisterComplete: 'register-complete',
-  RegisterCompleteSuccess: 'register-complete-success',
-  RegisterCompleteFailed: 'register-complete-failed',
-  ResetPassword: 'reset-password',
-  ResetPasswordSuccess: 'reset-password-success',
-  ResetPasswordFailed: 'reset-password-failed',
-  ResetPasswordComplete: 'reset-password-complete',
-  ResetPasswordCompleteSuccess: 'reset-password-complete-success',
-  ResetPasswordCompleteFailed: 'reset-password-complete-failed',
-  ProfileLoad: 'profile-load',
-  ProfileLoadSuccess: 'profile-load-success',
-  ProfileLoadFailed: 'profile-load-failed',
-  ProfileUpdate: 'profile-update',
-  ProfileUpdateSuccess: 'profile-update-success',
-  ProfileUpdateFailed: 'profile-update-failed',
-  ShippingAddressUpdate: 'shipping-address-update',
-  ShippingAddressUpdateSuccess: 'shipping-address-update-success',
-  ShippingAddressUpdateFailed: 'shipping-address-update-failed',
-  SidePaneOpen: 'side-pane-open',
-  SidePaneOpened: 'side-pane-opened',
-  SidePaneClose: 'side-pane-close',
-  SidePaneClosed: 'side-pane-closed',
-  CheckoutOpen: 'checkout-open',
-  CheckoutOpened: 'checkout-opened',
-  CheckoutClose: 'checkout-close',
-  CheckoutClosed: 'checkout-closed',
-  DeleteLineItem: 'delete-line-item',
-  CreateReferralProgram: 'create-referral-program',
-  CreateReferralProgramSuccess: 'create-referral-program-success',
-  CreateReferralProgramFailed: 'create-referral-program-failed'
-};
-
-// src/mediator.coffee
-var m = observable$1({});
-
-// src/controls/control.coffee
-var Control;
-var scrolling;
-var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$2 = {}.hasOwnProperty;
-
-scrolling = false;
-
-var Control$1 = Control = (function(superClass) {
-  extend$3(Control, superClass);
-
-  function Control() {
-    return Control.__super__.constructor.apply(this, arguments);
-  }
-
-  Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
-
-  Control.prototype.init = function() {
-    if ((this.input == null) && (this.lookup == null)) {
-      throw new Error('No input or lookup provided');
-    }
-    if ((this.input == null) && (this.inputs != null)) {
-      this.input = this.inputs[this.lookup];
-    }
-    if (this.input == null) {
-      this.input = {
-        name: this.lookup,
-        ref: this.data.ref(this.lookup),
-        validate: function(ref, name) {
-          return Promise.resolve([ref, name]);
-        }
-      };
-    }
-    if (this.inputs != null) {
-      return Control.__super__.init.apply(this, arguments);
-    }
-  };
-
-  Control.prototype.getValue = function(event) {
-    var ref1;
-    return (ref1 = $(event.target).val()) != null ? ref1.trim() : void 0;
-  };
-
-  Control.prototype.error = function(err) {
-    if (err instanceof DOMException) {
-      console.log('WARNING: Error in riot dom manipulation ignored:', err);
-      return;
-    }
-    Control.__super__.error.apply(this, arguments);
-    if (!scrolling) {
-      scrolling = true;
-      $('html, body').animate({
-        scrollTop: $(this.root).offset().top - $(window).height() / 2
-      }, {
-        complete: function() {
-          return scrolling = false;
-        },
-        duration: 500
-      });
-    }
-    return m.trigger(Events.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
-  };
-
-  Control.prototype.change = function() {
-    Control.__super__.change.apply(this, arguments);
-    return m.trigger(Events.Change, this.input.name, this.input.ref.get(this.input.name));
-  };
-
-  Control.prototype.changed = function(value) {
-    m.trigger(Events.ChangeSuccess, this.input.name, value);
-    return El$1.scheduleUpdate();
-  };
-
-  Control.prototype.value = function() {
-    return this.input.ref(this.input.name);
-  };
-
-  return Control;
-
-})(El$1.Input);
-
-// src/utils/placeholder.coffee
-var exports$1;
-var hidePlaceholderOnFocus;
-var unfocusOnAnElement;
-
-hidePlaceholderOnFocus = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === target.getAttribute('placeholder')) {
-    return target.value = '';
-  }
-};
-
-unfocusOnAnElement = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === '') {
-    return target.value = target.getAttribute('placeholder');
-  }
-};
-
-exports$1 = function() {};
-
-if (document.createElement("input").placeholder == null) {
-  exports$1 = function(input) {
-    var ref;
-    input = (ref = input[0]) != null ? ref : input;
-    if (input._placeholdered != null) {
-      return;
-    }
-    Object.defineProperty(input, '_placeholdered', {
-      value: true,
-      writable: true
-    });
-    if (!input.value) {
-      input.value = input.getAttribute('placeholder');
-    }
-    if (input.addEventListener) {
-      input.addEventListener('click', hidePlaceholderOnFocus, false);
-      return input.addEventListener('blur', unfocusOnAnElement, false);
-    } else if (input.attachEvent) {
-      input.attachEvent('onclick', hidePlaceholderOnFocus);
-      return input.attachEvent('onblur', unfocusOnAnElement);
-    }
-  };
-}
-
-var placeholder = exports$1;
-
-// templates/controls/text.pug
-var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\" autocomplete=\"{ autoComplete }\">\n<yield></yield>";
-
-// src/controls/text.coffee
-var Text;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
-
-var Text$1 = Text = (function(superClass) {
-  extend$4(Text, superClass);
-
-  function Text() {
-    return Text.__super__.constructor.apply(this, arguments);
-  }
-
-  Text.prototype.tag = 'text-control';
-
-  Text.prototype.html = html;
-
-  Text.prototype.type = 'text';
-
-  Text.prototype.formElement = 'input';
-
-  Text.prototype.autoComplete = 'on';
-
-  Text.prototype.init = function() {
-    Text.__super__.init.apply(this, arguments);
-    return this.on('updated', (function(_this) {
-      return function() {
-        var el;
-        el = _this.root.getElementsByTagName(_this.formElement)[0];
-        if (_this.type !== 'password') {
-          return placeholder(el);
-        }
-      };
-    })(this));
-  };
-
-  return Text;
-
-})(Control$1);
-
-// templates/controls/textarea.pug
-var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<yield></yield>";
-
-// src/controls/textarea.coffee
-var TextArea;
-var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4 = {}.hasOwnProperty;
-
-TextArea = (function(superClass) {
-  extend$5(TextArea, superClass);
-
-  function TextArea() {
-    return TextArea.__super__.constructor.apply(this, arguments);
-  }
-
-  TextArea.prototype.tag = 'textarea-control';
-
-  TextArea.prototype.html = html$1;
-
-  TextArea.prototype.formElement = 'textarea';
-
-  return TextArea;
-
-})(Text$1);
-
-var TextArea$1 = TextArea;
-
-// templates/controls/checkbox.pug
-var html$2 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n<yield></yield>";
-
-// src/controls/checkbox.coffee
-var Checkbox;
-var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5 = {}.hasOwnProperty;
-
-var Checkbox$1 = Checkbox = (function(superClass) {
-  extend$6(Checkbox, superClass);
-
-  function Checkbox() {
-    return Checkbox.__super__.constructor.apply(this, arguments);
-  }
-
-  Checkbox.prototype.tag = 'checkbox-control';
-
-  Checkbox.prototype.html = html$2;
-
-  Checkbox.prototype.getValue = function(event) {
-    return event.target.checked;
-  };
-
-  return Checkbox;
-
-})(Control$1);
-
 // node_modules/es-selectize/dist/js/selectize.mjs
 var DIACRITICS = {
     'a': '[aḀḁĂăÂâǍǎȺⱥȦȧẠạÄäÀàÁáĀāÃãÅåąĄÃąĄ]',
@@ -6315,7 +6025,7 @@ function cmp(a, b) {
     return 0;
 }
 
-function extend$8(a, b) {
+function extend$4$1(a, b) {
     var i, n, k, object;
     for (i = 1, n = arguments.length; i < n; i++) {
         object = arguments[i];
@@ -6653,7 +6363,7 @@ Sifter.prototype.getSortFunction = function(search, options) {
 Sifter.prototype.prepareSearch = function(query, options) {
     if (typeof query === 'object') return query;
 
-    options = extend$8({}, options);
+    options = extend$4$1({}, options);
 
     var optionFields     = options.fields;
     var optionSort       = options.sort;
@@ -9756,197 +9466,36 @@ function selectize($select, optsUser) {
     });
 }
 
-// templates/controls/select.pug
-var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+// node_modules/el-controls/lib/el-controls.mjs
+// src/utils/patches.coffee
+var agent$1;
+var ieMajor$1;
+var ieMinor$1;
+var matches$1;
+var reg$1;
 
-// src/controls/select.coffee
-var Select;
-var coolDown;
-var isABrokenBrowser;
-var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
-
-isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
-
-coolDown = -1;
-
-var Select$1 = Select = (function(superClass) {
-  extend$7(Select, superClass);
-
-  function Select() {
-    return Select.__super__.constructor.apply(this, arguments);
-  }
-
-  Select.prototype.tag = 'select-control';
-
-  Select.prototype.html = html$3;
-
-  Select.prototype.selectOptions = {};
-
-  Select.prototype.options = function() {
-    return this.selectOptions;
-  };
-
-  Select.prototype.readOnly = false;
-
-  Select.prototype.ignore = false;
-
-  Select.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    },
-    mount: function() {
-      return this.onUpdated();
-    }
-  };
-
-  Select.prototype.getValue = function(event) {
-    var ref;
-    return (ref = $(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-  };
-
-  Select.prototype.initSelect = function($select) {
-    var $input, invertedOptions, name, options, ref, select, value;
-    options = [];
-    invertedOptions = {};
-    ref = this.options();
-    for (value in ref) {
-      name = ref[value];
-      options.push({
-        text: name,
-        value: value
-      });
-      invertedOptions[name] = value;
-    }
-    selectize($select, {
-      dropdownParent: 'body'
-    }).on('change', (function(_this) {
-      return function(event) {
-        if (coolDown !== -1) {
-          return;
-        }
-        coolDown = setTimeout(function() {
-          return coolDown = -1;
-        }, 100);
-        _this.change(event);
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      };
-    })(this));
-    select = $select[0];
-    select.selectize.addOption(options);
-    select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
-    select.selectize.refreshOptions(false);
-    $input = $select.parent().find('.selectize-input input:first');
-    $input.on('change', function(event) {
-      var val;
-      val = $(event.target).val();
-      if (invertedOptions[val] != null) {
-        return $select[0].selectize.setValue(invertedOptions[val]);
-      }
-    });
-    if (this.readOnly) {
-      return $input.attr('readonly', true);
-    }
-  };
-
-  Select.prototype.init = function(opts) {
-    Select.__super__.init.apply(this, arguments);
-    return this.style = this.style || 'width:100%';
-  };
-
-  Select.prototype.onUpdated = function() {
-    var $control, $select, select, v;
-    if (this.input == null) {
-      return;
-    }
-    $select = $(this.root).find('select');
-    select = $select[0];
-    if (select != null) {
-      v = this.input.ref.get(this.input.name);
-      if (!this.initialized) {
-        return raf$1((function(_this) {
-          return function() {
-            _this.initSelect($select);
-            return _this.initialized = true;
-          };
-        })(this));
-      } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
-        select.selectize.clear(true);
-        return select.selectize.addItem(v, true);
-      }
-    } else {
-      $control = $(this.root).find('.selectize-control');
-      if ($control[0] == null) {
-        return raf$1((function(_this) {
-          return function() {
-            return _this.scheduleUpdate();
-          };
-        })(this));
-      }
-    }
-  };
-
-  return Select;
-
-})(Text$1);
-
-// src/controls/quantity-select.coffee
-var QuantitySelect;
-var i$1;
-var j;
-var opts;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
-
-opts = {};
-
-for (i$1 = j = 1; j < 100; i$1 = ++j) {
-  opts[i$1] = i$1;
+if (window.Promise == null) {
+  window.Promise = Promise$2;
 }
 
-var QuantitySelect$1 = QuantitySelect = (function(superClass) {
-  extend$9(QuantitySelect, superClass);
+if (window.requestAnimationFrame == null) {
+  window.requestAnimationFrame = raf$1;
+}
 
-  function QuantitySelect() {
-    return QuantitySelect.__super__.constructor.apply(this, arguments);
-  }
+if (window.cancelAnimationFrame == null) {
+  window.cancelAnimationFrame = raf$1.cancel;
+}
 
-  QuantitySelect.prototype.tag = 'quantity-select-control';
+agent$1 = navigator.userAgent;
 
-  QuantitySelect.prototype.lookup = 'quantity';
+reg$1 = /MSIE\s?(\d+)(?:\.(\d+))?/i;
 
-  QuantitySelect.prototype.options = function() {
-    return opts;
-  };
+matches$1 = agent$1.match(reg$1);
 
-  QuantitySelect.prototype.init = function() {
-    return QuantitySelect.__super__.init.apply(this, arguments);
-  };
-
-  QuantitySelect.prototype.readOnly = true;
-
-  QuantitySelect.prototype.getValue = function(event) {
-    var ref;
-    return parseFloat((ref = $(event.target).val()) != null ? ref.trim() : void 0);
-  };
-
-  QuantitySelect.prototype.change = function(e) {
-    var newValue, oldValue;
-    if (e.target == null) {
-      return;
-    }
-    oldValue = this.data.get('quantity');
-    QuantitySelect.__super__.change.apply(this, arguments);
-    newValue = this.data.get('quantity');
-    this.data.set('quantity', oldValue);
-    return this.cart.set(this.data.get('productId'), newValue);
-  };
-
-  return QuantitySelect;
-
-})(Select$1);
+if (matches$1 != null) {
+  ieMajor$1 = matches$1[1];
+  ieMinor$1 = matches$1[2];
+}
 
 // src/data/countries.coffee
 var countries = {
@@ -10203,53 +9752,6 @@ var countries = {
   }
 };
 
-// src/controls/country-select.coffee
-var CountrySelect;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
-
-var CountrySelect$1 = CountrySelect = (function(superClass) {
-  extend$10(CountrySelect, superClass);
-
-  function CountrySelect() {
-    return CountrySelect.__super__.constructor.apply(this, arguments);
-  }
-
-  CountrySelect.prototype.tag = 'country-select-control';
-
-  CountrySelect.prototype.options = function() {
-    return countries.data;
-  };
-
-  CountrySelect.prototype.init = function() {
-    CountrySelect.__super__.init.apply(this, arguments);
-    return this.on('update', (function(_this) {
-      return function() {
-        var country, k, ref, v;
-        country = _this.input.ref.get('order.shippingAddress.country');
-        if (country) {
-          country = country.toLowerCase();
-          if (country.length === 2) {
-            return _this.input.ref.set('order.shippingAddress.country', country);
-          } else {
-            ref = countries.data;
-            for (k in ref) {
-              v = ref[k];
-              if (v.toLowerCase() === country) {
-                _this.input.ref.set('order.shippingAddress.country', k);
-                return;
-              }
-            }
-          }
-        }
-      };
-    })(this));
-  };
-
-  return CountrySelect;
-
-})(Select$1);
-
 // src/data/states.coffee
 var states = {
   data: {
@@ -10308,366 +9810,6 @@ var states = {
     ae: 'U.S. Armed Forces – Europe',
     ap: 'U.S. Armed Forces – Pacific'
   }
-};
-
-// templates/controls/state-select.pug
-var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
-
-// src/controls/state-select.coffee
-var StateSelect;
-var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9 = {}.hasOwnProperty;
-
-var Select$2 = StateSelect = (function(superClass) {
-  extend$11(StateSelect, superClass);
-
-  function StateSelect() {
-    return StateSelect.__super__.constructor.apply(this, arguments);
-  }
-
-  StateSelect.prototype.tag = 'state-select-control';
-
-  StateSelect.prototype.html = html$4;
-
-  StateSelect.prototype.options = function() {
-    return states.data;
-  };
-
-  StateSelect.prototype.countryField = 'order.shippingAddress.country';
-
-  StateSelect.prototype.init = function() {
-    StateSelect.__super__.init.apply(this, arguments);
-    return this.on('update', (function(_this) {
-      return function() {
-        var k, ref, state, v;
-        if (_this.input == null) {
-          return;
-        }
-        state = _this.input.ref.get('order.shippingAddress.state');
-        if (state) {
-          state = state.toLowerCase();
-          if (state.length === 2) {
-            return _this.input.ref.set('order.shippingAddress.state', state);
-          } else {
-            ref = states.data;
-            for (k in ref) {
-              v = ref[k];
-              if (v.toLowerCase() === state) {
-                _this.input.ref.set('order.shippingAddress.state', k);
-                return;
-              }
-            }
-          }
-        }
-      };
-    })(this));
-  };
-
-  StateSelect.prototype.onUpdated = function() {
-    var value;
-    if (this.input == null) {
-      return;
-    }
-    if (this.input.ref.get(this.countryField) === 'us') {
-      $(this.root).find('.selectize-control').show();
-    } else {
-      $(this.root).find('.selectize-control').hide();
-      value = this.input.ref.get(this.input.name);
-      if (value) {
-        this.input.ref.set(this.input.name, value.toUpperCase());
-      }
-    }
-    return StateSelect.__super__.onUpdated.apply(this, arguments);
-  };
-
-  return StateSelect;
-
-})(Select$1);
-
-// src/controls/user-email.coffee
-var UserName;
-var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$10 = {}.hasOwnProperty;
-
-var UserEmail = UserName = (function(superClass) {
-  extend$12(UserName, superClass);
-
-  function UserName() {
-    return UserName.__super__.constructor.apply(this, arguments);
-  }
-
-  UserName.prototype.tag = 'user-name';
-
-  UserName.prototype.lookup = 'user.name';
-
-  return UserName;
-
-})(Text$1);
-
-// src/controls/user-name.coffee
-var UserEmail$1;
-var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$11 = {}.hasOwnProperty;
-
-var UserName$1 = UserEmail$1 = (function(superClass) {
-  extend$13(UserEmail, superClass);
-
-  function UserEmail() {
-    return UserEmail.__super__.constructor.apply(this, arguments);
-  }
-
-  UserEmail.prototype.tag = 'user-email';
-
-  UserEmail.prototype.lookup = 'user.email';
-
-  return UserEmail;
-
-})(Text$1);
-
-// src/controls/user-current-password.coffee
-var UserCurrentPassword;
-var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12 = {}.hasOwnProperty;
-
-var UserCurrentPassword$1 = UserCurrentPassword = (function(superClass) {
-  extend$14(UserCurrentPassword, superClass);
-
-  function UserCurrentPassword() {
-    return UserCurrentPassword.__super__.constructor.apply(this, arguments);
-  }
-
-  UserCurrentPassword.prototype.tag = 'user-current-password';
-
-  UserCurrentPassword.prototype.lookup = 'user.currentPassword';
-
-  UserCurrentPassword.prototype.type = 'password';
-
-  UserCurrentPassword.prototype.autoComplete = 'off';
-
-  UserCurrentPassword.prototype.init = function() {
-    return UserCurrentPassword.__super__.init.apply(this, arguments);
-  };
-
-  return UserCurrentPassword;
-
-})(Text$1);
-
-// src/controls/user-password.coffee
-var UserPassword;
-var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$13 = {}.hasOwnProperty;
-
-var UserPassword$1 = UserPassword = (function(superClass) {
-  extend$15(UserPassword, superClass);
-
-  function UserPassword() {
-    return UserPassword.__super__.constructor.apply(this, arguments);
-  }
-
-  UserPassword.prototype.tag = 'user-password';
-
-  UserPassword.prototype.lookup = 'user.password';
-
-  UserPassword.prototype.type = 'password';
-
-  return UserPassword;
-
-})(Text$1);
-
-// src/controls/user-password-confirm.coffee
-var UserPasswordConfirm;
-var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$14 = {}.hasOwnProperty;
-
-var UserPasswordConfirm$1 = UserPasswordConfirm = (function(superClass) {
-  extend$16(UserPasswordConfirm, superClass);
-
-  function UserPasswordConfirm() {
-    return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
-  }
-
-  UserPasswordConfirm.prototype.tag = 'user-password-confirm';
-
-  UserPasswordConfirm.prototype.lookup = 'user.passwordConfirm';
-
-  UserPasswordConfirm.prototype.type = 'password';
-
-  UserPasswordConfirm.prototype.autoComplete = 'off';
-
-  UserPasswordConfirm.prototype.init = function() {
-    return UserPasswordConfirm.__super__.init.apply(this, arguments);
-  };
-
-  return UserPasswordConfirm;
-
-})(Text$1);
-
-// src/controls/shippingaddress-name.coffee
-var ShippingAddressName;
-var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$15 = {}.hasOwnProperty;
-
-var ShippingAddressName$1 = ShippingAddressName = (function(superClass) {
-  extend$17(ShippingAddressName, superClass);
-
-  function ShippingAddressName() {
-    return ShippingAddressName.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressName.prototype.tag = 'shippingaddress-name';
-
-  ShippingAddressName.prototype.lookup = 'order.shippingAddress.name';
-
-  return ShippingAddressName;
-
-})(Text$1);
-
-// src/controls/shippingaddress-line1.coffee
-var ShippingAddressLine1;
-var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$16 = {}.hasOwnProperty;
-
-var ShippingAddressLine1$1 = ShippingAddressLine1 = (function(superClass) {
-  extend$18(ShippingAddressLine1, superClass);
-
-  function ShippingAddressLine1() {
-    return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressLine1.prototype.tag = 'shippingaddress-line1';
-
-  ShippingAddressLine1.prototype.lookup = 'order.shippingAddress.line1';
-
-  return ShippingAddressLine1;
-
-})(Text$1);
-
-// src/controls/shippingaddress-line2.coffee
-var ShippingAddressLine2;
-var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$17 = {}.hasOwnProperty;
-
-var ShippingAddressLine2$1 = ShippingAddressLine2 = (function(superClass) {
-  extend$19(ShippingAddressLine2, superClass);
-
-  function ShippingAddressLine2() {
-    return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressLine2.prototype.tag = 'shippingaddress-line2';
-
-  ShippingAddressLine2.prototype.lookup = 'order.shippingAddress.line2';
-
-  return ShippingAddressLine2;
-
-})(Text$1);
-
-// src/controls/shippingaddress-city.coffee
-var ShippingAddressCity;
-var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$18 = {}.hasOwnProperty;
-
-var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
-  extend$20(ShippingAddressCity, superClass);
-
-  function ShippingAddressCity() {
-    return ShippingAddressCity.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressCity.prototype.tag = 'shippingaddress-city';
-
-  ShippingAddressCity.prototype.lookup = 'order.shippingAddress.city';
-
-  return ShippingAddressCity;
-
-})(Text$1);
-
-// src/controls/shippingaddress-postalcode.coffee
-var ShippingAddressPostalCode;
-var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$19 = {}.hasOwnProperty;
-
-var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superClass) {
-  extend$21(ShippingAddressPostalCode, superClass);
-
-  function ShippingAddressPostalCode() {
-    return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressPostalCode.prototype.tag = 'shippingaddress-postalcode';
-
-  ShippingAddressPostalCode.prototype.lookup = 'order.shippingAddress.postalCode';
-
-  return ShippingAddressPostalCode;
-
-})(Text$1);
-
-// src/controls/shippingaddress-state.coffee
-var ShippingAddressState;
-var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$20 = {}.hasOwnProperty;
-
-var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
-  extend$22(ShippingAddressState, superClass);
-
-  function ShippingAddressState() {
-    return ShippingAddressState.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressState.prototype.tag = 'shippingaddress-state';
-
-  ShippingAddressState.prototype.lookup = 'order.shippingAddress.state';
-
-  return ShippingAddressState;
-
-})(Select$2);
-
-// src/controls/shippingaddress-country.coffee
-var ShippingAddressCountry;
-var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$21 = {}.hasOwnProperty;
-
-var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
-  extend$23(ShippingAddressCountry, superClass);
-
-  function ShippingAddressCountry() {
-    return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressCountry.prototype.tag = 'shippingaddress-country';
-
-  ShippingAddressCountry.prototype.lookup = 'order.shippingAddress.country';
-
-  return ShippingAddressCountry;
-
-})(CountrySelect$1);
-
-// src/controls/card-name.coffee
-var CardName;
-var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$22 = {}.hasOwnProperty;
-
-CardName = (function(superClass) {
-  extend$24(CardName, superClass);
-
-  function CardName() {
-    return CardName.__super__.constructor.apply(this, arguments);
-  }
-
-  CardName.prototype.tag = 'card-name';
-
-  CardName.prototype.lookup = 'payment.account.name';
-
-  return CardName;
-
-})(Text$1);
-
-var CardName$1 = CardName;
-
-// src/utils/keys.coffee
-var keys = {
-  ignore: [8, 9, 13, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40],
-  numeric: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
 };
 
 // src/utils/card.coffee
@@ -10794,7 +9936,13 @@ var cardFromNumber = function(num) {
   }
 };
 
-
+var cardType = function(num) {
+  var ref;
+  if (!num) {
+    return null;
+  }
+  return ((ref = cardFromNumber(num)) != null ? ref.type : void 0) || null;
+};
 
 var restrictNumeric = function(e) {
   var input;
@@ -10816,14 +9964,894 @@ var restrictNumeric = function(e) {
   }
 };
 
+// src/events.coffee
+var Events;
+
+var Events$1 = Events = {
+  Change: 'change',
+  ChangeSuccess: 'change-success',
+  ChangeFailed: 'change-failed'
+};
+
+// src/controls/control.coffee
+var Control;
+var scrolling;
+var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$2 = {}.hasOwnProperty;
+
+scrolling = false;
+
+var Control$1 = Control = (function(superClass) {
+  extend$3(Control, superClass);
+
+  function Control() {
+    return Control.__super__.constructor.apply(this, arguments);
+  }
+
+  Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
+
+  Control.prototype.init = function() {
+    if ((this.input == null) && (this.lookup == null)) {
+      throw new Error('No input or lookup provided');
+    }
+    if ((this.input == null) && (this.inputs != null)) {
+      this.input = this.inputs[this.lookup];
+    }
+    if (this.input == null) {
+      this.input = {
+        name: this.lookup,
+        ref: this.data.ref(this.lookup),
+        validate: function(ref, name) {
+          return Promise.resolve([ref, name]);
+        }
+      };
+    }
+    if (this.inputs != null) {
+      return Control.__super__.init.apply(this, arguments);
+    }
+  };
+
+  Control.prototype.getValue = function(event) {
+    var ref1;
+    return (ref1 = $(event.target).val()) != null ? ref1.trim() : void 0;
+  };
+
+  Control.prototype.error = function(err) {
+    if (err instanceof DOMException) {
+      console.log('WARNING: Error in riot dom manipulation ignored:', err);
+      return;
+    }
+    Control.__super__.error.apply(this, arguments);
+    if (!scrolling) {
+      scrolling = true;
+      $('html, body').animate({
+        scrollTop: $(this.root).offset().top - $(window).height() / 2
+      }, {
+        complete: function() {
+          return scrolling = false;
+        },
+        duration: 500
+      });
+    }
+    return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+  };
+
+  Control.prototype.change = function() {
+    Control.__super__.change.apply(this, arguments);
+    return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
+  };
+
+  Control.prototype.changed = function(value) {
+    this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
+    return El$1.scheduleUpdate();
+  };
+
+  Control.prototype.value = function() {
+    return this.input.ref(this.input.name);
+  };
+
+  return Control;
+
+})(El$1.Input);
+
+// src/utils/placeholder.coffee
+var exports$1;
+var hidePlaceholderOnFocus;
+var unfocusOnAnElement;
+
+hidePlaceholderOnFocus = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === target.getAttribute('placeholder')) {
+    return target.value = '';
+  }
+};
+
+unfocusOnAnElement = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === '') {
+    return target.value = target.getAttribute('placeholder');
+  }
+};
+
+exports$1 = function() {};
+
+if (document.createElement("input").placeholder == null) {
+  exports$1 = function(input) {
+    var ref;
+    input = (ref = input[0]) != null ? ref : input;
+    if (input._placeholdered != null) {
+      return;
+    }
+    Object.defineProperty(input, '_placeholdered', {
+      value: true,
+      writable: true
+    });
+    if (!input.value) {
+      input.value = input.getAttribute('placeholder');
+    }
+    if (input.addEventListener) {
+      input.addEventListener('click', hidePlaceholderOnFocus, false);
+      return input.addEventListener('blur', unfocusOnAnElement, false);
+    } else if (input.attachEvent) {
+      input.attachEvent('onclick', hidePlaceholderOnFocus);
+      return input.attachEvent('onblur', unfocusOnAnElement);
+    }
+  };
+}
+
+var placeholder = exports$1;
+
+// templates/controls/text.pug
+var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\" autocomplete=\"{ autoComplete }\">\n<yield></yield>";
+
+// src/controls/text.coffee
+var Text;
+var extend$1$2 = function(child, parent) { for (var key in parent) { if (hasProp$1$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$1$2 = {}.hasOwnProperty;
+
+var Text$1 = Text = (function(superClass) {
+  extend$1$2(Text, superClass);
+
+  function Text() {
+    return Text.__super__.constructor.apply(this, arguments);
+  }
+
+  Text.prototype.tag = 'text';
+
+  Text.prototype.html = html;
+
+  Text.prototype.type = 'text';
+
+  Text.prototype.formElement = 'input';
+
+  Text.prototype.autoComplete = 'on';
+
+  Text.prototype.init = function() {
+    Text.__super__.init.apply(this, arguments);
+    return this.on('updated', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.getElementsByTagName(_this.formElement)[0];
+        if (_this.type !== 'password') {
+          return placeholder(el);
+        }
+      };
+    })(this));
+  };
+
+  return Text;
+
+})(Control$1);
+
+Text.register();
+
+// templates/controls/textarea.pug
+var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<yield></yield>";
+
+// src/controls/textarea.coffee
+var TextArea;
+var extend$2$1 = function(child, parent) { for (var key in parent) { if (hasProp$2$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$2$1 = {}.hasOwnProperty;
+
+TextArea = (function(superClass) {
+  extend$2$1(TextArea, superClass);
+
+  function TextArea() {
+    return TextArea.__super__.constructor.apply(this, arguments);
+  }
+
+  TextArea.prototype.tag = 'textarea-control';
+
+  TextArea.prototype.html = html$1;
+
+  TextArea.prototype.formElement = 'textarea';
+
+  return TextArea;
+
+})(Text$1);
+
+TextArea.register();
+
+var TextArea$1 = TextArea;
+
+// templates/controls/checkbox.pug
+var html$2 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n<yield></yield>";
+
+// src/controls/checkbox.coffee
+var Checkbox;
+var extend$3$1 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
+
+var Checkbox$1 = Checkbox = (function(superClass) {
+  extend$3$1(Checkbox, superClass);
+
+  function Checkbox() {
+    return Checkbox.__super__.constructor.apply(this, arguments);
+  }
+
+  Checkbox.prototype.tag = 'checkbox-control';
+
+  Checkbox.prototype.html = html$2;
+
+  Checkbox.prototype.getValue = function(event) {
+    return event.target.checked;
+  };
+
+  return Checkbox;
+
+})(Control$1);
+
+Checkbox.register();
+
+// templates/controls/select.pug
+var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+
+// src/controls/select.coffee
+var Select;
+var coolDown;
+var isABrokenBrowser;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$4 = {}.hasOwnProperty;
+
+isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
+
+coolDown = -1;
+
+var Select$1 = Select = (function(superClass) {
+  extend$4(Select, superClass);
+
+  function Select() {
+    return Select.__super__.constructor.apply(this, arguments);
+  }
+
+  Select.prototype.tag = 'select-control';
+
+  Select.prototype.html = html$3;
+
+  Select.prototype.selectOptions = {};
+
+  Select.prototype.options = function() {
+    return this.selectOptions;
+  };
+
+  Select.prototype.readOnly = false;
+
+  Select.prototype.ignore = false;
+
+  Select.prototype.events = {
+    updated: function() {
+      return this.onUpdated();
+    },
+    mount: function() {
+      return this.onUpdated();
+    }
+  };
+
+  Select.prototype.getValue = function(event) {
+    var ref;
+    return (ref = $(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
+  };
+
+  Select.prototype.initSelect = function($select) {
+    var $input, invertedOptions, name, options, ref, select, value;
+    options = [];
+    invertedOptions = {};
+    ref = this.options();
+    for (value in ref) {
+      name = ref[value];
+      options.push({
+        text: name,
+        value: value
+      });
+      invertedOptions[name] = value;
+    }
+    selectize($select, {
+      dropdownParent: 'body'
+    }).on('change', (function(_this) {
+      return function(event) {
+        if (coolDown !== -1) {
+          return;
+        }
+        coolDown = setTimeout(function() {
+          return coolDown = -1;
+        }, 100);
+        _this.change(event);
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      };
+    })(this));
+    select = $select[0];
+    select.selectize.addOption(options);
+    select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
+    select.selectize.refreshOptions(false);
+    $input = $select.parent().find('.selectize-input input:first');
+    $input.on('change', function(event) {
+      var val;
+      val = $(event.target).val();
+      if (invertedOptions[val] != null) {
+        return $select[0].selectize.setValue(invertedOptions[val]);
+      }
+    });
+    if (this.readOnly) {
+      return $input.attr('readonly', true);
+    }
+  };
+
+  Select.prototype.init = function(opts) {
+    Select.__super__.init.apply(this, arguments);
+    return this.style = this.style || 'width:100%';
+  };
+
+  Select.prototype.onUpdated = function() {
+    var $control, $select, select, v;
+    if (this.input == null) {
+      return;
+    }
+    $select = $(this.root).find('select');
+    select = $select[0];
+    if (select != null) {
+      v = this.input.ref.get(this.input.name);
+      if (!this.initialized) {
+        return raf$1((function(_this) {
+          return function() {
+            _this.initSelect($select);
+            return _this.initialized = true;
+          };
+        })(this));
+      } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
+        select.selectize.clear(true);
+        return select.selectize.addItem(v, true);
+      }
+    } else {
+      $control = $(this.root).find('.selectize-control');
+      if ($control[0] == null) {
+        return raf$1((function(_this) {
+          return function() {
+            return _this.scheduleUpdate();
+          };
+        })(this));
+      }
+    }
+  };
+
+  return Select;
+
+})(Text$1);
+
+Select.register();
+
+// src/controls/quantity-select.coffee
+var QuantitySelect;
+var i$1;
+var j;
+var opts;
+var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5 = {}.hasOwnProperty;
+
+opts = {};
+
+for (i$1 = j = 1; j < 100; i$1 = ++j) {
+  opts[i$1] = i$1;
+}
+
+var quantitySelect = QuantitySelect = (function(superClass) {
+  extend$5(QuantitySelect, superClass);
+
+  function QuantitySelect() {
+    return QuantitySelect.__super__.constructor.apply(this, arguments);
+  }
+
+  QuantitySelect.prototype.tag = 'quantity-select';
+
+  QuantitySelect.prototype.lookup = 'quantity';
+
+  QuantitySelect.prototype.options = function() {
+    return opts;
+  };
+
+  QuantitySelect.prototype.init = function() {
+    return QuantitySelect.__super__.init.apply(this, arguments);
+  };
+
+  QuantitySelect.prototype.readOnly = true;
+
+  QuantitySelect.prototype.getValue = function(event) {
+    var ref;
+    return parseFloat((ref = $(event.target).val()) != null ? ref.trim() : void 0);
+  };
+
+  QuantitySelect.prototype.change = function(e) {
+    var newValue, oldValue;
+    if (e.target == null) {
+      return;
+    }
+    oldValue = this.data.get('quantity');
+    QuantitySelect.__super__.change.apply(this, arguments);
+    newValue = this.data.get('quantity');
+    this.data.set('quantity', oldValue);
+    return this.cart.set(this.data.get('productId'), newValue);
+  };
+
+  return QuantitySelect;
+
+})(Select$1);
+
+QuantitySelect.register();
+
+// src/controls/country-select.coffee
+var CountrySelect;
+var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
+
+var CountrySelect$1 = CountrySelect = (function(superClass) {
+  extend$6(CountrySelect, superClass);
+
+  function CountrySelect() {
+    return CountrySelect.__super__.constructor.apply(this, arguments);
+  }
+
+  CountrySelect.prototype.tag = 'country-select';
+
+  CountrySelect.prototype.options = function() {
+    return countries.data;
+  };
+
+  CountrySelect.prototype.init = function() {
+    CountrySelect.__super__.init.apply(this, arguments);
+    return this.on('update', (function(_this) {
+      return function() {
+        var country, k, ref, v;
+        country = _this.input.ref.get('order.shippingAddress.country');
+        if (country) {
+          country = country.toLowerCase();
+          if (country.length === 2) {
+            return _this.input.ref.set('order.shippingAddress.country', country);
+          } else {
+            ref = countries.data;
+            for (k in ref) {
+              v = ref[k];
+              if (v.toLowerCase() === country) {
+                _this.input.ref.set('order.shippingAddress.country', k);
+                return;
+              }
+            }
+          }
+        }
+      };
+    })(this));
+  };
+
+  return CountrySelect;
+
+})(Select$1);
+
+CountrySelect.register();
+
+// templates/controls/state-select.pug
+var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+
+// src/controls/state-select.coffee
+var StateSelect;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
+
+var Select$2 = StateSelect = (function(superClass) {
+  extend$7(StateSelect, superClass);
+
+  function StateSelect() {
+    return StateSelect.__super__.constructor.apply(this, arguments);
+  }
+
+  StateSelect.prototype.tag = 'state-select';
+
+  StateSelect.prototype.html = html$4;
+
+  StateSelect.prototype.options = function() {
+    return states.data;
+  };
+
+  StateSelect.prototype.countryField = 'order.shippingAddress.country';
+
+  StateSelect.prototype.init = function() {
+    StateSelect.__super__.init.apply(this, arguments);
+    return this.on('update', (function(_this) {
+      return function() {
+        var k, ref, state, v;
+        if (_this.input == null) {
+          return;
+        }
+        state = _this.input.ref.get('order.shippingAddress.state');
+        if (state) {
+          state = state.toLowerCase();
+          if (state.length === 2) {
+            return _this.input.ref.set('order.shippingAddress.state', state);
+          } else {
+            ref = states.data;
+            for (k in ref) {
+              v = ref[k];
+              if (v.toLowerCase() === state) {
+                _this.input.ref.set('order.shippingAddress.state', k);
+                return;
+              }
+            }
+          }
+        }
+      };
+    })(this));
+  };
+
+  StateSelect.prototype.onUpdated = function() {
+    var value;
+    if (this.input == null) {
+      return;
+    }
+    if (this.input.ref.get(this.countryField) === 'us') {
+      $(this.root).find('.selectize-control').show();
+    } else {
+      $(this.root).find('.selectize-control').hide();
+      value = this.input.ref.get(this.input.name);
+      if (value) {
+        this.input.ref.set(this.input.name, value.toUpperCase());
+      }
+    }
+    return StateSelect.__super__.onUpdated.apply(this, arguments);
+  };
+
+  return StateSelect;
+
+})(Select$1);
+
+StateSelect.register();
+
+// src/controls/user-email.coffee
+var UserEmail;
+var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
+
+var userEmail = UserEmail = (function(superClass) {
+  extend$8(UserEmail, superClass);
+
+  function UserEmail() {
+    return UserEmail.__super__.constructor.apply(this, arguments);
+  }
+
+  UserEmail.prototype.tag = 'user-email';
+
+  UserEmail.prototype.lookup = 'user.email';
+
+  return UserEmail;
+
+})(Text$1);
+
+UserEmail.register();
+
+// src/controls/user-name.coffee
+var UserName;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
+
+var userName = UserName = (function(superClass) {
+  extend$9(UserName, superClass);
+
+  function UserName() {
+    return UserName.__super__.constructor.apply(this, arguments);
+  }
+
+  UserName.prototype.tag = 'user-name';
+
+  UserName.prototype.lookup = 'user.name';
+
+  return UserName;
+
+})(Text$1);
+
+UserName.register();
+
+// src/controls/user-current-password.coffee
+var UserCurrentPassword;
+var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10 = {}.hasOwnProperty;
+
+var userCurrentPassword = UserCurrentPassword = (function(superClass) {
+  extend$10(UserCurrentPassword, superClass);
+
+  function UserCurrentPassword() {
+    return UserCurrentPassword.__super__.constructor.apply(this, arguments);
+  }
+
+  UserCurrentPassword.prototype.tag = 'user-current-password';
+
+  UserCurrentPassword.prototype.lookup = 'user.currentPassword';
+
+  UserCurrentPassword.prototype.type = 'password';
+
+  UserCurrentPassword.prototype.autoComplete = 'off';
+
+  UserCurrentPassword.prototype.init = function() {
+    return UserCurrentPassword.__super__.init.apply(this, arguments);
+  };
+
+  return UserCurrentPassword;
+
+})(Text$1);
+
+UserCurrentPassword.register();
+
+// src/controls/user-password.coffee
+var UserPassword;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$11 = {}.hasOwnProperty;
+
+var userPassword = UserPassword = (function(superClass) {
+  extend$11(UserPassword, superClass);
+
+  function UserPassword() {
+    return UserPassword.__super__.constructor.apply(this, arguments);
+  }
+
+  UserPassword.prototype.tag = 'user-password';
+
+  UserPassword.prototype.lookup = 'user.password';
+
+  UserPassword.prototype.type = 'password';
+
+  return UserPassword;
+
+})(Text$1);
+
+UserPassword.register();
+
+// src/controls/user-password-confirm.coffee
+var UserPasswordConfirm;
+var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12 = {}.hasOwnProperty;
+
+var userPasswordConfirm = UserPasswordConfirm = (function(superClass) {
+  extend$12(UserPasswordConfirm, superClass);
+
+  function UserPasswordConfirm() {
+    return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
+  }
+
+  UserPasswordConfirm.prototype.tag = 'user-password-confirm';
+
+  UserPasswordConfirm.prototype.lookup = 'user.passwordConfirm';
+
+  UserPasswordConfirm.prototype.type = 'password';
+
+  UserPasswordConfirm.prototype.autoComplete = 'off';
+
+  UserPasswordConfirm.prototype.init = function() {
+    return UserPasswordConfirm.__super__.init.apply(this, arguments);
+  };
+
+  return UserPasswordConfirm;
+
+})(Text$1);
+
+UserPasswordConfirm.register();
+
+// src/controls/shippingaddress-name.coffee
+var ShippingAddressName;
+var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13 = {}.hasOwnProperty;
+
+var shippingaddressName = ShippingAddressName = (function(superClass) {
+  extend$13(ShippingAddressName, superClass);
+
+  function ShippingAddressName() {
+    return ShippingAddressName.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressName.prototype.tag = 'shippingaddress-name';
+
+  ShippingAddressName.prototype.lookup = 'order.shippingAddress.name';
+
+  return ShippingAddressName;
+
+})(Text$1);
+
+ShippingAddressName.register();
+
+// src/controls/shippingaddress-line1.coffee
+var ShippingAddressLine1;
+var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$14 = {}.hasOwnProperty;
+
+var shippingaddressLine1 = ShippingAddressLine1 = (function(superClass) {
+  extend$14(ShippingAddressLine1, superClass);
+
+  function ShippingAddressLine1() {
+    return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressLine1.prototype.tag = 'shippingaddress-line1';
+
+  ShippingAddressLine1.prototype.lookup = 'order.shippingAddress.line1';
+
+  return ShippingAddressLine1;
+
+})(Text$1);
+
+ShippingAddressLine1.register();
+
+// src/controls/shippingaddress-line2.coffee
+var ShippingAddressLine2;
+var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$15 = {}.hasOwnProperty;
+
+var shippingaddressLine2 = ShippingAddressLine2 = (function(superClass) {
+  extend$15(ShippingAddressLine2, superClass);
+
+  function ShippingAddressLine2() {
+    return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressLine2.prototype.tag = 'shippingaddress-line2';
+
+  ShippingAddressLine2.prototype.lookup = 'order.shippingAddress.line2';
+
+  return ShippingAddressLine2;
+
+})(Text$1);
+
+ShippingAddressLine2.register();
+
+// src/controls/shippingaddress-city.coffee
+var ShippingAddressCity;
+var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$16 = {}.hasOwnProperty;
+
+var shippingaddressCity = ShippingAddressCity = (function(superClass) {
+  extend$16(ShippingAddressCity, superClass);
+
+  function ShippingAddressCity() {
+    return ShippingAddressCity.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressCity.prototype.tag = 'shippingaddress-city';
+
+  ShippingAddressCity.prototype.lookup = 'order.shippingAddress.city';
+
+  return ShippingAddressCity;
+
+})(Text$1);
+
+ShippingAddressCity.register();
+
+// src/controls/shippingaddress-postalcode.coffee
+var ShippingAddressPostalCode;
+var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$17 = {}.hasOwnProperty;
+
+var shippingaddressPostalcode = ShippingAddressPostalCode = (function(superClass) {
+  extend$17(ShippingAddressPostalCode, superClass);
+
+  function ShippingAddressPostalCode() {
+    return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressPostalCode.prototype.tag = 'shippingaddress-postalcode';
+
+  ShippingAddressPostalCode.prototype.lookup = 'order.shippingAddress.postalCode';
+
+  return ShippingAddressPostalCode;
+
+})(Text$1);
+
+ShippingAddressPostalCode.register();
+
+// src/controls/shippingaddress-state.coffee
+var ShippingAddressState;
+var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$18 = {}.hasOwnProperty;
+
+var shippingaddressState = ShippingAddressState = (function(superClass) {
+  extend$18(ShippingAddressState, superClass);
+
+  function ShippingAddressState() {
+    return ShippingAddressState.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressState.prototype.tag = 'shippingaddress-state';
+
+  ShippingAddressState.prototype.lookup = 'order.shippingAddress.state';
+
+  return ShippingAddressState;
+
+})(Select$2);
+
+ShippingAddressState.register();
+
+// src/controls/shippingaddress-country.coffee
+var ShippingAddressCountry;
+var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$19 = {}.hasOwnProperty;
+
+var shippingaddressCountry = ShippingAddressCountry = (function(superClass) {
+  extend$19(ShippingAddressCountry, superClass);
+
+  function ShippingAddressCountry() {
+    return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressCountry.prototype.tag = 'shippingaddress-country';
+
+  ShippingAddressCountry.prototype.lookup = 'order.shippingAddress.country';
+
+  return ShippingAddressCountry;
+
+})(CountrySelect$1);
+
+ShippingAddressCountry.register();
+
+// src/controls/card-name.coffee
+var CardName;
+var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$20 = {}.hasOwnProperty;
+
+CardName = (function(superClass) {
+  extend$20(CardName, superClass);
+
+  function CardName() {
+    return CardName.__super__.constructor.apply(this, arguments);
+  }
+
+  CardName.prototype.tag = 'card-name';
+
+  CardName.prototype.lookup = 'payment.account.name';
+
+  return CardName;
+
+})(Text$1);
+
+CardName.register();
+
+var CardName$1 = CardName;
+
+// src/utils/keys.coffee
+var keys = {
+  ignore: [8, 9, 13, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40],
+  numeric: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
+};
+
 // src/controls/card-number.coffee
 var CardNumber;
+<<<<<<< HEAD
+var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$21 = {}.hasOwnProperty;
+var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+=======
 var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$23 = {}.hasOwnProperty;
 var indexOf$2 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+>>>>>>> master
 
 CardNumber = (function(superClass) {
-  extend$25(CardNumber, superClass);
+  extend$21(CardNumber, superClass);
 
   function CardNumber() {
     return CardNumber.__super__.constructor.apply(this, arguments);
@@ -10907,16 +10935,24 @@ CardNumber = (function(superClass) {
 
 })(Text$1);
 
+CardNumber.register();
+
 var CardNumber$1 = CardNumber;
 
 // src/controls/card-expiry.coffee
 var CardExpiry;
+<<<<<<< HEAD
+var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$22 = {}.hasOwnProperty;
+var indexOf$1$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+=======
 var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$24 = {}.hasOwnProperty;
 var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+>>>>>>> master
 
 CardExpiry = (function(superClass) {
-  extend$26(CardExpiry, superClass);
+  extend$22(CardExpiry, superClass);
 
   function CardExpiry() {
     return CardExpiry.__super__.constructor.apply(this, arguments);
@@ -10943,7 +10979,11 @@ CardExpiry = (function(superClass) {
       $input.on('keypress', restrictNumeric);
       $input.on('keypress', function(e) {
         var ref, value;
+<<<<<<< HEAD
+        if (ref = e.which, indexOf$1$1.call(keys.numeric, ref) < 0) {
+=======
         if (ref = e.which, indexOf$3.call(keys.numeric, ref) < 0) {
+>>>>>>> master
           return true;
         }
         value = $input.val() + String.fromCharCode(e.which);
@@ -10966,16 +11006,24 @@ CardExpiry = (function(superClass) {
 
 })(Text$1);
 
+CardExpiry.register();
+
 var CardExpiry$1 = CardExpiry;
 
 // src/controls/card-cvc.coffee
 var CardCVC;
+<<<<<<< HEAD
+var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$23 = {}.hasOwnProperty;
+var indexOf$2$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+=======
 var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$25 = {}.hasOwnProperty;
 var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+>>>>>>> master
 
 CardCVC = (function(superClass) {
-  extend$27(CardCVC, superClass);
+  extend$23(CardCVC, superClass);
 
   function CardCVC() {
     return CardCVC.__super__.constructor.apply(this, arguments);
@@ -11002,7 +11050,11 @@ CardCVC = (function(superClass) {
       $input.on('keypress', restrictNumeric);
       $input.on('keypress', function(e) {
         var ref, value;
+<<<<<<< HEAD
+        if (ref = e.which, indexOf$2$1.call(keys.numeric, ref) < 0) {
+=======
         if (ref = e.which, indexOf$4.call(keys.numeric, ref) < 0) {
+>>>>>>> master
           return true;
         }
         value = $input.val() + String.fromCharCode(e.which);
@@ -11018,15 +11070,17 @@ CardCVC = (function(superClass) {
 
 })(Text$1);
 
+CardCVC.register();
+
 var CardCVC$1 = CardCVC;
 
 // src/controls/terms.coffee
 var Terms;
-var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$26 = {}.hasOwnProperty;
+var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$24 = {}.hasOwnProperty;
 
-var Terms$1 = Terms = (function(superClass) {
-  extend$28(Terms, superClass);
+var terms = Terms = (function(superClass) {
+  extend$24(Terms, superClass);
 
   function Terms() {
     return Terms.__super__.constructor.apply(this, arguments);
@@ -11040,13 +11094,15 @@ var Terms$1 = Terms = (function(superClass) {
 
 })(Checkbox$1);
 
+Terms.register();
+
 // src/controls/gift-toggle.coffee
 var GiftToggle;
-var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$27 = {}.hasOwnProperty;
+var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$25 = {}.hasOwnProperty;
 
-var GiftToggle$1 = GiftToggle = (function(superClass) {
-  extend$29(GiftToggle, superClass);
+var giftToggle = GiftToggle = (function(superClass) {
+  extend$25(GiftToggle, superClass);
 
   function GiftToggle() {
     return GiftToggle.__super__.constructor.apply(this, arguments);
@@ -11060,13 +11116,15 @@ var GiftToggle$1 = GiftToggle = (function(superClass) {
 
 })(Checkbox$1);
 
+GiftToggle.register();
+
 // src/controls/gift-type.coffee
 var GiftType;
-var extend$30 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$28 = {}.hasOwnProperty;
+var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$26 = {}.hasOwnProperty;
 
 GiftType = (function(superClass) {
-  extend$30(GiftType, superClass);
+  extend$26(GiftType, superClass);
 
   function GiftType() {
     return GiftType.__super__.constructor.apply(this, arguments);
@@ -11080,15 +11138,17 @@ GiftType = (function(superClass) {
 
 })(Select$2);
 
+GiftType.register();
+
 var GiftType$1 = GiftType;
 
 // src/controls/gift-email.coffee
 var GiftEmail;
-var extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$29 = {}.hasOwnProperty;
+var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$27 = {}.hasOwnProperty;
 
 GiftEmail = (function(superClass) {
-  extend$31(GiftEmail, superClass);
+  extend$27(GiftEmail, superClass);
 
   function GiftEmail() {
     return GiftEmail.__super__.constructor.apply(this, arguments);
@@ -11104,13 +11164,15 @@ GiftEmail = (function(superClass) {
 
 var GiftEmail$1 = GiftEmail;
 
+GiftEmail.register();
+
 // src/controls/gift-message.coffee
 var GiftMessage;
-var extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$30 = {}.hasOwnProperty;
+var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$28 = {}.hasOwnProperty;
 
-var GiftMessage$1 = GiftMessage = (function(superClass) {
-  extend$32(GiftMessage, superClass);
+var giftMessage = GiftMessage = (function(superClass) {
+  extend$28(GiftMessage, superClass);
 
   function GiftMessage() {
     return GiftMessage.__super__.constructor.apply(this, arguments);
@@ -11124,13 +11186,15 @@ var GiftMessage$1 = GiftMessage = (function(superClass) {
 
 })(TextArea$1);
 
+GiftMessage.register();
+
 // src/controls/promocode.coffee
 var PromoCode;
-var extend$33 = function(child, parent) { for (var key in parent) { if (hasProp$31.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$31 = {}.hasOwnProperty;
+var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$29 = {}.hasOwnProperty;
 
-var PromoCode$1 = PromoCode = (function(superClass) {
-  extend$33(PromoCode, superClass);
+var promocode$1 = PromoCode = (function(superClass) {
+  extend$29(PromoCode, superClass);
 
   function PromoCode() {
     return PromoCode.__super__.constructor.apply(this, arguments);
@@ -11144,71 +11208,124 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 
 })(Text$1);
 
-// src/controls/index.coffee
-var Controls;
+PromoCode.register();
 
-var Controls$1 = Controls = {
-  Control: Control$1,
-  Text: Text$1,
-  TextArea: TextArea$1,
-  Checkbox: Checkbox$1,
-  Select: Select$1,
-  QuantitySelect: QuantitySelect$1,
-  CountrySelect: CountrySelect$1,
-  StateSelect: Select$2,
-  UserEmail: UserEmail,
-  UserName: UserName$1,
-  UserCurrentPassword: UserCurrentPassword$1,
-  UserPassword: UserPassword$1,
-  UserPasswordConfirm: UserPasswordConfirm$1,
-  ShippingAddressName: ShippingAddressName$1,
-  ShippingAddressLine1: ShippingAddressLine1$1,
-  ShippingAddressLine2: ShippingAddressLine2$1,
-  ShippingAddressCity: ShippingAddressCity$1,
-  ShippingAddressPostalCode: ShippingAddressPostalCode$1,
-  ShippingAddressState: ShippingAddressState$1,
-  ShippingAddressCountry: ShippingAddressCountry$1,
-  CardName: CardName$1,
-  CardNumber: CardNumber$1,
-  CardExpiry: CardExpiry$1,
-  CardCVC: CardCVC$1,
-  Terms: Terms$1,
-  GiftToggle: GiftToggle$1,
-  GiftType: GiftType$1,
-  GiftEmail: GiftEmail$1,
-  GiftMessage: GiftMessage$1,
-  PromoCode: PromoCode$1,
-  register: function() {
-    Text$1.register();
-    TextArea$1.register();
-    Checkbox$1.register();
-    Select$1.register();
-    QuantitySelect$1.register();
-    CountrySelect$1.register();
-    Select$2.register();
-    UserEmail.register();
-    UserName$1.register();
-    UserCurrentPassword$1.register();
-    UserPassword$1.register();
-    UserPasswordConfirm$1.register();
-    ShippingAddressName$1.register();
-    ShippingAddressLine1$1.register();
-    ShippingAddressLine2$1.register();
-    ShippingAddressCity$1.register();
-    ShippingAddressPostalCode$1.register();
-    ShippingAddressState$1.register();
-    ShippingAddressCountry$1.register();
-    CardName$1.register();
-    CardNumber$1.register();
-    CardExpiry$1.register();
-    CardCVC$1.register();
-    Terms$1.register();
-    GiftToggle$1.register();
-    GiftType$1.register();
-    GiftEmail$1.register();
-    GiftMessage$1.register();
-    return PromoCode$1.register();
+// src/controls/index.coffee
+
+// src/index.coffee
+var data = {
+  countries: countries,
+  states: states
+};
+
+var utils = {
+  card: {
+    luhnCheck: luhnCheck,
+    cardFromNumber: cardFromNumber,
+    cartType: cardType,
+    restrictNumeric: restrictNumeric
   }
+};
+
+
+
+
+
+var Controls = Object.freeze({
+	Events: Events$1,
+	data: data,
+	utils: utils,
+	Control: Control$1,
+	Text: Text$1,
+	TextArea: TextArea$1,
+	Checkbox: Checkbox$1,
+	Select: Select$1,
+	QuantitySelect: quantitySelect,
+	CountrySelect: CountrySelect$1,
+	StateSelect: Select$2,
+	UserEmail: userEmail,
+	UserName: userName,
+	UserCurrentPassword: userCurrentPassword,
+	UserPassword: userPassword,
+	UserPasswordConfirm: userPasswordConfirm,
+	ShippingAddressName: shippingaddressName,
+	ShippingAddressLine1: shippingaddressLine1,
+	ShippingAddressLine2: shippingaddressLine2,
+	ShippingAddressCity: shippingaddressCity,
+	ShippingAddressPostalCode: shippingaddressPostalcode,
+	ShippingAddressState: shippingaddressState,
+	ShippingAddressCountry: shippingaddressCountry,
+	CardName: CardName$1,
+	CardNumber: CardNumber$1,
+	CardExpiry: CardExpiry$1,
+	CardCVC: CardCVC$1,
+	Terms: terms,
+	GiftToggle: giftToggle,
+	GiftType: GiftType$1,
+	GiftEmail: GiftEmail$1,
+	GiftMessage: giftMessage,
+	PromoCode: promocode$1
+});
+
+// src/events.coffee
+var Events$1$1;
+
+var Events$2 = Events$1$1 = {
+  Ready: 'ready',
+  SetData: 'set-data',
+  TryUpdateItem: 'try-update-item',
+  UpdateItem: 'update-item',
+  UpdateItems: 'update-items',
+  Change: Events$1.Change,
+  ChangeSuccess: Events$1.ChangeSuccess,
+  ChangeFailed: Events$1.ChangeFailed,
+  Checkout: 'checkout',
+  ContinueShopping: 'continue-shopping',
+  Submit: 'submit',
+  SubmitCart: 'submit-card',
+  SubmitShippingAddress: 'submit-shipping-address',
+  SubmitSuccess: 'submit-success',
+  SubmitFailed: 'submit-failed',
+  ForceApplyPromoCode: 'force-apply-promocode',
+  ApplyPromoCode: 'apply-promocode',
+  ApplyPromoCodeSuccess: 'apply-promocode-success',
+  ApplyPromoCodeFailed: 'apply-promocode-failed',
+  Login: 'login',
+  LoginSuccess: 'login-success',
+  LoginFailed: 'login-failed',
+  Register: 'register',
+  RegisterSuccess: 'register-success',
+  RegisterFailed: 'register-failed',
+  RegisterComplete: 'register-complete',
+  RegisterCompleteSuccess: 'register-complete-success',
+  RegisterCompleteFailed: 'register-complete-failed',
+  ResetPassword: 'reset-password',
+  ResetPasswordSuccess: 'reset-password-success',
+  ResetPasswordFailed: 'reset-password-failed',
+  ResetPasswordComplete: 'reset-password-complete',
+  ResetPasswordCompleteSuccess: 'reset-password-complete-success',
+  ResetPasswordCompleteFailed: 'reset-password-complete-failed',
+  ProfileLoad: 'profile-load',
+  ProfileLoadSuccess: 'profile-load-success',
+  ProfileLoadFailed: 'profile-load-failed',
+  ProfileUpdate: 'profile-update',
+  ProfileUpdateSuccess: 'profile-update-success',
+  ProfileUpdateFailed: 'profile-update-failed',
+  ShippingAddressUpdate: 'shipping-address-update',
+  ShippingAddressUpdateSuccess: 'shipping-address-update-success',
+  ShippingAddressUpdateFailed: 'shipping-address-update-failed',
+  SidePaneOpen: 'side-pane-open',
+  SidePaneOpened: 'side-pane-opened',
+  SidePaneClose: 'side-pane-close',
+  SidePaneClosed: 'side-pane-closed',
+  CheckoutOpen: 'checkout-open',
+  CheckoutOpened: 'checkout-opened',
+  CheckoutClose: 'checkout-close',
+  CheckoutClosed: 'checkout-closed',
+  DeleteLineItem: 'delete-line-item',
+  CreateReferralProgram: 'create-referral-program',
+  CreateReferralProgramSuccess: 'create-referral-program-success',
+  CreateReferralProgramFailed: 'create-referral-program-failed'
 };
 
 // src/utils/country.coffee
@@ -11219,7 +11336,11 @@ var requiresPostalCode = function(code) {
 
 // src/forms/middleware.coffee
 var emailRe;
+<<<<<<< HEAD
+var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+=======
 var indexOf$5 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+>>>>>>> master
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
@@ -11316,7 +11437,7 @@ var cardNumber = function(value) {
   if (this.get('order.type') !== 'stripe') {
     return value;
   }
-  card = cardFromNumber(value);
+  card = utils.card.cardFromNumber(value);
   if (!card) {
     throw new Error('Enter a valid card number');
   }
@@ -11325,7 +11446,11 @@ var cardNumber = function(value) {
   if (!/^\d+$/.test(number)) {
     throw new Error('Enter a valid card number');
   }
+<<<<<<< HEAD
+  if (!(indexOf$4.call(card.length, length) >= 0 && (card.luhn === false || utils.card.luhnCheck(number)))) {
+=======
   if (!(indexOf$5.call(card.length, length) >= 0 && (card.luhn === false || luhnCheck(number)))) {
+>>>>>>> master
     throw new Error('Enter a valid card number');
   }
   return value;
@@ -11371,13 +11496,17 @@ var cvc = function(value) {
   if (this('order.type') !== 'stripe') {
     return value;
   }
-  card = cardFromNumber(this.get('payment.account.number'));
+  card = utils.card.cardFromNumber(this.get('payment.account.number'));
   cvc_ = value.trim();
   if (!/^\d+$/.test(cvc_)) {
     throw new Error('Enter a valid cvc');
   }
   if (card && card.type) {
+<<<<<<< HEAD
+    if (ref = cvc_.length, indexOf$4.call(card != null ? card.cvcLength : void 0, ref) < 0) {
+=======
     if (ref = cvc_.length, indexOf$5.call(card != null ? card.cvcLength : void 0, ref) < 0) {
+>>>>>>> master
       throw new Error('Enter a valid cvc');
     }
   } else {
@@ -11421,15 +11550,15 @@ var configs = config = {
 };
 
 // templates/forms/checkout.pug
-var html$5 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div if=\"{ !isEmpty() }\">\n      <div class=\"contact checkout-section\">\n        <h2>Contact</h2>\n        <div class=\"fields\">\n          <user-name class=\"input\" placeholder=\"Name\"></user-name>\n          <user-email class=\"input\" placeholder=\"Email\"></user-email>\n        </div>\n      </div>\n      <div class=\"payment checkout-section\">\n        <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n        <div class=\"fields\">\n          <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n          <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n            <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n          </card-number>\n          <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n        </div>\n      </div>\n      <div class=\"shipping checkout-section\">\n        <h2>Shipping</h2>\n        <div class=\"fields\">\n          <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n          <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n          <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n          <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n          <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        </div>\n      </div>\n      <div class=\"complete checkout-section\">\n        <h2>Complete Checkout</h2>\n        <terms>\n          <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n        </terms>\n        <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n        <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n      </div>\n    </div>\n  </yield>\n</form>";
+var html$1$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div if=\"{ !isEmpty() }\">\n      <div class=\"contact checkout-section\">\n        <h2>Contact</h2>\n        <div class=\"fields\">\n          <user-name class=\"input\" placeholder=\"Name\"></user-name>\n          <user-email class=\"input\" placeholder=\"Email\"></user-email>\n        </div>\n      </div>\n      <div class=\"payment checkout-section\">\n        <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n        <div class=\"fields\">\n          <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n          <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n            <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n          </card-number>\n          <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n        </div>\n      </div>\n      <div class=\"shipping checkout-section\">\n        <h2>Shipping</h2>\n        <div class=\"fields\">\n          <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n          <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n          <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n          <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n          <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        </div>\n      </div>\n      <div class=\"complete checkout-section\">\n        <h2>Complete Checkout</h2>\n        <terms>\n          <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n        </terms>\n        <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n        <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n      </div>\n    </div>\n  </yield>\n</form>";
 
 // src/forms/checkout.coffee
 var CheckoutForm;
-var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$32.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$32 = {}.hasOwnProperty;
+var extend$5$1 = function(child, parent) { for (var key in parent) { if (hasProp$3$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3$1 = {}.hasOwnProperty;
 
 CheckoutForm = (function(superClass) {
-  extend$34(CheckoutForm, superClass);
+  extend$5$1(CheckoutForm, superClass);
 
   function CheckoutForm() {
     return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -11437,7 +11566,7 @@ CheckoutForm = (function(superClass) {
 
   CheckoutForm.prototype.tag = 'checkout';
 
-  CheckoutForm.prototype.html = html$5;
+  CheckoutForm.prototype.html = html$1$1;
 
   CheckoutForm.prototype.errorMessage = '';
 
@@ -11491,7 +11620,7 @@ CheckoutForm = (function(superClass) {
       return;
     }
     this.loading = true;
-    m.trigger(Events.Submit, this.tag);
+    this.mediator.trigger(Events$2.Submit, this.tag);
     this.errorMessage = '';
     El$1.scheduleUpdate();
     email = '';
@@ -11525,7 +11654,7 @@ CheckoutForm = (function(superClass) {
                 return El$1.scheduleUpdate();
               }
             }, 200);
-            return m.trigger(Events.SubmitSuccess);
+            return _this.mediator.trigger(Events$2.SubmitSuccess);
           })["catch"](function(err) {
             var hasErrored, ref;
             if (typeof window !== "undefined" && window !== null) {
@@ -11537,7 +11666,7 @@ CheckoutForm = (function(superClass) {
             _this.loading = false;
             console.log("checkout submit Error: " + err);
             _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
-            m.trigger(Events.SubmitFailed, err);
+            _this.mediator.trigger(Events$2.SubmitFailed, err);
             return El$1.scheduleUpdate();
           });
         })["catch"](function(err) {
@@ -11554,7 +11683,7 @@ CheckoutForm = (function(superClass) {
             }
             _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
           }
-          m.trigger(Events.SubmitFailed, err);
+          _this.mediator.trigger(Events$2.SubmitFailed, err);
           return El$1.scheduleUpdate();
         });
       };
@@ -11573,7 +11702,7 @@ CheckoutForm = (function(superClass) {
           }
           _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
         }
-        m.trigger(Events.SubmitFailed, err);
+        _this.mediator.trigger(Events$2.SubmitFailed, err);
         return El$1.scheduleUpdate();
       };
     })(this));
@@ -11586,15 +11715,15 @@ CheckoutForm = (function(superClass) {
 var Checkout = CheckoutForm;
 
 // templates/forms/checkout-card.pug
-var html$6 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$2$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/forms/checkout-card.coffee
 var CheckoutCardForm;
-var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$33 = {}.hasOwnProperty;
+var extend$6$1 = function(child, parent) { for (var key in parent) { if (hasProp$4$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$4$1 = {}.hasOwnProperty;
 
 CheckoutCardForm = (function(superClass) {
-  extend$35(CheckoutCardForm, superClass);
+  extend$6$1(CheckoutCardForm, superClass);
 
   function CheckoutCardForm() {
     return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -11602,7 +11731,7 @@ CheckoutCardForm = (function(superClass) {
 
   CheckoutCardForm.prototype.tag = 'checkout-card';
 
-  CheckoutCardForm.prototype.html = html$6;
+  CheckoutCardForm.prototype.html = html$2$1;
 
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -11618,7 +11747,7 @@ CheckoutCardForm = (function(superClass) {
   };
 
   CheckoutCardForm.prototype._submit = function() {
-    m.trigger(Events.SubmitCard);
+    this.mediator.trigger(Events$2.SubmitCard);
     if (this.paged) {
       index$1.set('checkout-user', this.data.get('user'));
       index$1.set('checkout-payment', this.data.get('order.payment'));
@@ -11633,15 +11762,15 @@ CheckoutCardForm = (function(superClass) {
 var CheckoutCard = CheckoutCardForm;
 
 // templates/forms/checkout-shippingaddress.pug
-var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$3$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/forms/checkout-shippingaddress.coffee
 var CheckoutShippingAddressForm;
-var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$34 = {}.hasOwnProperty;
+var extend$7$1 = function(child, parent) { for (var key in parent) { if (hasProp$5$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5$1 = {}.hasOwnProperty;
 
 CheckoutShippingAddressForm = (function(superClass) {
-  extend$36(CheckoutShippingAddressForm, superClass);
+  extend$7$1(CheckoutShippingAddressForm, superClass);
 
   function CheckoutShippingAddressForm() {
     return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -11649,7 +11778,7 @@ CheckoutShippingAddressForm = (function(superClass) {
 
   CheckoutShippingAddressForm.prototype.tag = 'checkout-shippingaddress';
 
-  CheckoutShippingAddressForm.prototype.html = html$7;
+  CheckoutShippingAddressForm.prototype.html = html$3$1;
 
   CheckoutShippingAddressForm.prototype.paged = false;
 
@@ -11678,7 +11807,7 @@ CheckoutShippingAddressForm = (function(superClass) {
   };
 
   CheckoutShippingAddressForm.prototype._submit = function() {
-    m.trigger(Events.SubmitShippingAddress);
+    m.trigger(Events$2.SubmitShippingAddress);
     if (this.paged) {
       index$1.set('checkout-user', this.data.get('user'));
       index$1.set('checkout-shippingAddress', this.data.get('order.shippingAddress'));
@@ -11693,15 +11822,15 @@ CheckoutShippingAddressForm = (function(superClass) {
 var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
 // templates/forms/cart.pug
-var html$8 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+var html$4$1 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
 // src/forms/cart.coffee
 var CartForm;
-var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$35 = {}.hasOwnProperty;
+var extend$8$1 = function(child, parent) { for (var key in parent) { if (hasProp$6$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6$1 = {}.hasOwnProperty;
 
 CartForm = (function(superClass) {
-  extend$37(CartForm, superClass);
+  extend$8$1(CartForm, superClass);
 
   function CartForm() {
     return CartForm.__super__.constructor.apply(this, arguments);
@@ -11709,7 +11838,7 @@ CartForm = (function(superClass) {
 
   CartForm.prototype.tag = 'cart';
 
-  CartForm.prototype.html = html$8;
+  CartForm.prototype.html = html$4$1;
 
   CartForm.prototype.init = function() {
     var promoCode;
@@ -11719,7 +11848,7 @@ CartForm = (function(superClass) {
       this.data.set('order.promoCode', promoCode);
       this.applyPromoCode();
     }
-    m.on(Events.ForceApplyPromoCode, (function(_this) {
+    this.mediator.on(Events$2.ForceApplyPromoCode, (function(_this) {
       return function() {
         return _this.applyPromoCode();
       };
@@ -11768,7 +11897,7 @@ CartForm = (function(superClass) {
     this.failed = false;
     this.data.set('order.coupon', {});
     this.scheduleUpdate();
-    m.trigger(Events.ApplyPromoCode, promoCode);
+    this.mediator.trigger(Events$2.ApplyPromoCode, promoCode);
     return this.cart.promoCode(promoCode).then((function(_this) {
       return function() {
         var coupon;
@@ -11781,7 +11910,7 @@ CartForm = (function(superClass) {
         } else {
           _this.promoMessage = promoCode + ' Applied!';
         }
-        m.trigger(Events.ApplyPromoCodeSuccess, coupon);
+        _this.mediator.trigger(Events$2.ApplyPromoCodeSuccess, coupon);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
@@ -11797,18 +11926,18 @@ CartForm = (function(superClass) {
         } else {
           _this.promoMessage = 'This code is invalid.';
         }
-        m.trigger(Events.ApplyPromoCodeFailed, err);
+        _this.mediator.trigger(Events$2.ApplyPromoCodeFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
   };
 
   CartForm.prototype.checkout = function() {
-    return m.trigger(Events.Checkout);
+    return this.mediator.trigger(Events$2.Checkout);
   };
 
   CartForm.prototype.continueShopping = function() {
-    return m.trigger(Events.ContinueShopping);
+    return this.mediator.trigger(Events$2.ContinueShopping);
   };
 
   return CartForm;
@@ -11818,15 +11947,15 @@ CartForm = (function(superClass) {
 var Cart$1$1 = CartForm;
 
 // templates/forms/lineitem.pug
-var html$9 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select-control></quantity-select-control>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+var html$5 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
 // src/forms/lineitem.coffee
 var LineItemForm;
-var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$36 = {}.hasOwnProperty;
+var extend$9$1 = function(child, parent) { for (var key in parent) { if (hasProp$7$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7$1 = {}.hasOwnProperty;
 
 LineItemForm = (function(superClass) {
-  extend$38(LineItemForm, superClass);
+  extend$9$1(LineItemForm, superClass);
 
   function LineItemForm() {
     return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -11834,7 +11963,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$9;
+  LineItemForm.prototype.html = html$5;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -11845,7 +11974,7 @@ LineItemForm = (function(superClass) {
   };
 
   LineItemForm.prototype["delete"] = function(event) {
-    return m.trigger(Events.DeleteLineItem, this.data);
+    return this.mediator.trigger(Events$2.DeleteLineItem, this.data);
   };
 
   return LineItemForm;
@@ -11855,15 +11984,15 @@ LineItemForm = (function(superClass) {
 var LineItem = LineItemForm;
 
 // templates/forms/lineitems.pug
-var html$10 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select-control></quantity-select-control></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$6 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/forms/lineitems.coffee
 var LineItems;
-var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$37 = {}.hasOwnProperty;
+var extend$10$1 = function(child, parent) { for (var key in parent) { if (hasProp$8$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8$1 = {}.hasOwnProperty;
 
 LineItems = (function(superClass) {
-  extend$39(LineItems, superClass);
+  extend$10$1(LineItems, superClass);
 
   function LineItems() {
     return LineItems.__super__.constructor.apply(this, arguments);
@@ -11871,7 +12000,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$10;
+  LineItems.prototype.html = html$6;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -11894,15 +12023,15 @@ LineItems = (function(superClass) {
 var LineItems$1 = LineItems;
 
 // templates/forms/form.pug
-var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/forms/login.coffee
 var LoginForm;
-var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$38 = {}.hasOwnProperty;
+var extend$11$1 = function(child, parent) { for (var key in parent) { if (hasProp$9$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9$1 = {}.hasOwnProperty;
 
 LoginForm = (function(superClass) {
-  extend$40(LoginForm, superClass);
+  extend$11$1(LoginForm, superClass);
 
   function LoginForm() {
     return LoginForm.__super__.constructor.apply(this, arguments);
@@ -11910,7 +12039,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$11;
+  LoginForm.prototype.html = html$7;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -11927,16 +12056,16 @@ LoginForm = (function(superClass) {
     };
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.Login);
+    this.mediator.trigger(Events$2.Login);
     return this.client.account.login(opts).then((function(_this) {
       return function(res) {
-        m.trigger(Events.LoginSuccess, res);
+        _this.mediator.trigger(Events$2.LoginSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.LoginFailed, err);
+        _this.mediator.trigger(Events$2.LoginFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -11949,15 +12078,15 @@ LoginForm = (function(superClass) {
 var Login = LoginForm;
 
 // templates/forms/order.pug
-var html$12 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+var html$8 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
 // src/forms/order.coffee
 var OrderForm;
-var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$39 = {}.hasOwnProperty;
+var extend$12$1 = function(child, parent) { for (var key in parent) { if (hasProp$10$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10$1 = {}.hasOwnProperty;
 
 OrderForm = (function(superClass) {
-  extend$41(OrderForm, superClass);
+  extend$12$1(OrderForm, superClass);
 
   function OrderForm() {
     return OrderForm.__super__.constructor.apply(this, arguments);
@@ -11965,7 +12094,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$12;
+  OrderForm.prototype.html = html$8;
 
   OrderForm.prototype.parentData = null;
 
@@ -11993,7 +12122,7 @@ OrderForm = (function(superClass) {
   };
 
   OrderForm.prototype["delete"] = function(event) {
-    return m.trigger(Events.DeleteLineItem, this.data);
+    return this.mediator.trigger(Events$2.DeleteLineItem, this.data);
   };
 
   return OrderForm;
@@ -12003,15 +12132,15 @@ OrderForm = (function(superClass) {
 var Order = OrderForm;
 
 // templates/forms/orders.pug
-var html$13 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+var html$9 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
 // src/forms/orders.coffee
 var Orders;
-var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$40 = {}.hasOwnProperty;
+var extend$13$1 = function(child, parent) { for (var key in parent) { if (hasProp$11$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$11$1 = {}.hasOwnProperty;
 
 Orders = (function(superClass) {
-  extend$42(Orders, superClass);
+  extend$13$1(Orders, superClass);
 
   function Orders() {
     return Orders.__super__.constructor.apply(this, arguments);
@@ -12019,7 +12148,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$13;
+  Orders.prototype.html = html$9;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -12033,11 +12162,11 @@ var Orders$1 = Orders;
 
 // src/forms/profile.coffee
 var ProfileForm;
-var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$41 = {}.hasOwnProperty;
+var extend$14$1 = function(child, parent) { for (var key in parent) { if (hasProp$12$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12$1 = {}.hasOwnProperty;
 
 ProfileForm = (function(superClass) {
-  extend$43(ProfileForm, superClass);
+  extend$14$1(ProfileForm, superClass);
 
   function ProfileForm() {
     return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -12045,7 +12174,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$11;
+  ProfileForm.prototype.html = html$7;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -12064,7 +12193,7 @@ ProfileForm = (function(superClass) {
   };
 
   ProfileForm.prototype.init = function() {
-    m.trigger(Events.ProfileLoad);
+    this.mediator.trigger(Events$2.ProfileLoad);
     this.client.account.get().then((function(_this) {
       return function(res) {
         var firstName, lastName;
@@ -12074,7 +12203,7 @@ ProfileForm = (function(superClass) {
         _this.data.set('user.name', firstName + ' ' + lastName);
         if (_this.data.get('referralProgram') && ((res.referrers == null) || res.referrers.length === 0)) {
           return raf(function() {
-            m.trigger(Events.CreateReferralProgram);
+            _this.mediator.trigger(Events$2.CreateReferralProgram);
             return _this.client.referrer.create({
               program: _this.data.get('referralProgram'),
               programId: _this.data.get('referralProgram.id'),
@@ -12083,25 +12212,25 @@ ProfileForm = (function(superClass) {
               var refrs;
               refrs = [res2];
               _this.data.set('user.referrers', refrs);
-              m.trigger(Events.CreateReferralProgramSuccess, refrs);
-              m.trigger(Events.ProfileLoadSuccess, res);
+              _this.mediator.trigger(Events$2.CreateReferralProgramSuccess, refrs);
+              _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
               return El$1.scheduleUpdate();
             })["catch"](function(err) {
               _this.errorMessage = err.message;
-              m.trigger(Events.CreateReferralProgramFailed, err);
-              m.trigger(Events.ProfileLoadSuccess, res);
+              _this.mediator.trigger(Events$2.CreateReferralProgramFailed, err);
+              _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
               return El$1.scheduleUpdate();
             });
           });
         } else {
-          m.trigger(Events.ProfileLoadSuccess, res);
+          _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
           return El$1.scheduleUpdate();
         }
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.ProfileLoadFailed, err);
+        _this.mediator.trigger(Events$2.ProfileLoadFailed, err);
         return El$1.scheduleUpdate();
       };
     })(this));
@@ -12120,19 +12249,19 @@ ProfileForm = (function(superClass) {
     };
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.ProfileUpdate);
+    this.mediator.trigger(Events$2.ProfileUpdate);
     return this.client.account.update(opts).then((function(_this) {
       return function(res) {
         _this.data.set('user.currentPassword', null);
         _this.data.set('user.password', null);
         _this.data.set('user.passwordConfirm', null);
-        m.trigger(Events.ProfileUpdateSuccess, res);
+        _this.mediator.trigger(Events$2.ProfileUpdateSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.ProfileUpdateFailed, err);
+        _this.mediator.trigger(Events$2.ProfileUpdateFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12146,11 +12275,11 @@ var Profile = ProfileForm;
 
 // src/forms/register.coffee
 var RegisterForm;
-var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$42 = {}.hasOwnProperty;
+var extend$15$1 = function(child, parent) { for (var key in parent) { if (hasProp$13$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13$1 = {}.hasOwnProperty;
 
 RegisterForm = (function(superClass) {
-  extend$44(RegisterForm, superClass);
+  extend$15$1(RegisterForm, superClass);
 
   function RegisterForm() {
     return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -12158,7 +12287,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$11;
+  RegisterForm.prototype.html = html$7;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -12198,19 +12327,19 @@ RegisterForm = (function(superClass) {
     }
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.Register);
+    this.mediator.trigger(Events$2.Register);
     return this.client.account.create(opts).then((function(_this) {
       return function(res) {
         var latency;
-        m.trigger(Events.RegisterSuccess, res);
+        _this.mediator.trigger(Events$2.RegisterSuccess, res);
         _this.scheduleUpdate();
         if (_this.immediateLogin && res.token) {
           _this.client.setCustomerToken(res.token);
           latency = _this.immediateLoginLatency / 2;
           return setTimeout(function() {
-            m.trigger(Events.Login);
+            _this.mediator.trigger(Events$2.Login);
             return setTimeout(function() {
-              m.trigger(Events.LoginSuccess, res);
+              _this.mediator.trigger(Events$2.LoginSuccess, res);
               return _this.scheduleUpdate();
             }, latency);
           }, latency);
@@ -12219,7 +12348,7 @@ RegisterForm = (function(superClass) {
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.RegisterFailed, err);
+        _this.mediator.trigger(Events$2.RegisterFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12233,11 +12362,11 @@ var Register = RegisterForm;
 
 // src/forms/register-complete.coffee
 var RegisterComplete;
-var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$43 = {}.hasOwnProperty;
+var extend$16$1 = function(child, parent) { for (var key in parent) { if (hasProp$14$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$14$1 = {}.hasOwnProperty;
 
 RegisterComplete = (function(superClass) {
-  extend$45(RegisterComplete, superClass);
+  extend$16$1(RegisterComplete, superClass);
 
   function RegisterComplete() {
     return RegisterComplete.__super__.constructor.apply(this, arguments);
@@ -12245,7 +12374,7 @@ RegisterComplete = (function(superClass) {
 
   RegisterComplete.prototype.tag = 'register-complete';
 
-  RegisterComplete.prototype.html = html$11;
+  RegisterComplete.prototype.html = html$7;
 
   RegisterComplete.prototype.twoStageSignUp = false;
 
@@ -12281,19 +12410,19 @@ RegisterComplete = (function(superClass) {
     }
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.RegisterComplete);
+    this.mediator.trigger(Events$2.RegisterComplete);
     return this.client.account.enable(opts).then((function(_this) {
       return function(res) {
         if (res.token) {
           _this.client.setCustomerToken(res.token);
         }
-        m.trigger(Events.RegisterCompleteSuccess, res);
+        _this.mediator.trigger(Events$2.RegisterCompleteSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.RegisterCompleteFailed, err);
+        _this.mediator.trigger(Events$2.RegisterCompleteFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12307,11 +12436,11 @@ var RegisterComplete$1 = RegisterComplete;
 
 // src/forms/reset-password.coffee
 var ResetPasswordForm;
-var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$44 = {}.hasOwnProperty;
+var extend$17$1 = function(child, parent) { for (var key in parent) { if (hasProp$15$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$15$1 = {}.hasOwnProperty;
 
 ResetPasswordForm = (function(superClass) {
-  extend$46(ResetPasswordForm, superClass);
+  extend$17$1(ResetPasswordForm, superClass);
 
   function ResetPasswordForm() {
     return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -12319,7 +12448,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$11;
+  ResetPasswordForm.prototype.html = html$7;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -12338,16 +12467,16 @@ ResetPasswordForm = (function(superClass) {
     };
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.ResetPassword);
+    this.mediator.trigger(Events$2.ResetPassword);
     return this.client.account.reset(opts).then((function(_this) {
       return function(res) {
-        m.trigger(Events.ResetPasswordSuccess, res);
+        _this.mediator.trigger(Events$2.ResetPasswordSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.ResetPasswordFailed, err);
+        _this.mediator.trigger(Events$2.ResetPasswordFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12361,11 +12490,11 @@ var ResetPassword = ResetPasswordForm;
 
 // src/forms/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
-var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$45 = {}.hasOwnProperty;
+var extend$18$1 = function(child, parent) { for (var key in parent) { if (hasProp$16$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$16$1 = {}.hasOwnProperty;
 
 ResetPasswordCompleteForm = (function(superClass) {
-  extend$47(ResetPasswordCompleteForm, superClass);
+  extend$18$1(ResetPasswordCompleteForm, superClass);
 
   function ResetPasswordCompleteForm() {
     return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -12373,7 +12502,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$11;
+  ResetPasswordCompleteForm.prototype.html = html$7;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -12395,19 +12524,19 @@ ResetPasswordCompleteForm = (function(superClass) {
     };
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.ResetPasswordComplete);
+    this.mediator.trigger(Events$2.ResetPasswordComplete);
     return this.client.account.confirm(opts).then((function(_this) {
       return function(res) {
         if (res.token) {
           _this.client.setCustomerToken(res.token);
         }
-        m.trigger(Events.ResetPasswordCompleteSuccess, res);
+        _this.mediator.trigger(Events$2.ResetPasswordCompleteSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message.replace('Token', 'Link');
-        m.trigger(Events.ResetPasswordCompleteFailed, err);
+        _this.mediator.trigger(Events$2.ResetPasswordCompleteFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12421,11 +12550,11 @@ var ResetPasswordComplete = ResetPasswordCompleteForm;
 
 // src/forms/shippingaddress.coffee
 var ShippingAddressForm;
-var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$46 = {}.hasOwnProperty;
+var extend$19$1 = function(child, parent) { for (var key in parent) { if (hasProp$17$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$17$1 = {}.hasOwnProperty;
 
 ShippingAddressForm = (function(superClass) {
-  extend$48(ShippingAddressForm, superClass);
+  extend$19$1(ShippingAddressForm, superClass);
 
   function ShippingAddressForm() {
     return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -12433,7 +12562,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$11;
+  ShippingAddressForm.prototype.html = html$7;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -12469,16 +12598,16 @@ ShippingAddressForm = (function(superClass) {
     };
     this.errorMessage = '';
     this.scheduleUpdate();
-    m.trigger(Events.ShippingAddressUpdate);
+    this.mediator.trigger(Events$2.ShippingAddressUpdate);
     return this.client.account.updateOrder(opts).then((function(_this) {
       return function(res) {
-        m.trigger(Events.ShippingAddressUpdateSuccess, res);
+        _this.mediator.trigger(Events$2.ShippingAddressUpdateSuccess, res);
         return _this.scheduleUpdate();
       };
     })(this))["catch"]((function(_this) {
       return function(err) {
         _this.errorMessage = err.message;
-        m.trigger(Events.ShippingAddressUpdateFailed, err);
+        _this.mediator.trigger(Events$2.ShippingAddressUpdateFailed, err);
         return _this.scheduleUpdate();
       };
     })(this));
@@ -12529,15 +12658,15 @@ var Forms$1 = Forms = {
 };
 
 // templates/widgets/cart-counter.pug
-var html$14 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$10 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$47 = {}.hasOwnProperty;
+var extend$20$1 = function(child, parent) { for (var key in parent) { if (hasProp$18$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$18$1 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$49(CartCounter, superClass);
+  extend$20$1(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -12545,7 +12674,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$14;
+  CartCounter.prototype.html = html$10;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -12580,15 +12709,18 @@ CartCounter = (function(superClass) {
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$15 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\">\n  <div class=\"checkout-modal-close\" onclick=\"{ close }\">&#10005;</div>\n</div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <cart>\n      <h2>Your Items</h2>\n      <lineitems if=\"{ !isEmpty() }\"></lineitems>\n      <div class=\"promo\">\n        <div class=\"promo-label\">Coupon</div>\n        <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n          <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n          <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n        </div>\n      </div>\n      <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n        <div class=\"invoice-label\">Discount</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Subtotal</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Shipping</div>\n        <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line invoice-total\">\n        <div class=\"invoice-label\">Total</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n    </cart>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <checkout-card class=\"checkout-form-part\">\n          <div class=\"contact checkout-section\">\n            <h2>Contact</h2>\n            <div class=\"fields\">\n              <user-name class=\"input\" placeholder=\"Name\"></user-name>\n              <user-email class=\"input\" placeholder=\"Email\"></user-email>\n            </div>\n          </div>\n          <div class=\"payment checkout-section\">\n            <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n            <div class=\"fields\">\n              <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n              <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n              </card-number>\n              <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n              <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n            </div>\n          </div>\n          <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n          <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n        </checkout-card>\n        <checkout class=\"checkout-form-part\">\n          <div class=\"shipping checkout-section\">\n            <h2>Shipping</h2>\n            <div class=\"fields\">\n              <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n              <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n              <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n            </div>\n            <div class=\"fields\">\n              <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n            </div>\n            <div class=\"fields\">\n              <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n              <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n            </div>\n          </div>\n          <terms>\n            <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n          </terms>\n          <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n          <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n        </checkout>\n        <div class=\"completed checkout-form-part\">\n          <yield ></yield >\n        </div>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$11 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\">\n  <div class=\"checkout-modal-close\" onclick=\"{ close }\">&#10005;</div>\n</div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <cart>\n      <h2>Your Items</h2>\n      <lineitems if=\"{ !isEmpty() }\"></lineitems>\n      <div class=\"promo\">\n        <div class=\"promo-label\">Coupon</div>\n        <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n          <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n          <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n        </div>\n      </div>\n      <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n        <div class=\"invoice-label\">Discount</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Subtotal</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Shipping</div>\n        <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line\">\n        <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n      <div class=\"invoice-line invoice-total\">\n        <div class=\"invoice-label\">Total</div>\n        <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n      </div>\n    </cart>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <checkout-card class=\"checkout-form-part\">\n          <div class=\"contact checkout-section\">\n            <h2>Contact</h2>\n            <div class=\"fields\">\n              <user-name class=\"input\" placeholder=\"Name\"></user-name>\n              <user-email class=\"input\" placeholder=\"Email\"></user-email>\n            </div>\n          </div>\n          <div class=\"payment checkout-section\">\n            <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n            <div class=\"fields\">\n              <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n              <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n              </card-number>\n              <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n              <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n            </div>\n          </div>\n          <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n          <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n        </checkout-card>\n        <checkout class=\"checkout-form-part\">\n          <div class=\"shipping checkout-section\">\n            <h2>Shipping</h2>\n            <div class=\"fields\">\n              <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n              <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n              <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n            </div>\n            <div class=\"fields\">\n              <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n            </div>\n            <div class=\"fields\">\n              <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n              <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n            </div>\n          </div>\n          <terms>\n            <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n          </terms>\n          <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n          <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n        </checkout>\n        <div class=\"completed checkout-form-part\">\n          <yield ></yield >\n        </div>\n      </div>\n    </div>\n  </div>\n</div>";
+
+// src/mediator.coffee
+var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$48 = {}.hasOwnProperty;
+var extend$21$1 = function(child, parent) { for (var key in parent) { if (hasProp$19$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$19$1 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$50(CheckoutModal, superClass);
+  extend$21$1(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -12596,7 +12728,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$15;
+  CheckoutModal.prototype.html = html$11;
 
   CheckoutModal.prototype.names = null;
 
@@ -12611,27 +12743,27 @@ CheckoutModal = (function(superClass) {
       this.names = ['Payment Info', 'Shipping Info', 'Done'];
     }
     CheckoutModal.__super__.init.apply(this, arguments);
-    m.on(Events.CheckoutOpen, (function(_this) {
+    m$1.on(Events$2.CheckoutOpen, (function(_this) {
       return function(id) {
         if (id === _this.id) {
           return _this.toggle(true);
         }
       };
     })(this));
-    m.on(Events.CheckoutClose, (function(_this) {
+    m$1.on(Events$2.CheckoutClose, (function(_this) {
       return function(id) {
         if (id === _this.id) {
           return _this.toggle(false);
         }
       };
     })(this));
-    m.on(Events.SubmitCard, (function(_this) {
+    m$1.on(Events$2.SubmitCard, (function(_this) {
       return function(id) {
         _this.step = 1;
         return El$1.scheduleUpdate();
       };
     })(this));
-    return m.on(Events.SubmitSuccess, (function(_this) {
+    return m$1.on(Events$2.SubmitSuccess, (function(_this) {
       return function(id) {
         _this.step = 2;
         return El$1.scheduleUpdate();
@@ -12669,10 +12801,10 @@ CheckoutModal = (function(superClass) {
     $container = $(this.root).find('.checkout-container');
     if (this.opened) {
       $container.css('top', $(window).scrollTop());
-      m.trigger(Events.CheckoutOpened);
+      m$1.trigger(Events$2.CheckoutOpened);
     } else {
       $container.css('top', -2000);
-      m.trigger(Events.CheckoutClosed);
+      m$1.trigger(Events$2.CheckoutClosed);
     }
     return this.scheduleUpdate();
   };
@@ -12684,15 +12816,15 @@ CheckoutModal = (function(superClass) {
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/nested-form.pug
-var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$12 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/widgets/nested-form.coffee
 var NestedForm;
-var extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$49 = {}.hasOwnProperty;
+var extend$22$1 = function(child, parent) { for (var key in parent) { if (hasProp$20$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$20$1 = {}.hasOwnProperty;
 
 NestedForm = (function(superClass) {
-  extend$51(NestedForm, superClass);
+  extend$22$1(NestedForm, superClass);
 
   function NestedForm() {
     return NestedForm.__super__.constructor.apply(this, arguments);
@@ -12700,7 +12832,7 @@ NestedForm = (function(superClass) {
 
   NestedForm.prototype.tag = 'nested-form';
 
-  NestedForm.prototype.html = html$16;
+  NestedForm.prototype.html = html$12;
 
   return NestedForm;
 
@@ -12709,15 +12841,15 @@ NestedForm = (function(superClass) {
 var NestedForm$1 = NestedForm;
 
 // templates/widgets/side-pane.pug
-var html$17 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$13 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$50 = {}.hasOwnProperty;
+var extend$23$1 = function(child, parent) { for (var key in parent) { if (hasProp$21$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$21$1 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$52(SidePane, superClass);
+  extend$23$1(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -12725,7 +12857,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$17;
+  SidePane.prototype.html = html$13;
 
   SidePane.prototype.id = '';
 
@@ -12733,14 +12865,14 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.init = function() {
     SidePane.__super__.init.apply(this, arguments);
-    m.on(Events.SidePaneOpen, (function(_this) {
+    m$1.on(Events$2.SidePaneOpen, (function(_this) {
       return function(id) {
         if (id === _this.id) {
           return _this.toggle(true);
         }
       };
     })(this));
-    return m.on(Events.SidePaneClose, (function(_this) {
+    return m$1.on(Events$2.SidePaneClose, (function(_this) {
       return function(id) {
         if (id === _this.id) {
           return _this.toggle(false);
@@ -12764,9 +12896,9 @@ SidePane = (function(superClass) {
       this.opened = !this.opened;
     }
     if (this.opened) {
-      m.trigger(Events.SidePaneOpened);
+      m$1.trigger(Events$2.SidePaneOpened);
     } else {
-      m.trigger(Events.SidePaneClosed);
+      m$1.trigger(Events$2.SidePaneClosed);
     }
     return this.scheduleUpdate();
   };
@@ -13027,7 +13159,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$53(a, b) {
+function extend$24$1(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -13134,7 +13266,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$53(getParsingFlags(m), flags);
+        extend$24$1(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -13266,7 +13398,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$53(function () {
+    return extend$24$1(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -13334,13 +13466,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$53({}, parentConfig), prop;
+    var res = extend$24$1({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$4(parentConfig[prop]) && isObject$4(childConfig[prop])) {
                 res[prop] = {};
-                extend$53(res[prop], parentConfig[prop]);
-                extend$53(res[prop], childConfig[prop]);
+                extend$24$1(res[prop], parentConfig[prop]);
+                extend$24$1(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -13353,7 +13485,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$4(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$53({}, res[prop]);
+            res[prop] = extend$24$1({}, res[prop]);
         }
     }
     return res;
@@ -13762,12 +13894,21 @@ var WEEK = 7;
 var WEEKDAY = 8;
 
 // node_modules/moment/src/lib/utils/index-of.js
+<<<<<<< HEAD
+var indexOf$5;
+
+if (Array.prototype.indexOf) {
+    indexOf$5 = Array.prototype.indexOf;
+} else {
+    indexOf$5 = function (o) {
+=======
 var indexOf$6;
 
 if (Array.prototype.indexOf) {
     indexOf$6 = Array.prototype.indexOf;
 } else {
     indexOf$6 = function (o) {
+>>>>>>> master
         // I know
         var i;
         for (i = 0; i < this.length; ++i) {
@@ -13870,14 +14011,35 @@ function handleStrictParse(monthName, format, strict) {
 
     if (strict) {
         if (format === 'MMM') {
+<<<<<<< HEAD
+            ii = indexOf$5.call(this._shortMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf$5.call(this._longMonthsParse, llc);
+=======
             ii = indexOf$6.call(this._shortMonthsParse, llc);
             return ii !== -1 ? ii : null;
         } else {
             ii = indexOf$6.call(this._longMonthsParse, llc);
+>>>>>>> master
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'MMM') {
+<<<<<<< HEAD
+            ii = indexOf$5.call(this._shortMonthsParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._longMonthsParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf$5.call(this._longMonthsParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._shortMonthsParse, llc);
+=======
             ii = indexOf$6.call(this._shortMonthsParse, llc);
             if (ii !== -1) {
                 return ii;
@@ -13890,6 +14052,7 @@ function handleStrictParse(monthName, format, strict) {
                 return ii;
             }
             ii = indexOf$6.call(this._shortMonthsParse, llc);
+>>>>>>> master
             return ii !== -1 ? ii : null;
         }
     }
@@ -14386,6 +14549,15 @@ function handleStrictParse$1(weekdayName, format, strict) {
 
     if (strict) {
         if (format === 'dddd') {
+<<<<<<< HEAD
+            ii = indexOf$5.call(this._weekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else if (format === 'ddd') {
+            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+=======
             ii = indexOf$6.call(this._weekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else if (format === 'ddd') {
@@ -14393,10 +14565,44 @@ function handleStrictParse$1(weekdayName, format, strict) {
             return ii !== -1 ? ii : null;
         } else {
             ii = indexOf$6.call(this._minWeekdaysParse, llc);
+>>>>>>> master
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'dddd') {
+<<<<<<< HEAD
+            ii = indexOf$5.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else if (format === 'ddd') {
+            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            return ii !== -1 ? ii : null;
+        } else {
+            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._weekdaysParse, llc);
+            if (ii !== -1) {
+                return ii;
+            }
+            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+=======
             ii = indexOf$6.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
@@ -14428,6 +14634,7 @@ function handleStrictParse$1(weekdayName, format, strict) {
                 return ii;
             }
             ii = indexOf$6.call(this._shortWeekdaysParse, llc);
+>>>>>>> master
             return ii !== -1 ? ii : null;
         }
     }
@@ -15475,7 +15682,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$53(config, bestMoment || tempConfig);
+    extend$24$1(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -16484,7 +16691,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$53({}, getParsingFlags(this));
+    return extend$24$1({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -17537,9 +17744,9 @@ var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i 
 
 Shop = {};
 
-Shop.Controls = Controls$1;
+Shop.Controls = Controls;
 
-Shop.Events = Events;
+Shop.Events = Events$2;
 
 Shop.Forms = Forms$1;
 
@@ -17649,7 +17856,7 @@ while (true) {
 }
 
 Shop.start = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, data, i, item, items, j, k2, len, len1, meta, p, promo, ps, queries, r, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref20, ref4, ref5, ref6, ref7, ref8, ref9, referrer, settings, tag, tags, v2;
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, data$$1, i, item, items, j, k2, len, len1, meta, p, promo, ps, queries, r, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref20, ref4, ref5, ref6, ref7, ref8, ref9, referrer, settings, tag, tags, v2;
   if (opts == null) {
     opts = {};
   }
@@ -17658,7 +17865,6 @@ Shop.start = function(opts) {
   }
   Shop.Forms.register();
   Shop.Widgets.register();
-  Shop.Controls.register();
   referrer = '';
   queries = getQueries();
   if ((ref4 = opts.config) != null ? ref4.hashReferrer : void 0) {
@@ -17701,22 +17907,22 @@ Shop.start = function(opts) {
       metadata: meta != null ? meta : {}
     }
   });
-  data = this.data.get();
+  data$$1 = this.data.get();
   for (k in opts) {
     v = opts[k];
-    if (data[k] == null) {
-      data[k] = opts[k];
+    if (data$$1[k] == null) {
+      data$$1[k] = opts[k];
     } else {
-      ref19 = data[k];
+      ref19 = data$$1[k];
       for (k2 in ref19) {
         v2 = ref19[k2];
         if (v2 == null) {
-          data[k][k2] = (ref20 = opts[k]) != null ? ref20[k2] : void 0;
+          data$$1[k][k2] = (ref20 = opts[k]) != null ? ref20[k2] : void 0;
         }
       }
     }
   }
-  this.data.set(data);
+  this.data.set(data$$1);
   checkoutUser = index$1.get('checkout-user');
   checkoutShippingAddress = index$1.get('checkout-shippingAddress');
   checkoutPayment = index$1.get('checkout-payment');
@@ -17766,7 +17972,8 @@ Shop.start = function(opts) {
   tags = El$1.mount(elementsToMount, {
     cart: this.cart,
     client: this.client,
-    data: this.data
+    data: this.data,
+    mediator: m$1
   });
   El$1.update = function() {
     var i, len, results, tag;
@@ -17786,7 +17993,7 @@ Shop.start = function(opts) {
         total: _this.data.get('order.total')
       });
       if (item != null) {
-        m.trigger(Events.UpdateItem, item);
+        m$1.trigger(Events$2.UpdateItem, item);
       }
       meta = _this.data.get('order.metadata');
       index$1.set('order.metadata', meta);
@@ -17800,12 +18007,12 @@ Shop.start = function(opts) {
         var promoCode;
         promoCode = res.affiliate.couponId;
         _this.data.set('order.promoCode', promocode);
-        return m.trigger(Events.ForceApplyPromoCode);
+        return m$1.trigger(Events$2.ForceApplyPromoCode);
       };
     })(this))["catch"](function() {});
   } else if (promo !== '') {
     this.data.set('order.promoCode', promo);
-    m.trigger(Events.ForceApplyPromoCode);
+    m$1.trigger(Events$2.ForceApplyPromoCode);
   }
   ps = [];
   for (i = 0, len = tags.length; i < len; i++) {
@@ -17825,21 +18032,21 @@ Shop.start = function(opts) {
         tag = tags[j];
         $(tag.root).addClass('ready').find(tagSelectors).addClass('ready');
       }
-      return m.trigger(Events.Ready);
+      return m$1.trigger(Events$2.Ready);
     });
     return El$1.update();
   })["catch"](function(err) {
     var ref21;
     return typeof window !== "undefined" && window !== null ? (ref21 = window.Raven) != null ? ref21.captureException(err) : void 0 : void 0;
   });
-  m.data = this.data;
-  m.on(Events.SetData, (function(_this) {
+  m$1.data = this.data;
+  m$1.on(Events$2.SetData, (function(_this) {
     return function(data1) {
       _this.data = data1;
       return _this.cart.invoice();
     };
   })(this));
-  m.on(Events.DeleteLineItem, function(item) {
+  m$1.on(Events$2.DeleteLineItem, function(item) {
     var id;
     id = item.get('id');
     if (!id) {
@@ -17850,8 +18057,8 @@ Shop.start = function(opts) {
     }
     return Shop.setItem(id, 0);
   });
-  m.trigger(Events.SetData, this.data);
-  m.on('error', function(err) {
+  m$1.trigger(Events$2.SetData, this.data);
+  m$1.on('error', function(err) {
     var ref21;
     console.log(err);
     return typeof window !== "undefined" && window !== null ? (ref21 = window.Raven) != null ? ref21.captureException(err) : void 0 : void 0;
@@ -17867,7 +18074,7 @@ Shop.start = function(opts) {
     }
   }
   El$1.scheduleUpdate();
-  return m;
+  return m$1;
 };
 
 Shop.initCart = function() {
@@ -17879,14 +18086,14 @@ Shop.setItem = function(id, quantity, locked) {
   if (locked == null) {
     locked = false;
   }
-  m.trigger(Events.TryUpdateItem, id);
+  m$1.trigger(Events$2.TryUpdateItem, id);
   p = this.cart.set(id, quantity, locked);
   if (this.promise !== p) {
     this.promise = p;
     return this.promise.then((function(_this) {
       return function() {
         El$1.scheduleUpdate();
-        return m.trigger(Events.UpdateItems, _this.data.get('order.items'));
+        return m$1.trigger(Events$2.UpdateItems, _this.data.get('order.items'));
       };
     })(this))["catch"](function(err) {
       var ref4;

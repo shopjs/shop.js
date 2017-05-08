@@ -2,7 +2,6 @@ import El from 'el.js'
 
 import Events from '../events'
 import html   from '../../templates/forms/form'
-import m      from '../mediator'
 import {
   isEmail
   isPassword
@@ -27,13 +26,13 @@ class LoginForm extends El.Form
     @errorMessage = ''
 
     @scheduleUpdate()
-    m.trigger Events.Login
+    @mediator.trigger Events.Login
     @client.account.login(opts).then (res) =>
-      m.trigger Events.LoginSuccess, res
+      @mediator.trigger Events.LoginSuccess, res
       @scheduleUpdate()
     .catch (err)=>
       @errorMessage = err.message
-      m.trigger Events.LoginFailed, err
+      @mediator.trigger Events.LoginFailed, err
       @scheduleUpdate()
 
 export default LoginForm
