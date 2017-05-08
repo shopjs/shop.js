@@ -25,9 +25,9 @@ the library, steps to reproduce, etc. "X isn't working!!!1!" will probably just 
 
 ### Setting Up
 
-To setup for making changes you will need to take a few steps, we've outlined them below:
+To make changes you will need to take a few steps, which we've outlined below:
 
-1. Ensure you have node.js installed. You can download Node.js from [nodejs.org][node]. Because
+1. Ensure you have Node.js installed. You can download Node.js from [nodejs.org][node]. Because
 Shop.js uses modern JS features, you will need a modern version of Node. v7+ is recommended.
 
 2. Fork the [Shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
@@ -39,8 +39,7 @@ necessary to build Shop.js.
 
 ### Making a Change
 
-Once you have Node.js, the repository, and have installed dependencies you are ready to make your
-change. Your change should be made directly to the branch in your fork, or to a branch in your fork made off of master.
+Your change should be made directly to the branch in your fork, or to a branch in your fork made off of master.
 
 ### Submitting Your Change
 
