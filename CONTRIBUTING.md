@@ -27,19 +27,19 @@ the library, steps to reproduce, etc. "X isn't working!!!1!" will probably just 
 
 To setup for making changes you will need to take a few steps, we've outlined them below:
 
-1. Ensure you have node.js installed. You can download node.js from [nodejs.org][node]. Because
-shop.js uses modern JS features, you will need a modern version of node. v7+ is recommended.
+1. Ensure you have node.js installed. You can download Node.js from [nodejs.org][node]. Because
+Shop.js uses modern JS features, you will need a modern version of Node. v7+ is recommended.
 
-2. Fork the [shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
+2. Fork the [Shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
 for the [command line][fork-cli] and for the [GitHub Client][fork-gui].
 
 3. Next, run `npm install` from within your clone of your fork. That will install dependencies
-necessary to build shop.js
+necessary to build Shop.js
 
 
 ### Making a Change
 
-Once you have node.js, the repository, and have installed dependencies are you almost ready to make your
+Once you have Node.js, the repository, and have installed dependencies are you almost ready to make your
 change. The only other thing before you start is to checkout the correct branch. Your change should be 
 made directly to the branch in your fork, or to a branch in your fork made off of master.
 
