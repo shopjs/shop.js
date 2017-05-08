@@ -34,7 +34,7 @@ Shop.js uses modern JS features, you will need a modern version of Node. v7+ is 
 for the [command line][fork-cli] and for the [GitHub Client][fork-gui].
 
 3. Next, run `npm install` from within your clone of your fork. That will install dependencies
-necessary to build Shop.js
+necessary to build Shop.js.
 
 
 ### Making a Change
@@ -46,7 +46,7 @@ made directly to the branch in your fork, or to a branch in your fork made off o
 ### Submitting Your Change
 
 After you have made and tested your change, commit and push it to your fork. Then, open a Pull Request
-from your fork to the main shop.js repository on the branch you used in the `Making a Change` section of this document.
+from your fork to the main Shop.js repository on the branch you used in the `Making a Change` section of this document.
 
 ## Code Style Guide
 
