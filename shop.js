@@ -10026,7 +10026,7 @@ var Control$1 = Control = (function(superClass) {
       return;
     }
     Control.__super__.error.apply(this, arguments);
-    if (!scrolling) {
+    if (!scrolling && $(this.root).offset().top <= $(window).scrollTop()) {
       scrolling = true;
       $('html, body').animate({
         scrollTop: $(this.root).offset().top - $(window).height() / 2
