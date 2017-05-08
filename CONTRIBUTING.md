@@ -1,13 +1,13 @@
 # How to contribute
 
-Community involvement is essential to the success of shop.js and the rest of the Hanzo ecosystem.
+Community involvement is essential to the success of Shop.js and the rest of the Hanzo ecosystem.
 To make changes and get them into the library, here are some guidelines to make that process
 smooth for all involved.
 
 ## Reporting issues
 
 To report a bug, request a feature, or even ask a question, make use of the GitHub Issues
-section for [shop.js][issues]. When submitting an issue please take the following steps:
+section for [Shop.js][issues]. When submitting an issue please take the following steps:
 
 1. **Seach for existing issues.** Your question or bug may have already been answered or fixed,
 be sure to search the issues first before putting in a duplicate issue.
@@ -40,22 +40,15 @@ necessary to build shop.js
 ### Making a Change
 
 Once you have node.js, the repository, and have installed dependencies are you almost ready to make your
-change. The only other thing before you start is to checkout the correct branch. Which branch you should
-make your change to (and send a PR to) depends on the type of change you are making.
-
-Here is our branch breakdown:
-
-- `master` - Make your change to the `master` branch if it is an *urgent* hotfix.
-
-Your change should be made directly to the branch in your fork, or to a branch in your fork made off of
-one of the above branches.
+change. The only other thing before you start is to checkout the correct branch. Your change should be 
+made directly to the branch in your fork, or to a branch in your fork made off of master.
 
 ### Submitting Your Change
 
 After you have made and tested your change, commit and push it to your fork. Then, open a Pull Request
 from your fork to the main shop.js repository on the branch you used in the `Making a Change` section of this document.
 
-## Quickie Code Style Guide
+## Code Style Guide
 
 - Use 2 spaces for tabs, never tab characters.
 - No trailing whitespace, blank lines should have no whitespace.
@@ -69,5 +62,4 @@ from your fork to the main shop.js repository on the branch you used in the `Mak
 [fork-gui]: https://guides.github.com/activities/forking/
 
 ## Contributor Code of Conduct
-
-[Code of Conduct](CODE_OF_CONDUCT.md) is adapted from [Contributor Covenant, version 1.4](http://contributor-covenant.org/version/1/4)
+[Contributor Covenant, version 1.4](http://contributor-covenant.org/version/1/4)
