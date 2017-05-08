@@ -1,13 +1,13 @@
 # How to contribute
 
-Community involvement is essential to the success of shop.js and the rest of the Hanzo ecosystem.
+Community involvement is essential to the success of [Shop.js][shopjs] and the rest of the Hanzo ecosystem.
 To make changes and get them into the library, here are some guidelines to make that process
 smooth for all involved.
 
 ## Reporting issues
 
 To report a bug, request a feature, or even ask a question, make use of the GitHub Issues
-section for [shop.js][issues]. When submitting an issue please take the following steps:
+section for [Shop.js][issues]. When submitting an issue please take the following steps:
 
 1. **Seach for existing issues.** Your question or bug may have already been answered or fixed,
 be sure to search the issues first before putting in a duplicate issue.
@@ -25,48 +25,33 @@ the library, steps to reproduce, etc. "X isn't working!!!1!" will probably just 
 
 ### Setting Up
 
-To setup for making changes you will need to take a few steps, we've outlined them below:
+To make changes you will need to take a few steps, which we've outlined below:
 
-1. Ensure you have node.js installed. You can download node.js from [nodejs.org][node]. Because
-shop.js uses modern JS features, you will need a modern version of node. v4+ is recommended.
+1. Ensure you have Node.js installed. You can download Node.js from [nodejs.org][node]. Because
+Shop.js uses modern JS features, you will need a modern version of Node. v7+ is recommended.
 
-2. Fork the [shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
+2. Fork the [Shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
 for the [command line][fork-cli] and for the [GitHub Client][fork-gui].
 
 3. Next, run `npm install` from within your clone of your fork. That will install dependencies
-necessary to build shop.js
+necessary to build Shop.js.
 
 
 ### Making a Change
 
-Once you have node.js, the repository, and have installed dependencies are you almost ready to make your
-change. The only other thing before you start is to checkout the correct branch. Which branch you should
-make your change to (and send a PR to) depends on the type of change you are making.
-
-Here is our branch breakdown:
-
-- `master` - Make your change to the `master` branch if it is an *urgent* hotfix.
-- `dev` - Make your change to `dev` if it is a *non-urgent* bugfix or a backwards-compatible feature.
-- `next` - Make your change to `next` if it is a breaking change, or wild/crazy idea.
-
-Your change should be made directly to the branch in your fork, or to a branch in your fork made off of
-one of the above branches.
+Your change should be made directly to the branch in your fork, or to a branch in your fork made off of master.
 
 ### Submitting Your Change
 
 After you have made and tested your change, commit and push it to your fork. Then, open a Pull Request
-from your fork to the main shop.js repository on the branch you used in the `Making a Change` section of this document.
+from your fork to the main Shop.js repository.
 
-## Quickie Code Style Guide
+## Code Style Guide
 
-- Use 4 spaces for tabs, never tab characters.
+- Use 2 spaces for tabs, never tab characters.
 - No trailing whitespace, blank lines should have no whitespace.
-- Always favor strict equals `===` unless you *need* to use type coercion.
-- Follow conventions already in the code, and listen to eslint.
-- **Ensure changes are eslint validated.** After making a change be sure to run the build process
-to ensure that you didn't break anything. You can do this with `npm test` which will run
-eslint, rebuild, then run the test suite.
 
+[shopjs]: https://github.com/hanzo.io/shop.js
 [issues]: https://github.com/hanzo-io/shop.js/issues
 [shop]: https://github.com/hanzo-io/shop.js
 [fiddle]: http://jsfiddle.net
@@ -76,5 +61,4 @@ eslint, rebuild, then run the test suite.
 [fork-gui]: https://guides.github.com/activities/forking/
 
 ## Contributor Code of Conduct
-
-[Code of Conduct](CODE_OF_CONDUCT.md) is adapted from [Contributor Covenant, version 1.4](http://contributor-covenant.org/version/1/4)
+[Contributor Covenant, version 1.4](http://contributor-covenant.org/version/1/4)
