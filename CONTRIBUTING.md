@@ -39,9 +39,8 @@ necessary to build Shop.js.
 
 ### Making a Change
 
-Once you have Node.js, the repository, and have installed dependencies are you almost ready to make your
-change. The only other thing before you start is to checkout the correct branch. Your change should be 
-made directly to the branch in your fork, or to a branch in your fork made off of master.
+Once you have Node.js, the repository, and have installed dependencies you are ready to make your
+change. Your change should be made directly to the branch in your fork, or to a branch in your fork made off of master.
 
 ### Submitting Your Change
 
