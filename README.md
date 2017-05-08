@@ -9,8 +9,21 @@
 
 > Ecommerce UI components and framework powered by Hanzo
 
-Shop.js is a front-end framework for ecommerce powered by [Hanzo][hanzo]. It has
-a fully customizable look and feel with many built-in reactive components.
+[Shop.js][getshopjs] is [Hanzo][[hanzo]'s UI library, a complete set of reactive
+Ecommerce components powered by [El.js][eljs]. It has a completely customizable
+look and feel and can be easily integrated into any website.
+
+Shop.js provides countless components which can be mix-and-matched to completely
+customize a unique and branded shopping experience. From `<cart>` to
+`<checkout>`, Shop.js has you covered.
+
+You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
+[around][kpak] [the][ludela] [web][stonedaudio].
+
+## Install
+```bash
+$ npm install shop.js --save
+```
 
 ## Examples
 You can see a great example of Shop.js in action at
@@ -289,10 +302,12 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 ## License
 [BSD][license-url]
 
-[shop.js]:         https://cdn.rawgit.com/hanzo-io/shop.js/v0.0.1/shop.min.js
-
-[hanzo]:           https://hanzo.io
-[riot]:            http://riotjs.com
+[eljs]:             https://github.com/hanzo-io/el.js
+[getshopjs]:        https://getshopjs.com
+[hanzo]:            https://hanzo.io
+[kpak]:             https://kpakcase.com
+[ludela]:           https://ludela.com
+[stonedaudio]:      https://stoned.audio
 
 [build-img]:        https://img.shields.io/travis/hanzo-io/shop.js.svg
 [build-url]:        https://travis-ci.org/hanzo-io/shop.js
