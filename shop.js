@@ -862,7 +862,7 @@ var styleManager = {
 
 /**
  * The riot template engine
- * @version v3.0.3
+ * @version v3.0.4
  */
 /**
  * riot.util.brackets
@@ -1086,7 +1086,12 @@ var tmpl = (function () {
   function _tmpl (str, data) {
     if (!str) return str
 
-    return (_cache[str] || (_cache[str] = _create(str))).call(data, _logErr)
+    return (_cache[str] || (_cache[str] = _create(str))).call(
+      data, _logErr.bind({
+        data: data,
+        tmpl: str
+      })
+    )
   }
 
   _tmpl.hasExpr = brackets.hasExpr;
@@ -1110,10 +1115,9 @@ var tmpl = (function () {
       typeof console !== 'undefined' &&
       typeof console.error === 'function'
     ) {
-      if (err.riotData.tagName) {
-        console.error('Riot template error thrown in the <%s> tag', err.riotData.tagName);
-      }
-      console.error(err);
+      console.error(err.message);
+      console.log('<%s> %s', err.riotData.tagName || 'Unknown tag', this.tmpl); // eslint-disable-line
+      console.log(this.data); // eslint-disable-line
     }
   }
 
@@ -1282,7 +1286,7 @@ var tmpl = (function () {
     return expr
   }
 
-  _tmpl.version = brackets.version = 'v3.0.3';
+  _tmpl.version = brackets.version = 'v3.0.4';
 
   return _tmpl
 
@@ -9466,7 +9470,7 @@ function selectize($select, optsUser) {
     });
 }
 
-// node_modules/el-controls/lib/el-controls.mjs
+// ../../hanzo/el-controls/lib/el-controls.mjs
 // src/utils/patches.coffee
 var agent$1;
 var ieMajor$1;
@@ -10104,7 +10108,7 @@ if (document.createElement("input").placeholder == null) {
 var placeholder = exports$1;
 
 // templates/controls/text.pug
-var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\" autocomplete=\"{ autoComplete }\">\n<yield></yield>";
+var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autoComplete }\">\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/text.coffee
 var Text;
@@ -10148,7 +10152,7 @@ var Text$1 = Text = (function(superClass) {
 Text.register();
 
 // templates/controls/textarea.pug
-var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<yield></yield>";
+var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/textarea.coffee
 var TextArea;
@@ -10206,7 +10210,7 @@ var Checkbox$1 = Checkbox = (function(superClass) {
 Checkbox.register();
 
 // templates/controls/select.pug
-var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder small\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -10451,7 +10455,7 @@ var CountrySelect$1 = CountrySelect = (function(superClass) {
 CountrySelect.register();
 
 // templates/controls/state-select.pug
-var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder { small: input.ref.get(countryField) == &quot;us&quot; || input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/state-select.coffee
 var StateSelect;
@@ -10840,15 +10844,9 @@ var keys = {
 
 // src/controls/card-number.coffee
 var CardNumber;
-<<<<<<< HEAD
 var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$21 = {}.hasOwnProperty;
-var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-=======
-var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$23 = {}.hasOwnProperty;
 var indexOf$2 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
->>>>>>> master
 
 CardNumber = (function(superClass) {
   extend$21(CardNumber, superClass);
@@ -10941,15 +10939,9 @@ var CardNumber$1 = CardNumber;
 
 // src/controls/card-expiry.coffee
 var CardExpiry;
-<<<<<<< HEAD
 var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$22 = {}.hasOwnProperty;
 var indexOf$1$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-=======
-var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$24 = {}.hasOwnProperty;
-var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
->>>>>>> master
 
 CardExpiry = (function(superClass) {
   extend$22(CardExpiry, superClass);
@@ -10979,11 +10971,7 @@ CardExpiry = (function(superClass) {
       $input.on('keypress', restrictNumeric);
       $input.on('keypress', function(e) {
         var ref, value;
-<<<<<<< HEAD
         if (ref = e.which, indexOf$1$1.call(keys.numeric, ref) < 0) {
-=======
-        if (ref = e.which, indexOf$3.call(keys.numeric, ref) < 0) {
->>>>>>> master
           return true;
         }
         value = $input.val() + String.fromCharCode(e.which);
@@ -11012,15 +11000,9 @@ var CardExpiry$1 = CardExpiry;
 
 // src/controls/card-cvc.coffee
 var CardCVC;
-<<<<<<< HEAD
 var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$23 = {}.hasOwnProperty;
 var indexOf$2$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-=======
-var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$25 = {}.hasOwnProperty;
-var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
->>>>>>> master
 
 CardCVC = (function(superClass) {
   extend$23(CardCVC, superClass);
@@ -11050,11 +11032,7 @@ CardCVC = (function(superClass) {
       $input.on('keypress', restrictNumeric);
       $input.on('keypress', function(e) {
         var ref, value;
-<<<<<<< HEAD
         if (ref = e.which, indexOf$2$1.call(keys.numeric, ref) < 0) {
-=======
-        if (ref = e.which, indexOf$4.call(keys.numeric, ref) < 0) {
->>>>>>> master
           return true;
         }
         value = $input.val() + String.fromCharCode(e.which);
@@ -11336,11 +11314,7 @@ var requiresPostalCode = function(code) {
 
 // src/forms/middleware.coffee
 var emailRe;
-<<<<<<< HEAD
-var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-=======
-var indexOf$5 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
->>>>>>> master
+var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
@@ -11446,11 +11420,7 @@ var cardNumber = function(value) {
   if (!/^\d+$/.test(number)) {
     throw new Error('Enter a valid card number');
   }
-<<<<<<< HEAD
-  if (!(indexOf$4.call(card.length, length) >= 0 && (card.luhn === false || utils.card.luhnCheck(number)))) {
-=======
-  if (!(indexOf$5.call(card.length, length) >= 0 && (card.luhn === false || luhnCheck(number)))) {
->>>>>>> master
+  if (!(indexOf$3.call(card.length, length) >= 0 && (card.luhn === false || utils.card.luhnCheck(number)))) {
     throw new Error('Enter a valid card number');
   }
   return value;
@@ -11502,11 +11472,7 @@ var cvc = function(value) {
     throw new Error('Enter a valid cvc');
   }
   if (card && card.type) {
-<<<<<<< HEAD
-    if (ref = cvc_.length, indexOf$4.call(card != null ? card.cvcLength : void 0, ref) < 0) {
-=======
-    if (ref = cvc_.length, indexOf$5.call(card != null ? card.cvcLength : void 0, ref) < 0) {
->>>>>>> master
+    if (ref = cvc_.length, indexOf$3.call(card != null ? card.cvcLength : void 0, ref) < 0) {
       throw new Error('Enter a valid cvc');
     }
   } else {
@@ -11550,7 +11516,7 @@ var configs = config = {
 };
 
 // templates/forms/checkout.pug
-var html$1$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div if=\"{ !isEmpty() }\">\n      <div class=\"contact checkout-section\">\n        <h2>Contact</h2>\n        <div class=\"fields\">\n          <user-name class=\"input\" placeholder=\"Name\"></user-name>\n          <user-email class=\"input\" placeholder=\"Email\"></user-email>\n        </div>\n      </div>\n      <div class=\"payment checkout-section\">\n        <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n        <div class=\"fields\">\n          <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n          <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n            <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n          </card-number>\n          <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n        </div>\n      </div>\n      <div class=\"shipping checkout-section\">\n        <h2>Shipping</h2>\n        <div class=\"fields\">\n          <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n          <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n          <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n          <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n          <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        </div>\n      </div>\n      <div class=\"complete checkout-section\">\n        <h2>Complete Checkout</h2>\n        <terms>\n          <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n        </terms>\n        <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n        <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n      </div>\n    </div>\n  </yield>\n</form>";
+var html$1$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div if=\"{ !isEmpty() }\">\n      <div class=\"contact checkout-section\">\n        <h2>Contact</h2>\n        <div class=\"fields\">\n          <user-name class=\"input\" placeholder=\"Name\"></user-name>\n          <user-email class=\"input\" placeholder=\"Email\"></user-email>\n        </div>\n      </div>\n      <div class=\"payment checkout-section\">\n        <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"/img/lock-icon.svg\"></span>\n        <div class=\"fields\">\n          <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n          <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n            <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"/img/stripelogo.png\"></a></div>\n          </card-number>\n          <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n        </div>\n      </div>\n      <div class=\"shipping checkout-section\">\n        <h2>Shipping</h2>\n        <div class=\"fields\">\n          <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n          <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n          <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n          <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n        </div>\n        <div class=\"fields\">\n          <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n          <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n        </div>\n      </div>\n      <div class=\"complete checkout-section\">\n        <h2>Complete Checkout</h2>\n        <terms>\n          <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n        </terms>\n        <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n        <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n      </div>\n    </div>\n  </yield>\n</form>";
 
 // src/forms/checkout.coffee
 var CheckoutForm;
@@ -11947,7 +11913,7 @@ CartForm = (function(superClass) {
 var Cart$1$1 = CartForm;
 
 // templates/forms/lineitem.pug
-var html$5 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+var html$5 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
 // src/forms/lineitem.coffee
 var LineItemForm;
@@ -11984,7 +11950,7 @@ LineItemForm = (function(superClass) {
 var LineItem = LineItemForm;
 
 // templates/forms/lineitems.pug
-var html$6 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$6 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/forms/lineitems.coffee
 var LineItems;
@@ -13894,21 +13860,12 @@ var WEEK = 7;
 var WEEKDAY = 8;
 
 // node_modules/moment/src/lib/utils/index-of.js
-<<<<<<< HEAD
-var indexOf$5;
+var indexOf$4;
 
 if (Array.prototype.indexOf) {
-    indexOf$5 = Array.prototype.indexOf;
+    indexOf$4 = Array.prototype.indexOf;
 } else {
-    indexOf$5 = function (o) {
-=======
-var indexOf$6;
-
-if (Array.prototype.indexOf) {
-    indexOf$6 = Array.prototype.indexOf;
-} else {
-    indexOf$6 = function (o) {
->>>>>>> master
+    indexOf$4 = function (o) {
         // I know
         var i;
         for (i = 0; i < this.length; ++i) {
@@ -14011,48 +13968,26 @@ function handleStrictParse(monthName, format, strict) {
 
     if (strict) {
         if (format === 'MMM') {
-<<<<<<< HEAD
-            ii = indexOf$5.call(this._shortMonthsParse, llc);
+            ii = indexOf$4.call(this._shortMonthsParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$5.call(this._longMonthsParse, llc);
-=======
-            ii = indexOf$6.call(this._shortMonthsParse, llc);
-            return ii !== -1 ? ii : null;
-        } else {
-            ii = indexOf$6.call(this._longMonthsParse, llc);
->>>>>>> master
+            ii = indexOf$4.call(this._longMonthsParse, llc);
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'MMM') {
-<<<<<<< HEAD
-            ii = indexOf$5.call(this._shortMonthsParse, llc);
+            ii = indexOf$4.call(this._shortMonthsParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._longMonthsParse, llc);
+            ii = indexOf$4.call(this._longMonthsParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$5.call(this._longMonthsParse, llc);
+            ii = indexOf$4.call(this._longMonthsParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._shortMonthsParse, llc);
-=======
-            ii = indexOf$6.call(this._shortMonthsParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._longMonthsParse, llc);
-            return ii !== -1 ? ii : null;
-        } else {
-            ii = indexOf$6.call(this._longMonthsParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._shortMonthsParse, llc);
->>>>>>> master
+            ii = indexOf$4.call(this._shortMonthsParse, llc);
             return ii !== -1 ? ii : null;
         }
     }
@@ -14549,92 +14484,48 @@ function handleStrictParse$1(weekdayName, format, strict) {
 
     if (strict) {
         if (format === 'dddd') {
-<<<<<<< HEAD
-            ii = indexOf$5.call(this._weekdaysParse, llc);
+            ii = indexOf$4.call(this._weekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else if (format === 'ddd') {
-            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$5.call(this._minWeekdaysParse, llc);
-=======
-            ii = indexOf$6.call(this._weekdaysParse, llc);
-            return ii !== -1 ? ii : null;
-        } else if (format === 'ddd') {
-            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
-            return ii !== -1 ? ii : null;
-        } else {
-            ii = indexOf$6.call(this._minWeekdaysParse, llc);
->>>>>>> master
+            ii = indexOf$4.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'dddd') {
-<<<<<<< HEAD
-            ii = indexOf$5.call(this._weekdaysParse, llc);
+            ii = indexOf$4.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            ii = indexOf$4.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else if (format === 'ddd') {
-            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._weekdaysParse, llc);
+            ii = indexOf$4.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            ii = indexOf$4.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$5.call(this._minWeekdaysParse, llc);
+            ii = indexOf$4.call(this._minWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._weekdaysParse, llc);
+            ii = indexOf$4.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$5.call(this._shortWeekdaysParse, llc);
-=======
-            ii = indexOf$6.call(this._weekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._minWeekdaysParse, llc);
-            return ii !== -1 ? ii : null;
-        } else if (format === 'ddd') {
-            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._weekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._minWeekdaysParse, llc);
-            return ii !== -1 ? ii : null;
-        } else {
-            ii = indexOf$6.call(this._minWeekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._weekdaysParse, llc);
-            if (ii !== -1) {
-                return ii;
-            }
-            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
->>>>>>> master
+            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         }
     }
