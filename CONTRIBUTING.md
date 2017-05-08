@@ -45,7 +45,7 @@ change. Your change should be made directly to the branch in your fork, or to a 
 ### Submitting Your Change
 
 After you have made and tested your change, commit and push it to your fork. Then, open a Pull Request
-from your fork to the main Shop.js repository on the branch you used in the `Making a Change` section of this document.
+from your fork to the main Shop.js repository.
 
 ## Code Style Guide
 
