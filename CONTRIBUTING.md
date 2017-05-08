@@ -28,7 +28,7 @@ the library, steps to reproduce, etc. "X isn't working!!!1!" will probably just 
 To setup for making changes you will need to take a few steps, we've outlined them below:
 
 1. Ensure you have node.js installed. You can download node.js from [nodejs.org][node]. Because
-shop.js uses modern JS features, you will need a modern version of node. v4+ is recommended.
+shop.js uses modern JS features, you will need a modern version of node. v7+ is recommended.
 
 2. Fork the [shop.js][shop] repository, if you are unsure how to do this GitHub has a guides
 for the [command line][fork-cli] and for the [GitHub Client][fork-gui].
@@ -46,8 +46,6 @@ make your change to (and send a PR to) depends on the type of change you are mak
 Here is our branch breakdown:
 
 - `master` - Make your change to the `master` branch if it is an *urgent* hotfix.
-- `dev` - Make your change to `dev` if it is a *non-urgent* bugfix or a backwards-compatible feature.
-- `next` - Make your change to `next` if it is a breaking change, or wild/crazy idea.
 
 Your change should be made directly to the branch in your fork, or to a branch in your fork made off of
 one of the above branches.
@@ -59,13 +57,8 @@ from your fork to the main shop.js repository on the branch you used in the `Mak
 
 ## Quickie Code Style Guide
 
-- Use 4 spaces for tabs, never tab characters.
+- Use 2 spaces for tabs, never tab characters.
 - No trailing whitespace, blank lines should have no whitespace.
-- Always favor strict equals `===` unless you *need* to use type coercion.
-- Follow conventions already in the code, and listen to eslint.
-- **Ensure changes are eslint validated.** After making a change be sure to run the build process
-to ensure that you didn't break anything. You can do this with `npm test` which will run
-eslint, rebuild, then run the test suite.
 
 [issues]: https://github.com/hanzo-io/shop.js/issues
 [shop]: https://github.com/hanzo-io/shop.js
