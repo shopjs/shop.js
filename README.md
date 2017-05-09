@@ -10,8 +10,8 @@
 > Ecommerce UI components and framework powered by Hanzo
 
 [Shop.js][getshopjs] is a complete set of reactive Ecommerce components powered
-by [El.js][eljs]. Thanks to [Hanzo][hanzo], it can be easily integrated into any
-website, without any backend necessary.
+by [El.js][eljs]. With [Hanzo][hanzo], it can be easily integrated into any
+website, no backend required.
 
 Shop.js provides countless components which can be mix-and-matched to completely
 customize a unique and branded shopping experience. From `<cart>` to
@@ -21,7 +21,7 @@ You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
 [around][kpak] [the][ludela] [web][stonedaudio].
 
 ## Features
-- Lightweight, complete shopping experience weighs in at 70kb gzipped
+- Lightweight, complete shopping experience weighs in at 120kb gzipped
 - Core and all dependencies are ES modules, and can be mixed and matched freely
 - Components can be nested and customized with plain HTML/CSS thanks to
   [El.js][eljs]
