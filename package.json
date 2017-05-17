@@ -65,7 +65,7 @@
     "connect": "3.6.1",
     "coveralls": "2.13.1",
     "css-mqpacker": "6.0.0",
-    "debug": "^2.6.6",
+    "debug": "2.6.6",
     "es5-shim": "^4.5.9",
     "istanbul": "0.4.5",
     "lost": "8.0.0",
