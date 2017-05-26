@@ -862,7 +862,7 @@ var styleManager = {
 
 /**
  * The riot template engine
- * @version v3.0.4
+ * @version v3.0.5
  */
 /**
  * riot.util.brackets
@@ -886,7 +886,7 @@ var brackets = (function (UNDEF) {
 
     S_QBLOCKS = R_STRINGS.source + '|' +
       /(?:\breturn\s+|(?:[$\w\)\]]|\+\+|--)\s*(\/)(?![*\/]))/.source + '|' +
-      /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?(\/)[gim]*/.source,
+      /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?([^<]\/)[gim]*/.source,
 
     UNSUPPORTED = RegExp('[\\' + 'x00-\\x1F<>a-zA-Z0-9\'",;\\\\]'),
 
@@ -1286,7 +1286,7 @@ var tmpl = (function () {
     return expr
   }
 
-  _tmpl.version = brackets.version = 'v3.0.4';
+  _tmpl.version = brackets.version = 'v3.0.5';
 
   return _tmpl
 
@@ -5755,7 +5755,7 @@ Cart = (function() {
   };
 
   Cart.prototype.invoice = function() {
-    var city, country, coupon, discount, item, items, j, k, l, len, len1, len2, len3, len4, len5, m, n, o, postalCode, quantity, ref, ref1, ref2, ref3, ref4, shipping, shippingRate, shippingRateFilter, shippingRates, state, subtotal, tax, taxRate, taxRateFilter, taxRates;
+    var city, country, coupon, discount, item, items, j, k, l, len, len1, len2, len3, len4, len5, m, n, o, postalCode, quantity, rate, ref, ref1, ref2, ref3, ref4, shipping, shippingRate, shippingRateFilter, shippingRates, state, subtotal, tax, taxRate, taxRateFilter, taxRates;
     items = this.data.get('order.items');
     discount = 0;
     coupon = this.data.get('order.coupon');
@@ -5814,7 +5814,10 @@ Cart = (function() {
     }
     this.data.set('order.subtotal', subtotal);
     taxRates = this.data.get('taxRates');
-    this.data.set('order.taxRate', 0);
+    rate = this.data.get('order.taxRate');
+    if (rate == null) {
+      this.data.set('order.taxRate', 0);
+    }
     if (taxRates != null) {
       for (n = 0, len4 = taxRates.length; n < len4; n++) {
         taxRateFilter = taxRates[n];
@@ -5839,7 +5842,10 @@ Cart = (function() {
       }
     }
     shippingRates = this.data.get('shippingRates');
-    this.data.set('order.shippingRate', 0);
+    rate = this.data.get('order.shippingRate');
+    if (rate == null) {
+      this.data.set('order.shippingRate', 0);
+    }
     if (shippingRates != null) {
       for (o = 0, len5 = shippingRates.length; o < len5; o++) {
         shippingRateFilter = shippingRates[o];
@@ -9470,7 +9476,7 @@ function selectize($select, optsUser) {
     });
 }
 
-// ../../hanzo/el-controls/lib/el-controls.mjs
+// node_modules/el-controls/lib/el-controls.mjs
 // src/utils/patches.coffee
 var agent$1;
 var ieMajor$1;
@@ -10154,31 +10160,31 @@ Text.register();
 // templates/controls/textarea.pug
 var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
-// src/controls/textarea.coffee
-var TextArea;
+// src/controls/textbox.coffee
+var TextBox;
 var extend$2$1 = function(child, parent) { for (var key in parent) { if (hasProp$2$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$2$1 = {}.hasOwnProperty;
 
-TextArea = (function(superClass) {
-  extend$2$1(TextArea, superClass);
+TextBox = (function(superClass) {
+  extend$2$1(TextBox, superClass);
 
-  function TextArea() {
-    return TextArea.__super__.constructor.apply(this, arguments);
+  function TextBox() {
+    return TextBox.__super__.constructor.apply(this, arguments);
   }
 
-  TextArea.prototype.tag = 'textarea-control';
+  TextBox.prototype.tag = 'textbox';
 
-  TextArea.prototype.html = html$1;
+  TextBox.prototype.html = html$1;
 
-  TextArea.prototype.formElement = 'textarea';
+  TextBox.prototype.formElement = 'textarea';
 
-  return TextArea;
+  return TextBox;
 
 })(Text$1);
 
-TextArea.register();
+TextBox.register();
 
-var TextArea$1 = TextArea;
+var TextBox$1 = TextBox;
 
 // templates/controls/checkbox.pug
 var html$2 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n<yield></yield>";
@@ -10195,7 +10201,7 @@ var Checkbox$1 = Checkbox = (function(superClass) {
     return Checkbox.__super__.constructor.apply(this, arguments);
   }
 
-  Checkbox.prototype.tag = 'checkbox-control';
+  Checkbox.prototype.tag = 'checkbox';
 
   Checkbox.prototype.html = html$2;
 
@@ -11162,7 +11168,7 @@ var giftMessage = GiftMessage = (function(superClass) {
 
   return GiftMessage;
 
-})(TextArea$1);
+})(TextBox$1);
 
 GiftMessage.register();
 
@@ -11220,7 +11226,7 @@ var Controls = Object.freeze({
 	utils: utils,
 	Control: Control$1,
 	Text: Text$1,
-	TextArea: TextArea$1,
+	TextBox: TextBox$1,
 	Checkbox: Checkbox$1,
 	Select: Select$1,
 	QuantitySelect: quantitySelect,
