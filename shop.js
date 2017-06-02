@@ -3352,6 +3352,22 @@ var Ref$1 = Ref = (function() {
     return this;
   };
 
+  Ref.prototype.clear = function() {
+    var child, id, ref;
+    this._cache = {};
+    ref = this._children;
+    for (id in ref) {
+      child = ref[id];
+      child.clear();
+    }
+    this._children = {};
+    this._numChildren = 0;
+    this._value = void 0;
+    if (this.parent != null) {
+      return this.parent.set(this.key, void 0);
+    }
+  };
+
   Ref.prototype.destroy = function() {
     var child, id, ref;
     ref = this._children;
@@ -3413,9 +3429,13 @@ var Ref$1 = Ref = (function() {
     oldValue = this.get(key);
     this._mutate(key);
     if (value == null) {
-      this.value(index(this.value(), key));
+      if (isObject$2(key)) {
+        this.value(index(this.value(), key));
+      } else {
+        this.index(key, value, false);
+      }
     } else {
-      this.index(key, value);
+      this.index(key, value, false);
     }
     this._triggerSet(key, value, oldValue);
     this._triggerSetChildren(key, value, oldValue);
@@ -3487,19 +3507,22 @@ var Ref$1 = Ref = (function() {
     return new Ref(index({}, this.get(key)));
   };
 
-  Ref.prototype.index = function(key, value, obj, prev) {
+  Ref.prototype.index = function(key, value, get, obj) {
     var next, prop, props;
+    if (get == null) {
+      get = true;
+    }
     if (obj == null) {
       obj = this.value();
     }
     if (this.parent) {
-      return this.parent.index(this.key + '.' + key, value);
+      return this.parent.index(this.key + '.' + key, value, get);
     }
     if (isNumber$1(key)) {
       key = String(key);
     }
     props = key.split('.');
-    if (value == null) {
+    if (get) {
       while (prop = props.shift()) {
         if (!props.length) {
           return obj != null ? obj[prop] : void 0;
@@ -3507,6 +3530,12 @@ var Ref$1 = Ref = (function() {
         obj = obj != null ? obj[prop] : void 0;
       }
       return;
+    }
+    if (this._value == null) {
+      this._value = {};
+      if (obj == null) {
+        obj = this._value;
+      }
     }
     while (prop = props.shift()) {
       if (!props.length) {
@@ -3537,7 +3566,7 @@ var Ref$1 = Ref = (function() {
 var methods;
 var refer;
 
-methods = ['extend', 'get', 'index', 'ref', 'set', 'value', 'on', 'off', 'one', 'trigger'];
+methods = ['extend', 'get', 'index', 'ref', 'set', 'value', 'clear', 'destroy', 'on', 'off', 'one', 'trigger'];
 
 refer = function(state, ref) {
   var fn, i, len, method, wrapper;
@@ -3572,7 +3601,7 @@ refer.Ref = Ref$1;
 
 var refer$1 = refer;
 
-// node_modules/el.js/lib/el.mjs
+// ../../hanzo/el.js/lib/el.mjs
 // src/schedule.coffee
 var id$1;
 var p;
@@ -3827,6 +3856,7 @@ inputify = function(data, configs) {
       config: config,
       validate: validate
     };
+    observable$1(input);
     return inputs[name] = input;
   };
   for (name in configs) {
@@ -3851,17 +3881,9 @@ Form = (function(superClass) {
   }
 
   Form.prototype.initInputs = function() {
-    var input, name, ref, results1;
     this.inputs = {};
     if (this.configs != null) {
-      this.inputs = inputify$1(this.data, this.configs);
-      ref = this.inputs;
-      results1 = [];
-      for (name in ref) {
-        input = ref[name];
-        results1.push(observable$1(input));
-      }
-      return results1;
+      return this.inputs = inputify$1(this.data, this.configs);
     }
   };
 
@@ -3870,7 +3892,7 @@ Form = (function(superClass) {
   };
 
   Form.prototype.submit = function(e) {
-    var input, name, pRef, ps, ref;
+    var input, name, p, pRef, ps, ref;
     ps = [];
     ref = this.inputs;
     for (name in ref) {
@@ -3881,7 +3903,7 @@ Form = (function(superClass) {
         ps.push(pRef.p);
       }
     }
-    Promise$2.settle(ps).then((function(_this) {
+    p = Promise$2.settle(ps).then((function(_this) {
       return function(results) {
         var i, len, result;
         for (i = 0, len = results.length; i < len; i++) {
@@ -3897,7 +3919,7 @@ Form = (function(superClass) {
       e.preventDefault();
       e.stopPropagation();
     }
-    return false;
+    return p;
   };
 
   Form.prototype._submit = function() {};
@@ -3933,6 +3955,23 @@ Input = (function(superClass) {
   };
 
   Input.prototype.init = function() {
+    var ref1, ref2;
+    if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
+      throw new Error('No input or bind provided');
+    }
+    if ((this.input == null) && (this.inputs != null)) {
+      this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
+    }
+    if (this.input == null) {
+      this.input = {
+        name: (ref2 = this.lookup) != null ? ref2 : this.bind,
+        ref: this.data,
+        validate: function(ref, name) {
+          return Promise.resolve([ref, name]);
+        }
+      };
+      observable$1(this.input);
+    }
     this.input.on('validate', (function(_this) {
       return function(pRef) {
         return _this.validate(pRef);
@@ -9476,7 +9515,7 @@ function selectize($select, optsUser) {
     });
 }
 
-// node_modules/el-controls/lib/el-controls.mjs
+// ../../hanzo/el-controls/lib/el-controls.mjs
 // src/utils/patches.coffee
 var agent$1;
 var ieMajor$1;
@@ -10001,29 +10040,12 @@ var Control$1 = Control = (function(superClass) {
   Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
 
   Control.prototype.init = function() {
-    if ((this.input == null) && (this.lookup == null)) {
-      throw new Error('No input or lookup provided');
-    }
-    if ((this.input == null) && (this.inputs != null)) {
-      this.input = this.inputs[this.lookup];
-    }
-    if (this.input == null) {
-      this.input = {
-        name: this.lookup,
-        ref: this.data.ref(this.lookup),
-        validate: function(ref, name) {
-          return Promise.resolve([ref, name]);
-        }
-      };
-    }
-    if (this.inputs != null) {
-      return Control.__super__.init.apply(this, arguments);
-    }
+    return Control.__super__.init.apply(this, arguments);
   };
 
   Control.prototype.getValue = function(event) {
-    var ref1;
-    return (ref1 = $(event.target).val()) != null ? ref1.trim() : void 0;
+    var ref;
+    return (ref = $(event.target).val()) != null ? ref.trim() : void 0;
   };
 
   Control.prototype.error = function(err) {
