@@ -11293,7 +11293,7 @@ var Events$2 = Events$1$1 = {
   Checkout: 'checkout',
   ContinueShopping: 'continue-shopping',
   Submit: 'submit',
-  SubmitCart: 'submit-card',
+  SubmitCard: 'submit-card',
   SubmitShippingAddress: 'submit-shipping-address',
   SubmitSuccess: 'submit-success',
   SubmitFailed: 'submit-failed',
@@ -12745,7 +12745,16 @@ CheckoutModal = (function(superClass) {
     m$1.on(Events$2.CheckoutOpen, (function(_this) {
       return function(id) {
         if (id === _this.id) {
-          return _this.toggle(true);
+          _this.toggle(true);
+          Shop.analytics.track('Viewed Checkout Step', {
+            step: 1
+          });
+          Shop.analytics.track('Completed Checkout Step', {
+            step: 1
+          });
+          return Shop.analytics.track('Viewed Checkout Step', {
+            step: 2
+          });
         }
       };
     })(this));
@@ -12759,13 +12768,22 @@ CheckoutModal = (function(superClass) {
     m$1.on(Events$2.SubmitCard, (function(_this) {
       return function(id) {
         _this.step = 1;
-        return El$1.scheduleUpdate();
+        El$1.scheduleUpdate();
+        Shop.analytics.track('Completed Checkout Step', {
+          step: 2
+        });
+        return Shop.analytics.track('Viewed Checkout Step', {
+          step: 3
+        });
       };
     })(this));
     return m$1.on(Events$2.SubmitSuccess, (function(_this) {
       return function(id) {
         _this.step = 2;
-        return El$1.scheduleUpdate();
+        El$1.scheduleUpdate();
+        return Shop.analytics.track('Completed Checkout Step', {
+          step: 3
+        });
       };
     })(this));
   };
@@ -17649,7 +17667,7 @@ var renderDate = function(date, format) {
 };
 
 // src/index.coffee
-var Shop;
+var Shop$1;
 var children;
 var elementsToMount;
 var getMCIds;
@@ -17666,39 +17684,39 @@ var tagNames;
 var v;
 var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-Shop = {};
+Shop$1 = {};
 
-Shop.Controls = Controls;
+Shop$1.Controls = Controls;
 
-Shop.Events = Events$2;
+Shop$1.Events = Events$2;
 
-Shop.Forms = Forms$1;
+Shop$1.Forms = Forms$1;
 
-Shop.Widgets = Widgets$1;
+Shop$1.Widgets = Widgets$1;
 
-Shop.El = El$1;
+Shop$1.El = El$1;
 
 El$1.View.prototype.renderCurrency = renderUICurrencyFromJSON;
 
 El$1.View.prototype.renderDate = renderDate;
 
 El$1.View.prototype.isEmpty = function() {
-  return Shop.isEmpty();
+  return Shop$1.isEmpty();
 };
 
-Shop.use = function(templates) {
+Shop$1.use = function(templates) {
   var ref, ref1;
   if (templates != null ? (ref = templates.Controls) != null ? ref.Error : void 0 : void 0) {
-    Shop.Controls.Control.prototype.errorHtml = templates.Controls.Error;
+    Shop$1.Controls.Control.prototype.errorHtml = templates.Controls.Error;
   }
   if (templates != null ? (ref1 = templates.Controls) != null ? ref1.Text : void 0 : void 0) {
-    return Shop.Controls.Text.prototype.html = templates.Controls.Text;
+    return Shop$1.Controls.Text.prototype.html = templates.Controls.Text;
   }
 };
 
-Shop.analytics = analytics$1$1;
+Shop$1.analytics = analytics$1$1;
 
-Shop.isEmpty = function() {
+Shop$1.isEmpty = function() {
   var items;
   items = this.data.get('order.items');
   return items.length === 0;
@@ -17741,7 +17759,7 @@ getMCIds = function(qs) {
 
 tagNames = [];
 
-ref = Shop.Forms;
+ref = Shop$1.Forms;
 for (k in ref) {
   v = ref[k];
   if (v.prototype.tag != null) {
@@ -17749,7 +17767,7 @@ for (k in ref) {
   }
 }
 
-ref1 = Shop.Widgets;
+ref1 = Shop$1.Widgets;
 for (k in ref1) {
   v = ref1[k];
   if (v.prototype.tag != null) {
@@ -17779,7 +17797,7 @@ while (true) {
   }
 }
 
-Shop.start = function(opts) {
+Shop$1.start = function(opts) {
   var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, data$$1, i, item, items, j, k2, len, len1, meta, p, promo, ps, queries, r, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref20, ref4, ref5, ref6, ref7, ref8, ref9, referrer, settings, tag, tags, v2;
   if (opts == null) {
     opts = {};
@@ -17787,8 +17805,8 @@ Shop.start = function(opts) {
   if (opts.key == null) {
     throw new Error('Please specify your API Key');
   }
-  Shop.Forms.register();
-  Shop.Widgets.register();
+  Shop$1.Forms.register();
+  Shop$1.Widgets.register();
   referrer = '';
   queries = getQueries();
   if ((ref4 = opts.config) != null ? ref4.hashReferrer : void 0) {
@@ -17979,7 +17997,7 @@ Shop.start = function(opts) {
     if (!id) {
       id = item.get('productSlug');
     }
-    return Shop.setItem(id, 0);
+    return Shop$1.setItem(id, 0);
   });
   m$1.trigger(Events$2.SetData, this.data);
   m$1.on('error', function(err) {
@@ -18001,11 +18019,11 @@ Shop.start = function(opts) {
   return m$1;
 };
 
-Shop.initCart = function() {
+Shop$1.initCart = function() {
   return this.cart.initCart();
 };
 
-Shop.setItem = function(id, quantity, locked) {
+Shop$1.setItem = function(id, quantity, locked) {
   var p;
   if (locked == null) {
     locked = false;
@@ -18026,12 +18044,12 @@ Shop.setItem = function(id, quantity, locked) {
   }
 };
 
-Shop.getItem = function(id) {
+Shop$1.getItem = function(id) {
   return this.cart.get(id);
 };
 
-var Shop$1 = Shop;
+var Shop$2 = Shop$1;
 
-return Shop$1;
+return Shop$2;
 
 }());
