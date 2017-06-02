@@ -24,7 +24,7 @@ export default Events =
 
   Submit:
     'submit'
-  SubmitCart:
+  SubmitCard:
     'submit-card'
   SubmitShippingAddress:
     'submit-shipping-address'

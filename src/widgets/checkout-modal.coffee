@@ -22,15 +22,25 @@ class CheckoutModal extends El.View
     m.on Events.CheckoutOpen, (id)=>
       if id == @id
         @toggle true
+        Shop.analytics.track 'Viewed Checkout Step', step: 1
+        Shop.analytics.track 'Completed Checkout Step', step: 1
+        Shop.analytics.track 'Viewed Checkout Step', step: 2
+
     m.on Events.CheckoutClose, (id)=>
       if id == @id
         @toggle false
+
     m.on Events.SubmitCard, (id)=>
       @step = 1
       El.scheduleUpdate()
+      Shop.analytics.track 'Completed Checkout Step', step: 2
+      Shop.analytics.track 'Viewed Checkout Step', step: 3
+
     m.on Events.SubmitSuccess, (id)=>
       @step = 2
       El.scheduleUpdate()
+      Shop.analytics.track 'Completed Checkout Step', step: 3
+
 
   open: ()->
     @toggle true
