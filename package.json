@@ -77,7 +77,7 @@
     "postcss-discard-comments": "2.0.4",
     "postmortem": "^0.2.6",
     "poststylus": "0.2.3",
-    "pug": "2.0.0-rc.1",
+    "pug": "2.0.0-rc.2",
     "random-token": "0.0.8",
     "referential": "0.5.23",
     "rucksack-css": "0.9.1",
