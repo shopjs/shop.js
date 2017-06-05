@@ -11418,6 +11418,7 @@ var isPostalRequired = function(value) {
   if (requiresPostalCode(this.get('order.shippingAddress.country') || '') && ((value == null) || value === '')) {
     throw new Error("Required for Selected Country");
   }
+  return value;
 };
 
 var isEcardGiftRequired = function(value) {
