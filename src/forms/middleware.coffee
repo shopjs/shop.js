@@ -53,6 +53,7 @@ export splitName = (value) ->
 export isPostalRequired = (value) ->
   if requiresPostalCode(@get('order.shippingAddress.country') || '') && (!value? || value == '')
     throw new Error "Required for Selected Country"
+  return value
 
 export isEcardGiftRequired = (value) ->
   return value if (!@get('order.gift') || @get('order.giftType') != 'ecard') || (value && value != '')
