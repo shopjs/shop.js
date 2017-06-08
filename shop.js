@@ -10507,6 +10507,15 @@ var Select$2 = StateSelect = (function(superClass) {
 
   StateSelect.prototype.countryField = 'order.shippingAddress.country';
 
+  StateSelect.prototype.getValue = function(event) {
+    var ref, ref1;
+    if (this.input.ref.get(this.countryField) === 'us') {
+      return (ref = $(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
+    } else {
+      return (ref1 = $(event.target).val()) != null ? ref1.trim() : void 0;
+    }
+  };
+
   StateSelect.prototype.init = function() {
     StateSelect.__super__.init.apply(this, arguments);
     return this.on('update', (function(_this) {
@@ -10546,7 +10555,7 @@ var Select$2 = StateSelect = (function(superClass) {
       $(this.root).find('.selectize-control').hide();
       value = this.input.ref.get(this.input.name);
       if (value) {
-        this.input.ref.set(this.input.name, value.toUpperCase());
+        this.input.ref.set(this.input.name, value);
       }
     }
     return StateSelect.__super__.onUpdated.apply(this, arguments);

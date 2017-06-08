@@ -327,6 +327,9 @@ itemUpdateQueue = []
 Shop.initCart = ->
   @cart.initCart()
 
+Shop.clear = ->
+  @cart.clear()
+
 Shop.setItem = (id, quantity, locked=false) ->
   m.trigger Events.TryUpdateItem, id
   p = @cart.set id, quantity, locked
