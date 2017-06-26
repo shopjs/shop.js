@@ -5432,7 +5432,7 @@ Hanzo.Api = Api$1;
 
 Hanzo.Client = Client;
 
-// node_modules/commerce.js/lib/commerce.mjs
+// ../../hanzo/commerce.js/lib/commerce.mjs
 // src/analytics.coffee
 var analytics;
 
@@ -5484,7 +5484,7 @@ Cart = (function() {
     var cartId, i, item, items, j, len;
     cartId = this.data.get('order.cartId');
     if (!cartId && (this.client.cart != null)) {
-      return this.client.cart.create().then((function(_this) {
+      this.client.cart.create().then((function(_this) {
         return function(cart) {
           var i, item, items, j, len;
           _this.data.set('order.cartId', cart.id);
@@ -5496,14 +5496,28 @@ Cart = (function() {
           return _this.onCart(cart.id);
         };
       })(this));
-    } else {
+      return this.data.on('set', (function(_this) {
+        return function(name) {
+          if (name === 'order.storeId') {
+            return _this._cartSyncStore();
+          }
+        };
+      })(this));
+    } else if (this.client.cart != null) {
       this.onCart(cartId);
       items = this.data.get('order.items');
       for (i = j = 0, len = items.length; j < len; i = ++j) {
         item = items[i];
         this._cartSet(item.productId, item.quantity);
       }
-      return this.onCart(cartId);
+      this.onCart(cartId);
+      return this.data.on('set', (function(_this) {
+        return function(name) {
+          if (name === 'order.storeId') {
+            return _this._cartSyncStore();
+          }
+        };
+      })(this));
     }
   };
 
@@ -5516,7 +5530,8 @@ Cart = (function() {
       return this.client.cart.set({
         id: cartId,
         productId: id,
-        quantity: quantity
+        quantity: quantity,
+        storeId: this.data.get('order.storeId')
       });
     }
   };
@@ -5528,6 +5543,28 @@ Cart = (function() {
       cart.id = cartId;
       return this.client.cart.update(cart);
     }
+  };
+
+  Cart.prototype._cartSyncStore = function() {
+    var cartId;
+    cartId = this.data.get('order.cartId');
+    if (cartId && (this.client.cart != null)) {
+      return this.client.cart.update({
+        id: cartId,
+        storeId: this.data.get('order.storeId')
+      });
+    }
+  };
+
+  Cart.prototype.clear = function() {
+    var item, items, j, len;
+    this.queue.length = 0;
+    items = this.data.get('order.items');
+    for (j = 0, len = items.length; j < len; j++) {
+      item = items[j];
+      this.set(item.productId, 0);
+    }
+    return this.data.get('order.items');
   };
 
   Cart.prototype.set = function(id, quantity, locked) {
@@ -5861,19 +5898,19 @@ Cart = (function() {
       for (n = 0, len4 = taxRates.length; n < len4; n++) {
         taxRateFilter = taxRates[n];
         city = this.data.get('order.shippingAddress.city');
-        if (!city || ((taxRateFilter.city != null) && taxRateFilter.city.toLowerCase() !== city.toLowerCase())) {
+        if ((!city && taxRateFilter.city) || ((taxRateFilter.city != null) && taxRateFilter.city.toLowerCase() !== city.toLowerCase())) {
           continue;
         }
         postalCode = this.data.get('order.shippingAddress.postalCode');
-        if (!postalCode || ((taxRateFilter.postalCode != null) && taxRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
+        if ((!postalCode && taxRateFilter.postalCode) || ((taxRateFilter.postalCode != null) && taxRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
           continue;
         }
         state = this.data.get('order.shippingAddress.state');
-        if (!state || ((taxRateFilter.state != null) && taxRateFilter.state.toLowerCase() !== state.toLowerCase())) {
+        if ((!state && taxRateFilter.state) || ((taxRateFilter.state != null) && taxRateFilter.state.toLowerCase() !== state.toLowerCase())) {
           continue;
         }
         country = this.data.get('order.shippingAddress.country');
-        if (!country || ((taxRateFilter.country != null) && taxRateFilter.country.toLowerCase() !== country.toLowerCase())) {
+        if ((!country && taxRateFilter.country) || ((taxRateFilter.country != null) && taxRateFilter.country.toLowerCase() !== country.toLowerCase())) {
           continue;
         }
         this.data.set('order.taxRate', taxRateFilter.taxRate);
@@ -5889,19 +5926,19 @@ Cart = (function() {
       for (o = 0, len5 = shippingRates.length; o < len5; o++) {
         shippingRateFilter = shippingRates[o];
         city = this.data.get('order.shippingAddress.city');
-        if (!city || ((shippingRateFilter.city != null) && shippingRateFilter.city.toLowerCase() !== city.toLowerCase())) {
+        if ((!city && shippingRateFilter.city) || ((shippingRateFilter.city != null) && shippingRateFilter.city.toLowerCase() !== city.toLowerCase())) {
           continue;
         }
         postalCode = this.data.get('order.shippingAddress.postalCode');
-        if (!postalCode || ((shippingRateFilter.postalCode != null) && shippingRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
+        if ((!postalCode && shippingRateFilter.postalCode) || ((shippingRateFilter.postalCode != null) && shippingRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
           continue;
         }
         state = this.data.get('order.shippingAddress.state');
-        if (!state || ((shippingRateFilter.state != null) && shippingRateFilter.state.toLowerCase() !== state.toLowerCase())) {
+        if ((!state && shippingRateFilter.state) || ((shippingRateFilter.state != null) && shippingRateFilter.state.toLowerCase() !== state.toLowerCase())) {
           continue;
         }
         country = this.data.get('order.shippingAddress.country');
-        if (!country || ((shippingRateFilter.country != null) && shippingRateFilter.country.toLowerCase() !== country.toLowerCase())) {
+        if ((!country && shippingRateFilter.country) || ((shippingRateFilter.country != null) && shippingRateFilter.country.toLowerCase() !== country.toLowerCase())) {
           continue;
         }
         this.data.set('order.shippingRate', shippingRateFilter.shippingRate);
@@ -18031,6 +18068,10 @@ Shop$1.start = function(opts) {
 
 Shop$1.initCart = function() {
   return this.cart.initCart();
+};
+
+Shop$1.clear = function() {
+  return this.cart.clear();
 };
 
 Shop$1.setItem = function(id, quantity, locked) {
