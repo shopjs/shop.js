@@ -54,7 +54,7 @@
     "moment": "2.18.1"
   },
   "devDependencies": {
-    "autoprefixer": "7.1.1",
+    "autoprefixer": "7.1.2",
     "bebop": "^1.12.5",
     "chai": "4.0.2",
     "chai-as-promised": "7.0.0",
