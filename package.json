@@ -80,7 +80,7 @@
     "pug": "2.0.0-rc.2",
     "random-token": "0.0.8",
     "referential": "0.5.23",
-    "rucksack-css": "0.9.1",
+    "rucksack-css": "1.0.0",
     "rupture": "0.6.2",
     "sake-bundle": "^0.6.0",
     "sake-cli": "^0.5.21",
