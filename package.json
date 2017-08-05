@@ -76,7 +76,7 @@
     "nightmare": "2.10.0",
     "postcss-discard-comments": "2.0.4",
     "postmortem": "^0.2.6",
-    "poststylus": "0.2.3",
+    "poststylus": "1.0.0",
     "pug": "2.0.0-rc.2",
     "random-token": "0.0.8",
     "referential": "0.5.23",
