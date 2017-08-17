@@ -5432,7 +5432,7 @@ Hanzo.Api = Api$1;
 
 Hanzo.Client = Client;
 
-// ../../hanzo/commerce.js/lib/commerce.mjs
+// node_modules/commerce.js/lib/commerce.mjs
 // src/analytics.coffee
 var analytics;
 
@@ -5982,8 +5982,8 @@ Cart = (function() {
         referralProgram = _this.data.get('referralProgram');
         if (referralProgram != null) {
           p2 = _this.client.referrer.create({
-            userId: data.order.userId,
-            orderId: data.order.orderId,
+            userId: _this.data.get('order.userId'),
+            orderId: _this.data.get('order.id'),
             program: referralProgram,
             programId: _this.data.get('referralProgram.id')
           })["catch"](function(err) {
