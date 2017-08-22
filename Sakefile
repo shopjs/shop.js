@@ -15,7 +15,8 @@ task 'build', 'build js', ['build:static'], ->
   bundle.write
     entry: 'src/index.coffee'
     compilers:
-      coffee: version: 1
+      coffee:
+        version: 1
 
 task 'build:min', 'build js for production', ['build'], ->
   yield bundle.write
@@ -25,7 +26,8 @@ task 'build:min', 'build js for production', ['build'], ->
     sourceMap: false
     browser:   false
     compilers:
-      coffee: version: 1
+      coffee:
+        version: 1
   yield exec 'uglifyjs shop.js -o shop.min.js'
   yield exec 'cp lib/theme.css theme.css'
 
