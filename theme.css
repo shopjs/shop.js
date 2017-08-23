@@ -1,3 +1,29 @@
+cart,
+checkout,
+checkout-card,
+checkout-shippingaddress,
+login,
+orders,
+profile,
+register,
+reset-password,
+reset-password-complete,
+shippingaddress{
+  box-sizing:border-box;
+}
+cart *,
+checkout *,
+checkout-card *,
+checkout-shippingaddress *,
+login *,
+orders *,
+profile *,
+register *,
+reset-password *,
+reset-password-complete *,
+shippingaddress *{
+  box-sizing:border-box;
+}
 cart .input .selectize-input,
 checkout .input .selectize-input,
 checkout-card .input .selectize-input,
