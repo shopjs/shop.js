@@ -1290,7 +1290,6 @@ cart .product-quantity-container .item{
 }
 cart .product-description{
   line-height:1em;
-  padding-left:20px;
   display:inline-block;
   vertical-align:top;
   width:90%;
@@ -1309,6 +1308,7 @@ cart .product-image-container{
 }
 cart .product-image-container img{
   max-height:3.5em;
+  padding-right:20px;
 }
 cart .product-text-container{
   width:40%;
