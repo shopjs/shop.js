@@ -20,14 +20,14 @@ class CheckoutModal extends El.View
     super
 
     m.on Events.CheckoutOpen, (id)=>
-      if id == @id
+      if !id || id == @id
         @toggle true
         Shop.analytics.track 'Viewed Checkout Step', step: 1
         Shop.analytics.track 'Completed Checkout Step', step: 1
         Shop.analytics.track 'Viewed Checkout Step', step: 2
 
     m.on Events.CheckoutClose, (id)=>
-      if id == @id
+      if !id || id == @id
         @toggle false
 
     m.on Events.SubmitCard, (id)=>
