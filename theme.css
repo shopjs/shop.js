@@ -1505,6 +1505,14 @@ checkout-shippingaddress{
   padding:20px;
   background-color:#eee;
 }
+checkout button,
+checkout-card button,
+checkout-shippingaddress button,
+checkout .button,
+checkout-card .button,
+checkout-shippingaddress .button{
+  border-width:0;
+}
 checkout .checkout-section,
 checkout-card .checkout-section,
 checkout-shippingaddress .checkout-section{
