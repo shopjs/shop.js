@@ -25,6 +25,7 @@ task 'build:min', 'build js for production', ['build'], ->
     external:  false
     sourceMap: false
     browser:   false
+    commonjs:  true
     compilers:
       coffee:
         version: 1
