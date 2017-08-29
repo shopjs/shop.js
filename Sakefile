@@ -18,8 +18,6 @@ task 'build', 'build js', ['build:static'], ->
       coffee:
         version: 1
 
-  yield exec 'cp lib/theme.css theme.css'
-
 task 'build:min', 'build js for production', ['build'], ->
   yield bundle.write
     entry:     'src/index.coffee'
@@ -31,6 +29,7 @@ task 'build:min', 'build js for production', ['build'], ->
       coffee:
         version: 1
   yield exec 'uglifyjs shop.js -o shop.min.js'
+  yield exec 'cp lib/theme.css theme.css'
 
 task 'build:static', 'build static assets', ->
   exec '''
