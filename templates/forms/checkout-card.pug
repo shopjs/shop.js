@@ -1,2 +1,33 @@
 form(onsubmit='{ submit }')
   #{ 'yield' }
+    .contact.checkout-section
+      h2
+        | Contact
+      .fields
+        user-name.input(placeholder='Name')
+        user-email.input(placeholder='Email')
+    .payment.checkout-section
+      h2
+        | Payment
+      span.secured-text
+        | SSL Secure
+        span Checkout
+        img.lock-icon(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg')
+      .fields
+        card-name.input(placeholder='Name on Card')
+        card-number.input(name='number', placeholder='Card Number')
+          div.cards-accepted
+            img.card-logo.amex-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg')
+            img.card-logo.visa-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg')
+            img.card-logo.discover-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg')
+            img.card-logo.jcb-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg')
+            img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
+            a.stripe-link(href='//www.stripe.com', target='_blank')
+              img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
+        card-expiry.input(name='expiry', placeholder='MM / YY')
+        card-cvc.input(name='cvc', placeholder='CVC')
+
+    button.checkout-next(type='submit')
+      | Continue &#10140;
+    .error(if='{ errorMessage }')
+      | { errorMessage }

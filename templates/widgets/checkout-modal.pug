@@ -12,105 +12,112 @@
     .checkout-back(if='{ step == 1 }', onclick='{ back }') &#10140;
 
   .checkout-content
-    cart
-      h2
-        | Your Items
-      lineitems(if='{ !isEmpty() }')
-      .promo
-        .promo-label
-          | Coupon
-        .promo-row(class='{ applied: applied, applying: applying, failed: failed }')
-          promocode.input(placeholder='Coupon')
-          button(disabled='{ applying }', onclick='{ applyPromoCode }')
-            span(if='{ !applied && !applying && !failed }') +
-            span(if='{ applied }' ) &#10003;
-            span(if='{ failed }' ) &#10005;
-            span(if='{ applying }') ...
-      .invoice-discount.invoice-line.animated.fadeIn(if="{ data.get('order.discount') > 0 }")
-        .invoice-label
-          | Discount
-        .invoice-amount
-          | { renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }
-      .invoice-line
-        .invoice-label
-          | Subtotal
-        .invoice-amount
-          | { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }
-      .invoice-line
-        .invoice-label
-          | Shipping
-        .invoice-amount.not-bold
-          | { data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }
-      .invoice-line
-        .invoice-label
-          | Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)
-        .invoice-amount
-          | { renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }
-      .invoice-line.invoice-total
-        .invoice-label
-          | Total
-        .invoice-amount
-          | { renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }
+    #{ 'yield' }(from='cart')
+      cart
+        h2(if='{ !isEmpty() }')
+          | Your Items
+        h2(if='{ isEmpty() }')
+          | Your Cart Is Empty
+        lineitems(if='{ !isEmpty() }')
+
+        .promo
+          .promo-label
+            | Coupon
+          .promo-row(class='{ applied: applied, applying: applying, failed: failed }')
+            promocode.input(placeholder='Coupon')
+            button(disabled='{ applying }', onclick='{ applyPromoCode }')
+              span(if='{ !applied && !applying && !failed }') +
+              span(if='{ applied }' ) &#10003;
+              span(if='{ failed }' ) &#10005;
+              span(if='{ applying }') ...
+        .invoice-discount.invoice-line.animated.fadeIn(if="{ data.get('order.discount') > 0 }")
+          .invoice-label
+            | Discount
+          .invoice-amount
+            | { renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }
+        .invoice-line
+          .invoice-label
+            | Subtotal
+          .invoice-amount
+            | { renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }
+        .invoice-line
+          .invoice-label
+            | Shipping
+          .invoice-amount.not-bold
+            | { data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }
+        .invoice-line
+          .invoice-label
+            | Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)
+          .invoice-amount
+            | { renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }
+        .invoice-line.invoice-total
+          .invoice-label
+            | Total
+          .invoice-amount
+            | { renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }
 
     .checkout-form(class='{ step-1: step == 0, step-2: step == 1, step-3: step == 2 }')
       .checkout-form-parts
-        checkout-card.checkout-form-part
-          .contact.checkout-section
-            h2
-              | Contact
-            .fields
-              user-name.input(placeholder='Name')
-              user-email.input(placeholder='Email')
-          .payment.checkout-section
-            h2
-              | Payment
-            span.secured-text
-              | SSL Secure
-              span Checkout
-              img.lock-icon(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg')
-            .fields
-              card-name.input(placeholder='Name on Card')
-              card-number.input(name='number', placeholder='Card Number')
-                div.cards-accepted
-                  img.card-logo.amex-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg')
-                  img.card-logo.visa-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg')
-                  img.card-logo.discover-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg')
-                  img.card-logo.jcb-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg')
-                  img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
-                  a.stripe-link(href='//www.stripe.com', target='_blank')
-                    img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
-              card-expiry.input(name='expiry', placeholder='MM / YY')
-              card-cvc.input(name='cvc', placeholder='CVC')
+        #{ 'yield' }(from='checkout-1')
+          checkout-card
+            .contact.checkout-section
+              h2
+                | Contact
+              .fields
+                user-name.input(placeholder='Name')
+                user-email.input(placeholder='Email')
+            .payment.checkout-section
+              h2
+                | Payment
+              span.secured-text
+                | SSL Secure
+                span Checkout
+                img.lock-icon(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg')
+              .fields
+                card-name.input(placeholder='Name on Card')
+                card-number.input(name='number', placeholder='Card Number')
+                  div.cards-accepted
+                    img.card-logo.amex-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg')
+                    img.card-logo.visa-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg')
+                    img.card-logo.discover-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg')
+                    img.card-logo.jcb-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg')
+                    img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
+                    a.stripe-link(href='//www.stripe.com', target='_blank')
+                      img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
+                card-expiry.input(name='expiry', placeholder='MM / YY')
+                card-cvc.input(name='cvc', placeholder='CVC')
 
-          button.checkout-next(type='submit')
-            | Continue &#10140;
-          .error(if='{ errorMessage }')
-            | { errorMessage }
+            button.checkout-next(type='submit')
+              | Continue &#10140;
+            .error(if='{ errorMessage }')
+              | { errorMessage }
 
-        checkout.checkout-form-part
-          .shipping.checkout-section
-            h2
-              | Shipping
-            .fields
-              shippingaddress-name.input(placeholder='Recipient')
-              shippingaddress-line1.input(placeholder='Address')
-              shippingaddress-line2.input(placeholder='Suite')
-            .fields
-              shippingaddress-city.input(placeholder='City')
-              shippingaddress-postalcode.input(placeholder='Postal Code')
-            .fields
-              shippingaddress-state.input(placeholder='State')
-              shippingaddress-country.input(placeholder='Country')
-          terms.checkbox
-            label(for='terms')
-              | I have read and accept the&nbsp;
-              a(href='terms', target='_blank') terms and conditions
+        #{ 'yield' }(from='checkout-2')
+          checkout
+            .shipping.checkout-section
+              h2
+                | Shipping
+              .fields
+                shippingaddress-name.input(placeholder='Recipient')
+                shippingaddress-line1.input(placeholder='Address')
+                shippingaddress-line2.input(placeholder='Suite')
+              .fields
+                shippingaddress-city.input(placeholder='City')
+                shippingaddress-postalcode.input(placeholder='Postal Code')
+              .fields
+                shippingaddress-state.input(placeholder='State')
+                shippingaddress-country.input(placeholder='Country')
+            terms.checkbox
+              label(for='terms')
+                | I have read and accept the&nbsp;
+                a(href='terms', target='_blank') terms and conditions
 
-          button.checkout-next(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
-            | Checkout
-          .error(if='{ errorMessage }')
-            | { errorMessage }
+            button.checkout-next(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
+              | Checkout
+            .error(if='{ errorMessage }')
+              | { errorMessage }
 
-        .completed.checkout-form-part
-          #{ 'yield '}
+        #{ 'yield' }(from='checkout-3')
+          .completed
+            #{ 'yield '}
 

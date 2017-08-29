@@ -244,6 +244,7 @@ Shop.start = (opts = {}) ->
   @cart.onUpdate = (item) =>
     items = @data.get 'order.items'
     store.set 'items', items
+
     @cart._cartUpdate
       tax:   @data.get 'order.tax'
       total: @data.get 'order.total'
@@ -330,6 +331,15 @@ Shop.initCart = ->
 Shop.clear = ->
   @cart.clear()
 
+# cart item is in the form of:
+#
+# id:       string
+# sku:      string
+# name:     string
+# quantity: number
+# price:    number in cents
+#
+
 Shop.setItem = (id, quantity, locked=false) ->
   m.trigger Events.TryUpdateItem, id
   p = @cart.set id, quantity, locked
@@ -341,7 +351,18 @@ Shop.setItem = (id, quantity, locked=false) ->
     .catch (err) ->
       window?.Raven?.captureException err
 
+Shop.addItem = (id, quanity, locked) ->
+  item = Shop.getItem(id)
+  Shop.setItem(id, item.quantity += quantity, locked)
+
 Shop.getItem = (id) ->
-  return @cart.get id
+  item =  @cart.get id
+  return {
+    id:         item.id ? ''
+    sku:        item.sku ? ''
+    name:       item.name ? ''
+    quantity:   item.quantity ? 0
+    price:      item.price ? 0
+  }
 
 export default Shop

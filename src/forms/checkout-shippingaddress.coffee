@@ -1,5 +1,4 @@
 import El from 'el.js'
-import riot         from 'riot/lib/riot'
 import store        from 'akasha'
 
 import Events from '../events'

@@ -1,7 +1,8 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/form'
+import html   from '../../templates/forms/login'
+
 import {
   isEmail
   isPassword
