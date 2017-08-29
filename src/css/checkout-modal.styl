@@ -126,35 +126,35 @@
       top: calc(-1.5em - 10px)
 
   .checkout-form
-    & > *
+    .checkout-form-parts
       width: 300%
       transition transform $themeTransitionTime ease-in-out
 
-      .checkout-form-part
+      & > *
         column 1/3 3 0
 
     &.step-1
-      .checkout-form-part:not(:nth-child(1))
-        height: 10px
-        & > *
-          display: none
-
+      .checkout-form-parts
+        & > :not(:nth-child(1))
+          height: 10px
+          & > *
+            display: none
 
     &.step-2
       .checkout-form-parts
         transform: translateX(calc(-100% * 1/3))
 
-      .checkout-form-part:not(:nth-child(2))
-        height: 10px
-        & > *
-          display: none
+        & > :not(:nth-child(2))
+          height: 10px
+          & > *
+            display: none
 
     &.step-3
       .checkout-form-parts
         transform: translateX(calc(-100% * 2/3))
 
-      .checkout-form-part:not(:nth-child(3))
-        height: 10px
-        & > *
-          display: none
+        & > :not(:nth-child(3))
+          height: 10px
+          & > *
+            display: none
 

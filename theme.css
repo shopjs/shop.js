@@ -1746,54 +1746,54 @@ checkout-shippingaddress .stripe-logo{
 .checkout-content checkout-card .secured-text{
   top:calc(-1.5em - 10px);
 }
-.checkout-content .checkout-form > *{
+.checkout-content .checkout-form .checkout-form-parts{
   width:300%;
   transition:-webkit-transform 500ms ease-in-out;
   transition:transform 500ms ease-in-out;
   transition:transform 500ms ease-in-out, -webkit-transform 500ms ease-in-out;
 }
-.checkout-content .checkout-form > * .checkout-form-part{
+.checkout-content .checkout-form .checkout-form-parts > *{
   width:calc(99.9% * 1/3);
 }
-.checkout-content .checkout-form > * .checkout-form-part:nth-child(1n){
+.checkout-content .checkout-form .checkout-form-parts > *:nth-child(1n){
   float:left;
   margin-right:0;
   clear:none;
 }
-.checkout-content .checkout-form > * .checkout-form-part:last-child{
+.checkout-content .checkout-form .checkout-form-parts > *:last-child{
   margin-right:0;
 }
-.checkout-content .checkout-form > * .checkout-form-part:nth-child(3n){
+.checkout-content .checkout-form .checkout-form-parts > *:nth-child(3n){
   margin-right:0;
   float:right;
 }
-.checkout-content .checkout-form > * .checkout-form-part:nth-child(3n + 1){
+.checkout-content .checkout-form .checkout-form-parts > *:nth-child(3n + 1){
   clear:both;
 }
-.checkout-content .checkout-form.step-1 .checkout-form-part:not(:nth-child(1)){
+.checkout-content .checkout-form.step-1 .checkout-form-parts > :not(:nth-child(1)){
   height:10px;
 }
-.checkout-content .checkout-form.step-1 .checkout-form-part:not(:nth-child(1)) > *{
+.checkout-content .checkout-form.step-1 .checkout-form-parts > :not(:nth-child(1)) > *{
   display:none;
 }
 .checkout-content .checkout-form.step-2 .checkout-form-parts{
   -webkit-transform:translateX(calc(-100% * 1 / 3));
           transform:translateX(calc(-100% * 1 / 3));
 }
-.checkout-content .checkout-form.step-2 .checkout-form-part:not(:nth-child(2)){
+.checkout-content .checkout-form.step-2 .checkout-form-parts > :not(:nth-child(2)){
   height:10px;
 }
-.checkout-content .checkout-form.step-2 .checkout-form-part:not(:nth-child(2)) > *{
+.checkout-content .checkout-form.step-2 .checkout-form-parts > :not(:nth-child(2)) > *{
   display:none;
 }
 .checkout-content .checkout-form.step-3 .checkout-form-parts{
   -webkit-transform:translateX(calc(-100% * 2 / 3));
           transform:translateX(calc(-100% * 2 / 3));
 }
-.checkout-content .checkout-form.step-3 .checkout-form-part:not(:nth-child(3)){
+.checkout-content .checkout-form.step-3 .checkout-form-parts > :not(:nth-child(3)){
   height:10px;
 }
-.checkout-content .checkout-form.step-3 .checkout-form-part:not(:nth-child(3)) > *{
+.checkout-content .checkout-form.step-3 .checkout-form-parts > :not(:nth-child(3)) > *{
   display:none;
 }
 @media only screen and (max-width: 400px){
