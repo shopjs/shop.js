@@ -13,22 +13,22 @@ task 'clean', 'clean project', ->
 
 task 'build', 'build js', ['build:static'], ->
   bundle.write
-    entry: 'src/index.coffee'
+    entry:   'src/index.coffee'
+    details: true
+    quiet:   false
     compilers:
-      coffee:
-        version: 1
+      coffee: version: 1
 
 task 'build:min', 'build js for production', ['build'], ->
   yield bundle.write
     entry:     'src/index.coffee'
-    format:    'web'
-    external:  false
-    sourceMap: false
     browser:   false
     commonjs:  true
+    external:  false
+    format:    'web'
+    sourceMap: false
     compilers:
-      coffee:
-        version: 1
+      coffee: version: 1
   yield exec 'uglifyjs shop.js -o shop.min.js'
   yield exec 'cp lib/theme.css theme.css'
 
