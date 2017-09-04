@@ -358,11 +358,11 @@ Shop.addItem = (id, quantity, locked) ->
 Shop.getItem = (id) ->
   item =  @cart.get id
   return {
-    id:         item.id ? ''
-    sku:        item.sku ? ''
-    name:       item.name ? ''
-    quantity:   item.quantity ? 0
-    price:      item.price ? 0
+    id:         item?.id ? ''
+    sku:        item?.sku ? ''
+    name:       item?.name ? ''
+    quantity:   item?.quantity ? 0
+    price:      item?.price ? 0
   }
 
 export default Shop
