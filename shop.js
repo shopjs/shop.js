@@ -14418,14 +14418,14 @@ SidePane = (function(superClass) {
     SidePane.__super__.init.apply(this, arguments);
     m$1.on(Events$2.SidePaneOpen, (function(_this) {
       return function(id) {
-        if (id === _this.id) {
+        if (!id || id === _this.id) {
           return _this.toggle(true);
         }
       };
     })(this));
     return m$1.on(Events$2.SidePaneClose, (function(_this) {
       return function(id) {
-        if (id === _this.id) {
+        if (!id || id === _this.id) {
           return _this.toggle(false);
         }
       };
