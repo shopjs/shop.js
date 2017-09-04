@@ -19592,11 +19592,11 @@ Shop$1.getItem = function(id) {
   var item, ref4, ref5, ref6, ref7, ref8;
   item = this.cart.get(id);
   return {
-    id: (ref4 = item.id) != null ? ref4 : '',
-    sku: (ref5 = item.sku) != null ? ref5 : '',
-    name: (ref6 = item.name) != null ? ref6 : '',
-    quantity: (ref7 = item.quantity) != null ? ref7 : 0,
-    price: (ref8 = item.price) != null ? ref8 : 0
+    id: (ref4 = item != null ? item.id : void 0) != null ? ref4 : '',
+    sku: (ref5 = item != null ? item.sku : void 0) != null ? ref5 : '',
+    name: (ref6 = item != null ? item.name : void 0) != null ? ref6 : '',
+    quantity: (ref7 = item != null ? item.quantity : void 0) != null ? ref7 : 0,
+    price: (ref8 = item != null ? item.price : void 0) != null ? ref8 : 0
   };
 };
 
