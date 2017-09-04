@@ -19998,7 +19998,7 @@ Shop$1.setItem = function(id, quantity, locked) {
   }
 };
 
-Shop$1.addItem = function(id, quanity, locked) {
+Shop$1.addItem = function(id, quantity, locked) {
   var item;
   item = Shop$1.getItem(id);
   return Shop$1.setItem(id, item.quantity += quantity, locked);
