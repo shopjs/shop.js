@@ -351,7 +351,7 @@ Shop.setItem = (id, quantity, locked=false) ->
     .catch (err) ->
       window?.Raven?.captureException err
 
-Shop.addItem = (id, quanity, locked) ->
+Shop.addItem = (id, quantity, locked) ->
   item = Shop.getItem(id)
   Shop.setItem(id, item.quantity += quantity, locked)
 

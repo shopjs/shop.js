@@ -17,6 +17,10 @@ task 'build', 'build js', ['build:static'], ->
     compilers:
       coffee:
         version: 1
+    quiet: false
+    details: true
+    external: false
+    commonjs:  true
 
 task 'build:min', 'build js for production', ['build'], ->
   yield bundle.write
