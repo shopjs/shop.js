@@ -15,10 +15,10 @@ class SidePane extends El.View
     super
 
     m.on Events.SidePaneOpen, (id)=>
-      if id == @id
+      if !id || id == @id
         @toggle true
     m.on Events.SidePaneClose, (id)=>
-      if id == @id
+      if !id || id == @id
         @toggle false
 
   open: ()->
