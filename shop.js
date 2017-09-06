@@ -5791,6 +5791,7 @@ Cart = (function() {
         analytics$1.track('Removed Product', a);
         this.data.set('order.items', items);
         this._cartSet(item.productId, 0);
+        item.quantity = 0;
         this.onUpdate(item);
       }
       this.queue.shift();
