@@ -17,7 +17,7 @@ import m             from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
 import {renderUICurrencyFromJSON} from './utils/currency'
-import {renderDate} from './utils/dates'
+import {renderDate, rfc3339} from './utils/dates'
 
 Shop = {}
 Shop.Controls = Controls
@@ -155,8 +155,9 @@ Shop.start = (opts = {}) ->
   meta   = store.get 'order.metadata'
 
   @data = refer
-    taxRates:       opts.taxRates || []
-    shippingRates:  opts.shippingRates || []
+    taxRates:       null
+    shippingRates:  null
+    countries:      []
     tokenId:        queries.tokenid
     terms:          opts.terms ? false
     order:
@@ -209,7 +210,28 @@ Shop.start = (opts = {}) ->
   settings.key      = opts.key      if opts.key
   settings.endpoint = opts.endpoint if opts.endpoint
 
+  # fetch library data
+  lastChecked = store.get 'lastChecked'
+
+  countries     = store.get 'countries'
+  taxRates      = store.get 'taxRates'
+  shoppingRates = store.get 'shoppingRates'
+
   @client = new Api settings
+  @client.library.shopjs(
+    hasCountries:       !!countries
+    hasTaxRates:        !!taxRates
+    hasShippingRates:   !!shippingRates
+    lastChecked:        renderDate(lastChecked, rfc3339)
+  ).then (res) =>
+    store.set 'countries',      res.countries ? countries
+    store.set 'taxRates',       res.taxRates ? taxRates
+    store.set 'shippingRates',  res.shippingRates ? shippingRates
+    store.set 'lastChecked',    renderDate(new Date(), rfc3339)
+
+    @cart.taxRates      res.taxRates ? taxRates
+    @cart.shippingRates res.shippingRates ? shippingRates
+
   @cart   = new Cart @client, @data, opts.cartOptions
 
   @cart.onCart = =>

@@ -51,7 +51,7 @@
     "es-raf": "^3.3.1",
     "es-selectize": "^0.12.10",
     "hanzo.js": "^2.4.0",
-    "moment": "2.18.1"
+    "moment-timezone": "0.5.13"
   },
   "devDependencies": {
     "autoprefixer": "7.1.3",
