@@ -33,18 +33,3 @@ export default Forms =
   ResetPasswordComplete:    ResetPasswordComplete
   ShippingAddress:          ShippingAddress
 
-export Checkout
-export CheckoutCard
-export CheckoutShippingAddress
-export Cart
-export LineItem
-export LineItems
-export Login
-export Order
-export Orders
-export Profile
-export Register
-export RegisterComplete
-export ResetPassword
-export ResetPasswordComplete
-export ShippingAddress
