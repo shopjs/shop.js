@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/reset-password'
+import html   from '../../templates/containers/reset-password'
 
 import {
   isRequired
@@ -35,5 +35,7 @@ class ResetPasswordForm extends El.Form
       @errorMessage = err.message
       @mediator.trigger Events.ResetPasswordFailed, err
       @scheduleUpdate()
+
+ResetPasswordForm.register()
 
 export default ResetPasswordForm

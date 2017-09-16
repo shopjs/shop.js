@@ -3,8 +3,8 @@ import { Events as ControlEvents } from 'el-controls'
 export default Events =
   Ready:
     'ready'
-  SetData:
-    'set-data'
+  LoadData:
+    'load-data'
 
   TryUpdateItem:
     'try-update-item'

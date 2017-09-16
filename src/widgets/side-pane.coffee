@@ -40,5 +40,7 @@ class SidePane extends El.View
 
     @scheduleUpdate()
 
+SidePane.register()
+
 export default SidePane
 

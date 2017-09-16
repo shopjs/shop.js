@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/reset-password-complete'
+import html   from '../../templates/containers/reset-password-complete'
 
 import {
   isPassword,
@@ -40,5 +40,7 @@ class ResetPasswordCompleteForm extends El.Form
       @errorMessage = err.message.replace 'Token', 'Link'
       @mediator.trigger Events.ResetPasswordCompleteFailed, err
       @scheduleUpdate()
+
+ResetPasswordCompleteForm.register()
 
 export default ResetPasswordCompleteForm

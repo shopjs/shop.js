@@ -33,20 +33,18 @@ export default Forms =
   ResetPasswordComplete:    ResetPasswordComplete
   ShippingAddress:          ShippingAddress
 
-  register: ->
-    Checkout.register()
-    CheckoutCard.register()
-    CheckoutShippingAddress.register()
-
-    Cart.register()
-    LineItem.register()
-    LineItems.register()
-    Login.register()
-    Order.register()
-    Orders.register()
-    Profile.register()
-    Register.register()
-    RegisterComplete.register()
-    ResetPassword.register()
-    ResetPasswordComplete.register()
-    ShippingAddress.register()
+export Checkout
+export CheckoutCard
+export CheckoutShippingAddress
+export Cart
+export LineItem
+export LineItems
+export Login
+export Order
+export Orders
+export Profile
+export Register
+export RegisterComplete
+export ResetPassword
+export ResetPasswordComplete
+export ShippingAddress

@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/login'
+import html   from '../../templates/containers/login'
 
 import {
   isEmail
@@ -35,5 +35,7 @@ class LoginForm extends El.Form
       @errorMessage = err.message
       @mediator.trigger Events.LoginFailed, err
       @scheduleUpdate()
+
+LoginForm.register()
 
 export default LoginForm

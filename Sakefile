@@ -17,8 +17,8 @@ task 'build', 'build js', ['build:static'], ->
     compilers:
       coffee:
         version: 1
-    quiet: false
-    details: true
+    # quiet: false
+    # details: true
     external: false
     commonjs:  true
 
@@ -27,8 +27,8 @@ task 'build:web', 'build js', ->
     entry:     'src/index.coffee'
     external:  false
     browser:   false
-    details:   true
-    quiet:     false
+    # details:   true
+    # quiet:     false
     commonjs:  true
     format:    'web'
     sourceMap: false
@@ -50,7 +50,8 @@ task 'server', 'Run static server for tests', (cb) ->
   server.use (require 'serve-static') './test/fixtures'
   server = require('http').createServer(server).listen port, cb
 
-task 'test', 'Run tests', ['build', 'server'], (opts) ->
+
+task 'test', 'Run tests', ['build'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''
@@ -78,7 +79,6 @@ task 'test', 'Run tests', ['build', 'server'], (opts) ->
         #{grep}
         #{test}"
 
-  server.close()
   process.exit status
 
 task 'test:ci', 'Run tests', (opts) ->

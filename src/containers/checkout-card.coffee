@@ -2,7 +2,7 @@ import El    from 'el.js'
 import store from 'akasha'
 
 import Events from '../events'
-import html   from '../../templates/forms/checkout-card'
+import html   from '../../templates/containers/checkout-card'
 import {
   cardNumber
   cvc
@@ -43,5 +43,7 @@ class CheckoutCardForm extends El.Form
       store.set 'checkout-user',    @data.get 'user'
       store.set 'checkout-payment', @data.get 'order.payment'
     @scheduleUpdate()
+
+CheckoutCardForm.register()
 
 export default CheckoutCardForm

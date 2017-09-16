@@ -2,7 +2,7 @@ import El    from 'el.js'
 import store from 'akasha'
 
 import Events from '../events'
-import html   from '../../templates/forms/cart'
+import html   from '../../templates/containers/cart'
 
 class CartForm extends El.Form
   tag:  'cart'
@@ -95,5 +95,7 @@ class CartForm extends El.Form
 
   continueShopping: ()->
     @mediator.trigger Events.ContinueShopping
+
+CartForm.register()
 
 export default CartForm

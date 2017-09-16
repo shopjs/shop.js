@@ -3,7 +3,7 @@ import store from 'akasha'
 
 import Events  from '../events'
 import configs from './configs'
-import html    from '../../templates/forms/checkout'
+import html    from '../../templates/containers/checkout'
 
 class CheckoutForm extends El.Form
   tag:  'checkout'
@@ -121,5 +121,7 @@ class CheckoutForm extends El.Form
 
       @mediator.trigger Events.SubmitFailed, err
       El.scheduleUpdate()
+
+CheckForm.register()
 
 export default CheckoutForm

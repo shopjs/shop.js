@@ -28,4 +28,6 @@ class CartCounter extends El.View
 
     price
 
+CartCounter.register()
+
 export default CartCounter

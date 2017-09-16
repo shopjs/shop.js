@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/register'
+import html   from '../../templates/containers/register'
 
 import {
   isRequired
@@ -70,5 +70,7 @@ class RegisterForm extends El.Form
       @errorMessage = err.message
       @mediator.trigger Events.RegisterFailed, err
       @scheduleUpdate()
+
+RegisterForm.register()
 
 export default RegisterForm

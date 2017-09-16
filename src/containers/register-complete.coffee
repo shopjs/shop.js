@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/form'
+import html   from '../../templates/containers/form'
 import {
   isPassword,
   isRequired,
@@ -9,7 +9,7 @@ import {
   splitName,
 } from './middleware'
 
-class RegisterComplete extends El.Form
+class RegisterCompleteForm extends El.Form
   tag: 'register-complete'
   html: html
 
@@ -56,4 +56,6 @@ class RegisterComplete extends El.Form
       @mediator.trigger Events.RegisterCompleteFailed, err
       @scheduleUpdate()
 
-export default RegisterComplete
+RegisterCompleteForm.register()
+
+export default RegisterCompleteForm
