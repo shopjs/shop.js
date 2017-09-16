@@ -12,7 +12,7 @@ import {
   getQueries,
   getReferrer,
   getMCIds
-} from './utils/dates'
+} from './utils/uri'
 
 import {
   Control
@@ -455,9 +455,16 @@ Shop.getItem = (id) ->
 # Support inline load
 if document?.currentScript?
   key = currentScript.getAttribute('data-key')
+  endpoint = currentScript.getAttribute('data-endpoint')
 
   if key
+    opts =
+      key: key
+
+    if endpoint
+      opts.endpoint = endpoint
+
     requestAnimationFrame ()->
-      Shop.start { key: key }
+      Shop.start opts
 
 export default Shop

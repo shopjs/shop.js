@@ -1,5 +1,5 @@
 import moment from 'moment-timezone'
-import { getLocale } from
+import { getLanguage } from './language'
 
 export rfc3339  = 'YYYY-MM-DDTHH:mm:ssZ'
 export mmddyyyy = 'M-DD-YYYY'
@@ -8,7 +8,7 @@ export ddmmyyyy = 'D-MM-YYYY'
 
 export renderDate = (date, format) ->
   if !format?
-    if getLocale() == 'en-US'
+    if getLanguage() == 'en-US'
       format = mmddyyyy
     else
       format = ddmmyyyy

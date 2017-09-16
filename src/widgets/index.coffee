@@ -6,7 +6,3 @@ export default Widgets =
   CartCounter:   CartCounter
   CheckoutModal: CheckoutModal
   SidePane:      SidePane
-
-export CartCounter
-export CheckoutModal
-export SidePane
