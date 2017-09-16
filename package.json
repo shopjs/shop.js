@@ -50,7 +50,7 @@
     "es-md5": "^2.7.2",
     "es-raf": "^3.3.1",
     "es-selectize": "^0.12.10",
-    "hanzo.js": "^2.4.1",
+    "hanzo.js": "2.4.1",
     "moment-timezone": "0.5.13"
   },
   "devDependencies": {

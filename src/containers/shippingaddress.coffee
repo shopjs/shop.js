@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/form'
+import html   from '../../templates/containers/form'
 import {
   isRequired
   isPostalRequired
@@ -48,5 +48,7 @@ class ShippingAddressForm extends El.Form
       @errorMessage = err.message
       @mediator.trigger Events.ShippingAddressUpdateFailed, err
       @scheduleUpdate()
+
+ShippingAddressForm.register()
 
 export default ShippingAddressForm

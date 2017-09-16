@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/lineitem'
+import html   from '../../templates/containers/lineitem'
 
 class LineItemForm extends El.Form
   tag:  'lineitem'
@@ -14,5 +14,7 @@ class LineItemForm extends El.Form
 
   delete: (event) ->
     @mediator.trigger Events.DeleteLineItem, @data
+
+LineItemForm.register()
 
 export default LineItemForm

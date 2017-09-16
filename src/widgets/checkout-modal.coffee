@@ -74,4 +74,6 @@ class CheckoutModal extends El.View
 
     @scheduleUpdate()
 
+CheckoutModal.register()
+
 export default CheckoutModal

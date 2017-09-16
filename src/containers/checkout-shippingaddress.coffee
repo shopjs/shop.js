@@ -2,7 +2,7 @@ import El from 'el.js'
 import store        from 'akasha'
 
 import Events from '../events'
-import html   from '../../templates/forms/checkout-shippingaddress'
+import html   from '../../templates/containers/checkout-shippingaddress'
 import {
   isEmail
   isPostalRequired
@@ -48,5 +48,7 @@ class CheckoutShippingAddressForm extends El.Form
       store.set 'checkout-user', @data.get 'user'
       store.set 'checkout-shippingAddress', @data.get 'order.shippingAddress'
     @scheduleUpdate()
+
+CheckoutShippingAddressForm.register()
 
 export default CheckoutShippingAddressForm

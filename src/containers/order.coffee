@@ -2,7 +2,7 @@ import El from 'el.js'
 import refer from 'referential'
 
 import Events from '../events'
-import html   from '../../templates/forms/order'
+import html   from '../../templates/containers/order'
 
 class OrderForm extends El.Form
   tag:  'order'
@@ -24,5 +24,7 @@ class OrderForm extends El.Form
 
   delete: (event) ->
     @mediator.trigger Events.DeleteLineItem, @data
+
+OrderForm.register()
 
 export default OrderForm

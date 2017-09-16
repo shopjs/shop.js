@@ -1,7 +1,7 @@
 import El from 'el.js'
 
 import Events from '../events'
-import html   from '../../templates/forms/lineitems'
+import html   from '../../templates/containers/lineitems'
 
 class LineItems extends El.View
   tag:  'lineitems'
@@ -16,5 +16,7 @@ class LineItems extends El.View
     @on 'update', =>
       if @parentData?
         @data = @parentData
+
+LineItems.register()
 
 export default LineItems
