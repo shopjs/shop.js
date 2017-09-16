@@ -1,8 +1,9 @@
 describe 'Shop.start', ->
   it "...", ->
-    m = Shop.start
-      key:        key
-      endpoint:   endpoint
+    m = yield browser.evaluate ->
+      return Shop.start
+        key:        key
+        endpoint:   endpoint
 
     m.should.not.be.null
 
