@@ -18,11 +18,11 @@ import {
   Control
   Text
   TextBox
-  Checkbox
+  CheckBox
   Select
   QuantitySelect
-  # CountrySelect
-  # StateSelect
+  CountrySelect
+  StateSelect
   UserEmail
   UserName
   UserCurrentPassword
@@ -45,14 +45,14 @@ import {
   GiftEmail
   GiftMessage
   PromoCode
-} from 'el-controls'
+} from './controls'
 
 Controls =
   # Basic
   Control:  Control
   Text:     Text
   TextBox:  TextBox
-  Checkbox: CheckBox
+  Checkbox: Checkbox
   Select:   Select
 
   # Advanced
@@ -105,10 +105,9 @@ Shop.Containers = Containers
 Shop.Widgets = Widgets
 Shop.El = El
 
-El.View::renderCurrency = renderUICurrencyFromJSON
-El.View::renderDate = renderDate
-El.View::isEmpty = ->
-  Shop.isEmpty()
+# make available in templates
+window.renderCurrency = renderUICurrencyFromJSON
+window.renderDate = renderDate
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -185,7 +184,6 @@ initData = (opts)->
   referrer = getReferrer(opts.config?.hashReferrer) ? opts.order?.referrer
   store.set 'referrer', referrer
 
-  promo  = queries.promo ? ''
   items  = store.get 'items'
   cartId = store.get 'cartId'
   meta   = store.get 'order.metadata'
@@ -253,20 +251,20 @@ initClient = (opts)->
   return new Api settings
 
 # initialize the cart from commerce.js
-initCart = (client, data)->
-  cart = new Cart client, data, opts.cartOptions
+initCart = (client, data, cartOptions)->
+  cart = new Cart client, data
 
   # fetch library data
   lastChecked   = store.get 'lastChecked'
   countries     = store.get 'countries'
   taxRates      = store.get 'taxRates'
-  shoppingRates = store.get 'shoppingRates'
+  shippingRates = store.get 'shippingRates'
 
   client.library.shopjs(
     hasCountries:       !!countries
     hasTaxRates:        !!taxRates
     hasShippingRates:   !!shippingRates
-    lastChecked:        renderDate(lastChecked, rfc3339)
+    lastChecked:        renderDate(lastChecked || '2000-01-01', rfc3339)
   ).then (res) ->
     store.set 'countries', res.countries ? countries
     store.set 'taxRates', res.taxRates ? taxRates
@@ -357,11 +355,14 @@ Shop.start = (opts = {}) ->
   @data     = initData opts
   @client   = initClient opts
 
-  @cart     = initCart @client, @data
+  @cart     = initCart @client, @data, opts.cartOptions
   @m        = initMediator @data, @cart
 
   # update referrer data
-  referrer = data.get 'order.referrerId'
+  queries = getQueries()
+  promo  = queries.promo ? ''
+  referrer = @data.get 'order.referrerId'
+
   if referrer? && referrer != ''
     @client.referrer.get(referrer).then (res) =>
       promoCode = res.affiliate.couponId
@@ -378,10 +379,6 @@ Shop.start = (opts = {}) ->
     client:   @client
     data:     @data
     mediator: m
-
-  El.update = ->
-    for tag in tags
-      tag.update()
 
   ps = []
   for tag in tags
@@ -405,7 +402,7 @@ Shop.start = (opts = {}) ->
   .catch (err) ->
     window?.Raven?.captureException err
 
-  m.trigger Events.LoadData, data
+  m.trigger Events.LoadData, @data
   return m
 
 Shop.initCart = ->
@@ -454,8 +451,8 @@ Shop.getItem = (id) ->
 
 # Support inline load
 if document?.currentScript?
-  key = currentScript.getAttribute('data-key')
-  endpoint = currentScript.getAttribute('data-endpoint')
+  key = document.currentScript.getAttribute('data-key')
+  endpoint = document.currentScript.getAttribute('data-endpoint')
 
   if key
     opts =
