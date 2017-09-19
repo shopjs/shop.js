@@ -122,6 +122,6 @@ class CheckoutForm extends El.Form
       @mediator.trigger Events.SubmitFailed, err
       El.scheduleUpdate()
 
-CheckForm.register()
+CheckoutForm.register()
 
 export default CheckoutForm

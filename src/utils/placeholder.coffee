@@ -1,3 +1,5 @@
+# Deprecated for now
+
 # contains parts of Input Placeholder Polyfill
 # MIT Licensed
 # Created by Christopher Rolfe
