@@ -1,5 +1,9 @@
-import { utils } from 'el-controls'
-import { requiresPostalCode }        from '../utils/country'
+import { requiresPostalCode } from '../utils/country'
+import {
+  luhnCheck
+  cardFromNumber
+} from '../utils/card'
+
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
@@ -75,14 +79,14 @@ export cardNumber = (value) ->
   if @get('order.type') != 'stripe'
     return value
 
-  card = utils.card.cardFromNumber value
+  card = card.cardFromNumber value
   throw new Error('Enter a valid card number') unless card
 
   number = value.replace(/\D/g, '')
   length = number.length
 
   throw new Error('Enter a valid card number') unless /^\d+$/.test(number)
-  throw new Error('Enter a valid card number') unless length in card.length and (card.luhn is false or utils.card.luhnCheck(number))
+  throw new Error('Enter a valid card number') unless length in card.length and (card.luhn is false or luhnCheck(number))
 
   value
 
@@ -125,7 +129,7 @@ export cvc = (value) ->
   if @('order.type') != 'stripe'
     return value
 
-  card = utils.card.cardFromNumber(@get 'payment.account.number')
+  card = cardFromNumber(@get 'payment.account.number')
   cvc_ = value.trim()
 
   throw new Error('Enter a valid cvc') unless /^\d+$/.test(cvc_)
