@@ -12,10 +12,6 @@ class CardNumber extends Text
   bind:     'payment.account.number'
   cardType: ''
 
-  events:
-    updated: ->
-      @onUpdated()
-
   init: ->
     super
 

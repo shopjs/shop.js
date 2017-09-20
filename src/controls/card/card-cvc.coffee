@@ -8,10 +8,6 @@ class CardCVC extends Text
   tag:    'card-cvc'
   bind: 'payment.account.cvc'
 
-  events:
-    updated: ->
-      @onUpdated()
-
   init: ->
     super
 

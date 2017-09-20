@@ -52,7 +52,7 @@ Controls =
   Control:  Control
   Text:     Text
   TextBox:  TextBox
-  Checkbox: Checkbox
+  Checkbox: CheckBox
   Select:   Select
 
   # Advanced
@@ -201,8 +201,6 @@ initData = (opts)->
       taxRate:      opts.config?.taxRate        || opts.order?.taxRate       || 0
       currency:     opts.config?.currency       || opts.order?.currency      || 'usd'
       referrerId:   referrer
-      shippingAddress:
-        country: 'us'
       discount:    0
       tax:         0
       subtotal:    0
@@ -260,16 +258,26 @@ initCart = (client, data, cartOptions)->
   taxRates      = store.get 'taxRates'
   shippingRates = store.get 'shippingRates'
 
+  lastChecked = renderDate(new Date(), rfc3339)
+
   client.library.shopjs(
     hasCountries:       !!countries
     hasTaxRates:        !!taxRates
     hasShippingRates:   !!shippingRates
     lastChecked:        renderDate(lastChecked || '2000-01-01', rfc3339)
   ).then (res) ->
-    store.set 'countries', res.countries ? countries
-    store.set 'taxRates', res.taxRates ? taxRates
-    store.set 'shippingRates', res.shippingRates ? shippingRates
-    store.set 'lastChecked', renderDate(new Date(), rfc3339)
+    countries = res.countries ? countries
+    taxRates = res.taxRates ? taxRates
+    shippingRates = res.shippingRates ? shippingRates
+
+    store.set 'countries', countries
+    store.set 'taxRates', taxRates
+    store.set 'shippingRates', shippingRates
+    store.set 'lastChecked', lastChecked
+
+    data.set 'countries', countries
+    data.set 'taxRates', taxRates
+    data.set 'shippingRates', shippingRates
 
     if res.currency
       data.set 'order.currency', res.currency

@@ -8,10 +8,6 @@ class CardExpiry extends Text
   tag:  'card-expiry'
   bind: 'payment.account.expiry'
 
-  events:
-    updated: ->
-      @onUpdated()
-
   init: ->
     super
 
