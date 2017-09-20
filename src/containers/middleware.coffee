@@ -1,4 +1,7 @@
-import { requiresPostalCode } from '../utils/country'
+import {
+  requiresPostalCode
+  requiresState
+} from '../utils/country'
 import {
   luhnCheck
   cardFromNumber
@@ -53,6 +56,11 @@ export splitName = (value) ->
   @set 'user.lastName',  lastName
 
   value
+
+export isStateRequired = (value) ->
+  if requiresState(@get('order.shippingAddress.country') || '', @get('countries')) && (!value? || value == '')
+    throw new Error "Required for Selected Country"
+  return value
 
 export isPostalRequired = (value) ->
   if requiresPostalCode(@get('order.shippingAddress.country') || '') && (!value? || value == '')

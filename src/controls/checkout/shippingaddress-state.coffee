@@ -8,5 +8,14 @@ export default class ShippingAddressState extends StateSelect
   getCountry: ->
     return @data.get 'order.shippingAddress.country'
 
+  init: ->
+    super
+
+    @input.ref.on 'set', (k, v)=>
+      if k == 'order.shippingAddress.country'
+        # force update of selectOptions
+        @options()
+        @scheduleUpdate()
+
 ShippingAddressState.register()
 

@@ -1,14 +1,15 @@
 import {
-  isRequired,
-  isEmail,
-  splitName,
-  isPostalRequired,
-  requiresStripe,
-  expiration,
-  cardNumber,
-  cvc,
-  isEcardGiftRequired,
-  agreeToTerms,
+  isRequired
+  isEmail
+  splitName
+  isStateRequired
+  isPostalRequired
+  requiresStripe
+  expiration
+  cardNumber
+  cvc
+  isEcardGiftRequired
+  agreeToTerms
 } from './middleware'
 
 export default config =
@@ -20,7 +21,7 @@ export default config =
   'order.shippingAddress.line1':      [ isRequired ]
   'order.shippingAddress.line2':      null
   'order.shippingAddress.city':       [ isRequired ]
-  'order.shippingAddress.state':      [ isRequired ]
+  'order.shippingAddress.state':      [ isStateRequired ]
   'order.shippingAddress.postalCode': [ isPostalRequired ]
   'order.shippingAddress.country':    [ isRequired ]
 
