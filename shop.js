@@ -442,114 +442,6 @@ var caf = cancelAnimationFrame = function(handle) {
   }
 };
 
-// node_modules/es-keyboardevent-key-polyfill/index.js
-var keyboardeventKeyPolyfill = {
-  keys: {
-    3: 'Cancel',
-    6: 'Help',
-    8: 'Backspace',
-    9: 'Tab',
-    12: 'Clear',
-    13: 'Enter',
-    16: 'Shift',
-    17: 'Control',
-    18: 'Alt',
-    19: 'Pause',
-    20: 'CapsLock',
-    27: 'Escape',
-    28: 'Convert',
-    29: 'NonConvert',
-    30: 'Accept',
-    31: 'ModeChange',
-    32: ' ',
-    33: 'PageUp',
-    34: 'PageDown',
-    35: 'End',
-    36: 'Home',
-    37: 'ArrowLeft',
-    38: 'ArrowUp',
-    39: 'ArrowRight',
-    40: 'ArrowDown',
-    41: 'Select',
-    42: 'Print',
-    43: 'Execute',
-    44: 'PrintScreen',
-    45: 'Insert',
-    46: 'Delete',
-    48: ['0', ')'],
-    49: ['1', '!'],
-    50: ['2', '@'],
-    51: ['3', '#'],
-    52: ['4', '$'],
-    53: ['5', '%'],
-    54: ['6', '^'],
-    55: ['7', '&'],
-    56: ['8', '*'],
-    57: ['9', '('],
-    91: 'OS',
-    93: 'ContextMenu',
-    144: 'NumLock',
-    145: 'ScrollLock',
-    181: 'VolumeMute',
-    182: 'VolumeDown',
-    183: 'VolumeUp',
-    186: [';', ':'],
-    187: ['=', '+'],
-    188: [',', '<'],
-    189: ['-', '_'],
-    190: ['.', '>'],
-    191: ['/', '?'],
-    192: ['`', '~'],
-    219: ['[', '{'],
-    220: ['\\', '|'],
-    221: [']', '}'],
-    222: ["'", '"'],
-    224: 'Meta',
-    225: 'AltGraph',
-    246: 'Attn',
-    247: 'CrSel',
-    248: 'ExSel',
-    249: 'EraseEof',
-    250: 'Play',
-    251: 'ZoomOut'
-  }
-};
-
-// Function keys (F1-24).
-var i;
-for (i = 1; i < 25; i++) {
-  keyboardeventKeyPolyfill.keys[111 + i] = 'F' + i;
-}
-
-// Printable ASCII characters.
-var letter = '';
-for (i = 65; i < 91; i++) {
-  letter = String.fromCharCode(i);
-  keyboardeventKeyPolyfill.keys[i] = [letter.toLowerCase(), letter.toUpperCase()];
-}
-
-var keyPoly = function() {
-  if (!('KeyboardEvent' in window) ||
-      'key' in window.KeyboardEvent.prototype) {
-    return false;
-  }
-
-  // Polyfill `key` on `KeyboardEvent`.
-  var proto = {
-    get: function (x) {
-      var key = keyboardeventKeyPolyfill.keys[this.which || this.keyCode];
-
-      if (Array.isArray(key)) {
-        key = key[+this.shiftKey];
-      }
-
-      return key;
-    }
-  };
-  Object.defineProperty(window.KeyboardEvent.prototype, 'key', proto);
-  return proto;
-};
-
 // src/utils/polyfills/addeventlistener.coffee
 var addEventPoly = function() {
   var addEvent, addListen, doc, docHijack, win;
@@ -696,8 +588,6 @@ if (window.requestAnimationFrame == null) {
 if (window.cancelAnimationFrame == null) {
   window.cancelAnimationFrame = raf$1.cancel;
 }
-
-keyPoly();
 
 addEventPoly();
 
@@ -5583,7 +5473,7 @@ var byId = function(name) {
 var blueprints;
 var createBlueprint;
 var fn$1;
-var i$1;
+var i;
 var len;
 var model;
 var models;
@@ -5780,8 +5670,8 @@ models = ['collection', 'coupon', 'product', 'variant'];
 fn$1 = function(model) {
   return blueprints[model] = createBlueprint(model);
 };
-for (i$1 = 0, len = models.length; i$1 < len; i$1++) {
-  model = models[i$1];
+for (i = 0, len = models.length; i < len; i++) {
+  model = models[i];
   fn$1(model);
 }
 
@@ -6493,6 +6383,2425 @@ Cart = (function() {
 })();
 
 var Cart$1 = Cart;
+
+//  commonjsHelpers
+
+var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+
+
+
+
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+var gmaps = createCommonjsModule(function (module, exports) {
+// node_modules/gmaps/gmaps.js
+"use strict";
+(function(root, factory) {
+  {
+    module.exports = factory();
+  }
+
+
+}(commonjsGlobal, function() {
+
+/*!
+ * GMaps.js v0.4.24
+ * http://hpneo.github.com/gmaps/
+ *
+ * Copyright 2016, Gustavo Leon
+ * Released under the MIT License.
+ */
+
+var extend_object = function(obj, new_obj) {
+  var name;
+
+  if (obj === new_obj) {
+    return obj;
+  }
+
+  for (name in new_obj) {
+    if (new_obj[name] !== undefined) {
+      obj[name] = new_obj[name];
+    }
+  }
+
+  return obj;
+};
+
+var replace_object = function(obj, replace) {
+  var name;
+
+  if (obj === replace) {
+    return obj;
+  }
+
+  for (name in replace) {
+    if (obj[name] != undefined) {
+      obj[name] = replace[name];
+    }
+  }
+
+  return obj;
+};
+
+var array_map = function(array, callback) {
+  var original_callback_params = Array.prototype.slice.call(arguments, 2),
+      array_return = [],
+      array_length = array.length,
+      i;
+
+  if (Array.prototype.map && array.map === Array.prototype.map) {
+    array_return = Array.prototype.map.call(array, function(item) {
+      var callback_params = original_callback_params.slice(0);
+      callback_params.splice(0, 0, item);
+
+      return callback.apply(this, callback_params);
+    });
+  }
+  else {
+    for (i = 0; i < array_length; i++) {
+      callback_params = original_callback_params;
+      callback_params.splice(0, 0, array[i]);
+      array_return.push(callback.apply(this, callback_params));
+    }
+  }
+
+  return array_return;
+};
+
+var array_flat = function(array) {
+  var new_array = [],
+      i;
+
+  for (i = 0; i < array.length; i++) {
+    new_array = new_array.concat(array[i]);
+  }
+
+  return new_array;
+};
+
+var coordsToLatLngs = function(coords, useGeoJSON) {
+  var first_coord = coords[0],
+      second_coord = coords[1];
+
+  if (useGeoJSON) {
+    first_coord = coords[1];
+    second_coord = coords[0];
+  }
+
+  return new google.maps.LatLng(first_coord, second_coord);
+};
+
+var arrayToLatLng = function(coords, useGeoJSON) {
+  var i;
+
+  for (i = 0; i < coords.length; i++) {
+    if (!(coords[i] instanceof google.maps.LatLng)) {
+      if (coords[i].length > 0 && typeof(coords[i][0]) === "object") {
+        coords[i] = arrayToLatLng(coords[i], useGeoJSON);
+      }
+      else {
+        coords[i] = coordsToLatLngs(coords[i], useGeoJSON);
+      }
+    }
+  }
+
+  return coords;
+};
+
+var getElementsByClassName = function (class_name, context) {
+    var element,
+        _class = class_name.replace('.', '');
+
+    if ('jQuery' in this && context) {
+        element = $("." + _class, context)[0];
+    } else {
+        element = document.getElementsByClassName(_class)[0];
+    }
+    return element;
+
+};
+
+var getElementById = function(id, context) {
+  var element,
+  id = id.replace('#', '');
+
+  if ('jQuery' in window && context) {
+    element = $('#' + id, context)[0];
+  } else {
+    element = document.getElementById(id);
+  }
+
+  return element;
+};
+
+var findAbsolutePosition = function(obj)  {
+  var curleft = 0,
+      curtop = 0;
+
+  if (obj.offsetParent) {
+    do {
+      curleft += obj.offsetLeft;
+      curtop += obj.offsetTop;
+    } while (obj = obj.offsetParent);
+  }
+
+  return [curleft, curtop];
+};
+
+var GMaps = (function(global) {
+  "use strict";
+
+  var doc = document;
+  /**
+   * Creates a new GMaps instance, including a Google Maps map.
+   * @class GMaps
+   * @constructs
+   * @param {object} options - `options` accepts all the [MapOptions](https://developers.google.com/maps/documentation/javascript/reference#MapOptions) and [events](https://developers.google.com/maps/documentation/javascript/reference#Map) listed in the Google Maps API. Also accepts:
+   * * `lat` (number): Latitude of the map's center
+   * * `lng` (number): Longitude of the map's center
+   * * `el` (string or HTMLElement): container where the map will be rendered
+   * * `markerClusterer` (function): A function to create a marker cluster. You can use MarkerClusterer or MarkerClustererPlus.
+   */
+  var GMaps = function(options) {
+
+    if (!(typeof window.google === 'object' && window.google.maps)) {
+      if (typeof window.console === 'object' && window.console.error) {
+        console.error('Google Maps API is required. Please register the following JavaScript library https://maps.googleapis.com/maps/api/js.');
+      }
+
+      return function() {};
+    }
+
+    if (!this) return new GMaps(options);
+
+    options.zoom = options.zoom || 15;
+    options.mapType = options.mapType || 'roadmap';
+
+    var valueOrDefault = function(value, defaultValue) {
+      return value === undefined ? defaultValue : value;
+    };
+
+    var self = this,
+        i,
+        events_that_hide_context_menu = [
+          'bounds_changed', 'center_changed', 'click', 'dblclick', 'drag',
+          'dragend', 'dragstart', 'idle', 'maptypeid_changed', 'projection_changed',
+          'resize', 'tilesloaded', 'zoom_changed'
+        ],
+        events_that_doesnt_hide_context_menu = ['mousemove', 'mouseout', 'mouseover'],
+        options_to_be_deleted = ['el', 'lat', 'lng', 'mapType', 'width', 'height', 'markerClusterer', 'enableNewStyle'],
+        identifier = options.el || options.div,
+        markerClustererFunction = options.markerClusterer,
+        mapType = google.maps.MapTypeId[options.mapType.toUpperCase()],
+        map_center = new google.maps.LatLng(options.lat, options.lng),
+        zoomControl = valueOrDefault(options.zoomControl, true),
+        zoomControlOpt = options.zoomControlOpt || {
+          style: 'DEFAULT',
+          position: 'TOP_LEFT'
+        },
+        zoomControlStyle = zoomControlOpt.style || 'DEFAULT',
+        zoomControlPosition = zoomControlOpt.position || 'TOP_LEFT',
+        panControl = valueOrDefault(options.panControl, true),
+        mapTypeControl = valueOrDefault(options.mapTypeControl, true),
+        scaleControl = valueOrDefault(options.scaleControl, true),
+        streetViewControl = valueOrDefault(options.streetViewControl, true),
+        overviewMapControl = valueOrDefault(overviewMapControl, true),
+        map_options = {},
+        map_base_options = {
+          zoom: this.zoom,
+          center: map_center,
+          mapTypeId: mapType
+        },
+        map_controls_options = {
+          panControl: panControl,
+          zoomControl: zoomControl,
+          zoomControlOptions: {
+            style: google.maps.ZoomControlStyle[zoomControlStyle],
+            position: google.maps.ControlPosition[zoomControlPosition]
+          },
+          mapTypeControl: mapTypeControl,
+          scaleControl: scaleControl,
+          streetViewControl: streetViewControl,
+          overviewMapControl: overviewMapControl
+        };
+
+      if (typeof(options.el) === 'string' || typeof(options.div) === 'string') {
+        if (identifier.indexOf("#") > -1) {
+            /**
+             * Container element
+             *
+             * @type {HTMLElement}
+             */
+            this.el = getElementById(identifier, options.context);
+        } else {
+            this.el = getElementsByClassName.apply(this, [identifier, options.context]);
+        }
+      } else {
+          this.el = identifier;
+      }
+
+    if (typeof(this.el) === 'undefined' || this.el === null) {
+      throw 'No element defined.';
+    }
+
+    window.context_menu = window.context_menu || {};
+    window.context_menu[self.el.id] = {};
+
+    /**
+     * Collection of custom controls in the map UI
+     *
+     * @type {array}
+     */
+    this.controls = [];
+    /**
+     * Collection of map's overlays
+     *
+     * @type {array}
+     */
+    this.overlays = [];
+    /**
+     * Collection of KML/GeoRSS and FusionTable layers
+     *
+     * @type {array}
+     */
+    this.layers = [];
+    /**
+     * Collection of data layers (See {@link GMaps#addLayer})
+     *
+     * @type {object}
+     */
+    this.singleLayers = {};
+    /**
+     * Collection of map's markers
+     *
+     * @type {array}
+     */
+    this.markers = [];
+    /**
+     * Collection of map's lines
+     *
+     * @type {array}
+     */
+    this.polylines = [];
+    /**
+     * Collection of map's routes requested by {@link GMaps#getRoutes}, {@link GMaps#renderRoute}, {@link GMaps#drawRoute}, {@link GMaps#travelRoute} or {@link GMaps#drawSteppedRoute}
+     *
+     * @type {array}
+     */
+    this.routes = [];
+    /**
+     * Collection of map's polygons
+     *
+     * @type {array}
+     */
+    this.polygons = [];
+    this.infoWindow = null;
+    this.overlay_el = null;
+    /**
+     * Current map's zoom
+     *
+     * @type {number}
+     */
+    this.zoom = options.zoom;
+    this.registered_events = {};
+
+    this.el.style.width = options.width || this.el.scrollWidth || this.el.offsetWidth;
+    this.el.style.height = options.height || this.el.scrollHeight || this.el.offsetHeight;
+
+    google.maps.visualRefresh = options.enableNewStyle;
+
+    for (i = 0; i < options_to_be_deleted.length; i++) {
+      delete options[options_to_be_deleted[i]];
+    }
+
+    if(options.disableDefaultUI != true) {
+      map_base_options = extend_object(map_base_options, map_controls_options);
+    }
+
+    map_options = extend_object(map_base_options, options);
+
+    for (i = 0; i < events_that_hide_context_menu.length; i++) {
+      delete map_options[events_that_hide_context_menu[i]];
+    }
+
+    for (i = 0; i < events_that_doesnt_hide_context_menu.length; i++) {
+      delete map_options[events_that_doesnt_hide_context_menu[i]];
+    }
+
+    /**
+     * Google Maps map instance
+     *
+     * @type {google.maps.Map}
+     */
+    this.map = new google.maps.Map(this.el, map_options);
+
+    if (markerClustererFunction) {
+      /**
+       * Marker Clusterer instance
+       *
+       * @type {object}
+       */
+      this.markerClusterer = markerClustererFunction.apply(this, [this.map]);
+    }
+
+    var buildContextMenuHTML = function(control, e) {
+      var html = '',
+          options = window.context_menu[self.el.id][control];
+
+      for (var i in options){
+        if (options.hasOwnProperty(i)) {
+          var option = options[i];
+
+          html += '<li><a id="' + control + '_' + i + '" href="#">' + option.title + '</a></li>';
+        }
+      }
+
+      if (!getElementById('gmaps_context_menu')) return;
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      context_menu_element.innerHTML = html;
+
+      var context_menu_items = context_menu_element.getElementsByTagName('a'),
+          context_menu_items_count = context_menu_items.length,
+          i;
+
+      for (i = 0; i < context_menu_items_count; i++) {
+        var context_menu_item = context_menu_items[i];
+
+        var assign_menu_item_action = function(ev){
+          ev.preventDefault();
+
+          options[this.id.replace(control + '_', '')].action.apply(self, [e]);
+          self.hideContextMenu();
+        };
+
+        google.maps.event.clearListeners(context_menu_item, 'click');
+        google.maps.event.addDomListenerOnce(context_menu_item, 'click', assign_menu_item_action, false);
+      }
+
+      var position = findAbsolutePosition.apply(this, [self.el]),
+          left = position[0] + e.pixel.x - 15,
+          top = position[1] + e.pixel.y- 15;
+
+      context_menu_element.style.left = left + "px";
+      context_menu_element.style.top = top + "px";
+
+      // context_menu_element.style.display = 'block';
+    };
+
+    this.buildContextMenu = function(control, e) {
+      if (control === 'marker') {
+        e.pixel = {};
+
+        var overlay = new google.maps.OverlayView();
+        overlay.setMap(self.map);
+
+        overlay.draw = function() {
+          var projection = overlay.getProjection(),
+              position = e.marker.getPosition();
+
+          e.pixel = projection.fromLatLngToContainerPixel(position);
+
+          buildContextMenuHTML(control, e);
+        };
+      }
+      else {
+        buildContextMenuHTML(control, e);
+      }
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      setTimeout(function() {
+        context_menu_element.style.display = 'block';
+      }, 0);
+    };
+
+    /**
+     * Add a context menu for a map or a marker.
+     *
+     * @param {object} options - The `options` object should contain:
+     * * `control` (string): Kind of control the context menu will be attached. Can be "map" or "marker".
+     * * `options` (array): A collection of context menu items:
+     *   * `title` (string): Item's title shown in the context menu.
+     *   * `name` (string): Item's identifier.
+     *   * `action` (function): Function triggered after selecting the context menu item.
+     */
+    this.setContextMenu = function(options) {
+      window.context_menu[self.el.id][options.control] = {};
+
+      var i,
+          ul = doc.createElement('ul');
+
+      for (i in options.options) {
+        if (options.options.hasOwnProperty(i)) {
+          var option = options.options[i];
+
+          window.context_menu[self.el.id][options.control][option.name] = {
+            title: option.title,
+            action: option.action
+          };
+        }
+      }
+
+      ul.id = 'gmaps_context_menu';
+      ul.style.display = 'none';
+      ul.style.position = 'absolute';
+      ul.style.minWidth = '100px';
+      ul.style.background = 'white';
+      ul.style.listStyle = 'none';
+      ul.style.padding = '8px';
+      ul.style.boxShadow = '2px 2px 6px #ccc';
+
+      if (!getElementById('gmaps_context_menu')) {
+        doc.body.appendChild(ul);
+      }
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      google.maps.event.addDomListener(context_menu_element, 'mouseout', function(ev) {
+        if (!ev.relatedTarget || !this.contains(ev.relatedTarget)) {
+          window.setTimeout(function(){
+            context_menu_element.style.display = 'none';
+          }, 400);
+        }
+      }, false);
+    };
+
+    /**
+     * Hide the current context menu
+     */
+    this.hideContextMenu = function() {
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      if (context_menu_element) {
+        context_menu_element.style.display = 'none';
+      }
+    };
+
+    var setupListener = function(object, name) {
+      google.maps.event.addListener(object, name, function(e){
+        if (e == undefined) {
+          e = this;
+        }
+
+        options[name].apply(this, [e]);
+
+        self.hideContextMenu();
+      });
+    };
+
+    //google.maps.event.addListener(this.map, 'idle', this.hideContextMenu);
+    google.maps.event.addListener(this.map, 'zoom_changed', this.hideContextMenu);
+
+    for (var ev = 0; ev < events_that_hide_context_menu.length; ev++) {
+      var name = events_that_hide_context_menu[ev];
+
+      if (name in options) {
+        setupListener(this.map, name);
+      }
+    }
+
+    for (var ev = 0; ev < events_that_doesnt_hide_context_menu.length; ev++) {
+      var name = events_that_doesnt_hide_context_menu[ev];
+
+      if (name in options) {
+        setupListener(this.map, name);
+      }
+    }
+
+    google.maps.event.addListener(this.map, 'rightclick', function(e) {
+      if (options.rightclick) {
+        options.rightclick.apply(this, [e]);
+      }
+
+      if(window.context_menu[self.el.id]['map'] != undefined) {
+        self.buildContextMenu('map', e);
+      }
+    });
+
+    /**
+     * Trigger a `resize` event, useful if you need to repaint the current map (for changes in the viewport or display / hide actions).
+     */
+    this.refresh = function() {
+      google.maps.event.trigger(this.map, 'resize');
+    };
+
+    /**
+     * Adjust the map zoom to include all the markers added in the map.
+     */
+    this.fitZoom = function() {
+      var latLngs = [],
+          markers_length = this.markers.length,
+          i;
+
+      for (i = 0; i < markers_length; i++) {
+        if(typeof(this.markers[i].visible) === 'boolean' && this.markers[i].visible) {
+          latLngs.push(this.markers[i].getPosition());
+        }
+      }
+
+      this.fitLatLngBounds(latLngs);
+    };
+
+    /**
+     * Adjust the map zoom to include all the coordinates in the `latLngs` array.
+     *
+     * @param {array} latLngs - Collection of `google.maps.LatLng` objects.
+     */
+    this.fitLatLngBounds = function(latLngs) {
+      var total = latLngs.length,
+          bounds = new google.maps.LatLngBounds(),
+          i;
+
+      for(i = 0; i < total; i++) {
+        bounds.extend(latLngs[i]);
+      }
+
+      this.map.fitBounds(bounds);
+    };
+
+    /**
+     * Center the map using the `lat` and `lng` coordinates.
+     *
+     * @param {number} lat - Latitude of the coordinate.
+     * @param {number} lng - Longitude of the coordinate.
+     * @param {function} [callback] - Callback that will be executed after the map is centered.
+     */
+    this.setCenter = function(lat, lng, callback) {
+      this.map.panTo(new google.maps.LatLng(lat, lng));
+
+      if (callback) {
+        callback();
+      }
+    };
+
+    /**
+     * Return the HTML element container of the map.
+     *
+     * @returns {HTMLElement} the element container.
+     */
+    this.getElement = function() {
+      return this.el;
+    };
+
+    /**
+     * Increase the map's zoom.
+     *
+     * @param {number} [magnitude] - The number of times the map will be zoomed in.
+     */
+    this.zoomIn = function(value) {
+      value = value || 1;
+
+      this.zoom = this.map.getZoom() + value;
+      this.map.setZoom(this.zoom);
+    };
+
+    /**
+     * Decrease the map's zoom.
+     *
+     * @param {number} [magnitude] - The number of times the map will be zoomed out.
+     */
+    this.zoomOut = function(value) {
+      value = value || 1;
+
+      this.zoom = this.map.getZoom() - value;
+      this.map.setZoom(this.zoom);
+    };
+
+    var native_methods = [],
+        method;
+
+    for (method in this.map) {
+      if (typeof(this.map[method]) == 'function' && !this[method]) {
+        native_methods.push(method);
+      }
+    }
+
+    for (i = 0; i < native_methods.length; i++) {
+      (function(gmaps, scope, method_name) {
+        gmaps[method_name] = function(){
+          return scope[method_name].apply(scope, arguments);
+        };
+      })(this, this.map, native_methods[i]);
+    }
+  };
+
+  return GMaps;
+})(this);
+
+GMaps.prototype.createControl = function(options) {
+  var control = document.createElement('div');
+
+  control.style.cursor = 'pointer';
+
+  if (options.disableDefaultStyles !== true) {
+    control.style.fontFamily = 'Roboto, Arial, sans-serif';
+    control.style.fontSize = '11px';
+    control.style.boxShadow = 'rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px';
+  }
+
+  for (var option in options.style) {
+    control.style[option] = options.style[option];
+  }
+
+  if (options.id) {
+    control.id = options.id;
+  }
+
+  if (options.title) {
+    control.title = options.title;
+  }
+
+  if (options.classes) {
+    control.className = options.classes;
+  }
+
+  if (options.content) {
+    if (typeof options.content === 'string') {
+      control.innerHTML = options.content;
+    }
+    else if (options.content instanceof HTMLElement) {
+      control.appendChild(options.content);
+    }
+  }
+
+  if (options.position) {
+    control.position = google.maps.ControlPosition[options.position.toUpperCase()];
+  }
+
+  for (var ev in options.events) {
+    (function(object, name) {
+      google.maps.event.addDomListener(object, name, function(){
+        options.events[name].apply(this, [this]);
+      });
+    })(control, ev);
+  }
+
+  control.index = 1;
+
+  return control;
+};
+
+/**
+ * Add a custom control to the map UI.
+ *
+ * @param {object} options - The `options` object should contain:
+ * * `style` (object): The keys and values of this object should be valid CSS properties and values.
+ * * `id` (string): The HTML id for the custom control.
+ * * `classes` (string): A string containing all the HTML classes for the custom control.
+ * * `content` (string or HTML element): The content of the custom control.
+ * * `position` (string): Any valid [`google.maps.ControlPosition`](https://developers.google.com/maps/documentation/javascript/controls#ControlPositioning) value, in lower or upper case.
+ * * `events` (object): The keys of this object should be valid DOM events. The values should be functions.
+ * * `disableDefaultStyles` (boolean): If false, removes the default styles for the controls like font (family and size), and box shadow.
+ * @returns {HTMLElement}
+ */
+GMaps.prototype.addControl = function(options) {
+  var control = this.createControl(options);
+
+  this.controls.push(control);
+  this.map.controls[control.position].push(control);
+
+  return control;
+};
+
+/**
+ * Remove a control from the map. `control` should be a control returned by `addControl()`.
+ *
+ * @param {HTMLElement} control - One of the controls returned by `addControl()`.
+ * @returns {HTMLElement} the removed control.
+ */
+GMaps.prototype.removeControl = function(control) {
+  var position = null,
+      i;
+
+  for (i = 0; i < this.controls.length; i++) {
+    if (this.controls[i] == control) {
+      position = this.controls[i].position;
+      this.controls.splice(i, 1);
+    }
+  }
+
+  if (position) {
+    for (i = 0; i < this.map.controls.length; i++) {
+      var controlsForPosition = this.map.controls[control.position];
+
+      if (controlsForPosition.getAt(i) == control) {
+        controlsForPosition.removeAt(i);
+
+        break;
+      }
+    }
+  }
+
+  return control;
+};
+
+GMaps.prototype.createMarker = function(options) {
+  if (options.lat == undefined && options.lng == undefined && options.position == undefined) {
+    throw 'No latitude or longitude defined.';
+  }
+
+  var self = this,
+      details = options.details,
+      fences = options.fences,
+      outside = options.outside,
+      base_options = {
+        position: new google.maps.LatLng(options.lat, options.lng),
+        map: null
+      },
+      marker_options = extend_object(base_options, options);
+
+  delete marker_options.lat;
+  delete marker_options.lng;
+  delete marker_options.fences;
+  delete marker_options.outside;
+
+  var marker = new google.maps.Marker(marker_options);
+
+  marker.fences = fences;
+
+  if (options.infoWindow) {
+    marker.infoWindow = new google.maps.InfoWindow(options.infoWindow);
+
+    var info_window_events = ['closeclick', 'content_changed', 'domready', 'position_changed', 'zindex_changed'];
+
+    for (var ev = 0; ev < info_window_events.length; ev++) {
+      (function(object, name) {
+        if (options.infoWindow[name]) {
+          google.maps.event.addListener(object, name, function(e){
+            options.infoWindow[name].apply(this, [e]);
+          });
+        }
+      })(marker.infoWindow, info_window_events[ev]);
+    }
+  }
+
+  var marker_events = ['animation_changed', 'clickable_changed', 'cursor_changed', 'draggable_changed', 'flat_changed', 'icon_changed', 'position_changed', 'shadow_changed', 'shape_changed', 'title_changed', 'visible_changed', 'zindex_changed'];
+
+  var marker_events_with_mouse = ['dblclick', 'drag', 'dragend', 'dragstart', 'mousedown', 'mouseout', 'mouseover', 'mouseup'];
+
+  for (var ev = 0; ev < marker_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(){
+          options[name].apply(this, [this]);
+        });
+      }
+    })(marker, marker_events[ev]);
+  }
+
+  for (var ev = 0; ev < marker_events_with_mouse.length; ev++) {
+    (function(map, object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(me){
+          if(!me.pixel){
+            me.pixel = map.getProjection().fromLatLngToPoint(me.latLng);
+          }
+
+          options[name].apply(this, [me]);
+        });
+      }
+    })(this.map, marker, marker_events_with_mouse[ev]);
+  }
+
+  google.maps.event.addListener(marker, 'click', function() {
+    this.details = details;
+
+    if (options.click) {
+      options.click.apply(this, [this]);
+    }
+
+    if (marker.infoWindow) {
+      self.hideInfoWindows();
+      marker.infoWindow.open(self.map, marker);
+    }
+  });
+
+  google.maps.event.addListener(marker, 'rightclick', function(e) {
+    e.marker = this;
+
+    if (options.rightclick) {
+      options.rightclick.apply(this, [e]);
+    }
+
+    if (window.context_menu[self.el.id]['marker'] != undefined) {
+      self.buildContextMenu('marker', e);
+    }
+  });
+
+  if (marker.fences) {
+    google.maps.event.addListener(marker, 'dragend', function() {
+      self.checkMarkerGeofence(marker, function(m, f) {
+        outside(m, f);
+      });
+    });
+  }
+
+  return marker;
+};
+
+GMaps.prototype.addMarker = function(options) {
+  var marker;
+  if(options.hasOwnProperty('gm_accessors_')) {
+    // Native google.maps.Marker object
+    marker = options;
+  }
+  else {
+    if ((options.hasOwnProperty('lat') && options.hasOwnProperty('lng')) || options.position) {
+      marker = this.createMarker(options);
+    }
+    else {
+      throw 'No latitude or longitude defined.';
+    }
+  }
+
+  marker.setMap(this.map);
+
+  if(this.markerClusterer) {
+    this.markerClusterer.addMarker(marker);
+  }
+
+  this.markers.push(marker);
+
+  GMaps.fire('marker_added', marker, this);
+
+  return marker;
+};
+
+GMaps.prototype.addMarkers = function(array) {
+  for (var i = 0, marker; marker=array[i]; i++) {
+    this.addMarker(marker);
+  }
+
+  return this.markers;
+};
+
+GMaps.prototype.hideInfoWindows = function() {
+  for (var i = 0, marker; marker = this.markers[i]; i++){
+    if (marker.infoWindow) {
+      marker.infoWindow.close();
+    }
+  }
+};
+
+GMaps.prototype.removeMarker = function(marker) {
+  for (var i = 0; i < this.markers.length; i++) {
+    if (this.markers[i] === marker) {
+      this.markers[i].setMap(null);
+      this.markers.splice(i, 1);
+
+      if(this.markerClusterer) {
+        this.markerClusterer.removeMarker(marker);
+      }
+
+      GMaps.fire('marker_removed', marker, this);
+
+      break;
+    }
+  }
+
+  return marker;
+};
+
+GMaps.prototype.removeMarkers = function (collection) {
+  var new_markers = [];
+
+  if (typeof collection == 'undefined') {
+    for (var i = 0; i < this.markers.length; i++) {
+      var marker = this.markers[i];
+      marker.setMap(null);
+
+      GMaps.fire('marker_removed', marker, this);
+    }
+
+    if(this.markerClusterer && this.markerClusterer.clearMarkers) {
+      this.markerClusterer.clearMarkers();
+    }
+
+    this.markers = new_markers;
+  }
+  else {
+    for (var i = 0; i < collection.length; i++) {
+      var index = this.markers.indexOf(collection[i]);
+
+      if (index > -1) {
+        var marker = this.markers[index];
+        marker.setMap(null);
+
+        if(this.markerClusterer) {
+          this.markerClusterer.removeMarker(marker);
+        }
+
+        GMaps.fire('marker_removed', marker, this);
+      }
+    }
+
+    for (var i = 0; i < this.markers.length; i++) {
+      var marker = this.markers[i];
+      if (marker.getMap() != null) {
+        new_markers.push(marker);
+      }
+    }
+
+    this.markers = new_markers;
+  }
+};
+
+GMaps.prototype.drawOverlay = function(options) {
+  var overlay = new google.maps.OverlayView(),
+      auto_show = true;
+
+  overlay.setMap(this.map);
+
+  if (options.auto_show != null) {
+    auto_show = options.auto_show;
+  }
+
+  overlay.onAdd = function() {
+    var el = document.createElement('div');
+
+    el.style.borderStyle = "none";
+    el.style.borderWidth = "0px";
+    el.style.position = "absolute";
+    el.style.zIndex = 100;
+    el.innerHTML = options.content;
+
+    overlay.el = el;
+
+    if (!options.layer) {
+      options.layer = 'overlayLayer';
+    }
+    
+    var panes = this.getPanes(),
+        overlayLayer = panes[options.layer],
+        stop_overlay_events = ['contextmenu', 'DOMMouseScroll', 'dblclick', 'mousedown'];
+
+    overlayLayer.appendChild(el);
+
+    for (var ev = 0; ev < stop_overlay_events.length; ev++) {
+      (function(object, name) {
+        google.maps.event.addDomListener(object, name, function(e){
+          if (navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
+            e.cancelBubble = true;
+            e.returnValue = false;
+          }
+          else {
+            e.stopPropagation();
+          }
+        });
+      })(el, stop_overlay_events[ev]);
+    }
+
+    if (options.click) {
+      panes.overlayMouseTarget.appendChild(overlay.el);
+      google.maps.event.addDomListener(overlay.el, 'click', function() {
+        options.click.apply(overlay, [overlay]);
+      });
+    }
+
+    google.maps.event.trigger(this, 'ready');
+  };
+
+  overlay.draw = function() {
+    var projection = this.getProjection(),
+        pixel = projection.fromLatLngToDivPixel(new google.maps.LatLng(options.lat, options.lng));
+
+    options.horizontalOffset = options.horizontalOffset || 0;
+    options.verticalOffset = options.verticalOffset || 0;
+
+    var el = overlay.el,
+        content = el.children[0],
+        content_height = content.clientHeight,
+        content_width = content.clientWidth;
+
+    switch (options.verticalAlign) {
+      case 'top':
+        el.style.top = (pixel.y - content_height + options.verticalOffset) + 'px';
+        break;
+      default:
+      case 'middle':
+        el.style.top = (pixel.y - (content_height / 2) + options.verticalOffset) + 'px';
+        break;
+      case 'bottom':
+        el.style.top = (pixel.y + options.verticalOffset) + 'px';
+        break;
+    }
+
+    switch (options.horizontalAlign) {
+      case 'left':
+        el.style.left = (pixel.x - content_width + options.horizontalOffset) + 'px';
+        break;
+      default:
+      case 'center':
+        el.style.left = (pixel.x - (content_width / 2) + options.horizontalOffset) + 'px';
+        break;
+      case 'right':
+        el.style.left = (pixel.x + options.horizontalOffset) + 'px';
+        break;
+    }
+
+    el.style.display = auto_show ? 'block' : 'none';
+
+    if (!auto_show) {
+      options.show.apply(this, [el]);
+    }
+  };
+
+  overlay.onRemove = function() {
+    var el = overlay.el;
+
+    if (options.remove) {
+      options.remove.apply(this, [el]);
+    }
+    else {
+      overlay.el.parentNode.removeChild(overlay.el);
+      overlay.el = null;
+    }
+  };
+
+  this.overlays.push(overlay);
+  return overlay;
+};
+
+GMaps.prototype.removeOverlay = function(overlay) {
+  for (var i = 0; i < this.overlays.length; i++) {
+    if (this.overlays[i] === overlay) {
+      this.overlays[i].setMap(null);
+      this.overlays.splice(i, 1);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removeOverlays = function() {
+  for (var i = 0, item; item = this.overlays[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.overlays = [];
+};
+
+GMaps.prototype.drawPolyline = function(options) {
+  var path = [],
+      points = options.path;
+
+  if (points.length) {
+    if (points[0][0] === undefined) {
+      path = points;
+    }
+    else {
+      for (var i = 0, latlng; latlng = points[i]; i++) {
+        path.push(new google.maps.LatLng(latlng[0], latlng[1]));
+      }
+    }
+  }
+
+  var polyline_options = {
+    map: this.map,
+    path: path,
+    strokeColor: options.strokeColor,
+    strokeOpacity: options.strokeOpacity,
+    strokeWeight: options.strokeWeight,
+    geodesic: options.geodesic,
+    clickable: true,
+    editable: false,
+    visible: true
+  };
+
+  if (options.hasOwnProperty("clickable")) {
+    polyline_options.clickable = options.clickable;
+  }
+
+  if (options.hasOwnProperty("editable")) {
+    polyline_options.editable = options.editable;
+  }
+
+  if (options.hasOwnProperty("icons")) {
+    polyline_options.icons = options.icons;
+  }
+
+  if (options.hasOwnProperty("zIndex")) {
+    polyline_options.zIndex = options.zIndex;
+  }
+
+  var polyline = new google.maps.Polyline(polyline_options);
+
+  var polyline_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polyline_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polyline, polyline_events[ev]);
+  }
+
+  this.polylines.push(polyline);
+
+  GMaps.fire('polyline_added', polyline, this);
+
+  return polyline;
+};
+
+GMaps.prototype.removePolyline = function(polyline) {
+  for (var i = 0; i < this.polylines.length; i++) {
+    if (this.polylines[i] === polyline) {
+      this.polylines[i].setMap(null);
+      this.polylines.splice(i, 1);
+
+      GMaps.fire('polyline_removed', polyline, this);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removePolylines = function() {
+  for (var i = 0, item; item = this.polylines[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.polylines = [];
+};
+
+GMaps.prototype.drawCircle = function(options) {
+  options =  extend_object({
+    map: this.map,
+    center: new google.maps.LatLng(options.lat, options.lng)
+  }, options);
+
+  delete options.lat;
+  delete options.lng;
+
+  var polygon = new google.maps.Circle(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  return polygon;
+};
+
+GMaps.prototype.drawRectangle = function(options) {
+  options = extend_object({
+    map: this.map
+  }, options);
+
+  var latLngBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(options.bounds[0][0], options.bounds[0][1]),
+    new google.maps.LatLng(options.bounds[1][0], options.bounds[1][1])
+  );
+
+  options.bounds = latLngBounds;
+
+  var polygon = new google.maps.Rectangle(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  return polygon;
+};
+
+GMaps.prototype.drawPolygon = function(options) {
+  var useGeoJSON = false;
+
+  if(options.hasOwnProperty("useGeoJSON")) {
+    useGeoJSON = options.useGeoJSON;
+  }
+
+  delete options.useGeoJSON;
+
+  options = extend_object({
+    map: this.map
+  }, options);
+
+  if (useGeoJSON == false) {
+    options.paths = [options.paths.slice(0)];
+  }
+
+  if (options.paths.length > 0) {
+    if (options.paths[0].length > 0) {
+      options.paths = array_flat(array_map(options.paths, arrayToLatLng, useGeoJSON));
+    }
+  }
+
+  var polygon = new google.maps.Polygon(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  GMaps.fire('polygon_added', polygon, this);
+
+  return polygon;
+};
+
+GMaps.prototype.removePolygon = function(polygon) {
+  for (var i = 0; i < this.polygons.length; i++) {
+    if (this.polygons[i] === polygon) {
+      this.polygons[i].setMap(null);
+      this.polygons.splice(i, 1);
+
+      GMaps.fire('polygon_removed', polygon, this);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removePolygons = function() {
+  for (var i = 0, item; item = this.polygons[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.polygons = [];
+};
+
+GMaps.prototype.getFromFusionTables = function(options) {
+  var events = options.events;
+
+  delete options.events;
+
+  var fusion_tables_options = options,
+      layer = new google.maps.FusionTablesLayer(fusion_tables_options);
+
+  for (var ev in events) {
+    (function(object, name) {
+      google.maps.event.addListener(object, name, function(e) {
+        events[name].apply(this, [e]);
+      });
+    })(layer, ev);
+  }
+
+  this.layers.push(layer);
+
+  return layer;
+};
+
+GMaps.prototype.loadFromFusionTables = function(options) {
+  var layer = this.getFromFusionTables(options);
+  layer.setMap(this.map);
+
+  return layer;
+};
+
+GMaps.prototype.getFromKML = function(options) {
+  var url = options.url,
+      events = options.events;
+
+  delete options.url;
+  delete options.events;
+
+  var kml_options = options,
+      layer = new google.maps.KmlLayer(url, kml_options);
+
+  for (var ev in events) {
+    (function(object, name) {
+      google.maps.event.addListener(object, name, function(e) {
+        events[name].apply(this, [e]);
+      });
+    })(layer, ev);
+  }
+
+  this.layers.push(layer);
+
+  return layer;
+};
+
+GMaps.prototype.loadFromKML = function(options) {
+  var layer = this.getFromKML(options);
+  layer.setMap(this.map);
+
+  return layer;
+};
+
+GMaps.prototype.addLayer = function(layerName, options) {
+  //var default_layers = ['weather', 'clouds', 'traffic', 'transit', 'bicycling', 'panoramio', 'places'];
+  options = options || {};
+  var layer;
+
+  switch(layerName) {
+    case 'weather': this.singleLayers.weather = layer = new google.maps.weather.WeatherLayer();
+      break;
+    case 'clouds': this.singleLayers.clouds = layer = new google.maps.weather.CloudLayer();
+      break;
+    case 'traffic': this.singleLayers.traffic = layer = new google.maps.TrafficLayer();
+      break;
+    case 'transit': this.singleLayers.transit = layer = new google.maps.TransitLayer();
+      break;
+    case 'bicycling': this.singleLayers.bicycling = layer = new google.maps.BicyclingLayer();
+      break;
+    case 'panoramio':
+        this.singleLayers.panoramio = layer = new google.maps.panoramio.PanoramioLayer();
+        layer.setTag(options.filter);
+        delete options.filter;
+
+        //click event
+        if (options.click) {
+          google.maps.event.addListener(layer, 'click', function(event) {
+            options.click(event);
+            delete options.click;
+          });
+        }
+      break;
+      case 'places':
+        this.singleLayers.places = layer = new google.maps.places.PlacesService(this.map);
+
+        //search, nearbySearch, radarSearch callback, Both are the same
+        if (options.search || options.nearbySearch || options.radarSearch) {
+          var placeSearchRequest  = {
+            bounds : options.bounds || null,
+            keyword : options.keyword || null,
+            location : options.location || null,
+            name : options.name || null,
+            radius : options.radius || null,
+            rankBy : options.rankBy || null,
+            types : options.types || null
+          };
+
+          if (options.radarSearch) {
+            layer.radarSearch(placeSearchRequest, options.radarSearch);
+          }
+
+          if (options.search) {
+            layer.search(placeSearchRequest, options.search);
+          }
+
+          if (options.nearbySearch) {
+            layer.nearbySearch(placeSearchRequest, options.nearbySearch);
+          }
+        }
+
+        //textSearch callback
+        if (options.textSearch) {
+          var textSearchRequest  = {
+            bounds : options.bounds || null,
+            location : options.location || null,
+            query : options.query || null,
+            radius : options.radius || null
+          };
+
+          layer.textSearch(textSearchRequest, options.textSearch);
+        }
+      break;
+  }
+
+  if (layer !== undefined) {
+    if (typeof layer.setOptions == 'function') {
+      layer.setOptions(options);
+    }
+    if (typeof layer.setMap == 'function') {
+      layer.setMap(this.map);
+    }
+
+    return layer;
+  }
+};
+
+GMaps.prototype.removeLayer = function(layer) {
+  if (typeof(layer) == "string" && this.singleLayers[layer] !== undefined) {
+     this.singleLayers[layer].setMap(null);
+
+     delete this.singleLayers[layer];
+  }
+  else {
+    for (var i = 0; i < this.layers.length; i++) {
+      if (this.layers[i] === layer) {
+        this.layers[i].setMap(null);
+        this.layers.splice(i, 1);
+
+        break;
+      }
+    }
+  }
+};
+
+var travelMode, unitSystem;
+
+GMaps.prototype.getRoutes = function(options) {
+  switch (options.travelMode) {
+    case 'bicycling':
+      travelMode = google.maps.TravelMode.BICYCLING;
+      break;
+    case 'transit':
+      travelMode = google.maps.TravelMode.TRANSIT;
+      break;
+    case 'driving':
+      travelMode = google.maps.TravelMode.DRIVING;
+      break;
+    default:
+      travelMode = google.maps.TravelMode.WALKING;
+      break;
+  }
+
+  if (options.unitSystem === 'imperial') {
+    unitSystem = google.maps.UnitSystem.IMPERIAL;
+  }
+  else {
+    unitSystem = google.maps.UnitSystem.METRIC;
+  }
+
+  var base_options = {
+        avoidHighways: false,
+        avoidTolls: false,
+        optimizeWaypoints: false,
+        waypoints: []
+      },
+      request_options =  extend_object(base_options, options);
+
+  request_options.origin = /string/.test(typeof options.origin) ? options.origin : new google.maps.LatLng(options.origin[0], options.origin[1]);
+  request_options.destination = /string/.test(typeof options.destination) ? options.destination : new google.maps.LatLng(options.destination[0], options.destination[1]);
+  request_options.travelMode = travelMode;
+  request_options.unitSystem = unitSystem;
+
+  delete request_options.callback;
+  delete request_options.error;
+
+  var self = this,
+      routes = [],
+      service = new google.maps.DirectionsService();
+
+  service.route(request_options, function(result, status) {
+    if (status === google.maps.DirectionsStatus.OK) {
+      for (var r in result.routes) {
+        if (result.routes.hasOwnProperty(r)) {
+          routes.push(result.routes[r]);
+        }
+      }
+
+      if (options.callback) {
+        options.callback(routes, result, status);
+      }
+    }
+    else {
+      if (options.error) {
+        options.error(result, status);
+      }
+    }
+  });
+};
+
+GMaps.prototype.removeRoutes = function() {
+  this.routes.length = 0;
+};
+
+GMaps.prototype.getElevations = function(options) {
+  options = extend_object({
+    locations: [],
+    path : false,
+    samples : 256
+  }, options);
+
+  if (options.locations.length > 0) {
+    if (options.locations[0].length > 0) {
+      options.locations = array_flat(array_map([options.locations], arrayToLatLng,  false));
+    }
+  }
+
+  var callback = options.callback;
+  delete options.callback;
+
+  var service = new google.maps.ElevationService();
+
+  //location request
+  if (!options.path) {
+    delete options.path;
+    delete options.samples;
+
+    service.getElevationForLocations(options, function(result, status) {
+      if (callback && typeof(callback) === "function") {
+        callback(result, status);
+      }
+    });
+  //path request
+  } else {
+    var pathRequest = {
+      path : options.locations,
+      samples : options.samples
+    };
+
+    service.getElevationAlongPath(pathRequest, function(result, status) {
+     if (callback && typeof(callback) === "function") {
+        callback(result, status);
+      }
+    });
+  }
+};
+
+GMaps.prototype.cleanRoute = GMaps.prototype.removePolylines;
+
+GMaps.prototype.renderRoute = function(options, renderOptions) {
+  var self = this,
+      panel = ((typeof renderOptions.panel === 'string') ? document.getElementById(renderOptions.panel.replace('#', '')) : renderOptions.panel),
+      display;
+
+  renderOptions.panel = panel;
+  renderOptions = extend_object({
+    map: this.map
+  }, renderOptions);
+  display = new google.maps.DirectionsRenderer(renderOptions);
+
+  this.getRoutes({
+    origin: options.origin,
+    destination: options.destination,
+    travelMode: options.travelMode,
+    waypoints: options.waypoints,
+    unitSystem: options.unitSystem,
+    error: options.error,
+    avoidHighways: options.avoidHighways,
+    avoidTolls: options.avoidTolls,
+    optimizeWaypoints: options.optimizeWaypoints,
+    callback: function(routes, response, status) {
+      if (status === google.maps.DirectionsStatus.OK) {
+        display.setDirections(response);
+      }
+    }
+  });
+};
+
+GMaps.prototype.drawRoute = function(options) {
+  var self = this;
+
+  this.getRoutes({
+    origin: options.origin,
+    destination: options.destination,
+    travelMode: options.travelMode,
+    waypoints: options.waypoints,
+    unitSystem: options.unitSystem,
+    error: options.error,
+    avoidHighways: options.avoidHighways,
+    avoidTolls: options.avoidTolls,
+    optimizeWaypoints: options.optimizeWaypoints,
+    callback: function(routes) {
+      if (routes.length > 0) {
+        var polyline_options = {
+          path: routes[routes.length - 1].overview_path,
+          strokeColor: options.strokeColor,
+          strokeOpacity: options.strokeOpacity,
+          strokeWeight: options.strokeWeight
+        };
+
+        if (options.hasOwnProperty("icons")) {
+          polyline_options.icons = options.icons;
+        }
+
+        self.drawPolyline(polyline_options);
+
+        if (options.callback) {
+          options.callback(routes[routes.length - 1]);
+        }
+      }
+    }
+  });
+};
+
+GMaps.prototype.travelRoute = function(options) {
+  if (options.origin && options.destination) {
+    this.getRoutes({
+      origin: options.origin,
+      destination: options.destination,
+      travelMode: options.travelMode,
+      waypoints : options.waypoints,
+      unitSystem: options.unitSystem,
+      error: options.error,
+      callback: function(e) {
+        //start callback
+        if (e.length > 0 && options.start) {
+          options.start(e[e.length - 1]);
+        }
+
+        //step callback
+        if (e.length > 0 && options.step) {
+          var route = e[e.length - 1];
+          if (route.legs.length > 0) {
+            var steps = route.legs[0].steps;
+            for (var i = 0, step; step = steps[i]; i++) {
+              step.step_number = i;
+              options.step(step, (route.legs[0].steps.length - 1));
+            }
+          }
+        }
+
+        //end callback
+        if (e.length > 0 && options.end) {
+           options.end(e[e.length - 1]);
+        }
+      }
+    });
+  }
+  else if (options.route) {
+    if (options.route.legs.length > 0) {
+      var steps = options.route.legs[0].steps;
+      for (var i = 0, step; step = steps[i]; i++) {
+        step.step_number = i;
+        options.step(step);
+      }
+    }
+  }
+};
+
+GMaps.prototype.drawSteppedRoute = function(options) {
+  var self = this;
+
+  if (options.origin && options.destination) {
+    this.getRoutes({
+      origin: options.origin,
+      destination: options.destination,
+      travelMode: options.travelMode,
+      waypoints : options.waypoints,
+      error: options.error,
+      callback: function(e) {
+        //start callback
+        if (e.length > 0 && options.start) {
+          options.start(e[e.length - 1]);
+        }
+
+        //step callback
+        if (e.length > 0 && options.step) {
+          var route = e[e.length - 1];
+          if (route.legs.length > 0) {
+            var steps = route.legs[0].steps;
+            for (var i = 0, step; step = steps[i]; i++) {
+              step.step_number = i;
+              var polyline_options = {
+                path: step.path,
+                strokeColor: options.strokeColor,
+                strokeOpacity: options.strokeOpacity,
+                strokeWeight: options.strokeWeight
+              };
+
+              if (options.hasOwnProperty("icons")) {
+                polyline_options.icons = options.icons;
+              }
+
+              self.drawPolyline(polyline_options);
+              options.step(step, (route.legs[0].steps.length - 1));
+            }
+          }
+        }
+
+        //end callback
+        if (e.length > 0 && options.end) {
+           options.end(e[e.length - 1]);
+        }
+      }
+    });
+  }
+  else if (options.route) {
+    if (options.route.legs.length > 0) {
+      var steps = options.route.legs[0].steps;
+      for (var i = 0, step; step = steps[i]; i++) {
+        step.step_number = i;
+        var polyline_options = {
+          path: step.path,
+          strokeColor: options.strokeColor,
+          strokeOpacity: options.strokeOpacity,
+          strokeWeight: options.strokeWeight
+        };
+
+        if (options.hasOwnProperty("icons")) {
+          polyline_options.icons = options.icons;
+        }
+
+        self.drawPolyline(polyline_options);
+        options.step(step);
+      }
+    }
+  }
+};
+
+GMaps.Route = function(options) {
+  this.origin = options.origin;
+  this.destination = options.destination;
+  this.waypoints = options.waypoints;
+
+  this.map = options.map;
+  this.route = options.route;
+  this.step_count = 0;
+  this.steps = this.route.legs[0].steps;
+  this.steps_length = this.steps.length;
+
+  var polyline_options = {
+    path: new google.maps.MVCArray(),
+    strokeColor: options.strokeColor,
+    strokeOpacity: options.strokeOpacity,
+    strokeWeight: options.strokeWeight
+  };
+
+  if (options.hasOwnProperty("icons")) {
+    polyline_options.icons = options.icons;
+  }
+
+  this.polyline = this.map.drawPolyline(polyline_options).getPath();
+};
+
+GMaps.Route.prototype.getRoute = function(options) {
+  var self = this;
+
+  this.map.getRoutes({
+    origin : this.origin,
+    destination : this.destination,
+    travelMode : options.travelMode,
+    waypoints : this.waypoints || [],
+    error: options.error,
+    callback : function() {
+      self.route = e[0];
+
+      if (options.callback) {
+        options.callback.call(self);
+      }
+    }
+  });
+};
+
+GMaps.Route.prototype.back = function() {
+  if (this.step_count > 0) {
+    this.step_count--;
+    var path = this.route.legs[0].steps[this.step_count].path;
+
+    for (var p in path){
+      if (path.hasOwnProperty(p)){
+        this.polyline.pop();
+      }
+    }
+  }
+};
+
+GMaps.Route.prototype.forward = function() {
+  if (this.step_count < this.steps_length) {
+    var path = this.route.legs[0].steps[this.step_count].path;
+
+    for (var p in path){
+      if (path.hasOwnProperty(p)){
+        this.polyline.push(path[p]);
+      }
+    }
+    this.step_count++;
+  }
+};
+
+GMaps.prototype.checkGeofence = function(lat, lng, fence) {
+  return fence.containsLatLng(new google.maps.LatLng(lat, lng));
+};
+
+GMaps.prototype.checkMarkerGeofence = function(marker, outside_callback) {
+  if (marker.fences) {
+    for (var i = 0, fence; fence = marker.fences[i]; i++) {
+      var pos = marker.getPosition();
+      if (!this.checkGeofence(pos.lat(), pos.lng(), fence)) {
+        outside_callback(marker, fence);
+      }
+    }
+  }
+};
+
+GMaps.prototype.toImage = function(options) {
+  var options = options || {},
+      static_map_options = {};
+
+  static_map_options['size'] = options['size'] || [this.el.clientWidth, this.el.clientHeight];
+  static_map_options['lat'] = this.getCenter().lat();
+  static_map_options['lng'] = this.getCenter().lng();
+
+  if (this.markers.length > 0) {
+    static_map_options['markers'] = [];
+    
+    for (var i = 0; i < this.markers.length; i++) {
+      static_map_options['markers'].push({
+        lat: this.markers[i].getPosition().lat(),
+        lng: this.markers[i].getPosition().lng()
+      });
+    }
+  }
+
+  if (this.polylines.length > 0) {
+    var polyline = this.polylines[0];
+    
+    static_map_options['polyline'] = {};
+    static_map_options['polyline']['path'] = google.maps.geometry.encoding.encodePath(polyline.getPath());
+    static_map_options['polyline']['strokeColor'] = polyline.strokeColor;
+    static_map_options['polyline']['strokeOpacity'] = polyline.strokeOpacity;
+    static_map_options['polyline']['strokeWeight'] = polyline.strokeWeight;
+  }
+
+  return GMaps.staticMapURL(static_map_options);
+};
+
+GMaps.staticMapURL = function(options){
+  var parameters = [],
+      data,
+      static_root = (location.protocol === 'file:' ? 'http:' : location.protocol ) + '//maps.googleapis.com/maps/api/staticmap';
+
+  if (options.url) {
+    static_root = options.url;
+    delete options.url;
+  }
+
+  static_root += '?';
+
+  var markers = options.markers;
+  
+  delete options.markers;
+
+  if (!markers && options.marker) {
+    markers = [options.marker];
+    delete options.marker;
+  }
+
+  var styles = options.styles;
+
+  delete options.styles;
+
+  var polyline = options.polyline;
+  delete options.polyline;
+
+  /** Map options **/
+  if (options.center) {
+    parameters.push('center=' + options.center);
+    delete options.center;
+  }
+  else if (options.address) {
+    parameters.push('center=' + options.address);
+    delete options.address;
+  }
+  else if (options.lat) {
+    parameters.push(['center=', options.lat, ',', options.lng].join(''));
+    delete options.lat;
+    delete options.lng;
+  }
+  else if (options.visible) {
+    var visible = encodeURI(options.visible.join('|'));
+    parameters.push('visible=' + visible);
+  }
+
+  var size = options.size;
+  if (size) {
+    if (size.join) {
+      size = size.join('x');
+    }
+    delete options.size;
+  }
+  else {
+    size = '630x300';
+  }
+  parameters.push('size=' + size);
+
+  if (!options.zoom && options.zoom !== false) {
+    options.zoom = 15;
+  }
+
+  var sensor = options.hasOwnProperty('sensor') ? !!options.sensor : true;
+  delete options.sensor;
+  parameters.push('sensor=' + sensor);
+
+  for (var param in options) {
+    if (options.hasOwnProperty(param)) {
+      parameters.push(param + '=' + options[param]);
+    }
+  }
+
+  /** Markers **/
+  if (markers) {
+    var marker, loc;
+
+    for (var i = 0; data = markers[i]; i++) {
+      marker = [];
+
+      if (data.size && data.size !== 'normal') {
+        marker.push('size:' + data.size);
+        delete data.size;
+      }
+      else if (data.icon) {
+        marker.push('icon:' + encodeURI(data.icon));
+        delete data.icon;
+      }
+
+      if (data.color) {
+        marker.push('color:' + data.color.replace('#', '0x'));
+        delete data.color;
+      }
+
+      if (data.label) {
+        marker.push('label:' + data.label[0].toUpperCase());
+        delete data.label;
+      }
+
+      loc = (data.address ? data.address : data.lat + ',' + data.lng);
+      delete data.address;
+      delete data.lat;
+      delete data.lng;
+
+      for(var param in data){
+        if (data.hasOwnProperty(param)) {
+          marker.push(param + ':' + data[param]);
+        }
+      }
+
+      if (marker.length || i === 0) {
+        marker.push(loc);
+        marker = marker.join('|');
+        parameters.push('markers=' + encodeURI(marker));
+      }
+      // New marker without styles
+      else {
+        marker = parameters.pop() + encodeURI('|' + loc);
+        parameters.push(marker);
+      }
+    }
+  }
+
+  /** Map Styles **/
+  if (styles) {
+    for (var i = 0; i < styles.length; i++) {
+      var styleRule = [];
+      if (styles[i].featureType){
+        styleRule.push('feature:' + styles[i].featureType.toLowerCase());
+      }
+
+      if (styles[i].elementType) {
+        styleRule.push('element:' + styles[i].elementType.toLowerCase());
+      }
+
+      for (var j = 0; j < styles[i].stylers.length; j++) {
+        for (var p in styles[i].stylers[j]) {
+          var ruleArg = styles[i].stylers[j][p];
+          if (p == 'hue' || p == 'color') {
+            ruleArg = '0x' + ruleArg.substring(1);
+          }
+          styleRule.push(p + ':' + ruleArg);
+        }
+      }
+
+      var rule = styleRule.join('|');
+      if (rule != '') {
+        parameters.push('style=' + rule);
+      }
+    }
+  }
+
+  /** Polylines **/
+  function parseColor(color, opacity) {
+    if (color[0] === '#'){
+      color = color.replace('#', '0x');
+
+      if (opacity) {
+        opacity = parseFloat(opacity);
+        opacity = Math.min(1, Math.max(opacity, 0));
+        if (opacity === 0) {
+          return '0x00000000';
+        }
+        opacity = (opacity * 255).toString(16);
+        if (opacity.length === 1) {
+          opacity += opacity;
+        }
+
+        color = color.slice(0,8) + opacity;
+      }
+    }
+    return color;
+  }
+
+  if (polyline) {
+    data = polyline;
+    polyline = [];
+
+    if (data.strokeWeight) {
+      polyline.push('weight:' + parseInt(data.strokeWeight, 10));
+    }
+
+    if (data.strokeColor) {
+      var color = parseColor(data.strokeColor, data.strokeOpacity);
+      polyline.push('color:' + color);
+    }
+
+    if (data.fillColor) {
+      var fillcolor = parseColor(data.fillColor, data.fillOpacity);
+      polyline.push('fillcolor:' + fillcolor);
+    }
+
+    var path = data.path;
+    if (path.join) {
+      for (var j=0, pos; pos=path[j]; j++) {
+        polyline.push(pos.join(','));
+      }
+    }
+    else {
+      polyline.push('enc:' + path);
+    }
+
+    polyline = polyline.join('|');
+    parameters.push('path=' + encodeURI(polyline));
+  }
+
+  /** Retina support **/
+  var dpi = window.devicePixelRatio || 1;
+  parameters.push('scale=' + dpi);
+
+  parameters = parameters.join('&');
+  return static_root + parameters;
+};
+
+GMaps.prototype.addMapType = function(mapTypeId, options) {
+  if (options.hasOwnProperty("getTileUrl") && typeof(options["getTileUrl"]) == "function") {
+    options.tileSize = options.tileSize || new google.maps.Size(256, 256);
+
+    var mapType = new google.maps.ImageMapType(options);
+
+    this.map.mapTypes.set(mapTypeId, mapType);
+  }
+  else {
+    throw "'getTileUrl' function required.";
+  }
+};
+
+GMaps.prototype.addOverlayMapType = function(options) {
+  if (options.hasOwnProperty("getTile") && typeof(options["getTile"]) == "function") {
+    var overlayMapTypeIndex = options.index;
+
+    delete options.index;
+
+    this.map.overlayMapTypes.insertAt(overlayMapTypeIndex, options);
+  }
+  else {
+    throw "'getTile' function required.";
+  }
+};
+
+GMaps.prototype.removeOverlayMapType = function(overlayMapTypeIndex) {
+  this.map.overlayMapTypes.removeAt(overlayMapTypeIndex);
+};
+
+GMaps.prototype.addStyle = function(options) {
+  var styledMapType = new google.maps.StyledMapType(options.styles, { name: options.styledMapName });
+
+  this.map.mapTypes.set(options.mapTypeId, styledMapType);
+};
+
+GMaps.prototype.setStyle = function(mapTypeId) {
+  this.map.setMapTypeId(mapTypeId);
+};
+
+GMaps.prototype.createPanorama = function(streetview_options) {
+  if (!streetview_options.hasOwnProperty('lat') || !streetview_options.hasOwnProperty('lng')) {
+    streetview_options.lat = this.getCenter().lat();
+    streetview_options.lng = this.getCenter().lng();
+  }
+
+  this.panorama = GMaps.createPanorama(streetview_options);
+
+  this.map.setStreetView(this.panorama);
+
+  return this.panorama;
+};
+
+GMaps.createPanorama = function(options) {
+  var el = getElementById(options.el, options.context);
+
+  options.position = new google.maps.LatLng(options.lat, options.lng);
+
+  delete options.el;
+  delete options.context;
+  delete options.lat;
+  delete options.lng;
+
+  var streetview_events = ['closeclick', 'links_changed', 'pano_changed', 'position_changed', 'pov_changed', 'resize', 'visible_changed'],
+      streetview_options = extend_object({visible : true}, options);
+
+  for (var i = 0; i < streetview_events.length; i++) {
+    delete streetview_options[streetview_events[i]];
+  }
+
+  var panorama = new google.maps.StreetViewPanorama(el, streetview_options);
+
+  for (var i = 0; i < streetview_events.length; i++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(){
+          options[name].apply(this);
+        });
+      }
+    })(panorama, streetview_events[i]);
+  }
+
+  return panorama;
+};
+
+GMaps.prototype.on = function(event_name, handler) {
+  return GMaps.on(event_name, this, handler);
+};
+
+GMaps.prototype.off = function(event_name) {
+  GMaps.off(event_name, this);
+};
+
+GMaps.prototype.once = function(event_name, handler) {
+  return GMaps.once(event_name, this, handler);
+};
+
+GMaps.custom_events = ['marker_added', 'marker_removed', 'polyline_added', 'polyline_removed', 'polygon_added', 'polygon_removed', 'geolocated', 'geolocation_failed'];
+
+GMaps.on = function(event_name, object, handler) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map; 
+    return google.maps.event.addListener(object, event_name, handler);
+  }
+  else {
+    var registered_event = {
+      handler : handler,
+      eventName : event_name
+    };
+
+    object.registered_events[event_name] = object.registered_events[event_name] || [];
+    object.registered_events[event_name].push(registered_event);
+
+    return registered_event;
+  }
+};
+
+GMaps.off = function(event_name, object) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map; 
+    google.maps.event.clearListeners(object, event_name);
+  }
+  else {
+    object.registered_events[event_name] = [];
+  }
+};
+
+GMaps.once = function(event_name, object, handler) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map;
+    return google.maps.event.addListenerOnce(object, event_name, handler);
+  }
+};
+
+GMaps.fire = function(event_name, object, scope) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    google.maps.event.trigger(object, event_name, Array.prototype.slice.apply(arguments).slice(2));
+  }
+  else {
+    if(event_name in scope.registered_events) {
+      var firing_events = scope.registered_events[event_name];
+
+      for(var i = 0; i < firing_events.length; i++) {
+        (function(handler, scope, object) {
+          handler.apply(scope, [object]);
+        })(firing_events[i]['handler'], scope, object);
+      }
+    }
+  }
+};
+
+GMaps.geolocate = function(options) {
+  var complete_callback = options.always || options.complete;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      options.success(position);
+
+      if (complete_callback) {
+        complete_callback();
+      }
+    }, function(error) {
+      options.error(error);
+
+      if (complete_callback) {
+        complete_callback();
+      }
+    }, options.options);
+  }
+  else {
+    options.not_supported();
+
+    if (complete_callback) {
+      complete_callback();
+    }
+  }
+};
+
+GMaps.geocode = function(options) {
+  this.geocoder = new google.maps.Geocoder();
+  var callback = options.callback;
+  if (options.hasOwnProperty('lat') && options.hasOwnProperty('lng')) {
+    options.latLng = new google.maps.LatLng(options.lat, options.lng);
+  }
+
+  delete options.lat;
+  delete options.lng;
+  delete options.callback;
+  
+  this.geocoder.geocode(options, function(results, status) {
+    callback(results, status);
+  });
+};
+
+if (typeof window.google === 'object' && window.google.maps) {
+  //==========================
+  // Polygon containsLatLng
+  // https://github.com/tparkin/Google-Maps-Point-in-Polygon
+  // Poygon getBounds extension - google-maps-extensions
+  // http://code.google.com/p/google-maps-extensions/source/browse/google.maps.Polygon.getBounds.js
+  if (!google.maps.Polygon.prototype.getBounds) {
+    google.maps.Polygon.prototype.getBounds = function(latLng) {
+      var bounds = new google.maps.LatLngBounds();
+      var paths = this.getPaths();
+      var path;
+
+      for (var p = 0; p < paths.getLength(); p++) {
+        path = paths.getAt(p);
+        for (var i = 0; i < path.getLength(); i++) {
+          bounds.extend(path.getAt(i));
+        }
+      }
+
+      return bounds;
+    };
+  }
+
+  if (!google.maps.Polygon.prototype.containsLatLng) {
+    // Polygon containsLatLng - method to determine if a latLng is within a polygon
+    google.maps.Polygon.prototype.containsLatLng = function(latLng) {
+      // Exclude points outside of bounds as there is no way they are in the poly
+      var bounds = this.getBounds();
+
+      if (bounds !== null && !bounds.contains(latLng)) {
+        return false;
+      }
+
+      // Raycast point in polygon method
+      var inPoly = false;
+
+      var numPaths = this.getPaths().getLength();
+      for (var p = 0; p < numPaths; p++) {
+        var path = this.getPaths().getAt(p);
+        var numPoints = path.getLength();
+        var j = numPoints - 1;
+
+        for (var i = 0; i < numPoints; i++) {
+          var vertex1 = path.getAt(i);
+          var vertex2 = path.getAt(j);
+
+          if (vertex1.lng() < latLng.lng() && vertex2.lng() >= latLng.lng() || vertex2.lng() < latLng.lng() && vertex1.lng() >= latLng.lng()) {
+            if (vertex1.lat() + (latLng.lng() - vertex1.lng()) / (vertex2.lng() - vertex1.lng()) * (vertex2.lat() - vertex1.lat()) < latLng.lat()) {
+              inPoly = !inPoly;
+            }
+          }
+
+          j = i;
+        }
+      }
+
+      return inPoly;
+    };
+  }
+
+  if (!google.maps.Circle.prototype.containsLatLng) {
+    google.maps.Circle.prototype.containsLatLng = function(latLng) {
+      if (google.maps.geometry) {
+        return google.maps.geometry.spherical.computeDistanceBetween(this.getCenter(), latLng) <= this.getRadius();
+      }
+      else {
+        return true;
+      }
+    };
+  }
+
+  google.maps.Rectangle.prototype.containsLatLng = function(latLng) {
+    return this.getBounds().contains(latLng);
+  };
+
+  google.maps.LatLngBounds.prototype.containsLatLng = function(latLng) {
+    return this.contains(latLng);
+  };
+
+  google.maps.Marker.prototype.setFences = function(fences) {
+    this.fences = fences;
+  };
+
+  google.maps.Marker.prototype.addFence = function(fence) {
+    this.fences.push(fence);
+  };
+
+  google.maps.Marker.prototype.getId = function() {
+    return this['__gm_id'];
+  };
+}
+
+//==========================
+// Array indexOf
+// https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/indexOf
+if (!Array.prototype.indexOf) {
+  Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
+      "use strict";
+      if (this == null) {
+          throw new TypeError();
+      }
+      var t = Object(this);
+      var len = t.length >>> 0;
+      if (len === 0) {
+          return -1;
+      }
+      var n = 0;
+      if (arguments.length > 1) {
+          n = Number(arguments[1]);
+          if (n != n) { // shortcut for verifying if it's NaN
+              n = 0;
+          } else if (n != 0 && n != Infinity && n != -Infinity) {
+              n = (n > 0 || -1) * Math.floor(Math.abs(n));
+          }
+      }
+      if (n >= len) {
+          return -1;
+      }
+      var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+      for (; k < len; k++) {
+          if (k in t && t[k] === searchElement) {
+              return k;
+          }
+      }
+      return -1;
+  };
+}
+
+return GMaps;
+}));
+});
 
 // src/utils/uri.coffee
 var queries;
@@ -12180,22 +14489,23 @@ var Control$1 = Control = (function(superClass) {
     }
     Control.__super__.error.apply(this, arguments);
     rect = this.root.getBoundingClientRect();
-    elTop = rect.top;
+    elTop = rect.top - window.innerHeight / 2;
     wTop = window.pageYOffset;
     if (!scrolling && elTop <= wTop) {
       scrolling = true;
       autoPlay(true);
       t = new Lite({
-        x: 0
+        x: wTop
       }).to({
-        x: elTop
-      }, 500, Easing.Cubic).onUpdate(function(x) {
-        var percent;
-        percent = x / elTop;
-        return window.scrollTo(window.pageXOffset, wTop - x);
+        x: wTop + elTop
+      }, 500, Easing.Cubic).onUpdate(function(arg) {
+        var x;
+        x = arg.x;
+        return window.scrollTo(window.pageXOffset, x);
       }).onComplete(function() {
-        return scrolling = false;
-      });
+        scrolling = false;
+        return autoPlay(false);
+      }).start();
     }
     return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
   };
@@ -12248,7 +14558,7 @@ var checkbox = CheckBox = (function(superClass) {
 CheckBox.register();
 
 // templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">v</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\" if=\"{ hasOptions() }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\" if=\"{ hasOptions() }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ hasOptions() &amp;&amp; errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -12266,7 +14576,7 @@ var Select$1 = Select = (function(superClass) {
 
   Select.prototype.html = html$1;
 
-  Select.prototype.instructions = '';
+  Select.prototype.instructions = 'Select an Option';
 
   Select.prototype.autofocus = false;
 
@@ -12274,13 +14584,23 @@ var Select$1 = Select = (function(superClass) {
 
   Select.prototype.multiple = false;
 
-  Select.prototype.require = false;
+  Select.prototype.size = null;
 
-  Select.prototype.size = 10;
+  Select.prototype._optionsHash = 'default';
 
   Select.prototype.selectOptions = {};
 
+  Select.prototype.hasOptions = function() {
+    this.options;
+    return this._optionsHash.length > 2;
+  };
+
   Select.prototype.options = function() {
+    var optionsHash;
+    optionsHash = JSON.stringify(this.selectOptions);
+    if (this._optionsHash !== optionsHash) {
+      this._optionsHash = optionsHash;
+    }
     return this.selectOptions;
   };
 
@@ -12314,19 +14634,32 @@ var countrySelect = CountrySelect = (function(superClass) {
 
   CountrySelect.prototype.tag = 'country-selection';
 
-  CountrySelect.prototype._countryCount = 0;
-
   CountrySelect.prototype.options = function() {
-    var _countryCount, countries, country, i, len, options, ref, ref1, ref2, ref3, ref4, ref5;
+    var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    if (this._countryCount === countries.length) {
+    optionsHash = JSON.stringify(countries);
+    if (this._optionsHash === optionsHash) {
       return this.selectOptions;
     }
-    _countryCount = countries.length;
+    countries = countries.slice(0);
+    this._optionsHash = optionsHash;
     this.selectOptions = options = {};
+    this.input.ref.set(this.input.name, '');
+    countries.sort(function(a, b) {
+      var nameA, nameB;
+      nameA = a.name.toUpperCase();
+      nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
     for (i = 0, len = countries.length; i < len; i++) {
       country = countries[i];
-      options[country.code] = country.name;
+      options[country.code.toUpperCase()] = country.name;
     }
     return options;
   };
@@ -12633,24 +14966,49 @@ var stateSelect = StateSelect = (function(superClass) {
   StateSelect.prototype.tag = 'state-selection';
 
   StateSelect.prototype.options = function() {
-    var code, countries, country, i, j, len, len1, options, ref, ref1, ref2, ref3, ref4, ref5, ref6, subdivision;
+    var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    this.selectOptions = options = {};
     code = this.getCountry();
     if (!code || code.length !== 2) {
+      this._optionsHash = '';
       return;
     }
     code = code.toUpperCase();
+    found = false;
     for (i = 0, len = countries.length; i < len; i++) {
       country = countries[i];
       if (country.code.toUpperCase() === code) {
-        ref6 = country.subdivisions;
-        for (j = 0, len1 = ref6.length; j < len1; j++) {
-          subdivision = ref6[j];
-          options[subdivision.code] = subdivision.name;
+        found = true;
+        subdivisions = country.subdivisions;
+        optionsHash = JSON.stringify(subdivisions);
+        if (this._optionsHash === optionsHash) {
+          return this.selectOptions;
+        }
+        subdivisions = subdivisions.slice(0);
+        this._optionsHash = optionsHash;
+        this.selectOptions = options = {};
+        this.input.ref.set(this.input.name, '');
+        subdivisions.sort(function(a, b) {
+          var nameA, nameB;
+          nameA = a.name.toUpperCase();
+          nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+          subdivision = subdivisions[j];
+          options[subdivision.code.toUpperCase()] = subdivision.name;
         }
         break;
       }
+    }
+    if (!found) {
+      this._optionsHash = '';
     }
     return options;
   };
@@ -12849,7 +15207,7 @@ var restrictNumeric = function(e) {
   if (e.metaKey || e.ctrlKey) {
     return true;
   }
-  key = e.key;
+  key = e.keyCode;
   if (key === 32) {
     return e.preventDefault();
   }
@@ -12890,12 +15248,14 @@ CardCVC = (function(superClass) {
         el = _this.root.querySelector('input');
         _this._limit4 = function(e) {
           var key, value;
-          key = e.key;
+          key = e.keyCode;
           if (indexOf$2.call(keys.numeric, key) < 0) {
             return true;
           }
           value = el.value + String.fromCharCode(key);
           if (value.length > 4) {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
           }
         };
@@ -12944,20 +15304,24 @@ CardExpiry = (function(superClass) {
         el = _this.root.querySelector('input');
         _this._limit7 = function(e) {
           var key, value;
-          key = e.key;
+          key = e.keyCode;
           if (indexOf$3.call(keys.numeric, key) < 0) {
             return true;
           }
           value = el.value + String.fromCharCode(key);
           if (value.length > 7) {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
           }
           if (/^\d$/.test(value) && (value !== '0' && value !== '1')) {
-            $input.val('0' + value + ' / ');
-            return e.preventDefault();
+            el.value = '0' + value + ' / ';
+            e.preventDefault();
+            return e.stopPropagation();
           } else if (/^\d\d$/.test(value)) {
-            $input.val(value + ' / ');
-            return e.preventDefault();
+            el.value = value + ' / ';
+            e.preventDefault();
+            return e.stopPropagation();
           }
         };
         el.addEventListener('keypress', restrictNumeric);
@@ -13031,11 +15395,15 @@ CardNumber = (function(superClass) {
         el = _this.root.querySelector('input');
         _this._identifyCard = function(e) {
           var card, i, j, k, key, length, newValue, ref, ref1, upperLength, value;
-          key = e.key;
+          key = e.keyCode;
           if (indexOf$4.call(keys.numeric, key) < 0) {
             return true;
           }
-          _this.root.removeClass(_this.cardType + ' identified unknown');
+          if (_this.cardType) {
+            _this.root.classList.remove(_this.cardType);
+          }
+          _this.root.classList.remove('identified');
+          _this.root.classList.remove('unknown');
           value = el.value + String.fromCharCode(key);
           value = value.replace(/\D/g, '');
           length = value.length;
@@ -13045,12 +15413,15 @@ CardNumber = (function(superClass) {
             upperLength = card.length[card.length.length - 1];
             _this.cardType = card.type;
             if (_this.cardType) {
-              el.classList.add(_this.cardType + ' identified');
+              _this.root.classList.add(_this.cardType);
+              _this.root.classList.add('identified');
             } else {
-              el.classList.add('unknown');
+              _this.root.classList.add('unknown');
             }
           }
           if (length > upperLength) {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
           }
           newValue = value[0];
@@ -13096,6 +15467,9 @@ CardNumber.register();
 
 var CardNumber$1 = CardNumber;
 
+// ../../hanzo/el-controls/templates/controls/input-normal-placeholder.pug
+var html$1$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
 // src/controls/checkout/promocode.coffee
 var PromoCode;
 var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -13110,6 +15484,8 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 
   PromoCode.prototype.tag = 'promocode';
 
+  PromoCode.prototype.html = html$1$1;
+
   PromoCode.prototype.bind = 'order.promoCode';
 
   return PromoCode;
@@ -13120,7 +15496,7 @@ PromoCode.register();
 
 // src/controls/checkout/quantity-select.coffee
 var QuantitySelect;
-var i$2;
+var i$1;
 var j;
 var opts$1;
 var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -13128,8 +15504,8 @@ var hasProp$8 = {}.hasOwnProperty;
 
 opts$1 = {};
 
-for (i$2 = j = 1; j < 100; i$2 = ++j) {
-  opts$1[i$2] = i$2;
+for (i$1 = j = 1; j < 100; i$1 = ++j) {
+  opts$1[i$1] = i$1;
 }
 
 var QuantitySelect$1 = QuantitySelect = (function(superClass) {
@@ -13213,6 +15589,18 @@ var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
   ShippingAddressCountry.prototype.tag = 'shippingaddress-country';
 
   ShippingAddressCountry.prototype.bind = 'order.shippingAddress.country';
+
+  ShippingAddressCountry.prototype.init = function() {
+    ShippingAddressCountry.__super__.init.apply(this, arguments);
+    return this.input.ref.on('set', (function(_this) {
+      return function(k, v) {
+        if (k === 'countries') {
+          _this.options();
+          return _this.update();
+        }
+      };
+    })(this));
+  };
 
   return ShippingAddressCountry;
 
@@ -13326,6 +15714,18 @@ var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
 
   ShippingAddressState.prototype.getCountry = function() {
     return this.data.get('order.shippingAddress.country');
+  };
+
+  ShippingAddressState.prototype.init = function() {
+    ShippingAddressState.__super__.init.apply(this, arguments);
+    return this.input.ref.on('set', (function(_this) {
+      return function(k, v) {
+        if (k === 'order.shippingAddress.country') {
+          _this.options();
+          return _this.update();
+        }
+      };
+    })(this));
   };
 
   return ShippingAddressState;
@@ -13645,6 +16045,18 @@ var requiresPostalCode = function(code) {
   return code === 'dz' || code === 'ar' || code === 'am' || code === 'au' || code === 'at' || code === 'az' || code === 'a2' || code === 'bd' || code === 'by' || code === 'be' || code === 'ba' || code === 'br' || code === 'bn' || code === 'bg' || code === 'ca' || code === 'ic' || code === 'cn' || code === 'hr' || code === 'cy' || code === 'cz' || code === 'dk' || code === 'en' || code === 'ee' || code === 'fo' || code === 'fi' || code === 'fr' || code === 'ge' || code === 'de' || code === 'gr' || code === 'gl' || code === 'gu' || code === 'gg' || code === 'ho' || code === 'hu' || code === 'in' || code === 'id' || code === 'il' || code === 'it' || code === 'jp' || code === 'je' || code === 'kz' || code === 'kr' || code === 'ko' || code === 'kg' || code === 'lv' || code === 'li' || code === 'lt' || code === 'lu' || code === 'mk' || code === 'mg' || code === 'm3' || code === 'my' || code === 'mh' || code === 'mq' || code === 'yt' || code === 'mx' || code === 'mn' || code === 'me' || code === 'nl' || code === 'nz' || code === 'nb' || code === 'no' || code === 'pk' || code === 'ph' || code === 'pl' || code === 'po' || code === 'pt' || code === 'pr' || code === 're' || code === 'ru' || code === 'sa' || code === 'sf' || code === 'cs' || code === 'sg' || code === 'sk' || code === 'si' || code === 'za' || code === 'es' || code === 'lk' || code === 'nt' || code === 'sx' || code === 'uv' || code === 'vl' || code === 'se' || code === 'ch' || code === 'tw' || code === 'tj' || code === 'th' || code === 'tu' || code === 'tn' || code === 'tr' || code === 'tm' || code === 'vi' || code === 'ua' || code === 'gb' || code === 'us' || code === 'uy' || code === 'uz' || code === 'va' || code === 'vn' || code === 'wl' || code === 'ya';
 };
 
+var requiresState = function(code, countries) {
+  var country, i, len;
+  code = code.toUpperCase();
+  for (i = 0, len = countries.length; i < len; i++) {
+    country = countries[i];
+    if (country.code.toUpperCase() === code) {
+      return country.subdivisions.length > 0;
+    }
+  }
+  return false;
+};
+
 // src/containers/middleware.coffee
 var emailRe;
 var indexOf$5 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -13714,6 +16126,13 @@ var splitName = function(value) {
   return value;
 };
 
+var isStateRequired = function(value) {
+  if (requiresState(this.get('order.shippingAddress.country') || '', this.get('countries')) && ((value == null) || value === '')) {
+    throw new Error("Required for Selected Country");
+  }
+  return value;
+};
+
 var isPostalRequired = function(value) {
   if (requiresPostalCode(this.get('order.shippingAddress.country') || '') && ((value == null) || value === '')) {
     throw new Error("Required for Selected Country");
@@ -13745,7 +16164,7 @@ var cardNumber = function(value) {
   if (this.get('order.type') !== 'stripe') {
     return value;
   }
-  card = card.cardFromNumber(value);
+  card = cardFromNumber(value);
   if (!card) {
     throw new Error('Enter a valid card number');
   }
@@ -13834,7 +16253,7 @@ var configs = config = {
   'order.shippingAddress.line1': [isRequired],
   'order.shippingAddress.line2': null,
   'order.shippingAddress.city': [isRequired],
-  'order.shippingAddress.state': [isRequired],
+  'order.shippingAddress.state': [isStateRequired],
   'order.shippingAddress.postalCode': [isPostalRequired],
   'order.shippingAddress.country': [isRequired],
   'order.gift': null,
@@ -13850,7 +16269,7 @@ var configs = config = {
 };
 
 // templates/containers/checkout.pug
-var html$1$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
+var html$2$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
 
 // src/containers/checkout.coffee
 var CheckoutForm;
@@ -13866,7 +16285,7 @@ CheckoutForm = (function(superClass) {
 
   CheckoutForm.prototype.tag = 'checkout';
 
-  CheckoutForm.prototype.html = html$1$1;
+  CheckoutForm.prototype.html = html$2$1;
 
   CheckoutForm.prototype.errorMessage = '';
 
@@ -14017,7 +16436,7 @@ CheckoutForm.register();
 var Checkout = CheckoutForm;
 
 // templates/containers/checkout-card.pug
-var html$2$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$3$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-card.coffee
 var CheckoutCardForm;
@@ -14033,7 +16452,7 @@ CheckoutCardForm = (function(superClass) {
 
   CheckoutCardForm.prototype.tag = 'checkout-card';
 
-  CheckoutCardForm.prototype.html = html$2$1;
+  CheckoutCardForm.prototype.html = html$3$1;
 
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -14066,7 +16485,7 @@ CheckoutCardForm.register();
 var CheckoutCard = CheckoutCardForm;
 
 // templates/containers/checkout-shippingaddress.pug
-var html$3$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$4$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-shippingaddress.coffee
 var CheckoutShippingAddressForm;
@@ -14082,7 +16501,7 @@ CheckoutShippingAddressForm = (function(superClass) {
 
   CheckoutShippingAddressForm.prototype.tag = 'checkout-shippingaddress';
 
-  CheckoutShippingAddressForm.prototype.html = html$3$1;
+  CheckoutShippingAddressForm.prototype.html = html$4$1;
 
   CheckoutShippingAddressForm.prototype.paged = false;
 
@@ -14128,7 +16547,7 @@ CheckoutShippingAddressForm.register();
 var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
 // templates/containers/cart.pug
-var html$4$1 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+var html$5 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
 // src/containers/cart.coffee
 var CartForm;
@@ -14144,7 +16563,7 @@ CartForm = (function(superClass) {
 
   CartForm.prototype.tag = 'cart';
 
-  CartForm.prototype.html = html$4$1;
+  CartForm.prototype.html = html$5;
 
   CartForm.prototype.init = function() {
     var promoCode;
@@ -14255,7 +16674,7 @@ CartForm.register();
 var Cart$1$1 = CartForm;
 
 // templates/containers/lineitem.pug
-var html$5 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+var html$6 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
 // src/containers/lineitem.coffee
 var LineItemForm;
@@ -14271,7 +16690,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$5;
+  LineItemForm.prototype.html = html$6;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -14294,7 +16713,7 @@ LineItemForm.register();
 var LineItem = LineItemForm;
 
 // templates/containers/lineitems.pug
-var html$6 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$7 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/containers/lineitems.coffee
 var LineItems;
@@ -14310,7 +16729,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$6;
+  LineItems.prototype.html = html$7;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -14335,7 +16754,7 @@ LineItems.register();
 var LineItems$1 = LineItems;
 
 // templates/containers/login.pug
-var html$7 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
+var html$8 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
 
 // src/containers/login.coffee
 var LoginForm;
@@ -14351,7 +16770,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$7;
+  LoginForm.prototype.html = html$8;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -14392,7 +16811,7 @@ LoginForm.register();
 var Login = LoginForm;
 
 // templates/containers/order.pug
-var html$8 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+var html$9 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
 // src/containers/order.coffee
 var OrderForm;
@@ -14408,7 +16827,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$8;
+  OrderForm.prototype.html = html$9;
 
   OrderForm.prototype.parentData = null;
 
@@ -14448,7 +16867,7 @@ OrderForm.register();
 var Order = OrderForm;
 
 // templates/containers/orders.pug
-var html$9 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+var html$10 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
 // src/containers/orders.coffee
 var Orders;
@@ -14464,7 +16883,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$9;
+  Orders.prototype.html = html$10;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -14479,7 +16898,7 @@ Orders.register();
 var Orders$1 = Orders;
 
 // templates/containers/form.pug
-var html$10 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/containers/profile.coffee
 var ProfileForm;
@@ -14495,7 +16914,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$10;
+  ProfileForm.prototype.html = html$11;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -14597,7 +17016,7 @@ ProfileForm.register();
 var Profile = ProfileForm;
 
 // templates/containers/register.pug
-var html$11 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
+var html$12 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
 
 // src/containers/register.coffee
 var RegisterForm;
@@ -14613,7 +17032,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$11;
+  RegisterForm.prototype.html = html$12;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -14702,7 +17121,7 @@ RegisterCompleteForm = (function(superClass) {
 
   RegisterCompleteForm.prototype.tag = 'register-complete';
 
-  RegisterCompleteForm.prototype.html = html$10;
+  RegisterCompleteForm.prototype.html = html$11;
 
   RegisterCompleteForm.prototype.twoStageSignUp = false;
 
@@ -14765,7 +17184,7 @@ RegisterCompleteForm.register();
 var RegisterComplete = RegisterCompleteForm;
 
 // templates/containers/reset-password.pug
-var html$12 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
+var html$13 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
 
 // src/containers/reset-password.coffee
 var ResetPasswordForm;
@@ -14781,7 +17200,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$12;
+  ResetPasswordForm.prototype.html = html$13;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -14824,7 +17243,7 @@ ResetPasswordForm.register();
 var ResetPassword = ResetPasswordForm;
 
 // templates/containers/reset-password-complete.pug
-var html$13 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
+var html$14 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
 
 // src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
@@ -14840,7 +17259,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$13;
+  ResetPasswordCompleteForm.prototype.html = html$14;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -14902,7 +17321,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$10;
+  ShippingAddressForm.prototype.html = html$11;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -14983,7 +17402,7 @@ var Containers = Forms = {
 };
 
 // templates/widgets/cart-counter.pug
-var html$14 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$15 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
@@ -14999,7 +17418,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$14;
+  CartCounter.prototype.html = html$15;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -15036,7 +17455,7 @@ CartCounter.register();
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$15 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$16 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
@@ -15055,7 +17474,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$15;
+  CheckoutModal.prototype.html = html$16;
 
   CheckoutModal.prototype.names = null;
 
@@ -15163,7 +17582,7 @@ CheckoutModal.register();
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/side-pane.pug
-var html$16 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$17 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
@@ -15179,7 +17598,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$16;
+  SidePane.prototype.html = html$17;
 
   SidePane.prototype.id = '';
 
@@ -15410,18 +17829,6 @@ var renderUICurrencyFromJSON = function(code, jsonCurrency) {
   }
   return currentCurrencySign + jsonCurrency.substr(0, jsonCurrency.length - 2) + '.' + jsonCurrency.substr(-2);
 };
-
-//  commonjsHelpers
-
-var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-
-
-
-
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
 
 // node_modules/moment/src/lib/utils/hooks.js
 var hookCallback;
@@ -20765,7 +23172,7 @@ while (true) {
 }
 
 initData = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, d, data, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref4, ref5, ref6, ref7, ref8, ref9, referrer, v2;
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, country, d, data, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
   queries = getQueries();
   referrer = '';
   referrer = (ref4 = getReferrer((ref5 = opts.config) != null ? ref5.hashReferrer : void 0)) != null ? ref4 : (ref6 = opts.order) != null ? ref6.referrer : void 0;
@@ -20786,9 +23193,6 @@ initData = function(opts) {
       taxRate: ((ref10 = opts.config) != null ? ref10.taxRate : void 0) || ((ref11 = opts.order) != null ? ref11.taxRate : void 0) || 0,
       currency: ((ref12 = opts.config) != null ? ref12.currency : void 0) || ((ref13 = opts.order) != null ? ref13.currency : void 0) || 'usd',
       referrerId: referrer,
-      shippingAddress: {
-        country: 'us'
-      },
       discount: 0,
       tax: 0,
       subtotal: 0,
@@ -20831,6 +23235,45 @@ initData = function(opts) {
     data.set('payment', checkoutPayment);
     index$1.remove('checkout-payment');
   }
+  state = index$1.get('default-state');
+  country = index$1.get('default-country');
+  if (!state || !country) {
+    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref18 = window.navigator) != null ? ref18.geolocation : void 0 : void 0)) {
+      navigator.geolocation.getCurrentPosition((function(_this) {
+        return function(position) {
+          return gmaps.geocode({
+            address: position.coords.latitude + ", " + position.coords.longitude,
+            callback: function(results, status) {
+              var i, len, result;
+              if (data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')) {
+                return;
+              }
+              if (status === 'OK') {
+                state = '';
+                country = '';
+                for (i = 0, len = results.length; i < len; i++) {
+                  result = results[i];
+                  if (indexOf.call(result.types, 'administrative_area_level_1') >= 0) {
+                    state = result.address_components[0].short_name;
+                  } else if (indexOf.call(result.types, 'country') >= 0) {
+                    country = result.address_components[0].short_name;
+                  }
+                }
+                index$1.set('default-state', state);
+                return index$1.set('default-country', country);
+              }
+            }
+          });
+        };
+      })(this));
+    }
+  }
+  data.on('set', function(k, v) {
+    if (k === 'countries') {
+      data.set('order.shippingAddress.country', country);
+      return data.set('order.shippingAddress.state', state);
+    }
+  });
   return data;
 };
 
@@ -20853,6 +23296,10 @@ initCart = function(client, data, cartOptions) {
   countries = index$1.get('countries');
   taxRates = index$1.get('taxRates');
   shippingRates = index$1.get('shippingRates');
+  data.set('countries', countries);
+  data.set('taxRates', taxRates);
+  data.set('shippingRates', shippingRates);
+  lastChecked = renderDate(new Date(), rfc3339);
   client.library.shopjs({
     hasCountries: !!countries,
     hasTaxRates: !!taxRates,
@@ -20860,10 +23307,16 @@ initCart = function(client, data, cartOptions) {
     lastChecked: renderDate(lastChecked || '2000-01-01', rfc3339)
   }).then(function(res) {
     var ref4, ref5, ref6, ref7, ref8;
-    index$1.set('countries', (ref4 = res.countries) != null ? ref4 : countries);
-    index$1.set('taxRates', (ref5 = res.taxRates) != null ? ref5 : taxRates);
-    index$1.set('shippingRates', (ref6 = res.shippingRates) != null ? ref6 : shippingRates);
-    index$1.set('lastChecked', renderDate(new Date(), rfc3339));
+    countries = (ref4 = res.countries) != null ? ref4 : countries;
+    taxRates = (ref5 = res.taxRates) != null ? ref5 : taxRates;
+    shippingRates = (ref6 = res.shippingRates) != null ? ref6 : shippingRates;
+    index$1.set('countries', countries);
+    index$1.set('taxRates', taxRates);
+    index$1.set('shippingRates', shippingRates);
+    index$1.set('lastChecked', lastChecked);
+    data.set('countries', countries);
+    data.set('taxRates', taxRates);
+    data.set('shippingRates', shippingRates);
     if (res.currency) {
       data.set('order.currency', res.currency);
     }

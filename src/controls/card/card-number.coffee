@@ -19,11 +19,13 @@ class CardNumber extends Text
       el = @root.querySelector('input')
 
       @_identifyCard = (e) =>
-        key = e.key
+        key = e.keyCode
 
         return true if key not in keys.numeric
 
-        @root.removeClass @cardType + ' identified unknown'
+        @root.classList.remove @cardType if @cardType
+        @root.classList.remove 'identified'
+        @root.classList.remove 'unknown'
 
         value = el.value + String.fromCharCode key
 
@@ -38,11 +40,14 @@ class CardNumber extends Text
           @cardType = card.type
 
           if @cardType
-            el.classList.add @cardType + ' identified'
+            @root.classList.add @cardType
+            @root.classList.add 'identified'
           else
-            el.classList.add 'unknown'
+            @root.classList.add 'unknown'
 
         if length > upperLength
+          e.preventDefault()
+          e.stopPropagation()
           return false
 
         newValue = value[0]
