@@ -1,5 +1,5 @@
-import { TextBox } from 'el-controls'
-# import TextBox from 'el-controls/src/controls/textbox'
+# import { TextBox } from 'el-controls'
+import TextBox from 'el-controls/src/controls/textbox'
 
 export default class GiftMessage extends TextBox
   tag:  'gift-message'

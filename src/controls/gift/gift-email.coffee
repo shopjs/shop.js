@@ -1,5 +1,5 @@
-import { Text } from 'el-controls'
-# import Text from 'el-controls/src/controls/text'
+# import { Text } from 'el-controls'
+import Text from 'el-controls/src/controls/text'
 
 class GiftEmail extends Text
   tag:  'gift-email'

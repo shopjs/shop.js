@@ -25,16 +25,14 @@ import GiftMessage  from './gift/gift-message'
 import GiftToggle   from './gift/gift-toggle'
 import GiftType     from './gift/gift-type'
 
-import {
-  CheckBox
-  Control
-  CountrySelect
-  Dropdown
-  Select
-  StateSelect
-  Text
-  TextBox
-} from 'el-controls'
+import CheckBox         from 'el-controls/src/controls/checkbox'
+import Control          from 'el-controls/src/controls/control'
+import CountrySelect    from 'el-controls/src/controls/country-select'
+# import Dropdown         from 'el-controls/src/controls/dropdown'
+import Select           from 'el-controls/src/controls/select'
+import StateSelect      from 'el-controls/src/controls/state-select'
+import Text             from 'el-controls/src/controls/text'
+import TextBox          from 'el-controls/src/controls/textbox'
 
 export {
   CardCVC
@@ -45,7 +43,7 @@ export {
   CheckBox
   Control
   CountrySelect
-  Dropdown
+  # Dropdown
   Select
   StateSelect
   Text

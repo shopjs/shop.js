@@ -1,5 +1,5 @@
-import { Text } from 'el-controls'
-# import Text from 'el-controls/src/controls/text'
+# import { Text } from 'el-controls'
+import Text from 'el-controls/src/controls/text'
 
 import html from 'el-controls/templates/controls/input-normal-placeholder'
 
