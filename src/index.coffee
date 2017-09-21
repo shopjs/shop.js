@@ -243,6 +243,9 @@ initData = (opts)->
   state = store.get 'default-state' ? ''
   country = store.get 'default-country' ? ''
 
+  countriesReady = false
+  dontPrefill = false
+
   if !state || !country
     # get country/state
     # requires google maps to be in the namespace
@@ -255,7 +258,7 @@ initData = (opts)->
           callback: (results, status)=>
             # abort if manually selected
             if data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')
-              return
+              dontPrefill = true
 
             if status == 'OK'
               state = ''
@@ -271,9 +274,14 @@ initData = (opts)->
               store.set 'default-state', state
               store.set 'default-country', country
 
+              if countriesReady
+                data.set 'order.shippingAddress.country', country
+                data.set 'order.shippingAddress.state', state
+
   # use default geoloc
   data.on 'set', (k, v)->
-    if k == 'countries'
+    if k == 'countries' && !dontPrefill
+      countriesReady = true
       data.set 'order.shippingAddress.country', country
       data.set 'order.shippingAddress.state', state
 
