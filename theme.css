@@ -544,6 +544,20 @@ shippingaddress .input select ~ .select-indicator{
   pointer-events:none;
   display:block;
 }
+cart .input select:disabled ~ .select-indicator,
+checkout .input select:disabled ~ .select-indicator,
+checkout-card .input select:disabled ~ .select-indicator,
+checkout-modal .input select:disabled ~ .select-indicator,
+checkout-shippingaddress .input select:disabled ~ .select-indicator,
+login .input select:disabled ~ .select-indicator,
+orders .input select:disabled ~ .select-indicator,
+profile .input select:disabled ~ .select-indicator,
+register .input select:disabled ~ .select-indicator,
+reset-password .input select:disabled ~ .select-indicator,
+reset-password-complete .input select:disabled ~ .select-indicator,
+shippingaddress .input select:disabled ~ .select-indicator{
+  opacity:0.5;
+}
 cart .input.input.input,
 checkout .input.input.input,
 checkout-card .input.input.input,
