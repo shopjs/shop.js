@@ -12,6 +12,6 @@ export default class ShippingAddressCountry extends CountrySelect
       if k == 'countries'
         # force update of selectOptions
         @options()
-        @scheduleUpdate()
+        @update()
 
 ShippingAddressCountry.register()

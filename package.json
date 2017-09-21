@@ -49,6 +49,7 @@
     "es-keyboardevent-key-polyfill": "1.0.2",
     "es-md5": "^2.7.2",
     "es-raf": "^3.3.1",
+    "gmaps": "0.4.24",
     "hanzo.js": "2.4.1",
     "moment-timezone": "0.5.13"
   },

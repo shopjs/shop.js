@@ -15,21 +15,25 @@ class CardExpiry extends Text
       el = @root.querySelector('input')
 
       @_limit7 = (e) ->
-        key = e.key
+        key = e.keyCode
 
         return true if key not in keys.numeric
 
         value = el.value + String.fromCharCode key
 
         if value.length > 7
+          e.preventDefault()
+          e.stopPropagation()
           return false
 
         if /^\d$/.test(value) and value not in ['0', '1']
-          $input.val '0' + value + ' / '
+          el.value = '0' + value + ' / '
           e.preventDefault()
+          e.stopPropagation()
         else if /^\d\d$/.test value
-          $input.val value + ' / '
+          el.value = value + ' / '
           e.preventDefault()
+          e.stopPropagation()
 
       el.addEventListener 'keypress', restrictNumeric
       el.addEventListener 'keypress', @_limit7

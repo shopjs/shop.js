@@ -87,7 +87,7 @@ export cardNumber = (value) ->
   if @get('order.type') != 'stripe'
     return value
 
-  card = card.cardFromNumber value
+  card = cardFromNumber value
   throw new Error('Enter a valid card number') unless card
 
   number = value.replace(/\D/g, '')

@@ -15,7 +15,7 @@ export default class ShippingAddressState extends StateSelect
       if k == 'order.shippingAddress.country'
         # force update of selectOptions
         @options()
-        @scheduleUpdate()
+        @update()
 
 ShippingAddressState.register()
 

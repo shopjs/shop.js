@@ -112,7 +112,7 @@ export restrictNumeric = (e) ->
   # Key event is for a browser shortcut
   return true if e.metaKey or e.ctrlKey
 
-  key = e.key
+  key = e.keyCode
 
   # If keycode is a space
   return e.preventDefault() if key is 32

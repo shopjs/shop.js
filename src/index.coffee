@@ -7,6 +7,7 @@ import refer        from 'referential'
 import store        from 'akasha'
 import {Api}        from 'hanzo.js'
 import {Cart}       from 'commerce.js'
+import GMaps        from 'gmaps'
 
 import {
   getQueries,
@@ -233,10 +234,48 @@ initData = (opts)->
     data.set 'order.shippingAddress', checkoutShippingAddress
     store.remove 'checkout-shippingAddress'
 
-  checkoutPayment         = store.get 'checkout-payment'
+  checkoutPayment = store.get 'checkout-payment'
   if checkoutPayment
     data.set 'payment', checkoutPayment
     store.remove 'checkout-payment'
+
+  # fetch default geoloc data
+  state = store.get 'default-state' ? ''
+  country = store.get 'default-country' ? ''
+
+  if !state || !country
+    # get country/state
+    # requires google maps to be in the namespace
+    if window?.google && window?.navigator?.geolocation
+      navigator.geolocation.getCurrentPosition (position)=>
+        # abort if manually selected
+
+        GMaps.geocode
+          address: "#{position.coords.latitude}, #{position.coords.longitude}"
+          callback: (results, status)=>
+            # abort if manually selected
+            if data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')
+              return
+
+            if status == 'OK'
+              state = ''
+              country = ''
+
+              for result in results
+                if 'administrative_area_level_1' in result.types
+                  state = result.address_components[0].short_name
+                else if 'country' in result.types
+                  country = result.address_components[0].short_name
+
+              # cache default geoloc data
+              store.set 'default-state', state
+              store.set 'default-country', country
+
+  # use default geoloc
+  data.on 'set', (k, v)->
+    if k == 'countries'
+      data.set 'order.shippingAddress.country', country
+      data.set 'order.shippingAddress.state', state
 
   return data
 
@@ -257,6 +296,10 @@ initCart = (client, data, cartOptions)->
   countries     = store.get 'countries'
   taxRates      = store.get 'taxRates'
   shippingRates = store.get 'shippingRates'
+
+  data.set 'countries', countries
+  data.set 'taxRates', taxRates
+  data.set 'shippingRates', shippingRates
 
   lastChecked = renderDate(new Date(), rfc3339)
 

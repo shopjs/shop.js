@@ -15,13 +15,15 @@ class CardCVC extends Text
       el = @root.querySelector('input')
 
       @_limit4 = (e) ->
-        key = e.key
+        key = e.keyCode
 
         return true if key not in keys.numeric
 
         value = el.value + String.fromCharCode key
 
         if value.length > 4
+          e.preventDefault()
+          e.stopPropagation()
           return false
 
       el.addEventListener 'keypress', restrictNumeric
