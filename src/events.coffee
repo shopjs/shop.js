@@ -1,4 +1,4 @@
-import { Events as ControlEvents } from 'el-controls'
+import ControlEvents from 'el-controls/src/events'
 
 export default Events =
   Ready:

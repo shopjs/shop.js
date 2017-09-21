@@ -1,5 +1,5 @@
-import { CountrySelect } from 'el-controls'
-# import CountrySelect from 'el-controls/src/controls/country-select'
+# import { CountrySelect } from 'el-controls'
+import CountrySelect from 'el-controls/src/controls/country-select'
 
 export default class ShippingAddressCountry extends CountrySelect
   tag:  'shippingaddress-country'
