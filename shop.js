@@ -14558,7 +14558,7 @@ var checkbox = CheckBox = (function(superClass) {
 CheckBox.register();
 
 // templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\" if=\"{ hasOptions() }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\" if=\"{ hasOptions() }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ hasOptions() &amp;&amp; errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -23172,7 +23172,7 @@ while (true) {
 }
 
 initData = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, country, d, data, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
   queries = getQueries();
   referrer = '';
   referrer = (ref4 = getReferrer((ref5 = opts.config) != null ? ref5.hashReferrer : void 0)) != null ? ref4 : (ref6 = opts.order) != null ? ref6.referrer : void 0;
@@ -23237,6 +23237,8 @@ initData = function(opts) {
   }
   state = index$1.get('default-state');
   country = index$1.get('default-country');
+  countriesReady = false;
+  dontPrefill = false;
   if (!state || !country) {
     if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref18 = window.navigator) != null ? ref18.geolocation : void 0 : void 0)) {
       navigator.geolocation.getCurrentPosition((function(_this) {
@@ -23246,7 +23248,7 @@ initData = function(opts) {
             callback: function(results, status) {
               var i, len, result;
               if (data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')) {
-                return;
+                dontPrefill = true;
               }
               if (status === 'OK') {
                 state = '';
@@ -23260,7 +23262,11 @@ initData = function(opts) {
                   }
                 }
                 index$1.set('default-state', state);
-                return index$1.set('default-country', country);
+                index$1.set('default-country', country);
+                if (countriesReady) {
+                  data.set('order.shippingAddress.country', country);
+                  return data.set('order.shippingAddress.state', state);
+                }
               }
             }
           });
@@ -23269,7 +23275,8 @@ initData = function(opts) {
     }
   }
   data.on('set', function(k, v) {
-    if (k === 'countries') {
+    if (k === 'countries' && !dontPrefill) {
+      countriesReady = true;
       data.set('order.shippingAddress.country', country);
       return data.set('order.shippingAddress.state', state);
     }
