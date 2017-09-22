@@ -45,7 +45,7 @@
     "akasha": "^0.1.9",
     "broken": "^0.1.13",
     "commerce.js": "1.1.15",
-    "el-controls": "1.2.1",
+    "el-controls": "1.2.2",
     "el.js": "^2.1.31",
     "es-keyboardevent-key-polyfill": "1.0.2",
     "es-md5": "^2.7.2",
@@ -90,7 +90,7 @@
     "sake-outdated": "^0.1.28",
     "sake-publish": "^0.1.16",
     "sake-version": "^0.1.19",
-    "serve-static": "^1.12.4",
+    "serve-static": "^1.12.5",
     "stylus": "0.54.5",
     "uglify-js": "github:mishoo/UglifyJS2#harmony"
   }
