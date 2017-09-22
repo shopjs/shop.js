@@ -50,8 +50,7 @@ task 'server', 'Run static server for tests', (cb) ->
   server.use (require 'serve-static') './test/fixtures'
   server = require('http').createServer(server).listen port, cb
 
-
-task 'test', 'Run tests', ['build', 'server'], (opts) ->
+task 'test', 'Run tests', ['server'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''

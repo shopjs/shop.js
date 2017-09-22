@@ -106,10 +106,6 @@ Shop.Containers = Containers
 Shop.Widgets = Widgets
 Shop.El = El
 
-# make available in templates
-window.renderCurrency = renderUICurrencyFromJSON
-window.renderDate = renderDate
-
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
   Shop.Controls.Text::html         = templates.Controls.Text  if templates?.Controls?.Text
@@ -278,6 +274,18 @@ initData = (opts)->
                 data.set 'order.shippingAddress.country', country
                 data.set 'order.shippingAddress.state', state
 
+            m.trigger Events.GeoReady, {
+              status: 'success'
+              geolocation: position
+              gmaps: results
+            }
+    else
+      # makes more sense to force sequencing after all the synchronous stuff
+      requestAnimationFrame ()->
+        m.trigger Events.GeoReady, {
+          status: 'disabled'
+        }
+
   # use default geoloc
   data.on 'set', (k, v)->
     if k == 'countries' && !dontPrefill
@@ -301,7 +309,7 @@ initCart = (client, data, cartOptions)->
 
   # fetch library data
   lastChecked   = store.get 'lastChecked'
-  countries     = store.get 'countries'
+  countries     = store.get('countries') ? []
   taxRates      = store.get 'taxRates'
   shippingRates = store.get 'shippingRates'
 
@@ -312,7 +320,7 @@ initCart = (client, data, cartOptions)->
   lastChecked = renderDate(new Date(), rfc3339)
 
   client.library.shopjs(
-    hasCountries:       !!countries
+    hasCountries:       !!countries && countries.length != 0
     hasTaxRates:        !!taxRates
     hasShippingRates:   !!shippingRates
     lastChecked:        renderDate(lastChecked || '2000-01-01', rfc3339)
@@ -337,6 +345,9 @@ initCart = (client, data, cartOptions)->
     cart.shippingRates res.shippingRates ? shippingRates
 
     cart.invoice()
+
+    m.trigger Events.AsyncReady, res
+
     El.scheduleUpdate()
 
   cart.onCart = ->
@@ -388,7 +399,7 @@ initCart = (client, data, cartOptions)->
 
 initMediator = (data, cart) ->
   # initialize mediator
-  m.on Events.LoadData, (data) ->
+  m.on Events.Started, (data) ->
     cart.invoice()
     El.scheduleUpdate()
 
@@ -461,7 +472,7 @@ Shop.start = (opts = {}) ->
   .catch (err) ->
     window?.Raven?.captureException err
 
-  m.trigger Events.LoadData, @data
+  m.trigger Events.Started, @data
   return m
 
 Shop.initCart = ->
@@ -469,6 +480,12 @@ Shop.initCart = ->
 
 Shop.clear = ->
   @cart.clear()
+
+Shop.getMediator = ->
+  return m
+
+Shop.getData = ->
+  return @data
 
 Shop.isEmpty   = ->
   items = @data.get 'order.items'
@@ -522,5 +539,10 @@ if document?.currentScript?
 
     requestAnimationFrame ()->
       Shop.start opts
+
+if window?
+  window.Shop = Shop
+  window.renderCurrency = renderUICurrencyFromJSON
+  window.renderDate = renderDate
 
 export default Shop

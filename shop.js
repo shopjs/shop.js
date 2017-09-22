@@ -8861,6 +8861,15 @@ var getMCIds = function() {
   return [getQueries().mc_eid, getQueries().mc_cid];
 };
 
+// node_modules/el-controls/src/events.coffee
+var Events;
+
+var ControlEvents = Events = {
+  Change: 'change',
+  ChangeSuccess: 'change-success',
+  ChangeFailed: 'change-failed'
+};
+
 // node_modules/es6-tween/src/shim.js
 /* global global */
 
@@ -9647,4826 +9656,16 @@ class Lite {
 
 // node_modules/es6-tween/src/index.lite.js
 
-// node_modules/zepto-modules/zepto.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-var Zepto = (function() {
-  var undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
-    document = window.document,
-    elementDisplay = {}, classCache = {},
-    cssNumber = { 'column-count': 1, 'columns': 1, 'font-weight': 1, 'line-height': 1,'opacity': 1, 'z-index': 1, 'zoom': 1 },
-    fragmentRE = /^\s*<(\w+|!)[^>]*>/,
-    singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
-    tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
-    rootNodeRE = /^(?:body|html)$/i,
-    capitalRE = /([A-Z])/g,
-
-    // special attributes that should be get/set via method calls
-    methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'],
-
-    adjacencyOperators = [ 'after', 'prepend', 'before', 'append' ],
-    table = document.createElement('table'),
-    tableRow = document.createElement('tr'),
-    containers = {
-      'tr': document.createElement('tbody'),
-      'tbody': table, 'thead': table, 'tfoot': table,
-      'td': tableRow, 'th': tableRow,
-      '*': document.createElement('div')
-    },
-    readyRE = /complete|loaded|interactive/,
-    simpleSelectorRE = /^[\w-]*$/,
-    class2type = {},
-    toString = class2type.toString,
-    zepto = {},
-    camelize, uniq,
-    tempParent = document.createElement('div'),
-    propMap = {
-      'tabindex': 'tabIndex',
-      'readonly': 'readOnly',
-      'for': 'htmlFor',
-      'class': 'className',
-      'maxlength': 'maxLength',
-      'cellspacing': 'cellSpacing',
-      'cellpadding': 'cellPadding',
-      'rowspan': 'rowSpan',
-      'colspan': 'colSpan',
-      'usemap': 'useMap',
-      'frameborder': 'frameBorder',
-      'contenteditable': 'contentEditable'
-    },
-    isArray = Array.isArray ||
-      function(object){ return object instanceof Array };
-
-  zepto.matches = function(element, selector) {
-    if (!selector || !element || element.nodeType !== 1) return false
-    var matchesSelector = element.matches || element.webkitMatchesSelector ||
-                          element.mozMatchesSelector || element.oMatchesSelector ||
-                          element.matchesSelector;
-    if (matchesSelector) return matchesSelector.call(element, selector)
-    // fall back to performing a selector:
-    var match, parent = element.parentNode, temp = !parent;
-    if (temp) (parent = tempParent).appendChild(element);
-    match = ~zepto.qsa(parent, selector).indexOf(element);
-    temp && tempParent.removeChild(element);
-    return match
-  };
-
-  function type(obj) {
-    return obj == null ? String(obj) :
-      class2type[toString.call(obj)] || "object"
-  }
-
-  function isFunction(value) { return type(value) == "function" }
-  function isWindow(obj)     { return obj != null && obj == obj.window }
-  function isDocument(obj)   { return obj != null && obj.nodeType == obj.DOCUMENT_NODE }
-  function isObject(obj)     { return type(obj) == "object" }
-  function isPlainObject(obj) {
-    return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype
-  }
-
-  function likeArray(obj) {
-    var length = !!obj && 'length' in obj && obj.length,
-      type = $.type(obj);
-
-    return 'function' != type && !isWindow(obj) && (
-      'array' == type || length === 0 ||
-        (typeof length == 'number' && length > 0 && (length - 1) in obj)
-    )
-  }
-
-  function compact(array) { return filter.call(array, function(item){ return item != null }) }
-  function flatten(array) { return array.length > 0 ? $.fn.concat.apply([], array) : array }
-  camelize = function(str){ return str.replace(/-+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : '' }) };
-  function dasherize(str) {
-    return str.replace(/::/g, '/')
-           .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
-           .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-           .replace(/_/g, '-')
-           .toLowerCase()
-  }
-  uniq = function(array){ return filter.call(array, function(item, idx){ return array.indexOf(item) == idx }) };
-
-  function classRE(name) {
-    return name in classCache ?
-      classCache[name] : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'))
-  }
-
-  function maybeAddPx(name, value) {
-    return (typeof value == "number" && !cssNumber[dasherize(name)]) ? value + "px" : value
-  }
-
-  function defaultDisplay(nodeName) {
-    var element, display;
-    if (!elementDisplay[nodeName]) {
-      element = document.createElement(nodeName);
-      document.body.appendChild(element);
-      display = getComputedStyle(element, '').getPropertyValue("display");
-      element.parentNode.removeChild(element);
-      display == "none" && (display = "block");
-      elementDisplay[nodeName] = display;
-    }
-    return elementDisplay[nodeName]
-  }
-
-  function children(element) {
-    return 'children' in element ?
-      slice.call(element.children) :
-      $.map(element.childNodes, function(node){ if (node.nodeType == 1) return node })
-  }
-
-  function Z(dom, selector) {
-    var i, len = dom ? dom.length : 0;
-    for (i = 0; i < len; i++) this[i] = dom[i];
-    this.length = len;
-    this.selector = selector || '';
-  }
-
-  // `$.zepto.fragment` takes a html string and an optional tag name
-  // to generate DOM nodes from the given html string.
-  // The generated DOM nodes are returned as an array.
-  // This function can be overridden in plugins for example to make
-  // it compatible with browsers that don't support the DOM fully.
-  zepto.fragment = function(html, name, properties) {
-    var dom, nodes, container;
-
-    // A special case optimization for a single tag
-    if (singleTagRE.test(html)) dom = $(document.createElement(RegExp.$1));
-
-    if (!dom) {
-      if (html.replace) html = html.replace(tagExpanderRE, "<$1></$2>");
-      if (name === undefined) name = fragmentRE.test(html) && RegExp.$1;
-      if (!(name in containers)) name = '*';
-
-      container = containers[name];
-      container.innerHTML = '' + html;
-      dom = $.each(slice.call(container.childNodes), function(){
-        container.removeChild(this);
-      });
-    }
-
-    if (isPlainObject(properties)) {
-      nodes = $(dom);
-      $.each(properties, function(key, value) {
-        if (methodAttributes.indexOf(key) > -1) nodes[key](value);
-        else nodes.attr(key, value);
-      });
-    }
-
-    return dom
-  };
-
-  // `$.zepto.Z` swaps out the prototype of the given `dom` array
-  // of nodes with `$.fn` and thus supplying all the Zepto functions
-  // to the array. This method can be overridden in plugins.
-  zepto.Z = function(dom, selector) {
-    return new Z(dom, selector)
-  };
-
-  // `$.zepto.isZ` should return `true` if the given object is a Zepto
-  // collection. This method can be overridden in plugins.
-  zepto.isZ = function(object) {
-    return object instanceof zepto.Z
-  };
-
-  // `$.zepto.init` is Zepto's counterpart to jQuery's `$.fn.init` and
-  // takes a CSS selector and an optional context (and handles various
-  // special cases).
-  // This method can be overridden in plugins.
-  zepto.init = function(selector, context) {
-    var dom;
-    // If nothing given, return an empty Zepto collection
-    if (!selector) return zepto.Z()
-    // Optimize for string selectors
-    else if (typeof selector == 'string') {
-      selector = selector.trim();
-      // If it's a html fragment, create nodes from it
-      // Note: In both Chrome 21 and Firefox 15, DOM error 12
-      // is thrown if the fragment doesn't begin with <
-      if (selector[0] == '<' && fragmentRE.test(selector))
-        dom = zepto.fragment(selector, RegExp.$1, context), selector = null;
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector)
-      // If it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector);
-    }
-    // If a function is given, call it when the DOM is ready
-    else if (isFunction(selector)) return $(document).ready(selector)
-    // If a Zepto collection is given, just return it
-    else if (zepto.isZ(selector)) return selector
-    else {
-      // normalize array if an array of nodes is given
-      if (isArray(selector)) dom = compact(selector);
-      // Wrap DOM nodes.
-      else if (isObject(selector))
-        dom = [selector], selector = null;
-      // If it's a html fragment, create nodes from it
-      else if (fragmentRE.test(selector))
-        dom = zepto.fragment(selector.trim(), RegExp.$1, context), selector = null;
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector)
-      // And last but no least, if it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector);
-    }
-    // create a new Zepto collection from the nodes found
-    return zepto.Z(dom, selector)
-  };
-
-  // `$` will be the base `Zepto` object. When calling this
-  // function just call `$.zepto.init, which makes the implementation
-  // details of selecting nodes and creating Zepto collections
-  // patchable in plugins.
-  $ = function(selector, context){
-    return zepto.init(selector, context)
-  };
-
-  function extend(target, source, deep) {
-    for (key in source)
-      if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-        if (isPlainObject(source[key]) && !isPlainObject(target[key]))
-          target[key] = {};
-        if (isArray(source[key]) && !isArray(target[key]))
-          target[key] = [];
-        extend(target[key], source[key], deep);
-      }
-      else if (source[key] !== undefined) target[key] = source[key];
-  }
-
-  // Copy all but undefined properties from one or more
-  // objects to the `target` object.
-  $.extend = function(target){
-    var deep, args = slice.call(arguments, 1);
-    if (typeof target == 'boolean') {
-      deep = target;
-      target = args.shift();
-    }
-    args.forEach(function(arg){ extend(target, arg, deep); });
-    return target
-  };
-
-  // `$.zepto.qsa` is Zepto's CSS selector implementation which
-  // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
-  // This method can be overridden in plugins.
-  zepto.qsa = function(element, selector){
-    var found,
-        maybeID = selector[0] == '#',
-        maybeClass = !maybeID && selector[0] == '.',
-        nameOnly = maybeID || maybeClass ? selector.slice(1) : selector, // Ensure that a 1 char tag name still gets checked
-        isSimple = simpleSelectorRE.test(nameOnly);
-    return (element.getElementById && isSimple && maybeID) ? // Safari DocumentFragment doesn't have getElementById
-      ( (found = element.getElementById(nameOnly)) ? [found] : [] ) :
-      (element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11) ? [] :
-      slice.call(
-        isSimple && !maybeID && element.getElementsByClassName ? // DocumentFragment doesn't have getElementsByClassName/TagName
-          maybeClass ? element.getElementsByClassName(nameOnly) : // If it's simple, it could be a class
-          element.getElementsByTagName(selector) : // Or a tag
-          element.querySelectorAll(selector) // Or it's not simple, and we need to query all
-      )
-  };
-
-  function filtered(nodes, selector) {
-    return selector == null ? $(nodes) : $(nodes).filter(selector)
-  }
-
-  $.contains = document.documentElement.contains ?
-    function(parent, node) {
-      return parent !== node && parent.contains(node)
-    } :
-    function(parent, node) {
-      while (node && (node = node.parentNode))
-        if (node === parent) return true
-      return false
-    };
-
-  function funcArg(context, arg, idx, payload) {
-    return isFunction(arg) ? arg.call(context, idx, payload) : arg
-  }
-
-  function setAttribute(node, name, value) {
-    value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
-  }
-
-  // access className property while respecting SVGAnimatedString
-  function className(node, value){
-    var klass = node.className || '',
-        svg   = klass && klass.baseVal !== undefined;
-
-    if (value === undefined) return svg ? klass.baseVal : klass
-    svg ? (klass.baseVal = value) : (node.className = value);
-  }
-
-  // "true"  => true
-  // "false" => false
-  // "null"  => null
-  // "42"    => 42
-  // "42.5"  => 42.5
-  // "08"    => "08"
-  // JSON    => parse if valid
-  // String  => self
-  function deserializeValue(value) {
-    try {
-      return value ?
-        value == "true" ||
-        ( value == "false" ? false :
-          value == "null" ? null :
-          +value + "" == value ? +value :
-          /^[\[\{]/.test(value) ? $.parseJSON(value) :
-          value )
-        : value
-    } catch(e) {
-      return value
-    }
-  }
-
-  $.type = type;
-  $.isFunction = isFunction;
-  $.isWindow = isWindow;
-  $.isArray = isArray;
-  $.isPlainObject = isPlainObject;
-
-  $.isEmptyObject = function(obj) {
-    var name;
-    for (name in obj) return false
-    return true
-  };
-
-  $.isNumeric = function(val) {
-    var num = Number(val), type = typeof val;
-    return val != null && type != 'boolean' &&
-      (type != 'string' || val.length) &&
-      !isNaN(num) && isFinite(num) || false
-  };
-
-  $.inArray = function(elem, array, i){
-    return emptyArray.indexOf.call(array, elem, i)
-  };
-
-  $.camelCase = camelize;
-  $.trim = function(str) {
-    return str == null ? "" : String.prototype.trim.call(str)
-  };
-
-  // plugin compatibility
-  $.uuid = 0;
-  $.support = { };
-  $.expr = { };
-  $.noop = function() {};
-
-  $.map = function(elements, callback){
-    var value, values = [], i, key;
-    if (likeArray(elements))
-      for (i = 0; i < elements.length; i++) {
-        value = callback(elements[i], i);
-        if (value != null) values.push(value);
-      }
-    else
-      for (key in elements) {
-        value = callback(elements[key], key);
-        if (value != null) values.push(value);
-      }
-    return flatten(values)
-  };
-
-  $.each = function(elements, callback){
-    var i, key;
-    if (likeArray(elements)) {
-      for (i = 0; i < elements.length; i++)
-        if (callback.call(elements[i], i, elements[i]) === false) return elements
-    } else {
-      for (key in elements)
-        if (callback.call(elements[key], key, elements[key]) === false) return elements
-    }
-
-    return elements
-  };
-
-  $.grep = function(elements, callback){
-    return filter.call(elements, callback)
-  };
-
-  if (window.JSON) $.parseJSON = JSON.parse;
-
-  // Populate the class2type map
-  $.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
-    class2type[ "[object " + name + "]" ] = name.toLowerCase();
-  });
-
-  // Define methods that will be available on all
-  // Zepto collections
-  $.fn = {
-    constructor: zepto.Z,
-    length: 0,
-
-    // Because a collection acts like an array
-    // copy over these useful array functions.
-    forEach: emptyArray.forEach,
-    reduce: emptyArray.reduce,
-    push: emptyArray.push,
-    sort: emptyArray.sort,
-    splice: emptyArray.splice,
-    indexOf: emptyArray.indexOf,
-    concat: function(){
-      var i, value, args = [];
-      for (i = 0; i < arguments.length; i++) {
-        value = arguments[i];
-        args[i] = zepto.isZ(value) ? value.toArray() : value;
-      }
-      return concat.apply(zepto.isZ(this) ? this.toArray() : this, args)
-    },
-
-    // `map` and `slice` in the jQuery API work differently
-    // from their array counterparts
-    map: function(fn){
-      return $($.map(this, function(el, i){ return fn.call(el, i, el) }))
-    },
-    slice: function(){
-      return $(slice.apply(this, arguments))
-    },
-
-    ready: function(callback){
-      // need to check if document.body exists for IE as that browser reports
-      // document ready when it hasn't yet created the body element
-      if (readyRE.test(document.readyState) && document.body) callback($);
-      else document.addEventListener('DOMContentLoaded', function(){ callback($); }, false);
-      return this
-    },
-    get: function(idx){
-      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
-    },
-    toArray: function(){ return this.get() },
-    size: function(){
-      return this.length
-    },
-    remove: function(){
-      return this.each(function(){
-        if (this.parentNode != null)
-          this.parentNode.removeChild(this);
-      })
-    },
-    each: function(callback){
-      emptyArray.every.call(this, function(el, idx){
-        return callback.call(el, idx, el) !== false
-      });
-      return this
-    },
-    filter: function(selector){
-      if (isFunction(selector)) return this.not(this.not(selector))
-      return $(filter.call(this, function(element){
-        return zepto.matches(element, selector)
-      }))
-    },
-    add: function(selector,context){
-      return $(uniq(this.concat($(selector,context))))
-    },
-    is: function(selector){
-      return this.length > 0 && zepto.matches(this[0], selector)
-    },
-    not: function(selector){
-      var nodes=[];
-      if (isFunction(selector) && selector.call !== undefined)
-        this.each(function(idx){
-          if (!selector.call(this,idx)) nodes.push(this);
-        });
-      else {
-        var excludes = typeof selector == 'string' ? this.filter(selector) :
-          (likeArray(selector) && isFunction(selector.item)) ? slice.call(selector) : $(selector);
-        this.forEach(function(el){
-          if (excludes.indexOf(el) < 0) nodes.push(el);
-        });
-      }
-      return $(nodes)
-    },
-    has: function(selector){
-      return this.filter(function(){
-        return isObject(selector) ?
-          $.contains(this, selector) :
-          $(this).find(selector).size()
-      })
-    },
-    eq: function(idx){
-      return idx === -1 ? this.slice(idx) : this.slice(idx, + idx + 1)
-    },
-    first: function(){
-      var el = this[0];
-      return el && !isObject(el) ? el : $(el)
-    },
-    last: function(){
-      var el = this[this.length - 1];
-      return el && !isObject(el) ? el : $(el)
-    },
-    find: function(selector){
-      var result, $this = this;
-      if (!selector) result = $();
-      else if (typeof selector == 'object')
-        result = $(selector).filter(function(){
-          var node = this;
-          return emptyArray.some.call($this, function(parent){
-            return $.contains(parent, node)
-          })
-        });
-      else if (this.length == 1) result = $(zepto.qsa(this[0], selector));
-      else result = this.map(function(){ return zepto.qsa(this, selector) });
-      return result
-    },
-    closest: function(selector, context){
-      var nodes = [], collection = typeof selector == 'object' && $(selector);
-      this.each(function(_, node){
-        while (node && !(collection ? collection.indexOf(node) >= 0 : zepto.matches(node, selector)))
-          node = node !== context && !isDocument(node) && node.parentNode;
-        if (node && nodes.indexOf(node) < 0) nodes.push(node);
-      });
-      return $(nodes)
-    },
-    parents: function(selector){
-      var ancestors = [], nodes = this;
-      while (nodes.length > 0)
-        nodes = $.map(nodes, function(node){
-          if ((node = node.parentNode) && !isDocument(node) && ancestors.indexOf(node) < 0) {
-            ancestors.push(node);
-            return node
-          }
-        });
-      return filtered(ancestors, selector)
-    },
-    parent: function(selector){
-      return filtered(uniq(this.pluck('parentNode')), selector)
-    },
-    children: function(selector){
-      return filtered(this.map(function(){ return children(this) }), selector)
-    },
-    contents: function() {
-      return this.map(function() { return this.contentDocument || slice.call(this.childNodes) })
-    },
-    siblings: function(selector){
-      return filtered(this.map(function(i, el){
-        return filter.call(children(el.parentNode), function(child){ return child!==el })
-      }), selector)
-    },
-    empty: function(){
-      return this.each(function(){ this.innerHTML = ''; })
-    },
-    // `pluck` is borrowed from Prototype.js
-    pluck: function(property){
-      return $.map(this, function(el){ return el[property] })
-    },
-    show: function(){
-      return this.each(function(){
-        this.style.display == "none" && (this.style.display = '');
-        if (getComputedStyle(this, '').getPropertyValue("display") == "none")
-          this.style.display = defaultDisplay(this.nodeName);
-      })
-    },
-    replaceWith: function(newContent){
-      return this.before(newContent).remove()
-    },
-    wrap: function(structure){
-      var func = isFunction(structure);
-      if (this[0] && !func)
-        var dom   = $(structure).get(0),
-            clone = dom.parentNode || this.length > 1;
-
-      return this.each(function(index){
-        $(this).wrapAll(
-          func ? structure.call(this, index) :
-            clone ? dom.cloneNode(true) : dom
-        );
-      })
-    },
-    wrapAll: function(structure){
-      if (this[0]) {
-        $(this[0]).before(structure = $(structure));
-        var children;
-        // drill down to the inmost element
-        while ((children = structure.children()).length) structure = children.first();
-        $(structure).append(this);
-      }
-      return this
-    },
-    wrapInner: function(structure){
-      var func = isFunction(structure);
-      return this.each(function(index){
-        var self = $(this), contents = self.contents(),
-            dom  = func ? structure.call(this, index) : structure;
-        contents.length ? contents.wrapAll(dom) : self.append(dom);
-      })
-    },
-    unwrap: function(){
-      this.parent().each(function(){
-        $(this).replaceWith($(this).children());
-      });
-      return this
-    },
-    clone: function(){
-      return this.map(function(){ return this.cloneNode(true) })
-    },
-    hide: function(){
-      return this.css("display", "none")
-    },
-    toggle: function(setting){
-      return this.each(function(){
-        var el = $(this);(setting === undefined ? el.css("display") == "none" : setting) ? el.show() : el.hide();
-      })
-    },
-    prev: function(selector){ return $(this.pluck('previousElementSibling')).filter(selector || '*') },
-    next: function(selector){ return $(this.pluck('nextElementSibling')).filter(selector || '*') },
-    html: function(html){
-      return 0 in arguments ?
-        this.each(function(idx){
-          var originHtml = this.innerHTML;
-          $(this).empty().append( funcArg(this, html, idx, originHtml) );
-        }) :
-        (0 in this ? this[0].innerHTML : null)
-    },
-    text: function(text){
-      return 0 in arguments ?
-        this.each(function(idx){
-          var newText = funcArg(this, text, idx, this.textContent);
-          this.textContent = newText == null ? '' : ''+newText;
-        }) :
-        (0 in this ? this.pluck('textContent').join("") : null)
-    },
-    attr: function(name, value){
-      var result;
-      return (typeof name == 'string' && !(1 in arguments)) ?
-        (0 in this && this[0].nodeType == 1 && (result = this[0].getAttribute(name)) != null ? result : undefined) :
-        this.each(function(idx){
-          if (this.nodeType !== 1) return
-          if (isObject(name)) for (key in name) setAttribute(this, key, name[key]);
-          else setAttribute(this, name, funcArg(this, value, idx, this.getAttribute(name)));
-        })
-    },
-    removeAttr: function(name){
-      return this.each(function(){ this.nodeType === 1 && name.split(' ').forEach(function(attribute){
-        setAttribute(this, attribute);
-      }, this);})
-    },
-    prop: function(name, value){
-      name = propMap[name] || name;
-      return (1 in arguments) ?
-        this.each(function(idx){
-          this[name] = funcArg(this, value, idx, this[name]);
-        }) :
-        (this[0] && this[0][name])
-    },
-    removeProp: function(name){
-      name = propMap[name] || name;
-      return this.each(function(){ delete this[name]; })
-    },
-    data: function(name, value){
-      var attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
-
-      var data = (1 in arguments) ?
-        this.attr(attrName, value) :
-        this.attr(attrName);
-
-      return data !== null ? deserializeValue(data) : undefined
-    },
-    val: function(value){
-      if (0 in arguments) {
-        if (value == null) value = "";
-        return this.each(function(idx){
-          this.value = funcArg(this, value, idx, this.value);
-        })
-      } else {
-        return this[0] && (this[0].multiple ?
-           $(this[0]).find('option').filter(function(){ return this.selected }).pluck('value') :
-           this[0].value)
-      }
-    },
-    offset: function(coordinates){
-      if (coordinates) return this.each(function(index){
-        var $this = $(this),
-            coords = funcArg(this, coordinates, index, $this.offset()),
-            parentOffset = $this.offsetParent().offset(),
-            props = {
-              top:  coords.top  - parentOffset.top,
-              left: coords.left - parentOffset.left
-            };
-
-        if ($this.css('position') == 'static') props['position'] = 'relative';
-        $this.css(props);
-      })
-      if (!this.length) return null
-      if (document.documentElement !== this[0] && !$.contains(document.documentElement, this[0]))
-        return {top: 0, left: 0}
-      var obj = this[0].getBoundingClientRect();
-      return {
-        left: obj.left + window.pageXOffset,
-        top: obj.top + window.pageYOffset,
-        width: Math.round(obj.width),
-        height: Math.round(obj.height)
-      }
-    },
-    css: function(property, value){
-      if (arguments.length < 2) {
-        var element = this[0];
-        if (typeof property == 'string') {
-          if (!element) return
-          return element.style[camelize(property)] || getComputedStyle(element, '').getPropertyValue(property)
-        } else if (isArray(property)) {
-          if (!element) return
-          var props = {};
-          var computedStyle = getComputedStyle(element, '');
-          $.each(property, function(_, prop){
-            props[prop] = (element.style[camelize(prop)] || computedStyle.getPropertyValue(prop));
-          });
-          return props
-        }
-      }
-
-      var css = '';
-      if (type(property) == 'string') {
-        if (!value && value !== 0)
-          this.each(function(){ this.style.removeProperty(dasherize(property)); });
-        else
-          css = dasherize(property) + ":" + maybeAddPx(property, value);
-      } else {
-        for (key in property)
-          if (!property[key] && property[key] !== 0)
-            this.each(function(){ this.style.removeProperty(dasherize(key)); });
-          else
-            css += dasherize(key) + ':' + maybeAddPx(key, property[key]) + ';';
-      }
-
-      return this.each(function(){ this.style.cssText += ';' + css; })
-    },
-    index: function(element){
-      return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0])
-    },
-    hasClass: function(name){
-      if (!name) return false
-      return emptyArray.some.call(this, function(el){
-        return this.test(className(el))
-      }, classRE(name))
-    },
-    addClass: function(name){
-      if (!name) return this
-      return this.each(function(idx){
-        if (!('className' in this)) return
-        classList = [];
-        var cls = className(this), newName = funcArg(this, name, idx, cls);
-        newName.split(/\s+/g).forEach(function(klass){
-          if (!$(this).hasClass(klass)) classList.push(klass);
-        }, this);
-        classList.length && className(this, cls + (cls ? " " : "") + classList.join(" "));
-      })
-    },
-    removeClass: function(name){
-      return this.each(function(idx){
-        if (!('className' in this)) return
-        if (name === undefined) return className(this, '')
-        classList = className(this);
-        funcArg(this, name, idx, classList).split(/\s+/g).forEach(function(klass){
-          classList = classList.replace(classRE(klass), " ");
-        });
-        className(this, classList.trim());
-      })
-    },
-    toggleClass: function(name, when){
-      if (!name) return this
-      return this.each(function(idx){
-        var $this = $(this), names = funcArg(this, name, idx, className(this));
-        names.split(/\s+/g).forEach(function(klass){
-          (when === undefined ? !$this.hasClass(klass) : when) ?
-            $this.addClass(klass) : $this.removeClass(klass);
-        });
-      })
-    },
-    scrollTop: function(value){
-      if (!this.length) return
-      var hasScrollTop = 'scrollTop' in this[0];
-      if (value === undefined) return hasScrollTop ? this[0].scrollTop : this[0].pageYOffset
-      return this.each(hasScrollTop ?
-        function(){ this.scrollTop = value; } :
-        function(){ this.scrollTo(this.scrollX, value); })
-    },
-    scrollLeft: function(value){
-      if (!this.length) return
-      var hasScrollLeft = 'scrollLeft' in this[0];
-      if (value === undefined) return hasScrollLeft ? this[0].scrollLeft : this[0].pageXOffset
-      return this.each(hasScrollLeft ?
-        function(){ this.scrollLeft = value; } :
-        function(){ this.scrollTo(value, this.scrollY); })
-    },
-    position: function() {
-      if (!this.length) return
-
-      var elem = this[0],
-        // Get *real* offsetParent
-        offsetParent = this.offsetParent(),
-        // Get correct offsets
-        offset       = this.offset(),
-        parentOffset = rootNodeRE.test(offsetParent[0].nodeName) ? { top: 0, left: 0 } : offsetParent.offset();
-
-      // Subtract element margins
-      // note: when an element has margin: auto the offsetLeft and marginLeft
-      // are the same in Safari causing offset.left to incorrectly be 0
-      offset.top  -= parseFloat( $(elem).css('margin-top') ) || 0;
-      offset.left -= parseFloat( $(elem).css('margin-left') ) || 0;
-
-      // Add offsetParent borders
-      parentOffset.top  += parseFloat( $(offsetParent[0]).css('border-top-width') ) || 0;
-      parentOffset.left += parseFloat( $(offsetParent[0]).css('border-left-width') ) || 0;
-
-      // Subtract the two offsets
-      return {
-        top:  offset.top  - parentOffset.top,
-        left: offset.left - parentOffset.left
-      }
-    },
-    offsetParent: function() {
-      return this.map(function(){
-        var parent = this.offsetParent || document.body;
-        while (parent && !rootNodeRE.test(parent.nodeName) && $(parent).css("position") == "static")
-          parent = parent.offsetParent;
-        return parent
-      })
-    }
-  };
-
-  // for now
-  $.fn.detach = $.fn.remove
-
-  // Generate the `width` and `height` functions
-  ;['width', 'height'].forEach(function(dimension){
-    var dimensionProperty =
-      dimension.replace(/./, function(m){ return m[0].toUpperCase() });
-
-    $.fn[dimension] = function(value){
-      var offset, el = this[0];
-      if (value === undefined) return isWindow(el) ? el['inner' + dimensionProperty] :
-        isDocument(el) ? el.documentElement['scroll' + dimensionProperty] :
-        (offset = this.offset()) && offset[dimension]
-      else return this.each(function(idx){
-        el = $(this);
-        el.css(dimension, funcArg(this, value, idx, el[dimension]()));
-      })
-    };
-  });
-
-  function traverseNode(node, fun) {
-    fun(node);
-    for (var i = 0, len = node.childNodes.length; i < len; i++)
-      traverseNode(node.childNodes[i], fun);
-  }
-
-  // Generate the `after`, `prepend`, `before`, `append`,
-  // `insertAfter`, `insertBefore`, `appendTo`, and `prependTo` methods.
-  adjacencyOperators.forEach(function(operator, operatorIndex) {
-    var inside = operatorIndex % 2; //=> prepend, append
-
-    $.fn[operator] = function(){
-      // arguments can be nodes, arrays of nodes, Zepto objects and HTML strings
-      var argType, nodes = $.map(arguments, function(arg) {
-            var arr = [];
-            argType = type(arg);
-            if (argType == "array") {
-              arg.forEach(function(el) {
-                if (el.nodeType !== undefined) return arr.push(el)
-                else if ($.zepto.isZ(el)) return arr = arr.concat(el.get())
-                arr = arr.concat(zepto.fragment(el));
-              });
-              return arr
-            }
-            return argType == "object" || arg == null ?
-              arg : zepto.fragment(arg)
-          }),
-          parent, copyByClone = this.length > 1;
-      if (nodes.length < 1) return this
-
-      return this.each(function(_, target){
-        parent = inside ? target : target.parentNode;
-
-        // convert all methods to a "before" operation
-        target = operatorIndex == 0 ? target.nextSibling :
-                 operatorIndex == 1 ? target.firstChild :
-                 operatorIndex == 2 ? target :
-                 null;
-
-        var parentInDocument = $.contains(document.documentElement, parent);
-
-        nodes.forEach(function(node){
-          if (copyByClone) node = node.cloneNode(true);
-          else if (!parent) return $(node).remove()
-
-          parent.insertBefore(node, target);
-          if (parentInDocument) traverseNode(node, function(el){
-            if (el.nodeName != null && el.nodeName.toUpperCase() === 'SCRIPT' &&
-               (!el.type || el.type === 'text/javascript') && !el.src){
-              var target = el.ownerDocument ? el.ownerDocument.defaultView : window;
-              target['eval'].call(target, el.innerHTML);
-            }
-          });
-        });
-      })
-    };
-
-    // after    => insertAfter
-    // prepend  => prependTo
-    // before   => insertBefore
-    // append   => appendTo
-    $.fn[inside ? operator+'To' : 'insert'+(operatorIndex ? 'Before' : 'After')] = function(html){
-      $(html)[operator](this);
-      return this
-    };
-  });
-
-  zepto.Z.prototype = Z.prototype = $.fn;
-
-  // Export internal API functions in the `$.zepto` namespace
-  zepto.uniq = uniq;
-  zepto.deserializeValue = deserializeValue;
-  $.zepto = zepto;
-
-  return $
-})();
-
-var zepto = Zepto;
-
-//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/zepto-modules/zepto.js
-
-// node_modules/zepto-modules/event.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  var _zid = 1, undefined,
-      slice = Array.prototype.slice,
-      isFunction = $.isFunction,
-      isString = function(obj){ return typeof obj == 'string' },
-      handlers = {},
-      specialEvents={},
-      focusinSupported = 'onfocusin' in window,
-      focus = { focus: 'focusin', blur: 'focusout' },
-      hover = { mouseenter: 'mouseover', mouseleave: 'mouseout' };
-
-  specialEvents.click = specialEvents.mousedown = specialEvents.mouseup = specialEvents.mousemove = 'MouseEvents';
-
-  function zid(element) {
-    return element._zid || (element._zid = _zid++)
-  }
-  function findHandlers(element, event, fn, selector) {
-    event = parse(event);
-    if (event.ns) var matcher = matcherFor(event.ns);
-    return (handlers[zid(element)] || []).filter(function(handler) {
-      return handler
-        && (!event.e  || handler.e == event.e)
-        && (!event.ns || matcher.test(handler.ns))
-        && (!fn       || zid(handler.fn) === zid(fn))
-        && (!selector || handler.sel == selector)
-    })
-  }
-  function parse(event) {
-    var parts = ('' + event).split('.');
-    return {e: parts[0], ns: parts.slice(1).sort().join(' ')}
-  }
-  function matcherFor(ns) {
-    return new RegExp('(?:^| )' + ns.replace(' ', ' .* ?') + '(?: |$)')
-  }
-
-  function eventCapture(handler, captureSetting) {
-    return handler.del &&
-      (!focusinSupported && (handler.e in focus)) ||
-      !!captureSetting
-  }
-
-  function realEvent(type) {
-    return hover[type] || (focusinSupported && focus[type]) || type
-  }
-
-  function add(element, events, fn, data, selector, delegator, capture){
-    var id = zid(element), set = (handlers[id] || (handlers[id] = []));
-    events.split(/\s/).forEach(function(event){
-      if (event == 'ready') return $(document).ready(fn)
-      var handler   = parse(event);
-      handler.fn    = fn;
-      handler.sel   = selector;
-      // emulate mouseenter, mouseleave
-      if (handler.e in hover) fn = function(e){
-        var related = e.relatedTarget;
-        if (!related || (related !== this && !$.contains(this, related)))
-          return handler.fn.apply(this, arguments)
-      };
-      handler.del   = delegator;
-      var callback  = delegator || fn;
-      handler.proxy = function(e){
-        e = compatible(e);
-        if (e.isImmediatePropagationStopped()) return
-        e.data = data;
-        var result = callback.apply(element, e._args == undefined ? [e] : [e].concat(e._args));
-        if (result === false) e.preventDefault(), e.stopPropagation();
-        return result
-      };
-      handler.i = set.length;
-      set.push(handler);
-      if ('addEventListener' in element)
-        element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture));
-    });
-  }
-  function remove(element, events, fn, selector, capture){
-    var id = zid(element);(events || '').split(/\s/).forEach(function(event){
-      findHandlers(element, event, fn, selector).forEach(function(handler){
-        delete handlers[id][handler.i];
-      if ('removeEventListener' in element)
-        element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture));
-      });
-    });
-  }
-
-  $.event = { add: add, remove: remove };
-
-  $.proxy = function(fn, context) {
-    var args = (2 in arguments) && slice.call(arguments, 2);
-    if (isFunction(fn)) {
-      var proxyFn = function(){ return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments) };
-      proxyFn._zid = zid(fn);
-      return proxyFn
-    } else if (isString(context)) {
-      if (args) {
-        args.unshift(fn[context], fn);
-        return $.proxy.apply(null, args)
-      } else {
-        return $.proxy(fn[context], fn)
-      }
-    } else {
-      throw new TypeError("expected function")
-    }
-  };
-
-  $.fn.bind = function(event, data, callback){
-    return this.on(event, data, callback)
-  };
-  $.fn.unbind = function(event, callback){
-    return this.off(event, callback)
-  };
-  $.fn.one = function(event, selector, data, callback){
-    return this.on(event, selector, data, callback, 1)
-  };
-
-  var returnTrue = function(){return true},
-      returnFalse = function(){return false},
-      ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$|webkitMovement[XY]$)/,
-      eventMethods = {
-        preventDefault: 'isDefaultPrevented',
-        stopImmediatePropagation: 'isImmediatePropagationStopped',
-        stopPropagation: 'isPropagationStopped'
-      };
-
-  function compatible(event, source) {
-    if (source || !event.isDefaultPrevented) {
-      source || (source = event);
-
-      $.each(eventMethods, function(name, predicate) {
-        var sourceMethod = source[name];
-        event[name] = function(){
-          this[predicate] = returnTrue;
-          return sourceMethod && sourceMethod.apply(source, arguments)
-        };
-        event[predicate] = returnFalse;
-      });
-
-      try {
-        event.timeStamp || (event.timeStamp = Date.now());
-      } catch (ignored) { }
-
-      if (source.defaultPrevented !== undefined ? source.defaultPrevented :
-          'returnValue' in source ? source.returnValue === false :
-          source.getPreventDefault && source.getPreventDefault())
-        event.isDefaultPrevented = returnTrue;
-    }
-    return event
-  }
-
-  function createProxy(event) {
-    var key, proxy = { originalEvent: event };
-    for (key in event)
-      if (!ignoreProperties.test(key) && event[key] !== undefined) proxy[key] = event[key];
-
-    return compatible(proxy, event)
-  }
-
-  $.fn.delegate = function(selector, event, callback){
-    return this.on(event, selector, callback)
-  };
-  $.fn.undelegate = function(selector, event, callback){
-    return this.off(event, selector, callback)
-  };
-
-  $.fn.live = function(event, callback){
-    $(document.body).delegate(this.selector, event, callback);
-    return this
-  };
-  $.fn.die = function(event, callback){
-    $(document.body).undelegate(this.selector, event, callback);
-    return this
-  };
-
-  $.fn.on = function(event, selector, data, callback, one){
-    var autoRemove, delegator, $this = this;
-    if (event && !isString(event)) {
-      $.each(event, function(type, fn){
-        $this.on(type, selector, data, fn, one);
-      });
-      return $this
-    }
-
-    if (!isString(selector) && !isFunction(callback) && callback !== false)
-      callback = data, data = selector, selector = undefined;
-    if (callback === undefined || data === false)
-      callback = data, data = undefined;
-
-    if (callback === false) callback = returnFalse;
-
-    return $this.each(function(_, element){
-      if (one) autoRemove = function(e){
-        remove(element, e.type, callback);
-        return callback.apply(this, arguments)
-      };
-
-      if (selector) delegator = function(e){
-        var evt, match = $(e.target).closest(selector, element).get(0);
-        if (match && match !== element) {
-          evt = $.extend(createProxy(e), {currentTarget: match, liveFired: element});
-          return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
-        }
-      };
-
-      add(element, event, callback, data, selector, delegator || autoRemove);
-    })
-  };
-  $.fn.off = function(event, selector, callback){
-    var $this = this;
-    if (event && !isString(event)) {
-      $.each(event, function(type, fn){
-        $this.off(type, selector, fn);
-      });
-      return $this
-    }
-
-    if (!isString(selector) && !isFunction(callback) && callback !== false)
-      callback = selector, selector = undefined;
-
-    if (callback === false) callback = returnFalse;
-
-    return $this.each(function(){
-      remove(this, event, callback, selector);
-    })
-  };
-
-  $.fn.trigger = function(event, args){
-    event = (isString(event) || $.isPlainObject(event)) ? $.Event(event) : compatible(event);
-    event._args = args;
-    return this.each(function(){
-      // handle focus(), blur() by calling them directly
-      if (event.type in focus && typeof this[event.type] == "function") this[event.type]();
-      // items in the collection might not be DOM elements
-      else if ('dispatchEvent' in this) this.dispatchEvent(event);
-      else $(this).triggerHandler(event, args);
-    })
-  };
-
-  // triggers event handlers on current element just as if an event occurred,
-  // doesn't trigger an actual event, doesn't bubble
-  $.fn.triggerHandler = function(event, args){
-    var e, result;
-    this.each(function(i, element){
-      e = createProxy(isString(event) ? $.Event(event) : event);
-      e._args = args;
-      e.target = element;
-      $.each(findHandlers(element, event.type || event), function(i, handler){
-        result = handler.proxy(e);
-        if (e.isImmediatePropagationStopped()) return false
-      });
-    });
-    return result
-  }
-
-  // shortcut methods for `.bind(event, fn)` for each event type
-  ;('focusin focusout focus blur load resize scroll unload click dblclick '+
-  'mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave '+
-  'change select keydown keypress keyup error').split(' ').forEach(function(event) {
-    $.fn[event] = function(callback) {
-      return (0 in arguments) ?
-        this.bind(event, callback) :
-        this.trigger(event)
-    };
-  });
-
-  $.Event = function(type, props) {
-    if (!isString(type)) props = type, type = props.type;
-    var event = document.createEvent(specialEvents[type] || 'Events'), bubbles = true;
-    if (props) for (var name in props) (name == 'bubbles') ? (bubbles = !!props[name]) : (event[name] = props[name]);
-    event.initEvent(type, bubbles, true);
-    return compatible(event)
-  };
-
-})(zepto);
-
-// node_modules/zepto-modules/ie.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-(function(){
-  // getComputedStyle shouldn't freak out when called
-  // without a valid element as argument
-  try {
-    getComputedStyle(undefined);
-  } catch(e) {
-    var nativeGetComputedStyle = getComputedStyle;
-    window.getComputedStyle = function(element, pseudoElement){
-      try {
-        return nativeGetComputedStyle(element, pseudoElement)
-      } catch(e) {
-        return null
-      }
-    };
-  }
-})();
-
-// node_modules/zepto-modules/stack.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  $.fn.end = function(){
-    return this.prevObject || $()
-  };
-
-  $.fn.andSelf = function(){
-    return this.add(this.prevObject || $())
-  };
-
-  'filter,add,not,eq,first,last,find,closest,parents,parent,children,siblings'.split(',').forEach(function(property){
-    var fn = $.fn[property];
-    $.fn[property] = function(){
-      var ret = fn.apply(this, arguments);
-      ret.prevObject = this;
-      return ret
-    };
-  });
-})(zepto);
-
-// node_modules/zepto-modules/selector.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  var zepto$$1 = $.zepto, oldQsa = zepto$$1.qsa, oldMatches = zepto$$1.matches;
-
-  function visible(elem){
-    elem = $(elem);
-    return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
-  }
-
-  // Implements a subset from:
-  // http://api.jquery.com/category/selectors/jquery-selector-extensions/
-  //
-  // Each filter function receives the current index, all nodes in the
-  // considered set, and a value if there were parentheses. The value
-  // of `this` is the node currently being considered. The function returns the
-  // resulting node(s), null, or undefined.
-  //
-  // Complex selectors are not supported:
-  //   li:has(label:contains("foo")) + li:has(label:contains("bar"))
-  //   ul.inner:first > li
-  var filters = $.expr[':'] = {
-    visible:  function(){ if (visible(this)) return this },
-    hidden:   function(){ if (!visible(this)) return this },
-    selected: function(){ if (this.selected) return this },
-    checked:  function(){ if (this.checked) return this },
-    parent:   function(){ return this.parentNode },
-    first:    function(idx){ if (idx === 0) return this },
-    last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
-    eq:       function(idx, _, value){ if (idx === value) return this },
-    contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
-    has:      function(idx, _, sel){ if (zepto$$1.qsa(this, sel).length) return this }
-  };
-
-  var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
-      childRe  = /^\s*>/,
-      classTag = 'Zepto' + (+new Date());
-
-  function process(sel, fn) {
-    // quote the hash in `a[href^=#]` expression
-    sel = sel.replace(/=#\]/g, '="#"]');
-    var filter, arg, match = filterRe.exec(sel);
-    if (match && match[2] in filters) {
-      filter = filters[match[2]], arg = match[3];
-      sel = match[1];
-      if (arg) {
-        var num = Number(arg);
-        if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '');
-        else arg = num;
-      }
-    }
-    return fn(sel, filter, arg)
-  }
-
-  zepto$$1.qsa = function(node, selector) {
-    return process(selector, function(sel, filter, arg){
-      try {
-        var taggedParent;
-        if (!sel && filter) sel = '*';
-        else if (childRe.test(sel))
-          // support "> *" child queries by tagging the parent node with a
-          // unique class and prepending that classname onto the selector
-          taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel;
-
-        var nodes = oldQsa(node, sel);
-      } catch(e) {
-        console.error('error performing selector: %o', selector);
-        throw e
-      } finally {
-        if (taggedParent) taggedParent.removeClass(classTag);
-      }
-      return !filter ? nodes :
-        zepto$$1.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
-    })
-  };
-
-  zepto$$1.matches = function(node, selector){
-    return process(selector, function(sel, filter, arg){
-      return (!sel || oldMatches(node, sel)) &&
-        (!filter || filter.call(node, null, arg) === node)
-    })
-  };
-})(zepto);
-
-// node_modules/es-sifter/sifter.mjs
-var DIACRITICS = {
-    'a': '[aḀḁĂăÂâǍǎȺⱥȦȧẠạÄäÀàÁáĀāÃãÅåąĄÃąĄ]',
-    'b': '[b␢βΒB฿𐌁ᛒ]',
-    'c': '[cĆćĈĉČčĊċC̄c̄ÇçḈḉȻȼƇƈɕᴄＣｃ]',
-    'd': '[dĎďḊḋḐḑḌḍḒḓḎḏĐđD̦d̦ƉɖƊɗƋƌᵭᶁᶑȡᴅＤｄð]',
-    'e': '[eÉéÈèÊêḘḙĚěĔĕẼẽḚḛẺẻĖėËëĒēȨȩĘęᶒɆɇȄȅẾếỀềỄễỂểḜḝḖḗḔḕȆȇẸẹỆệⱸᴇＥｅɘǝƏƐε]',
-    'f': '[fƑƒḞḟ]',
-    'g': '[gɢ₲ǤǥĜĝĞğĢģƓɠĠġ]',
-    'h': '[hĤĥĦħḨḩẖẖḤḥḢḣɦʰǶƕ]',
-    'i': '[iÍíÌìĬĭÎîǏǐÏïḮḯĨĩĮįĪīỈỉȈȉȊȋỊịḬḭƗɨɨ̆ᵻᶖİiIıɪＩｉ]',
-    'j': '[jȷĴĵɈɉʝɟʲ]',
-    'k': '[kƘƙꝀꝁḰḱǨǩḲḳḴḵκϰ₭]',
-    'l': '[lŁłĽľĻļĹĺḶḷḸḹḼḽḺḻĿŀȽƚⱠⱡⱢɫɬᶅɭȴʟＬｌ]',
-    'n': '[nŃńǸǹŇňÑñṄṅŅņṆṇṊṋṈṉN̈n̈ƝɲȠƞᵰᶇɳȵɴＮｎŊŋ]',
-    'o': '[oØøÖöÓóÒòÔôǑǒŐőŎŏȮȯỌọƟɵƠơỎỏŌōÕõǪǫȌȍՕօ]',
-    'p': '[pṔṕṖṗⱣᵽƤƥᵱ]',
-    'q': '[qꝖꝗʠɊɋꝘꝙq̃]',
-    'r': '[rŔŕɌɍŘřŖŗṘṙȐȑȒȓṚṛⱤɽ]',
-    's': '[sŚśṠṡṢṣꞨꞩŜŝŠšŞşȘșS̈s̈]',
-    't': '[tŤťṪṫŢţṬṭƮʈȚțṰṱṮṯƬƭ]',
-    'u': '[uŬŭɄʉỤụÜüÚúÙùÛûǓǔŰűŬŭƯưỦủŪūŨũŲųȔȕ∪]',
-    'v': '[vṼṽṾṿƲʋꝞꝟⱱʋ]',
-    'w': '[wẂẃẀẁŴŵẄẅẆẇẈẉ]',
-    'x': '[xẌẍẊẋχ]',
-    'y': '[yÝýỲỳŶŷŸÿỸỹẎẏỴỵɎɏƳƴ]',
-    'z': '[zŹźẐẑŽžŻżẒẓẔẕƵƶ]'
-};
-
-var asciifold = (function() {
-    var i, n, k, chunk;
-    var foreignletters = '';
-    var lookup = {};
-    for (k in DIACRITICS) {
-        if (DIACRITICS.hasOwnProperty(k)) {
-            chunk = DIACRITICS[k].substring(2, DIACRITICS[k].length - 1);
-            foreignletters += chunk;
-            for (i = 0, n = chunk.length; i < n; i++) {
-                lookup[chunk.charAt(i)] = k;
-            }
-        }
-    }
-    var regexp = new RegExp('[' +  foreignletters + ']', 'g');
-    return function(str) {
-        return str.replace(regexp, function(foreignletter) {
-            return lookup[foreignletter];
-        }).toLowerCase();
-    };
-})();
-
-function cmp(a, b) {
-    if (typeof a === 'number' && typeof b === 'number') {
-        return a > b ? 1 : (a < b ? -1 : 0);
-    }
-    a = asciifold(String(a || ''));
-    b = asciifold(String(b || ''));
-    if (a > b) return 1;
-    if (b > a) return -1;
-    return 0;
-}
-
-function extend$5$1(a, b) {
-    var i, n, k, object;
-    for (i = 1, n = arguments.length; i < n; i++) {
-        object = arguments[i];
-        if (!object) continue;
-        for (k in object) {
-            if (object.hasOwnProperty(k)) {
-                a[k] = object[k];
-            }
-        }
-    }
-    return a;
-}
-
-/**
- * A property getter resolving dot-notation
- * @param  {Object}  obj     The root object to fetch property on
- * @param  {String}  name    The optionally dotted property name to fetch
- * @param  {Boolean} nesting Handle nesting or not
- * @return {Object}          The resolved property value
- */
-function getattr(obj, name, nesting) {
-    if (!obj || !name) return;
-    if (!nesting) return obj[name];
-    var names = name.split('.');
-    while(names.length && (obj = obj[names.shift()]));
-    return obj;
-}
-
-function trim$1(str) {
-    return (str + '').replace(/^\s+|\s+$|/g, '');
-}
-
-function escapeRegex(str) {
-    return (str + '').replace(/([.?*+^$[\]\\(){}|-])/g, '\\$1');
-}
-
-const isArray$2 = Array.isArray || (typeof $ !== 'undefined' && $.isArray) || function(object) {
-    return Object.prototype.toString.call(object) === '[object Array]';
-};
-
-/**
- * sifter.js
- * Copyright (c) 2013 Brian Reavis & contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
- * file except in compliance with the License. You may obtain a copy of the License at:
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- *
- * @author Brian Reavis <brian@thirdroute.com>
- */
-
-/**
- * Textually searches arrays and hashes of objects
- * by property (or multiple properties). Designed
- * specifically for autocomplete.
- *
- * @constructor
- * @param {array|object} items
- * @param {object} items
- */
-function Sifter(items, settings) {
-    this.items = items;
-    this.settings = settings || {diacritics: true};
-}
-
-/**
- * Splits a search string into an array of individual
- * regexps to be used to match results.
- *
- * @param {string} query
- * @returns {array}
- */
-Sifter.prototype.tokenize = function(query) {
-    query = trim$1(String(query || '').toLowerCase());
-    if (!query || !query.length) return [];
-
-    var i, n, regex, letter;
-    var tokens = [];
-    var words = query.split(/ +/);
-
-    for (i = 0, n = words.length; i < n; i++) {
-        regex = escapeRegex(words[i]);
-        if (this.settings.diacritics) {
-            for (letter in DIACRITICS) {
-                if (DIACRITICS.hasOwnProperty(letter)) {
-                    regex = regex.replace(new RegExp(letter, 'g'), DIACRITICS[letter]);
-                }
-            }
-        }
-        tokens.push({
-            string : words[i],
-            regex  : new RegExp(regex, 'i')
-        });
-    }
-
-    return tokens;
-};
-
-/**
- * Iterates over arrays and hashes.
- *
- * ```
- * this.iterator(this.items, function(item, id) {
- *    // invoked for each item
- * });
- * ```
- *
- * @param {array|object} object
- */
-Sifter.prototype.iterator = function(object, callback) {
-    var iterator;
-    if (isArray$2(object)) {
-        iterator = Array.prototype.forEach || function(callback) {
-            for (var i = 0, n = this.length; i < n; i++) {
-                callback(this[i], i, this);
-            }
-        };
-    } else {
-        iterator = function(callback) {
-            for (var key in this) {
-                if (this.hasOwnProperty(key)) {
-                    callback(this[key], key, this);
-                }
-            }
-        };
-    }
-
-    iterator.apply(object, [callback]);
-};
-
-/**
- * Returns a function to be used to score individual results.
- *
- * Good matches will have a higher score than poor matches.
- * If an item is not a match, 0 will be returned by the function.
- *
- * @param {object|string} search
- * @param {object} options (optional)
- * @returns {function}
- */
-Sifter.prototype.getScoreFunction = function(search, options) {
-    var self, fields, tokens, tokenCount, nesting;
-
-    self       = this;
-    search     = self.prepareSearch(search, options);
-    tokens     = search.tokens;
-    fields     = search.options.fields;
-    tokenCount = tokens.length;
-    nesting    = search.options.nesting;
-
-    /**
-     * Calculates how close of a match the
-     * given value is against a search token.
-     *
-     * @param {mixed} value
-     * @param {object} token
-     * @return {number}
-     */
-     function scoreValue(value, token) {
-        var score, pos;
-
-        if (!value) return 0;
-        value = String(value || '');
-        pos = value.search(token.regex);
-        if (pos === -1) return 0;
-        score = token.string.length / value.length;
-        if (pos === 0) score += 0.5;
-        return score;
-    }
-
-    /**
-     * Calculates the score of an object
-     * against the search query.
-     *
-     * @param {object} token
-     * @param {object} data
-     * @return {number}
-     */
-    var scoreObject = (function() {
-        var fieldCount = fields.length;
-        if (!fieldCount) {
-            return function() { return 0; };
-        }
-        if (fieldCount === 1) {
-            return function(token, data) {
-                return scoreValue(getattr(data, fields[0], nesting), token);
-            };
-        }
-        return function(token, data) {
-            for (var i = 0, sum = 0; i < fieldCount; i++) {
-                sum += scoreValue(getattr(data, fields[i], nesting), token);
-            }
-            return sum / fieldCount;
-        };
-    })();
-
-    if (!tokenCount) {
-        return function() { return 0; };
-    }
-    if (tokenCount === 1) {
-        return function(data) {
-            return scoreObject(tokens[0], data);
-        };
-    }
-
-    if (search.options.conjunction === 'and') {
-        return function(data) {
-            var score;
-            for (var i = 0, sum = 0; i < tokenCount; i++) {
-                score = scoreObject(tokens[i], data);
-                if (score <= 0) return 0;
-                sum += score;
-            }
-            return sum / tokenCount;
-        };
-    } else {
-        return function(data) {
-            for (var i = 0, sum = 0; i < tokenCount; i++) {
-                sum += scoreObject(tokens[i], data);
-            }
-            return sum / tokenCount;
-        };
-    }
-};
-
-/**
- * Returns a function that can be used to compare two
- * results, for sorting purposes. If no sorting should
- * be performed, `null` will be returned.
- *
- * @param {string|object} search
- * @param {object} options
- * @return function(a,b)
- */
-Sifter.prototype.getSortFunction = function(search, options) {
-    var i, n, self, field, fields, fieldsCount, multiplier, multipliers, sort, implicitScore;
-
-    self   = this;
-    search = self.prepareSearch(search, options);
-    sort   = (!search.query && options.sortEmpty) || options.sort;
-
-    /**
-     * Fetches the specified sort field value
-     * from a search result item.
-     *
-     * @param  {string} name
-     * @param  {object} result
-     * @return {mixed}
-     */
-    function getField(name, result) {
-        if (name === '$score') return result.score;
-        return getattr(self.items[result.id], name, options.nesting);
-    }
-
-    // parse options
-    fields = [];
-    if (sort) {
-        for (i = 0, n = sort.length; i < n; i++) {
-            if (search.query || sort[i].field !== '$score') {
-                fields.push(sort[i]);
-            }
-        }
-    }
-
-    // the "$score" field is implied to be the primary
-    // sort field, unless it's manually specified
-    if (search.query) {
-        implicitScore = true;
-        for (i = 0, n = fields.length; i < n; i++) {
-            if (fields[i].field === '$score') {
-                implicitScore = false;
-                break;
-            }
-        }
-        if (implicitScore) {
-            fields.unshift({field: '$score', direction: 'desc'});
-        }
-    } else {
-        for (i = 0, n = fields.length; i < n; i++) {
-            if (fields[i].field === '$score') {
-                fields.splice(i, 1);
-                break;
-            }
-        }
-    }
-
-    multipliers = [];
-    for (i = 0, n = fields.length; i < n; i++) {
-        multipliers.push(fields[i].direction === 'desc' ? -1 : 1);
-    }
-
-    // build function
-    fieldsCount = fields.length;
-    if (!fieldsCount) {
-        return null;
-    } else if (fieldsCount === 1) {
-        field = fields[0].field;
-        multiplier = multipliers[0];
-        return function(a, b) {
-            return multiplier * cmp(
-                getField(field, a),
-                getField(field, b)
-            );
-        };
-    } else {
-        return function(a, b) {
-            var i, result, field;
-            for (i = 0; i < fieldsCount; i++) {
-                field = fields[i].field;
-                result = multipliers[i] * cmp(
-                    getField(field, a),
-                    getField(field, b)
-                );
-                if (result) return result;
-            }
-            return 0;
-        };
-    }
-};
-
-/**
- * Parses a search query and returns an object
- * with tokens and fields ready to be populated
- * with results.
- *
- * @param {string} query
- * @param {object} options
- * @returns {object}
- */
-Sifter.prototype.prepareSearch = function(query, options) {
-    if (typeof query === 'object') return query;
-
-    options = extend$5$1({}, options);
-
-    var optionFields     = options.fields;
-    var optionSort       = options.sort;
-    var optionSortEmpty = options.sortEmpty;
-
-    if (optionFields && !isArray$2(optionFields)) options.fields = [optionFields];
-    if (optionSort && !isArray$2(optionSort)) options.sort = [optionSort];
-    if (optionSortEmpty && !isArray$2(optionSortEmpty)) options.sortEmpty = [optionSortEmpty];
-
-    return {
-        options : options,
-        query   : String(query || '').toLowerCase(),
-        tokens  : this.tokenize(query),
-        total   : 0,
-        items   : []
-    };
-};
-
-/**
- * Searches through all items and returns a sorted array of matches.
- *
- * The `options` parameter can contain:
- *
- *   - fields {string|array}
- *   - sort {array}
- *   - score {function}
- *   - filter {bool}
- *   - limit {integer}
- *
- * Returns an object containing:
- *
- *   - options {object}
- *   - query {string}
- *   - tokens {array}
- *   - total {int}
- *   - items {array}
- *
- * @param {string} query
- * @param {object} options
- * @returns {object}
- */
-Sifter.prototype.search = function(query, options) {
-    var self = this, score, search;
-    var fnSort;
-    var fnScore;
-
-    search  = this.prepareSearch(query, options);
-    options = search.options;
-    query   = search.query;
-
-    // generate result scoring function
-    fnScore = options.score || self.getScoreFunction(search);
-
-    // perform search and sort
-    if (query.length) {
-        self.iterator(self.items, function(item, id) {
-            score = fnScore(item);
-            if (options.filter === false || score > 0) {
-                search.items.push({'score': score, 'id': id});
-            }
-        });
-    } else {
-        self.iterator(self.items, function(item, id) {
-            search.items.push({'score': 1, 'id': id});
-        });
-    }
-
-    fnSort = self.getSortFunction(search, options);
-    if (fnSort) search.items.sort(fnSort);
-
-    // apply limits
-    search.total = search.items.length;
-    if (typeof options.limit === 'number') {
-        search.items = search.items.slice(0, options.limit);
-    }
-
-    return search;
-};
-
-// node_modules/es-is/array.js
-// Generated by CoffeeScript 1.12.5
-var isArray$3;
-
-var isArray$4 = isArray$3 = Array.isArray || function(value) {
-  return toString(value) === '[object Array]';
-};
-
-// node_modules/es-microplugin/microplugin.mjs
-// src/index.js
-/**
- * microplugin.js
- * Copyright (c) 2013 Brian Reavis & contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
- * file except in compliance with the License. You may obtain a copy of the License at:
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- *
- * @author Brian Reavis <brian@thirdroute.com>
- */
-
-const MicroPlugin = {};
-
-MicroPlugin.mixin = function(Interface) {
-    Interface.plugins = {};
-
-    /**
-     * Initializes the listed plugins (with options).
-     * Acceptable formats:
-     *
-     * List (without options):
-     *   ['a', 'b', 'c']
-     *
-     * List (with options):
-     *   [{'name': 'a', options: {}}, {'name': 'b', options: {}}]
-     *
-     * Hash (with options):
-     *   {'a': { ... }, 'b': { ... }, 'c': { ... }}
-     *
-     * @param {mixed} plugins
-     */
-    Interface.prototype.initializePlugins = function(plugins) {
-        var i, n, key;
-        var self  = this;
-        var queue = [];
-
-        self.plugins = {
-            names     : [],
-            settings  : {},
-            requested : {},
-            loaded    : {}
-        };
-
-        if (isArray$4(plugins)) {
-            for (i = 0, n = plugins.length; i < n; i++) {
-                if (typeof plugins[i] === 'string') {
-                    queue.push(plugins[i]);
-                } else {
-                    self.plugins.settings[plugins[i].name] = plugins[i].options;
-                    queue.push(plugins[i].name);
-                }
-            }
-        } else if (plugins) {
-            for (key in plugins) {
-                if (plugins.hasOwnProperty(key)) {
-                    self.plugins.settings[key] = plugins[key];
-                    queue.push(key);
-                }
-            }
-        }
-
-        while (queue.length) {
-            self.require(queue.shift());
-        }
-    };
-
-    Interface.prototype.loadPlugin = function(name) {
-        var self    = this;
-        var plugins = self.plugins;
-        var plugin  = Interface.plugins[name];
-
-        if (!Interface.plugins.hasOwnProperty(name)) {
-            throw new Error('Unable to find "' +  name + '" plugin');
-        }
-
-        plugins.requested[name] = true;
-        plugins.loaded[name] = plugin.fn.apply(self, [self.plugins.settings[name] || {}]);
-        plugins.names.push(name);
-    };
-
-    /**
-     * Initializes a plugin.
-     *
-     * @param {string} name
-     */
-    Interface.prototype.require = function(name) {
-        var self = this;
-        var plugins = self.plugins;
-
-        if (!self.plugins.loaded.hasOwnProperty(name)) {
-            if (plugins.requested[name]) {
-                throw new Error('Plugin has circular dependency ("' + name + '")');
-            }
-            self.loadPlugin(name);
-        }
-
-        return plugins.loaded[name];
-    };
-
-    /**
-     * Registers a plugin.
-     *
-     * @param {string} name
-     * @param {function} fn
-     */
-    Interface.define = function(name, fn) {
-        Interface.plugins[name] = {
-            'name' : name,
-            'fn'   : fn
-        };
-    };
-};
-
-// node_modules/es-selectize/dist/js/selectize.mjs
-// src/contrib/microevent.js
-/**
- * MicroEvent - to make any js object an event emitter
- *
- * - pure javascript - server compatible, browser compatible
- * - dont rely on the browser doms
- * - super simple - you get it immediatly, no mistery, no magic involved
- *
- * @author Jerome Etienne (https://github.com/jeromeetienne)
- */
-
-function MicroEvent() {}
-
-MicroEvent.prototype = {
-	on: function(event, fct){
-		this._events = this._events || {};
-		this._events[event] = this._events[event] || [];
-		this._events[event].push(fct);
-	},
-	off: function(event, fct){
-		var n = arguments.length;
-		if (n === 0) return delete this._events;
-		if (n === 1) return delete this._events[event];
-
-		this._events = this._events || {};
-		if (event in this._events === false) return;
-		this._events[event].splice(this._events[event].indexOf(fct), 1);
-	},
-	trigger: function(event /* , args... */){
-		this._events = this._events || {};
-		if (event in this._events === false) return;
-		for (var i = 0; i < this._events[event].length; i++){
-			this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
-		}
-	}
-};
-
-/**
- * Mixin will delegate all MicroEvent.js function in the destination object.
- *
- * - MicroEvent.mixin(Foobar) will make Foobar able to use MicroEvent
- *
- * @param {object} the object which will support MicroEvent
- */
-MicroEvent.mixin = function(destObject){
-	var props = ['on', 'off', 'trigger'];
-	for (var i = 0; i < props.length; i++){
-		destObject.prototype[props[i]] = MicroEvent.prototype[props[i]];
-	}
-};
-
-// src/contrib/highlight.js
-/**
- * highlight v3 | MIT license | Johann Burkard <jb@eaio.com>
- * Highlights arbitrary terms in a node.
- *
- * - Modified by Marshal <beatgates@gmail.com> 2011-6-24 (added regex)
- * - Modified by Brian Reavis <brian@thirdroute.com> 2012-8-27 (cleanup)
- */
-
-function highlight($element, pattern) {
-	if (typeof pattern === 'string' && !pattern.length) return;
-	var regex = (typeof pattern === 'string') ? new RegExp(pattern, 'i') : pattern;
-
-	var highlight = function(node) {
-		var skip = 0;
-		if (node.nodeType === 3) {
-			var pos = node.data.search(regex);
-			if (pos >= 0 && node.data.length > 0) {
-				// var match = node.data.match(regex);
-				var spannode = document.createElement('span');
-				spannode.className = 'highlight';
-				var middlebit = node.splitText(pos);
-				// var endbit = middlebit.splitText(match[0].length);
-				var middleclone = middlebit.cloneNode(true);
-				spannode.appendChild(middleclone);
-				middlebit.parentNode.replaceChild(spannode, middlebit);
-				skip = 1;
-			}
-		} else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
-			for (var i = 0; i < node.childNodes.length; ++i) {
-				i += highlight(node.childNodes[i]);
-			}
-		}
-		return skip;
-	};
-
-	return $element.each(function() {
-		highlight(this);
-	});
-}
-
-/**
- * removeHighlight fn copied from highlight v5 and
- * edited to remove with() and pass js strict mode
- */
-function init$1() {
-    $.fn.removeHighlight = function() {
-        return this.find('span.highlight').each(function() {
-            // this.parentNode.firstChild.nodeName;
-            var parent = this.parentNode;
-            parent.replaceChild(this.firstChild, this);
-            parent.normalize();
-        }).end();
-    };
-}
-
-// src/defaults.js
-var defaults$1 = {
-	options: [],
-	optgroups: [],
-
-	plugins: [],
-	delimiter: ',',
-	splitOn: null, // regexp or string for splitting up values from a paste command
-	persist: true,
-	diacritics: true,
-	create: false,
-	createOnBlur: false,
-	createFilter: null,
-	highlight: true,
-	openOnFocus: true,
-	maxOptions: 1000,
-	maxItems: null,
-	hideSelected: null,
-	addPrecedence: false,
-	selectOnTab: false,
-	preload: false,
-	allowEmptyOption: false,
-	closeAfterSelect: false,
-
-	scrollDuration: 60,
-	loadThrottle: 300,
-	loadingClass: 'loading',
-
-	dataAttr: 'data-data',
-	optgroupField: 'optgroup',
-	valueField: 'value',
-	labelField: 'text',
-	optgroupLabelField: 'label',
-	optgroupValueField: 'value',
-	lockOptgroupOrder: false,
-
-	sortField: '$order',
-	searchField: ['text'],
-	searchConjunction: 'and',
-
-	mode: null,
-	wrapperClass: 'selectize-control',
-	inputClass: 'selectize-input',
-	dropdownClass: 'selectize-dropdown',
-	dropdownContentClass: 'selectize-dropdown-content',
-
-	dropdownParent: null,
-
-	copyClassesToDropdown: true,
-
-	/*
-	load                 : null, // function(query, callback) { ... }
-	score                : null, // function(search) { ... }
-	onInitialize         : null, // function() { ... }
-	onChange             : null, // function(value) { ... }
-	onItemAdd            : null, // function(value, $item) { ... }
-	onItemRemove         : null, // function(value) { ... }
-	onClear              : null, // function() { ... }
-	onOptionAdd          : null, // function(value, data) { ... }
-	onOptionRemove       : null, // function(value) { ... }
-	onOptionClear        : null, // function() { ... }
-	onOptionGroupAdd     : null, // function(id, data) { ... }
-	onOptionGroupRemove  : null, // function(id) { ... }
-	onOptionGroupClear   : null, // function() { ... }
-	onDropdownOpen       : null, // function($dropdown) { ... }
-	onDropdownClose      : null, // function($dropdown) { ... }
-	onType               : null, // function(str) { ... }
-	onDelete             : null, // function(values) { ... }
-	*/
-
-	render: {
-		/*
-		item: null,
-		optgroup: null,
-		optgroup_header: null,
-		option: null,
-		option_create: null
-		*/
-	}
-};
-
-// src/consts.js
-var IS_MAC        = /Mac/.test(navigator.userAgent);
-
-var KEY_A         = 65;
-
-var KEY_RETURN    = 13;
-var KEY_ESC       = 27;
-var KEY_LEFT      = 37;
-var KEY_UP        = 38;
-var KEY_P         = 80;
-var KEY_RIGHT     = 39;
-var KEY_DOWN      = 40;
-var KEY_N         = 78;
-var KEY_BACKSPACE = 8;
-var KEY_DELETE    = 46;
-var KEY_SHIFT     = 16;
-var KEY_CMD       = IS_MAC ? 91 : 17;
-var KEY_CTRL      = IS_MAC ? 18 : 17;
-var KEY_TAB       = 9;
-
-var TAG_SELECT    = 1;
-var TAG_INPUT     = 2;
-
-// for now, android support in general is too spotty to support validity
-var SUPPORTS_VALIDITY_API = !/android/i.test(window.navigator.userAgent) && !!document.createElement('input').validity;
-
-// src/utils.js
-/**
- * Determines if the provided value has been defined.
- *
- * @param {mixed} object
- * @returns {boolean}
- */
-function isSet(object) {
-	return typeof object !== 'undefined';
-}
-
-/**
- * Converts a scalar to its best string representation
- * for hash keys and HTML attribute values.
- *
- * Transformations:
- *   'str'     -> 'str'
- *   null      -> ''
- *   undefined -> ''
- *   true      -> '1'
- *   false     -> '0'
- *   0         -> '0'
- *   1         -> '1'
- *
- * @param {string} value
- * @returns {string|null}
- */
-function hashKey(value) {
-	if (typeof value === 'undefined' || value === null) return null;
-	if (typeof value === 'boolean') return value ? '1' : '0';
-	return value + '';
-}
-
-/**
- * Escapes a string for use within HTML.
- *
- * @param {string} str
- * @returns {string}
- */
-function escapeHtml(str) {
-	return (str + '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
-}
-
-/**
- * Escapes "$" characters in replacement strings.
- *
- * @param {string} str
- * @returns {string}
- */
-
-
-
-
-/**
- * Wraps `fn` so that it can only be invoked once.
- *
- * @param {function} fn
- * @returns {function}
- */
-function once(fn) {
-	var called = false;
-	return function() {
-		if (called) return;
-		called = true;
-		fn.apply(this, arguments);
-	};
-}
-
-/**
- * Wraps `fn` so that it can only be called once
- * every `delay` milliseconds (invoked on the falling edge).
- *
- * @param {function} fn
- * @param {int} delay
- * @returns {function}
- */
-function debounce(fn, delay) {
-	var timeout;
-	return function() {
-		var self = this;
-		var args = arguments;
-		window.clearTimeout(timeout);
-		timeout = window.setTimeout(function() {
-			fn.apply(self, args);
-		}, delay);
-	};
-}
-
-/**
- * Debounce all fired events types listed in `types`
- * while executing the provided `fn`.
- *
- * @param {object} self
- * @param {array} types
- * @param {function} fn
- */
-function debounceEvents(self, types, fn) {
-	var type;
-	var trigger = self.trigger;
-	var eventArgs = {};
-
-	// override trigger method
-	self.trigger = function() {
-		var type = arguments[0];
-		if (types.indexOf(type) !== -1) {
-			eventArgs[type] = arguments;
-		} else {
-			return trigger.apply(self, arguments);
-		}
-	};
-
-	// invoke provided function
-	fn.apply(self, []);
-	self.trigger = trigger;
-
-	// trigger queued events
-	for (type in eventArgs) {
-		if (eventArgs.hasOwnProperty(type)) {
-			trigger.apply(self, eventArgs[type]);
-		}
-	}
-}
-
-/**
- * A workaround for http://bugs.jquery.com/ticket/6696
- *
- * @param {object} $parent - Parent element to listen on.
- * @param {string} event - Event name.
- * @param {string} selector - Descendant selector to filter by.
- * @param {function} fn - Event handler.
- */
-function watchChildEvent($parent, event, selector, fn) {
-	$parent.on(event, selector, function(e) {
-		var child = e.target;
-		while (child && child.parentNode !== $parent[0]) {
-			child = child.parentNode;
-		}
-		e.currentTarget = child;
-		return fn.apply(this, [e]);
-	});
-}
-
-/**
- * Determines the current selection within a text input control.
- * Returns an object containing:
- *   - start
- *   - length
- *
- * @param {object} input
- * @returns {object}
- */
-function getSelection(input) {
-	var result = {};
-	if ('selectionStart' in input) {
-		result.start = input.selectionStart;
-		result.length = input.selectionEnd - result.start;
-	} else if (document.selection) {
-		input.focus();
-		var sel = document.selection.createRange();
-		var selLen = document.selection.createRange().text.length;
-		sel.moveStart('character', -input.value.length);
-		result.start = sel.text.length - selLen;
-		result.length = selLen;
-	}
-	return result;
-}
-
-/**
- * Copies CSS properties from one element to another.
- *
- * @param {object} $from
- * @param {object} $to
- * @param {array} properties
- */
-function transferStyles($from, $to, properties) {
-	var i, n, styles = {};
-	if (properties) {
-		for (i = 0, n = properties.length; i < n; i++) {
-			styles[properties[i]] = $from.css(properties[i]);
-		}
-	} else {
-		styles = $from.css();
-	}
-	$to.css(styles);
-}
-
-/**
- * Measures the width of a string within a
- * parent element (in pixels).
- *
- * @param {string} str
- * @param {object} $parent
- * @returns {int}
- */
-function measureString(str, $parent) {
-	if (!str) {
-		return 0;
-	}
-
-	var $test = $('<test>').css({
-		position: 'absolute',
-		top: -99999,
-		left: -99999,
-		width: 'auto',
-		padding: 0,
-		whiteSpace: 'pre'
-	}).text(str).appendTo('body');
-
-	transferStyles($parent, $test, [
-		'letterSpacing',
-		'fontSize',
-		'fontFamily',
-		'fontWeight',
-		'textTransform'
-	]);
-
-	var width = $test.width();
-	$test.remove();
-
-	return width;
-}
-
-/**
- * Sets up an input to grow horizontally as the user
- * types. If the value is changed manually, you can
- * trigger the "update" handler to resize:
- *
- * $input.trigger('update');
- *
- * @param {object} $input
- */
-function autoGrow($input) {
-	var currentWidth = null;
-
-	var update = function(e, options) {
-		var value, keyCode, printable, placeholder, width;
-		var shift, character, selection;
-		e = e || window.event || {};
-		options = options || {};
-
-		if (e.metaKey || e.altKey) return;
-		if (!options.force && $input.data('grow') === false) return;
-
-		value = $input.val();
-		if (e.type && e.type.toLowerCase() === 'keydown') {
-			keyCode = e.keyCode;
-			printable = (
-				(keyCode >= 97 && keyCode <= 122) || // a-z
-				(keyCode >= 65 && keyCode <= 90)  || // A-Z
-				(keyCode >= 48 && keyCode <= 57)  || // 0-9
-				keyCode === 32 // space
-			);
-
-			if (keyCode === KEY_DELETE || keyCode === KEY_BACKSPACE) {
-				selection = getSelection($input[0]);
-				if (selection.length) {
-					value = value.substring(0, selection.start) + value.substring(selection.start + selection.length);
-				} else if (keyCode === KEY_BACKSPACE && selection.start) {
-					value = value.substring(0, selection.start - 1) + value.substring(selection.start + 1);
-				} else if (keyCode === KEY_DELETE && typeof selection.start !== 'undefined') {
-					value = value.substring(0, selection.start) + value.substring(selection.start + 1);
-				}
-			} else if (printable) {
-				shift = e.shiftKey;
-				character = String.fromCharCode(e.keyCode);
-				if (shift) character = character.toUpperCase();
-				else character = character.toLowerCase();
-				value += character;
-			}
-		}
-
-		placeholder = $input.attr('placeholder');
-		if (!value && placeholder) {
-			value = placeholder;
-		}
-
-		width = measureString(value, $input) + 4;
-		if (width !== currentWidth) {
-			currentWidth = width;
-			$input.width(width);
-			$input.triggerHandler('resize');
-		}
-	};
-
-	$input.on('keydown keyup update blur', update);
-	update();
-}
-
-function domToString(d) {
-	var tmp = document.createElement('div');
-
-	tmp.appendChild(d.cloneNode(true));
-
-	return tmp.innerHTML;
-}
-
-// src/selectize.js
-var inited = false;
-
-function Selectize($input, settings) {
-    if (!inited) {
-      init$$1();
-      inited = true;
-    }
-
-	var i, n, dir, input, self = this;
-	input = $input[0];
-	input.selectize = self;
-
-	// detect rtl environment
-	var computedStyle = window.getComputedStyle && window.getComputedStyle(input, null);
-	dir = computedStyle ? computedStyle.getPropertyValue('direction') : input.currentStyle && input.currentStyle.direction;
-	dir = dir || $input.parents('[dir]:first').attr('dir') || '';
-
-	// setup default state
-	$.extend(self, {
-		order            : 0,
-		settings         : settings,
-		$input           : $input,
-		tabIndex         : $input.attr('tabindex') || '',
-		tagType          : input.tagName.toLowerCase() === 'select' ? TAG_SELECT : TAG_INPUT,
-		rtl              : /rtl/i.test(dir),
-
-		eventNS          : '.selectize' + (++Selectize.count),
-		highlightedValue : null,
-		isOpen           : false,
-		isDisabled       : false,
-		isRequired       : $input.is('[required]'),
-		isInvalid        : false,
-		isLocked         : false,
-		isFocused        : false,
-		isInputHidden    : false,
-		isSetup          : false,
-		isShiftDown      : false,
-		isCmdDown        : false,
-		isCtrlDown       : false,
-		ignoreFocus      : false,
-		ignoreBlur       : false,
-		ignoreHover      : false,
-		hasOptions       : false,
-		currentResults   : null,
-		lastValue        : '',
-		caretPos         : 0,
-		loading          : 0,
-		loadedSearches   : {},
-
-		$activeOption    : null,
-		$activeItems     : [],
-
-		optgroups        : {},
-		options          : {},
-		userOptions      : {},
-		items            : [],
-		renderCache      : {},
-		onSearchChange   : settings.loadThrottle === null ? self.onSearchChange : debounce(self.onSearchChange, settings.loadThrottle)
-	});
-
-	// search system
-	self.sifter = new Sifter(this.options, {diacritics: settings.diacritics});
-
-	// build options table
-	if (self.settings.options) {
-		for (i = 0, n = self.settings.options.length; i < n; i++) {
-			self.registerOption(self.settings.options[i]);
-		}
-		delete self.settings.options;
-	}
-
-	// build optgroup table
-	if (self.settings.optgroups) {
-		for (i = 0, n = self.settings.optgroups.length; i < n; i++) {
-			self.registerOptionGroup(self.settings.optgroups[i]);
-		}
-		delete self.settings.optgroups;
-	}
-
-	// option-dependent defaults
-	self.settings.mode = self.settings.mode || (self.settings.maxItems === 1 ? 'single' : 'multi');
-	if (typeof self.settings.hideSelected !== 'boolean') {
-		self.settings.hideSelected = self.settings.mode === 'multi';
-	}
-
-	self.initializePlugins(self.settings.plugins);
-	self.setupCallbacks();
-	self.setupTemplates();
-	self.setup();
-}
-
-function init$$1() {
-    // initialize highlight
-    init$1();
-
-    // defaults
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Selectize.defaults = defaults$1;
-    Selectize.count    = 0;
-
-    // mixins
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    MicroEvent.mixin(Selectize);
-    MicroPlugin.mixin(Selectize);
-
-    // methods
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    $.extend(Selectize.prototype, {
-
-        /**
-         * Creates all elements and sets up event bindings.
-         */
-        setup: function() {
-            var self      = this;
-            var settings  = self.settings;
-            var eventNS   = self.eventNS;
-            var $window   = $(window);
-            var $document = $(document);
-            var $input    = self.$input;
-
-            var $wrapper;
-            var $control;
-            var $controlInput;
-            var $dropdown;
-            var $dropdownContent;
-            var $dropdownParent;
-            var inputMode;
-            var classes;
-            var classesPlugins;
-            var inputId;
-
-            inputMode         = self.settings.mode;
-            classes           = $input.attr('class') || '';
-
-            $wrapper          = $('<div>').addClass(settings.wrapperClass).addClass(classes).addClass(inputMode);
-            $control          = $('<div>').addClass(settings.inputClass).addClass('items').appendTo($wrapper);
-            $controlInput    = $('<input type="text" autocomplete="off" />').appendTo($control).attr('tabindex', $input.is(':disabled') ? '-1' : self.tabIndex);
-            $dropdownParent  = $(settings.dropdownParent || $wrapper);
-            $dropdown         = $('<div>').addClass(settings.dropdownClass).addClass(inputMode).hide().appendTo($dropdownParent);
-            $dropdownContent = $('<div>').addClass(settings.dropdownContentClass).appendTo($dropdown);
-
-            if(inputId = $input.attr('id')) {
-                $controlInput.attr('id', inputId + '-selectized');
-                $('label[for="'+inputId+'"]').attr('for', inputId + '-selectized');
-            }
-
-            if(self.settings.copyClassesToDropdown) {
-                $dropdown.addClass(classes);
-            }
-
-            $wrapper.css({
-                width: $input[0].style.width
-            });
-
-            if (self.plugins.names.length) {
-                classesPlugins = 'plugin-' + self.plugins.names.join(' plugin-');
-                $wrapper.addClass(classesPlugins);
-                $dropdown.addClass(classesPlugins);
-            }
-
-            if ((settings.maxItems === null || settings.maxItems > 1) && self.tagType === TAG_SELECT) {
-                $input.attr('multiple', 'multiple');
-            }
-
-            if (self.settings.placeholder) {
-                $controlInput.attr('placeholder', settings.placeholder);
-            }
-
-            // if splitOn was not passed in, construct it from the delimiter to allow pasting universally
-            if (!self.settings.splitOn && self.settings.delimiter) {
-                var delimiterEscaped = self.settings.delimiter.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                self.settings.splitOn = new RegExp('\\s*' + delimiterEscaped + '+\\s*');
-            }
-
-            if ($input.attr('autocorrect')) {
-                $controlInput.attr('autocorrect', $input.attr('autocorrect'));
-            }
-
-            if ($input.attr('autocapitalize')) {
-                $controlInput.attr('autocapitalize', $input.attr('autocapitalize'));
-            }
-
-            self.$wrapper          = $wrapper;
-            self.$control          = $control;
-            self.$controlInput    = $controlInput;
-            self.$dropdown         = $dropdown;
-            self.$dropdownContent = $dropdownContent;
-
-            $dropdown.on('mouseenter', '[data-selectable]', function() { return self.onOptionHover.apply(self, arguments); });
-            $dropdown.on('mousedown click', '[data-selectable]', function() { return self.onOptionSelect.apply(self, arguments); });
-            watchChildEvent($control, 'mousedown', '*:not(input)', function() { return self.onItemSelect.apply(self, arguments); });
-            autoGrow($controlInput);
-
-            $control.on({
-                mousedown : function() { return self.onMouseDown.apply(self, arguments); },
-                click     : function() { return self.onClick.apply(self, arguments); }
-            });
-
-            $controlInput.on({
-                mousedown : function(e) { e.stopPropagation(); },
-                keydown   : function() { return self.onKeyDown.apply(self, arguments); },
-                keyup     : function() { return self.onKeyUp.apply(self, arguments); },
-                keypress  : function() { return self.onKeyPress.apply(self, arguments); },
-                resize    : function() { self.positionDropdown.apply(self, []); },
-                blur      : function() { return self.onBlur.apply(self, arguments); },
-                focus     : function() { self.ignoreBlur = false; return self.onFocus.apply(self, arguments); },
-                paste     : function() { return self.onPaste.apply(self, arguments); }
-            });
-
-            $document.on('keydown' + eventNS, function(e) {
-                self.isCmdDown = e[IS_MAC ? 'metaKey' : 'ctrlKey'];
-                self.isCtrlDown = e[IS_MAC ? 'altKey' : 'ctrlKey'];
-                self.isShiftDown = e.shiftKey;
-            });
-
-            $document.on('keyup' + eventNS, function(e) {
-                if (e.keyCode === KEY_CTRL) self.isCtrlDown = false;
-                if (e.keyCode === KEY_SHIFT) self.isShiftDown = false;
-                if (e.keyCode === KEY_CMD) self.isCmdDown = false;
-            });
-
-            $document.on('mousedown' + eventNS, function(e) {
-                if (self.isFocused) {
-                    // prevent events on the dropdown scrollbar from causing the control to blur
-                    if (e.target === self.$dropdown[0] || e.target.parentNode === self.$dropdown[0]) {
-                        return false;
-                    }
-                    // blur on click outside
-                    if (!self.$control.has(e.target).length && e.target !== self.$control[0]) {
-                        self.blur(e.target);
-                    }
-                }
-            });
-
-            $window.on(['scroll' + eventNS, 'resize' + eventNS].join(' '), function() {
-                if (self.isOpen) {
-                    self.positionDropdown.apply(self, arguments);
-                }
-            });
-            $window.on('mousemove' + eventNS, function() {
-                self.ignoreHover = false;
-            });
-
-            // store original children and tab index so that they can be
-            // restored when the destroy() method is called.
-            this.revertSettings = {
-                $children : $input.children().detach(),
-                tabindex  : $input.attr('tabindex')
-            };
-
-            $input.attr('tabindex', -1).hide().after(self.$wrapper);
-
-            if ($.isArray(settings.items)) {
-                self.setValue(settings.items);
-                delete settings.items;
-            }
-
-            // feature detect for the validation API
-            if (SUPPORTS_VALIDITY_API) {
-                $input.on('invalid' + eventNS, function(e) {
-                    e.preventDefault();
-                    self.isInvalid = true;
-                    self.refreshState();
-                });
-            }
-
-            self.updateOriginalInput();
-            self.refreshItems();
-            self.refreshState();
-            self.updatePlaceholder();
-            self.isSetup = true;
-
-            if ($input.is(':disabled')) {
-                self.disable();
-            }
-
-            self.on('change', this.onChange);
-
-            $input.data('selectize', self);
-            $input.addClass('selectized');
-            self.trigger('initialize');
-
-            // preload options
-            if (settings.preload === true) {
-                self.onSearchChange('');
-            }
-
-        },
-
-        /**
-         * Sets up default rendering functions.
-         */
-        setupTemplates: function() {
-            var self = this;
-            var fieldLabel = self.settings.labelField;
-            var fieldOptgroup = self.settings.optgroupLabelField;
-
-            var templates = {
-                'optgroup': function(data) {
-                    return '<div class="optgroup">' + data.html + '</div>';
-                },
-                'optgroupHeader': function(data, escape) {
-                    return '<div class="optgroup-header">' + escape(data[fieldOptgroup]) + '</div>';
-                },
-                'option': function(data, escape) {
-                    return '<div class="option">' + escape(data[fieldLabel]) + '</div>';
-                },
-                'item': function(data, escape) {
-                    return '<div class="item">' + escape(data[fieldLabel]) + '</div>';
-                },
-                'optionCreate': function(data, escape) {
-                    return '<div class="create">Add <strong>' + escape(data.input) + '</strong>&hellip;</div>';
-                }
-            };
-
-            self.settings.render = $.extend({}, templates, self.settings.render);
-        },
-
-        /**
-         * Maps fired events to callbacks provided
-         * in the settings used when creating the control.
-         */
-        setupCallbacks: function() {
-            var key, fn, callbacks = {
-                'initialize'      : 'onInitialize',
-                'change'          : 'onChange',
-                'itemAdd'        : 'onItemAdd',
-                'itemRemove'     : 'onItemRemove',
-                'clear'           : 'onClear',
-                'optionAdd'      : 'onOptionAdd',
-                'optionRemove'   : 'onOptionRemove',
-                'optionClear'    : 'onOptionClear',
-                'optgroupAdd'    : 'onOptionGroupAdd',
-                'optgroupRemove' : 'onOptionGroupRemove',
-                'optgroupClear'  : 'onOptionGroupClear',
-                'dropdownOpen'   : 'onDropdownOpen',
-                'dropdownClose'  : 'onDropdownClose',
-                'type'            : 'onType',
-                'load'            : 'onLoad',
-                'focus'           : 'onFocus',
-                'blur'            : 'onBlur'
-            };
-
-            for (key in callbacks) {
-                if (callbacks.hasOwnProperty(key)) {
-                    fn = this.settings[callbacks[key]];
-                    if (fn) this.on(key, fn);
-                }
-            }
-        },
-
-        /**
-         * Triggered when the main control element
-         * has a click event.
-         *
-         * @param {object} e
-         * @return {boolean}
-         */
-        onClick: function(e) {
-            var self = this;
-
-            // necessary for mobile webkit devices (manual focus triggering
-            // is ignored unless invoked within a click event)
-            if (!self.isFocused) {
-                self.focus();
-                e.preventDefault();
-            }
-        },
-
-        /**
-         * Triggered when the main control element
-         * has a mouse down event.
-         *
-         * @param {object} e
-         * @return {boolean}
-         */
-        onMouseDown: function(e) {
-            var self = this;
-            var defaultPrevented = e.isDefaultPrevented();
-
-            if (self.isFocused) {
-                // retain focus by preventing native handling. if the
-                // event target is the input it should not be modified.
-                // otherwise, text selection within the input won't work.
-                if (e.target !== self.$controlInput[0]) {
-                    if (self.settings.mode === 'single') {
-                        // toggle dropdown
-                        if (self.isOpen)
-                          self.close();
-                        else
-                          self.open();
-                    } else if (!defaultPrevented) {
-                        self.setActiveItem(null);
-                    }
-                    return false
-                }
-            } else {
-                // give control focus
-                if (!defaultPrevented) {
-                    window.setTimeout(function() {
-                        self.focus();
-                    }, 0);
-                }
-            }
-        },
-
-        /**
-         * Triggered when the value of the control has been changed.
-         * This should propagate the event to the original DOM
-         * input / select element.
-         */
-        onChange: function() {
-            this.$input.trigger('change');
-        },
-
-        /**
-         * Triggered on <input> paste.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onPaste: function(e) {
-            var self = this;
-
-            if (self.isFull() || self.isInputHidden || self.isLocked) {
-                e.preventDefault();
-                return;
-            }
-
-            // If a regex or string is included, this will split the pasted
-            // input and create Items for each separate value
-            if (self.settings.splitOn) {
-
-                // Wait for pasted text to be recognized in value
-                setTimeout(function() {
-                    var pastedText = self.$controlInput.val();
-                    if(!pastedText.match(self.settings.splitOn)){ return }
-
-                    var splitInput = $.trim(pastedText).split(self.settings.splitOn);
-                    for (var i = 0, n = splitInput.length; i < n; i++) {
-                        self.createItem(splitInput[i]);
-                    }
-                }, 0);
-            }
-        },
-
-        /**
-         * Triggered on <input> keypress.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyPress: function(e) {
-            if (this.isLocked) return e && e.preventDefault();
-            var character = String.fromCharCode(e.keyCode || e.which);
-            if (this.settings.create && this.settings.mode === 'multi' && character === this.settings.delimiter) {
-                this.createItem();
-                e.preventDefault();
-                return false;
-            }
-        },
-
-        /**
-         * Triggered on <input> keydown.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyDown: function(e) {
-            var self = this;
-
-            if (self.isLocked) {
-                if (e.keyCode !== KEY_TAB) {
-                    e.preventDefault();
-                }
-                return;
-            }
-
-            switch (e.keyCode) {
-                case KEY_A:
-                    if (self.isCmdDown) {
-                        self.selectAll();
-                        return;
-                    }
-                    break;
-                case KEY_ESC:
-                    if (self.isOpen) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self.close();
-                    }
-                    return;
-                case KEY_N:
-                    if (!e.ctrlKey || e.altKey) break;
-                case KEY_DOWN:
-                    if (!self.isOpen && self.hasOptions) {
-                        self.open();
-                    } else if (self.$activeOption) {
-                        self.ignoreHover = true;
-                        var $next = self.getAdjacentOption(self.$activeOption, 1);
-                        if ($next.length) self.setActiveOption($next, true, true);
-                    }
-                    e.preventDefault();
-                    return;
-                case KEY_P:
-                    if (!e.ctrlKey || e.altKey) break;
-                case KEY_UP:
-                    if (self.$activeOption) {
-                        self.ignoreHover = true;
-                        var $prev = self.getAdjacentOption(self.$activeOption, -1);
-                        if ($prev.length) self.setActiveOption($prev, true, true);
-                    }
-                    e.preventDefault();
-                    return;
-                case KEY_RETURN:
-                    if (self.isOpen && self.$activeOption) {
-                        self.onOptionSelect({currentTarget: self.$activeOption});
-                        e.preventDefault();
-                    }
-                    return;
-                case KEY_LEFT:
-                    self.advanceSelection(-1, e);
-                    return;
-                case KEY_RIGHT:
-                    self.advanceSelection(1, e);
-                    return;
-                case KEY_TAB:
-                    if (self.settings.selectOnTab && self.isOpen && self.$activeOption) {
-                        self.onOptionSelect({currentTarget: self.$activeOption});
-
-                        // Default behaviour is to jump to the next field, we only want this
-                        // if the current field doesn't accept any more entries
-                        if (!self.isFull()) {
-                            e.preventDefault();
-                        }
-                    }
-                    if (self.settings.create && self.createItem()) {
-                        e.preventDefault();
-                    }
-                    return;
-                case KEY_BACKSPACE:
-                case KEY_DELETE:
-                    self.deleteSelection(e);
-                    return;
-            }
-
-            if ((self.isFull() || self.isInputHidden) && !(IS_MAC ? e.metaKey : e.ctrlKey)) {
-                e.preventDefault();
-                return;
-            }
-        },
-
-        /**
-         * Triggered on <input> keyup.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyUp: function(e) {
-            var self = this;
-
-            if (self.isLocked) return e && e.preventDefault();
-            var value = self.$controlInput.val() || '';
-            if (self.lastValue !== value) {
-                self.lastValue = value;
-                self.onSearchChange(value);
-                self.refreshOptions();
-                self.trigger('type', value);
-            }
-        },
-
-        /**
-         * Invokes the user-provide option provider / loader.
-         *
-         * Note: this function is debounced in the Selectize
-         * constructor (by `settings.loadThrottle` milliseconds)
-         *
-         * @param {string} value
-         */
-        onSearchChange: function(value) {
-            var self = this;
-            var fn = self.settings.load;
-            if (!fn) return;
-            if (self.loadedSearches.hasOwnProperty(value)) return;
-            self.loadedSearches[value] = true;
-            self.load(function(callback) {
-                fn.apply(self, [value, callback]);
-            });
-        },
-
-        /**
-         * Triggered on <input> focus.
-         *
-         * @param {object} e (optional)
-         * @returns {boolean}
-         */
-        onFocus: function(e) {
-            var self = this;
-            var wasFocused = self.isFocused;
-
-            if (self.isDisabled) {
-                self.blur();
-                if (e) e.preventDefault();
-                return false;
-            }
-
-            if (self.ignoreFocus) return;
-            self.isFocused = true;
-            if (self.settings.preload === 'focus') self.onSearchChange('');
-
-            if (!wasFocused) self.trigger('focus');
-
-            if (!self.$activeItems.length) {
-                self.showInput();
-                self.setActiveItem(null);
-                self.refreshOptions(!!self.settings.openOnFocus);
-            }
-
-            self.refreshState();
-        },
-
-        /**
-         * Triggered on <input> blur.
-         *
-         * @param {object} e
-         * @param {Element} dest
-         */
-        onBlur: function(e, dest) {
-            var self = this;
-            if (!self.isFocused) return;
-            self.isFocused = false;
-
-            if (self.ignoreFocus) {
-                return;
-            } else if (!self.ignoreBlur && document.activeElement === self.$dropdownContent[0]) {
-                // necessary to prevent IE closing the dropdown when the scrollbar is clicked
-                self.ignoreBlur = true;
-                self.onFocus(e);
-                return;
-            }
-
-            var deactivate = function() {
-                self.close();
-                self.setTextboxValue('');
-                self.setActiveItem(null);
-                self.setActiveOption(null);
-                self.setCaret(self.items.length);
-                self.refreshState();
-
-                // IE11 bug: element still marked as active
-                if (dest && dest.focus) dest.focus();
-
-                self.ignoreFocus = false;
-                self.trigger('blur');
-            };
-
-            self.ignoreFocus = true;
-            if (self.settings.create && self.settings.createOnBlur) {
-                self.createItem(null, false, deactivate);
-            } else {
-                deactivate();
-            }
-        },
-
-        /**
-         * Triggered when the user rolls over
-         * an option in the autocomplete dropdown menu.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onOptionHover: function(e) {
-            if (this.ignoreHover) return;
-            this.setActiveOption(e.currentTarget, false);
-        },
-
-        /**
-         * Triggered when the user clicks on an option
-         * in the autocomplete dropdown menu.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onOptionSelect: function(e) {
-            var value, $target, self = this;
-
-            if (e.preventDefault) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            $target = $(e.currentTarget);
-            if ($target.hasClass('create')) {
-                self.createItem(null, function() {
-                    if (self.settings.closeAfterSelect) {
-                        self.close();
-                    }
-                });
-            } else {
-                value = $target.attr('data-value');
-                if (typeof value !== 'undefined') {
-                    self.lastQuery = null;
-                    self.setTextboxValue('');
-                    self.addItem(value);
-                    if (self.settings.closeAfterSelect) {
-                        self.close();
-                    } else if (!self.settings.hideSelected && e.type && /mouse/.test(e.type)) {
-                        self.setActiveOption(self.getOption(value));
-                    }
-                }
-            }
-        },
-
-        /**
-         * Triggered when the user clicks on an item
-         * that has been selected.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onItemSelect: function(e) {
-            var self = this;
-
-            if (self.isLocked) return;
-            if (self.settings.mode === 'multi') {
-                e.preventDefault();
-                self.setActiveItem(e.currentTarget, e);
-            }
-        },
-
-        /**
-         * Invokes the provided method that provides
-         * results to a callback---which are then added
-         * as options to the control.
-         *
-         * @param {function} fn
-         */
-        load: function(fn) {
-            var self = this;
-            var $wrapper = self.$wrapper.addClass(self.settings.loadingClass);
-
-            self.loading++;
-            fn.apply(self, [function(results) {
-                self.loading = Math.max(self.loading - 1, 0);
-                if (results && results.length) {
-                    self.addOption(results);
-                    self.refreshOptions(self.isFocused && !self.isInputHidden);
-                }
-                if (!self.loading) {
-                    $wrapper.removeClass(self.settings.loadingClass);
-                }
-                self.trigger('load', results);
-            }]);
-        },
-
-        /**
-         * Sets the input field of the control to the specified value.
-         *
-         * @param {string} value
-         */
-        setTextboxValue: function(value) {
-            var $input = this.$controlInput;
-            var changed = $input.val() !== value;
-            if (changed) {
-                $input.val(value).triggerHandler('update');
-                this.lastValue = value;
-            }
-        },
-
-        /**
-         * Returns the value of the control. If multiple items
-         * can be selected (e.g. <select multiple>), this returns
-         * an array. If only one item can be selected, this
-         * returns a string.
-         *
-         * @returns {mixed}
-         */
-        getValue: function() {
-            if (this.tagType === TAG_SELECT && this.$input.attr('multiple')) {
-                return this.items;
-            } else {
-                return this.items.join(this.settings.delimiter);
-            }
-        },
-
-        /**
-         * Resets the selected items to the given value.
-         *
-         * @param {mixed} value
-         */
-        setValue: function(value, silent) {
-            var events = silent ? [] : ['change'];
-
-            debounceEvents(this, events, function() {
-                this.clear(silent);
-                this.addItems(value, silent);
-            });
-        },
-
-        /**
-         * Sets the selected item.
-         *
-         * @param {object} $item
-         * @param {object} e (optional)
-         */
-        setActiveItem: function($item, e) {
-            var self = this;
-            var eventName;
-            var i, idx, begin, end, item, swap;
-            var $last;
-
-            if (self.settings.mode === 'single') return;
-            $item = $($item);
-
-            // clear the active selection
-            if (!$item.length) {
-                $(self.$activeItems).removeClass('active');
-                self.$activeItems = [];
-                if (self.isFocused) {
-                    self.showInput();
-                }
-                return;
-            }
-
-            // modify selection
-            eventName = e && e.type.toLowerCase();
-
-            if (eventName === 'mousedown' && self.isShiftDown && self.$activeItems.length) {
-                $last = self.$control.children('.active:last');
-                begin = Array.prototype.indexOf.apply(self.$control[0].childNodes, [$last[0]]);
-                end   = Array.prototype.indexOf.apply(self.$control[0].childNodes, [$item[0]]);
-                if (begin > end) {
-                    swap  = begin;
-                    begin = end;
-                    end   = swap;
-                }
-                for (i = begin; i <= end; i++) {
-                    item = self.$control[0].childNodes[i];
-                    if (self.$activeItems.indexOf(item) === -1) {
-                        $(item).addClass('active');
-                        self.$activeItems.push(item);
-                    }
-                }
-                e.preventDefault();
-            } else if ((eventName === 'mousedown' && self.isCtrlDown) || (eventName === 'keydown' && this.isShiftDown)) {
-                if ($item.hasClass('active')) {
-                    idx = self.$activeItems.indexOf($item[0]);
-                    self.$activeItems.splice(idx, 1);
-                    $item.removeClass('active');
-                } else {
-                    self.$activeItems.push($item.addClass('active')[0]);
-                }
-            } else {
-                $(self.$activeItems).removeClass('active');
-                self.$activeItems = [$item.addClass('active')[0]];
-            }
-
-            // ensure control has focus
-            self.hideInput();
-            if (!this.isFocused) {
-                self.focus();
-            }
-        },
-
-        /**
-         * Sets the selected item in the dropdown menu
-         * of available options.
-         *
-         * @param {object} $object
-         * @param {boolean} scroll
-         * @param {boolean} animate
-         */
-        setActiveOption: function($option, scroll, animate) {
-            var heightMenu, heightItem, y;
-            var scrollTop, scrollBottom;
-            var self = this;
-
-            if (self.$activeOption) self.$activeOption.removeClass('active');
-            self.$activeOption = null;
-
-            $option = $($option);
-            if (!$option.length) return;
-
-            self.$activeOption = $option.addClass('active');
-
-            if (scroll || !isSet(scroll)) {
-
-                heightMenu   = self.$dropdownContent.height();
-                heightItem   = self.$activeOption.outerHeight(true);
-                scroll        = self.$dropdownContent.scrollTop() || 0;
-                y             = self.$activeOption.offset().top - self.$dropdownContent.offset().top + scroll;
-                scrollTop    = y;
-                scrollBottom = y - heightMenu + heightItem;
-
-                if (y + heightItem > heightMenu + scroll) {
-                    self.$dropdownContent.stop().animate({scrollTop: scrollBottom}, animate ? self.settings.scrollDuration : 0);
-                } else if (y < scroll) {
-                    self.$dropdownContent.stop().animate({scrollTop: scrollTop}, animate ? self.settings.scrollDuration : 0);
-                }
-
-            }
-        },
-
-        /**
-         * Selects all items (CTRL + A).
-         */
-        selectAll: function() {
-            var self = this;
-            if (self.settings.mode === 'single') return;
-
-            self.$activeItems = Array.prototype.slice.apply(self.$control.children(':not(input)').addClass('active'));
-            if (self.$activeItems.length) {
-                self.hideInput();
-                self.close();
-            }
-            self.focus();
-        },
-
-        /**
-         * Hides the input element out of view, while
-         * retaining its focus.
-         */
-        hideInput: function() {
-            var self = this;
-
-            self.setTextboxValue('');
-            self.$controlInput.css({opacity: 0, position: 'absolute', left: self.rtl ? 10000 : -10000});
-            self.isInputHidden = true;
-        },
-
-        /**
-         * Restores input visibility.
-         */
-        showInput: function() {
-            this.$controlInput.css({opacity: 1, position: 'relative', left: 0});
-            this.isInputHidden = false;
-        },
-
-        /**
-         * Gives the control focus.
-         */
-        focus: function() {
-            var self = this;
-            if (self.isDisabled) return;
-
-            self.ignoreFocus = true;
-            self.$controlInput[0].focus();
-            window.setTimeout(function() {
-                self.ignoreFocus = false;
-                self.onFocus();
-            }, 0);
-        },
-
-        /**
-         * Forces the control out of focus.
-         *
-         * @param {Element} dest
-         */
-        blur: function(dest) {
-            this.$controlInput[0].blur();
-            this.onBlur(null, dest);
-        },
-
-        /**
-         * Returns a function that scores an object
-         * to show how good of a match it is to the
-         * provided query.
-         *
-         * @param {string} query
-         * @param {object} options
-         * @return {function}
-         */
-        getScoreFunction: function(query) {
-            return this.sifter.getScoreFunction(query, this.getSearchOptions());
-        },
-
-        /**
-         * Returns search options for sifter (the system
-         * for scoring and sorting results).
-         *
-         * @see https://github.com/brianreavis/sifter.js
-         * @return {object}
-         */
-        getSearchOptions: function() {
-            var settings = this.settings;
-            var sort = settings.sortField;
-            if (typeof sort === 'string') {
-                sort = [{field: sort}];
-            }
-
-            return {
-                fields      : settings.searchField,
-                conjunction : settings.searchConjunction,
-                sort        : sort
-            };
-        },
-
-        /**
-         * Searches through available options and returns
-         * a sorted array of matches.
-         *
-         * Returns an object containing:
-         *
-         *   - query {string}
-         *   - tokens {array}
-         *   - total {int}
-         *   - items {array}
-         *
-         * @param {string} query
-         * @returns {object}
-         */
-        search: function(query) {
-            var i, result, calculateScore;
-            var self     = this;
-            var settings = self.settings;
-            var options  = this.getSearchOptions();
-
-            // validate user-provided result scoring function
-            if (settings.score) {
-                calculateScore = self.settings.score.apply(this, [query]);
-                if (typeof calculateScore !== 'function') {
-                    throw new Error('Selectize "score" setting must be a function that returns a function');
-                }
-            }
-
-            // perform search
-            if (query !== self.lastQuery) {
-                self.lastQuery = query;
-                result = self.sifter.search(query, $.extend(options, {score: calculateScore}));
-                self.currentResults = result;
-            } else {
-                result = $.extend(true, {}, self.currentResults);
-            }
-
-            // filter out selected items
-            if (settings.hideSelected) {
-                for (i = result.items.length - 1; i >= 0; i--) {
-                    if (self.items.indexOf(hashKey(result.items[i].id)) !== -1) {
-                        result.items.splice(i, 1);
-                    }
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * Refreshes the list of available options shown
-         * in the autocomplete dropdown menu.
-         *
-         * @param {boolean} triggerDropdown
-         */
-        refreshOptions: function(triggerDropdown) {
-            var i, j, k, n, groups, groupsOrder, option, optionHtml, optgroup, optgroups, html, htmlChildren, hasCreateOption;
-            var $active, $activeBefore, $create;
-
-            if (typeof triggerDropdown === 'undefined') {
-                triggerDropdown = true;
-            }
-
-            var self              = this;
-            var query             = $.trim(self.$controlInput.val());
-            var results           = self.search(query);
-            var $dropdownContent = self.$dropdownContent;
-            var activeBefore     = self.$activeOption && hashKey(self.$activeOption.attr('data-value'));
-
-            // build markup
-            n = results.items.length;
-            if (typeof self.settings.maxOptions === 'number') {
-                n = Math.min(n, self.settings.maxOptions);
-            }
-
-            // render and group available options individually
-            groups = {};
-            groupsOrder = [];
-
-            for (i = 0; i < n; i++) {
-                option      = self.options[results.items[i].id];
-                optionHtml = self.render('option', option);
-                optgroup    = option[self.settings.optgroupField] || '';
-                optgroups   = $.isArray(optgroup) ? optgroup : [optgroup];
-
-                for (j = 0, k = optgroups && optgroups.length; j < k; j++) {
-                    optgroup = optgroups[j];
-                    if (!self.optgroups.hasOwnProperty(optgroup)) {
-                        optgroup = '';
-                    }
-                    if (!groups.hasOwnProperty(optgroup)) {
-                        groups[optgroup] = document.createDocumentFragment();
-                        groupsOrder.push(optgroup);
-                    }
-                    groups[optgroup].appendChild(optionHtml);
-                }
-            }
-
-            // sort optgroups
-            if (this.settings.lockOptgroupOrder) {
-                groupsOrder.sort(function(a, b) {
-                    var aOrder = self.optgroups[a].$order || 0;
-                    var bOrder = self.optgroups[b].$order || 0;
-                    return aOrder - bOrder;
-                });
-            }
-
-            // render optgroup headers & join groups
-            html = document.createDocumentFragment();
-            for (i = 0, n = groupsOrder.length; i < n; i++) {
-                optgroup = groupsOrder[i];
-                if (self.optgroups.hasOwnProperty(optgroup) && groups[optgroup].childNodes.length) {
-                    // render the optgroup header and options within it,
-                    // then pass it to the wrapper template
-                    htmlChildren = document.createDocumentFragment();
-                    htmlChildren.appendChild(self.render('optgroupHeader', self.optgroups[optgroup]));
-                    htmlChildren.appendChild(groups[optgroup]);
-
-                    html.appendChild(self.render('optgroup', $.extend({}, self.optgroups[optgroup], {
-                        html: domToString(htmlChildren),
-                        dom:  htmlChildren
-                    })));
-                } else {
-                    html.appendChild(groups[optgroup]);
-                }
-            }
-
-            $dropdownContent.html(html);
-
-            // highlight matching terms inline
-            if (self.settings.highlight && results.query.length && results.tokens.length) {
-                $dropdownContent.removeHighlight();
-                for (i = 0, n = results.tokens.length; i < n; i++) {
-                    highlight($dropdownContent, results.tokens[i].regex);
-                }
-            }
-
-            // add "selected" class to selected options
-            if (!self.settings.hideSelected) {
-                for (i = 0, n = self.items.length; i < n; i++) {
-                    self.getOption(self.items[i]).addClass('selected');
-                }
-            }
-
-            // add create option
-            hasCreateOption = self.canCreate(query);
-            if (hasCreateOption) {
-                $dropdownContent.prepend(self.render('optionCreate', {input: query}));
-                $create = $($dropdownContent[0].childNodes[0]);
-            }
-
-            // activate
-            self.hasOptions = results.items.length > 0 || hasCreateOption;
-            if (self.hasOptions) {
-                if (results.items.length > 0) {
-                    $activeBefore = activeBefore && self.getOption(activeBefore);
-                    if ($activeBefore && $activeBefore.length) {
-                        $active = $activeBefore;
-                    } else if (self.settings.mode === 'single' && self.items.length) {
-                        $active = self.getOption(self.items[0]);
-                    }
-                    if (!$active || !$active.length) {
-                        if ($create && !self.settings.addPrecedence) {
-                            $active = self.getAdjacentOption($create, 1);
-                        } else {
-                            $active = $dropdownContent.find('[data-selectable]:first');
-                        }
-                    }
-                } else {
-                    $active = $create;
-                }
-                self.setActiveOption($active);
-                if (triggerDropdown && !self.isOpen) { self.open(); }
-            } else {
-                self.setActiveOption(null);
-                if (triggerDropdown && self.isOpen) { self.close(); }
-            }
-        },
-
-        /**
-         * Adds an available option. If it already exists,
-         * nothing will happen. Note: this does not refresh
-         * the options list dropdown (use `refreshOptions`
-         * for that).
-         *
-         * Usage:
-         *
-         *   this.addOption(data)
-         *
-         * @param {object|array} data
-         */
-        addOption: function(data) {
-            var i, n, value, self = this;
-
-            if ($.isArray(data)) {
-                for (i = 0, n = data.length; i < n; i++) {
-                    self.addOption(data[i]);
-                }
-                return;
-            }
-
-            if (value = self.registerOption(data)) {
-                self.userOptions[value] = true;
-                self.lastQuery = null;
-                self.trigger('optionAdd', value, data);
-            }
-        },
-
-        /**
-         * Registers an option to the pool of options.
-         *
-         * @param {object} data
-         * @return {boolean|string}
-         */
-        registerOption: function(data) {
-            var key = hashKey(data[this.settings.valueField]);
-            if (typeof key === 'undefined' || key === null || this.options.hasOwnProperty(key)) return false;
-            data.$order = data.$order || ++this.order;
-            this.options[key] = data;
-            return key;
-        },
-
-        /**
-         * Registers an option group to the pool of option groups.
-         *
-         * @param {object} data
-         * @return {boolean|string}
-         */
-        registerOptionGroup: function(data) {
-            var key = hashKey(data[this.settings.optgroupValueField]);
-            if (!key) return false;
-
-            data.$order = data.$order || ++this.order;
-            this.optgroups[key] = data;
-            return key;
-        },
-
-        /**
-         * Registers a new optgroup for options
-         * to be bucketed into.
-         *
-         * @param {string} id
-         * @param {object} data
-         */
-        addOptionGroup: function(id, data) {
-            data[this.settings.optgroupValueField] = id;
-            if (id = this.registerOptionGroup(data)) {
-                this.trigger('optgroupAdd', id, data);
-            }
-        },
-
-        /**
-         * Removes an existing option group.
-         *
-         * @param {string} id
-         */
-        removeOptionGroup: function(id) {
-            if (this.optgroups.hasOwnProperty(id)) {
-                delete this.optgroups[id];
-                this.renderCache = {};
-                this.trigger('optgroupRemove', id);
-            }
-        },
-
-        /**
-         * Clears all existing option groups.
-         */
-        clearOptionGroups: function() {
-            this.optgroups = {};
-            this.renderCache = {};
-            this.trigger('optgroupClear');
-        },
-
-        /**
-         * Updates an option available for selection. If
-         * it is visible in the selected items or options
-         * dropdown, it will be re-rendered automatically.
-         *
-         * @param {string} value
-         * @param {object} data
-         */
-        updateOption: function(value, data) {
-            var self = this;
-            var $item, $itemNew;
-            var valueNew, indexItem, cacheItems, cacheOptions, orderOld;
-
-            value     = hashKey(value);
-            valueNew = hashKey(data[self.settings.valueField]);
-
-            // sanity checks
-            if (value === null) return;
-            if (!self.options.hasOwnProperty(value)) return;
-            if (typeof valueNew !== 'string') throw new Error('Value must be set in option data');
-
-            orderOld = self.options[value].$order;
-
-            // update references
-            if (valueNew !== value) {
-                delete self.options[value];
-                indexItem = self.items.indexOf(value);
-                if (indexItem !== -1) {
-                    self.items.splice(indexItem, 1, valueNew);
-                }
-            }
-            data.$order = data.$order || orderOld;
-            self.options[valueNew] = data;
-
-            // invalidate render cache
-            cacheItems = self.renderCache.item;
-            cacheOptions = self.renderCache.option;
-
-            if (cacheItems) {
-                delete cacheItems[value];
-                delete cacheItems[valueNew];
-            }
-            if (cacheOptions) {
-                delete cacheOptions[value];
-                delete cacheOptions[valueNew];
-            }
-
-            // update the item if it's selected
-            if (self.items.indexOf(valueNew) !== -1) {
-                $item = self.getItem(value);
-                $itemNew = $(self.render('item', data));
-                if ($item.hasClass('active')) $itemNew.addClass('active');
-                $item.replaceWith($itemNew);
-            }
-
-            // invalidate last query because we might have updated the sortField
-            self.lastQuery = null;
-
-            // update dropdown contents
-            if (self.isOpen) {
-                self.refreshOptions(false);
-            }
-        },
-
-        /**
-         * Removes a single option.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        removeOption: function(value, silent) {
-            var self = this;
-            value = hashKey(value);
-
-            var cacheItems = self.renderCache.item;
-            var cacheOptions = self.renderCache.option;
-            if (cacheItems) delete cacheItems[value];
-            if (cacheOptions) delete cacheOptions[value];
-
-            delete self.userOptions[value];
-            delete self.options[value];
-            self.lastQuery = null;
-            self.trigger('optionRemove', value);
-            self.removeItem(value, silent);
-        },
-
-        /**
-         * Clears all options.
-         */
-        clearOptions: function() {
-            var self = this;
-
-            self.loadedSearches = {};
-            self.userOptions = {};
-            self.renderCache = {};
-            self.options = self.sifter.items = {};
-            self.lastQuery = null;
-            self.trigger('optionClear');
-            self.clear();
-        },
-
-        /**
-         * Returns the jQuery element of the option
-         * matching the given value.
-         *
-         * @param {string} value
-         * @returns {object}
-         */
-        getOption: function(value) {
-            return this.getElementWithValue(value, this.$dropdownContent.find('[data-selectable]'));
-        },
-
-        /**
-         * Returns the jQuery element of the next or
-         * previous selectable option.
-         *
-         * @param {object} $option
-         * @param {int} direction  can be 1 for next or -1 for previous
-         * @return {object}
-         */
-        getAdjacentOption: function($option, direction) {
-            var $options = this.$dropdown.find('[data-selectable]');
-            var index    = $options.index($option) + direction;
-
-            return index >= 0 && index < $options.length ? $options.eq(index) : $();
-        },
-
-        /**
-         * Finds the first element with a "data-value" attribute
-         * that matches the given value.
-         *
-         * @param {mixed} value
-         * @param {object} $els
-         * @return {object}
-         */
-        getElementWithValue: function(value, $els) {
-            value = hashKey(value);
-
-            if (typeof value !== 'undefined' && value !== null) {
-                for (var i = 0, n = $els.length; i < n; i++) {
-                    if ($els[i].getAttribute('data-value') === value) {
-                        return $($els[i]);
-                    }
-                }
-            }
-
-            return $();
-        },
-
-        /**
-         * Returns the jQuery element of the item
-         * matching the given value.
-         *
-         * @param {string} value
-         * @returns {object}
-         */
-        getItem: function(value) {
-            return this.getElementWithValue(value, this.$control.children());
-        },
-
-        /**
-         * "Selects" multiple items at once. Adds them to the list
-         * at the current caret position.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        addItems: function(values, silent) {
-            var items = $.isArray(values) ? values : [values];
-            for (var i = 0, n = items.length; i < n; i++) {
-                this.isPending = (i < n - 1);
-                this.addItem(items[i], silent);
-            }
-        },
-
-        /**
-         * "Selects" an item. Adds it to the list
-         * at the current caret position.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        addItem: function(value, silent) {
-            var events = silent ? [] : ['change'];
-
-            debounceEvents(this, events, function() {
-                var $item, $option, $options;
-                var self = this;
-                var inputMode = self.settings.mode;
-                var valueNext, wasFull;
-                value = hashKey(value);
-
-                if (self.items.indexOf(value) !== -1) {
-                    if (inputMode === 'single') self.close();
-                    return;
-                }
-
-                if (!self.options.hasOwnProperty(value)) return;
-                if (inputMode === 'single') self.clear(silent);
-                if (inputMode === 'multi' && self.isFull()) return;
-
-                $item = $(self.render('item', self.options[value]));
-                wasFull = self.isFull();
-                self.items.splice(self.caretPos, 0, value);
-                self.insertAtCaret($item);
-                if (!self.isPending || (!wasFull && self.isFull())) {
-                    self.refreshState();
-                }
-
-                if (self.isSetup) {
-                    $options = self.$dropdownContent.find('[data-selectable]');
-
-                    // update menu / remove the option (if this is not one item being added as part of series)
-                    if (!self.isPending) {
-                        $option = self.getOption(value);
-                        valueNext = self.getAdjacentOption($option, 1).attr('data-value');
-                        self.refreshOptions(self.isFocused && inputMode !== 'single');
-                        if (valueNext) {
-                            self.setActiveOption(self.getOption(valueNext));
-                        }
-                    }
-
-                    // hide the menu if the maximum number of items have been selected or no options are left
-                    if (!$options.length || self.isFull()) {
-                        self.close();
-                    } else {
-                        self.positionDropdown();
-                    }
-
-                    self.updatePlaceholder();
-                    self.trigger('itemAdd', value, $item);
-                    self.updateOriginalInput({silent: silent});
-                }
-            });
-        },
-
-        /**
-         * Removes the selected item matching
-         * the provided value.
-         *
-         * @param {string} value
-         */
-        removeItem: function(value, silent) {
-            var self = this;
-            var $item, i, idx;
-
-            $item = (value instanceof $) ? value : self.getItem(value);
-            value = hashKey($item.attr('data-value'));
-            i = self.items.indexOf(value);
-
-            if (i !== -1) {
-                $item.remove();
-                if ($item.hasClass('active')) {
-                    idx = self.$activeItems.indexOf($item[0]);
-                    self.$activeItems.splice(idx, 1);
-                }
-
-                self.items.splice(i, 1);
-                self.lastQuery = null;
-                if (!self.settings.persist && self.userOptions.hasOwnProperty(value)) {
-                    self.removeOption(value, silent);
-                }
-
-                if (i < self.caretPos) {
-                    self.setCaret(self.caretPos - 1);
-                }
-
-                self.refreshState();
-                self.updatePlaceholder();
-                self.updateOriginalInput({silent: silent});
-                self.positionDropdown();
-                self.trigger('itemRemove', value, $item);
-            }
-        },
-
-        /**
-         * Invokes the `create` method provided in the
-         * selectize options that should provide the data
-         * for the new item, given the user input.
-         *
-         * Once this completes, it will be added
-         * to the item list.
-         *
-         * @param {string} value
-         * @param {boolean} [triggerDropdown]
-         * @param {function} [callback]
-         * @return {boolean}
-         */
-        createItem: function(input, triggerDropdown) {
-            var self  = this;
-            var caret = self.caretPos;
-            input = input || $.trim(self.$controlInput.val() || '');
-
-            var callback = arguments[arguments.length - 1];
-            if (typeof callback !== 'function') callback = function() {};
-
-            if (typeof triggerDropdown !== 'boolean') {
-                triggerDropdown = true;
-            }
-
-            if (!self.canCreate(input)) {
-                callback();
-                return false;
-            }
-
-            self.lock();
-
-            var setup = (typeof self.settings.create === 'function') ? this.settings.create : function(input) {
-                var data = {};
-                data[self.settings.labelField] = input;
-                data[self.settings.valueField] = input;
-                return data;
-            };
-
-            var create = once(function(data) {
-                self.unlock();
-
-                if (!data || typeof data !== 'object') return callback();
-                var value = hashKey(data[self.settings.valueField]);
-                if (typeof value !== 'string') return callback();
-
-                self.setTextboxValue('');
-                self.addOption(data);
-                self.setCaret(caret);
-                self.addItem(value);
-                self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
-                callback(data);
-            });
-
-            var output = setup.apply(this, [input, create]);
-            if (typeof output !== 'undefined') {
-                create(output);
-            }
-
-            return true;
-        },
-
-        /**
-         * Re-renders the selected item lists.
-         */
-        refreshItems: function() {
-            this.lastQuery = null;
-
-            if (this.isSetup) {
-                this.addItem(this.items);
-            }
-
-            this.refreshState();
-            this.updateOriginalInput();
-        },
-
-        /**
-         * Updates all state-dependent attributes
-         * and CSS classes.
-         */
-        refreshState: function() {
-            this.refreshValidityState();
-            this.refreshClasses();
-        },
-
-        /**
-         * Update the `required` attribute of both input and control input.
-         *
-         * The `required` property needs to be activated on the control input
-         * for the error to be displayed at the right place. `required` also
-         * needs to be temporarily deactivated on the input since the input is
-         * hidden and can't show errors.
-         */
-        refreshValidityState: function() {
-            if (!this.isRequired) return false;
-
-            var invalid = !this.items.length;
-
-            this.isInvalid = invalid;
-            this.$controlInput.prop('required', invalid);
-            this.$input.prop('required', !invalid);
-        },
-
-        /**
-         * Updates all state-dependent CSS classes.
-         */
-        refreshClasses: function() {
-            var self     = this;
-            var isFull   = self.isFull();
-            var isLocked = self.isLocked;
-
-            self.$wrapper
-                .toggleClass('rtl', self.rtl);
-
-            self.$control
-                .toggleClass('focus', self.isFocused)
-                .toggleClass('disabled', self.isDisabled)
-                .toggleClass('required', self.isRequired)
-                .toggleClass('invalid', self.isInvalid)
-                .toggleClass('locked', isLocked)
-                .toggleClass('full', isFull).toggleClass('not-full', !isFull)
-                .toggleClass('input-active', self.isFocused && !self.isInputHidden)
-                .toggleClass('dropdown-active', self.isOpen)
-                .toggleClass('has-options', !$.isEmptyObject(self.options))
-                .toggleClass('has-items', self.items.length > 0);
-
-            self.$controlInput.data('grow', !isFull && !isLocked);
-        },
-
-        /**
-         * Determines whether or not more items can be added
-         * to the control without exceeding the user-defined maximum.
-         *
-         * @returns {boolean}
-         */
-        isFull: function() {
-            return this.settings.maxItems !== null && this.items.length >= this.settings.maxItems;
-        },
-
-        /**
-         * Refreshes the original <select> or <input>
-         * element to reflect the current state.
-         */
-        updateOriginalInput: function(opts) {
-            var i, n, options, label, self = this;
-            opts = opts || {};
-
-            if (self.tagType === TAG_SELECT) {
-                options = [];
-                for (i = 0, n = self.items.length; i < n; i++) {
-                    label = self.options[self.items[i]][self.settings.labelField] || '';
-                    options.push('<option value="' + escapeHtml(self.items[i]) + '" selected="selected">' + escapeHtml(label) + '</option>');
-                }
-                if (!options.length && !this.$input.attr('multiple')) {
-                    options.push('<option value="" selected="selected"></option>');
-                }
-                self.$input.html(options.join(''));
-            } else {
-                self.$input.val(self.getValue());
-                self.$input.attr('value',self.$input.val());
-            }
-
-            if (self.isSetup) {
-                if (!opts.silent) {
-                    self.trigger('change', self.$input.val());
-                }
-            }
-        },
-
-        /**
-         * Shows/hide the input placeholder depending
-         * on if there items in the list already.
-         */
-        updatePlaceholder: function() {
-            if (!this.settings.placeholder) return;
-            var $input = this.$controlInput;
-
-            if (this.items.length) {
-                $input.removeAttr('placeholder');
-            } else {
-                $input.attr('placeholder', this.settings.placeholder);
-            }
-            $input.triggerHandler('update', {force: true});
-        },
-
-        /**
-         * Shows the autocomplete dropdown containing
-         * the available options.
-         */
-        open: function() {
-            var self = this;
-
-            if (self.isLocked || self.isOpen || (self.settings.mode === 'multi' && self.isFull())) return;
-            self.focus();
-            self.isOpen = true;
-            self.refreshState();
-            self.$dropdown.css({visibility: 'hidden', display: 'block'});
-            self.positionDropdown();
-            self.$dropdown.css({visibility: 'visible'});
-            self.trigger('dropdownOpen', self.$dropdown);
-        },
-
-        /**
-         * Closes the autocomplete dropdown menu.
-         */
-        close: function() {
-            var self = this;
-            var trigger = self.isOpen;
-
-            if (self.settings.mode === 'single' && self.items.length) {
-                self.hideInput();
-                self.$controlInput.blur(); // close keyboard on iOS
-            }
-
-            self.isOpen = false;
-            self.$dropdown.hide();
-            self.setActiveOption(null);
-            self.refreshState();
-
-            if (trigger) self.trigger('dropdownClose', self.$dropdown);
-        },
-
-        /**
-         * Calculates and applies the appropriate
-         * position of the dropdown.
-         */
-        positionDropdown: function() {
-            var $control = this.$control;
-            var offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
-            offset.top += $control.outerHeight(true);
-
-            this.$dropdown.css({
-                width : $control.outerWidth(),
-                top   : offset.top,
-                left  : offset.left
-            });
-        },
-
-        /**
-         * Resets / clears all selected items
-         * from the control.
-         *
-         * @param {boolean} silent
-         */
-        clear: function(silent) {
-            var self = this;
-
-            if (!self.items.length) return;
-            self.$control.children(':not(input)').remove();
-            self.items = [];
-            self.lastQuery = null;
-            self.setCaret(0);
-            self.setActiveItem(null);
-            self.updatePlaceholder();
-            self.updateOriginalInput({silent: silent});
-            self.refreshState();
-            self.showInput();
-            self.trigger('clear');
-        },
-
-        /**
-         * A helper method for inserting an element
-         * at the current caret position.
-         *
-         * @param {object} $el
-         */
-        insertAtCaret: function($el) {
-            var caret = Math.min(this.caretPos, this.items.length);
-            if (caret === 0) {
-                this.$control.prepend($el);
-            } else {
-                $(this.$control[0].childNodes[caret]).before($el);
-            }
-            this.setCaret(caret + 1);
-        },
-
-        /**
-         * Removes the current selected item(s).
-         *
-         * @param {object} e (optional)
-         * @returns {boolean}
-         */
-        deleteSelection: function(e) {
-            var i, n, direction, selection, values, caret, optionSelect, $optionSelect, $tail;
-            var self = this;
-
-            direction = (e && e.keyCode === KEY_BACKSPACE) ? -1 : 1;
-            selection = getSelection(self.$controlInput[0]);
-
-            if (self.$activeOption && !self.settings.hideSelected) {
-                optionSelect = self.getAdjacentOption(self.$activeOption, -1).attr('data-value');
-            }
-
-            // determine items that will be removed
-            values = [];
-
-            if (self.$activeItems.length) {
-                $tail = self.$control.children('.active:' + (direction > 0 ? 'last' : 'first'));
-                caret = self.$control.children(':not(input)').index($tail);
-                if (direction > 0) { caret++; }
-
-                for (i = 0, n = self.$activeItems.length; i < n; i++) {
-                    values.push($(self.$activeItems[i]).attr('data-value'));
-                }
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            } else if ((self.isFocused || self.settings.mode === 'single') && self.items.length) {
-                if (direction < 0 && selection.start === 0 && selection.length === 0) {
-                    values.push(self.items[self.caretPos - 1]);
-                } else if (direction > 0 && selection.start === self.$controlInput.val().length) {
-                    values.push(self.items[self.caretPos]);
-                }
-            }
-
-            // allow the callback to abort
-            if (!values.length || (typeof self.settings.onDelete === 'function' && self.settings.onDelete.apply(self, [values]) === false)) {
-                return false;
-            }
-
-            // perform removal
-            if (typeof caret !== 'undefined') {
-                self.setCaret(caret);
-            }
-            while (values.length) {
-                self.removeItem(values.pop());
-            }
-
-            self.showInput();
-            self.positionDropdown();
-            self.refreshOptions(true);
-
-            // select previous option
-            if (optionSelect) {
-                $optionSelect = self.getOption(optionSelect);
-                if ($optionSelect.length) {
-                    self.setActiveOption($optionSelect);
-                }
-            }
-
-            return true;
-        },
-
-        /**
-         * Selects the previous / next item (depending
-         * on the `direction` argument).
-         *
-         * > 0 - right
-         * < 0 - left
-         *
-         * @param {int} direction
-         * @param {object} e (optional)
-         */
-        advanceSelection: function(direction, e) {
-            var tail, selection, idx, valueLength, cursorAtEdge, $tail;
-            var self = this;
-
-            if (direction === 0) return;
-            if (self.rtl) direction *= -1;
-
-            tail = direction > 0 ? 'last' : 'first';
-            selection = getSelection(self.$controlInput[0]);
-
-            if (self.isFocused && !self.isInputHidden) {
-                valueLength = self.$controlInput.val().length;
-                cursorAtEdge = direction < 0 ? selection.start === 0 &&
-                  selection.length === 0 : selection.start === valueLength;
-
-                if (cursorAtEdge && !valueLength) {
-                    self.advanceCaret(direction, e);
-                }
-            } else {
-                $tail = self.$control.children('.active:' + tail);
-                if ($tail.length) {
-                    idx = self.$control.children(':not(input)').index($tail);
-                    self.setActiveItem(null);
-                    self.setCaret(direction > 0 ? idx + 1 : idx);
-                }
-            }
-        },
-
-        /**
-         * Moves the caret left / right.
-         *
-         * @param {int} direction
-         * @param {object} e (optional)
-         */
-        advanceCaret: function(direction, e) {
-            var self = this, fn, $adj;
-
-            if (direction === 0) return;
-
-            fn = direction > 0 ? 'next' : 'prev';
-            if (self.isShiftDown) {
-                $adj = self.$controlInput[fn]();
-                if ($adj.length) {
-                    self.hideInput();
-                    self.setActiveItem($adj);
-                    if(e) e.preventDefault();
-                }
-            } else {
-                self.setCaret(self.caretPos + direction);
-            }
-        },
-
-        /**
-         * Moves the caret to the specified index.
-         *
-         * @param {int} i
-         */
-        setCaret: function(i) {
-            var self = this;
-
-            if (self.settings.mode === 'single') {
-                i = self.items.length;
-            } else {
-                i = Math.max(0, Math.min(self.items.length, i));
-            }
-
-            if(!self.isPending) {
-                // the input must be moved by leaving it in place and moving the
-                // siblings, due to the fact that focus cannot be restored once lost
-                // on mobile webkit devices
-                var j, n, $children, $child;
-                $children = self.$control.children(':not(input)');
-                for (j = 0, n = $children.length; j < n; j++) {
-                    $child = $($children[j]).detach();
-                    if (j <  i) {
-                        self.$controlInput.before($child);
-                    } else {
-                        self.$control.append($child);
-                    }
-                }
-            }
-
-            self.caretPos = i;
-        },
-
-        /**
-         * Disables user input on the control. Used while
-         * items are being asynchronously created.
-         */
-        lock: function() {
-            this.close();
-            this.isLocked = true;
-            this.refreshState();
-        },
-
-        /**
-         * Re-enables user input on the control.
-         */
-        unlock: function() {
-            this.isLocked = false;
-            this.refreshState();
-        },
-
-        /**
-         * Disables user input on the control completely.
-         * While disabled, it cannot receive focus.
-         */
-        disable: function() {
-            var self = this;
-            self.$input.prop('disabled', true);
-            self.$controlInput.prop('disabled', true).prop('tabindex', -1);
-            self.isDisabled = true;
-            self.lock();
-        },
-
-        /**
-         * Enables the control so that it can respond
-         * to focus and user input.
-         */
-        enable: function() {
-            var self = this;
-            self.$input.prop('disabled', false);
-            self.$controlInput.prop('disabled', false).prop('tabindex', self.tabIndex);
-            self.isDisabled = false;
-            self.unlock();
-        },
-
-        /**
-         * Completely destroys the control and
-         * unbinds all event listeners so that it can
-         * be garbage collected.
-         */
-        destroy: function() {
-            var self = this;
-            var eventNS = self.eventNS;
-            var revertSettings = self.revertSettings;
-
-            self.trigger('destroy');
-            self.off();
-            self.$wrapper.remove();
-            self.$dropdown.remove();
-
-            self.$input
-                .html('')
-                .append(revertSettings.$children)
-                .removeAttr('tabindex')
-                .removeClass('selectized')
-                .attr({tabindex: revertSettings.tabindex})
-                .show();
-
-            self.$controlInput.removeData('grow');
-            self.$input.removeData('selectize');
-
-            $(window).off(eventNS);
-            $(document).off(eventNS);
-            $(document.body).off(eventNS);
-
-            delete self.$input[0].selectize;
-        },
-
-        /**
-         * A helper method for rendering "item" and
-         * "option" templates, given the data.
-         *
-         * @param {string} templateName
-         * @param {object} data
-         * @returns {string}
-         */
-        render: function(templateName, data) {
-            var value, id;
-            var html = '';
-            var cache = false;
-            var self = this;
-            // var regexTag = /^[\t \r\n]*<([a-z][a-z0-9\-]*(?:\:[a-z][a-z0-9\-]*)?)/i;
-
-            if (templateName === 'option' || templateName === 'item') {
-                value = hashKey(data[self.settings.valueField]);
-                cache = !!value;
-            }
-
-            // pull markup from cache if it exists
-            if (cache) {
-                if (!isSet(self.renderCache[templateName])) {
-                    self.renderCache[templateName] = {};
-                }
-                if (self.renderCache[templateName].hasOwnProperty(value)) {
-                    return self.renderCache[templateName][value];
-                }
-            }
-
-            // render markup
-            html = $(self.settings.render[templateName].apply(this, [data, escapeHtml]));
-
-            // add mandatory attributes
-            if (templateName === 'option' || templateName === 'optionCreate') {
-                html.attr('data-selectable', '');
-            }
-            else if (templateName === 'optgroup') {
-                id = data[self.settings.optgroupValueField] || '';
-                html.attr('data-group', id);
-            }
-            if (templateName === 'option' || templateName === 'item') {
-                html.attr('data-value', value || '');
-            }
-
-            // update cache
-            if (cache) {
-                self.renderCache[templateName][value] = html[0];
-            }
-
-            return html[0];
-        },
-
-        /**
-         * Clears the render cache for a template. If
-         * no template is given, clears all render
-         * caches.
-         *
-         * @param {string} templateName
-         */
-        clearCache: function(templateName) {
-            var self = this;
-            if (typeof templateName === 'undefined') {
-                self.renderCache = {};
-            } else {
-                delete self.renderCache[templateName];
-            }
-        },
-
-        /**
-         * Determines whether or not to display the
-         * create item prompt, given a user input.
-         *
-         * @param {string} input
-         * @return {boolean}
-         */
-        canCreate: function(input) {
-            var self = this;
-            if (!self.settings.create) return false;
-            var filter = self.settings.createFilter;
-            return input.length
-                && (typeof filter !== 'function' || filter.apply(self, [input]))
-                && (typeof filter !== 'string' || new RegExp(filter).test(input))
-                && (!(filter instanceof RegExp) || filter.test(input));
-        }
-
-    });
-}
-
-// src/index.js
-function selectize($select, optsUser) {
-    var opts               = $.extend({}, defaults$1, optsUser);
-    var attrData           = opts.dataAttr;
-    var fieldLabel         = opts.labelField;
-    var fieldValue         = opts.valueField;
-    var fieldOptgroup      = opts.optgroupField;
-    var fieldOptgroupLabel = opts.optgroupLabelField;
-    var fieldOptgroupValue = opts.optgroupValueField;
-
-    /**
-     * Initializes selectize from a <input type="text"> element.
-     *
-     * @param {object} $input
-     * @param {object} optsElement
-     */
-    var initTextbox = function($input, optsElement) {
-        var i, n, values, option;
-
-        var dataRaw = $input.attr(attrData);
-
-        if (!dataRaw) {
-            var value = $.trim($input.val() || '');
-            if (!opts.allowEmptyOption && !value.length) return;
-            values = value.split(opts.delimiter);
-            for (i = 0, n = values.length; i < n; i++) {
-                option = {};
-                option[fieldLabel] = values[i];
-                option[fieldValue] = values[i];
-                optsElement.options.push(option);
-            }
-            optsElement.items = values;
-        } else {
-            optsElement.options = JSON.parse(dataRaw);
-            for (i = 0, n = optsElement.options.length; i < n; i++) {
-                optsElement.items.push(optsElement.options[i][fieldValue]);
-            }
-        }
-    };
-
-    /**
-     * Initializes selectize from a <select> element.
-     *
-     * @param {object} $input
-     * @param {object} optsElement
-     */
-    var initSelect = function($input, optsElement) {
-        var i, n, tagName, $children;
-        var options = optsElement.options;
-        var optionsMap = {};
-
-        var readData = function($el) {
-            var data = attrData && $el.attr(attrData);
-            if (typeof data === 'string' && data.length) {
-                return JSON.parse(data);
-            }
-            return null;
-        };
-
-        var addOption = function($option, group) {
-            $option = $($option);
-
-            var value = hashKey($option.val());
-            if (!value && !opts.allowEmptyOption) return;
-
-            // if the option already exists, it's probably been
-            // duplicated in another optgroup. in this case, push
-            // the current group to the "optgroup" property on the
-            // existing option so that it's rendered in both places.
-            if (optionsMap.hasOwnProperty(value)) {
-                if (group) {
-                    var arr = optionsMap[value][fieldOptgroup];
-                    if (!arr) {
-                        optionsMap[value][fieldOptgroup] = group;
-                    } else if (!$.isArray(arr)) {
-                        optionsMap[value][fieldOptgroup] = [arr, group];
-                    } else {
-                        arr.push(group);
-                    }
-                }
-                return;
-            }
-
-            var option            = readData($option) || {};
-            option[fieldLabel]    = option[fieldLabel] || $option.text();
-            option[fieldValue]    = option[fieldValue] || value;
-            option[fieldOptgroup] = option[fieldOptgroup] || group;
-
-            optionsMap[value] = option;
-            options.push(option);
-
-            if ($option.is(':selected')) {
-                optsElement.items.push(value);
-            }
-        };
-
-        var addGroup = function($optgroup) {
-            var i, n, id, optgroup, $options;
-
-            $optgroup = $($optgroup);
-            id = $optgroup.attr('label');
-
-            if (id) {
-                optgroup = readData($optgroup) || {};
-                optgroup[fieldOptgroupLabel] = id;
-                optgroup[fieldOptgroupValue] = id;
-                optsElement.optgroups.push(optgroup);
-            }
-
-            $options = $('option', $optgroup);
-            for (i = 0, n = $options.length; i < n; i++) {
-                addOption($options[i], id);
-            }
-        };
-
-        optsElement.maxItems = $input.attr('multiple') ? null : 1;
-
-        $children = $input.children();
-        for (i = 0, n = $children.length; i < n; i++) {
-            tagName = $children[i].tagName.toLowerCase();
-            if (tagName === 'optgroup') {
-                addGroup($children[i]);
-            } else if (tagName === 'option') {
-                addOption($children[i]);
-            }
-        }
-    };
-
-    return $select.each(function() {
-        if (this.selectize) return;
-
-        var instance;
-        var $input = $(this);
-        var tagName = this.tagName.toLowerCase();
-        var placeholder = $input.attr('placeholder') || $input.attr('data-placeholder');
-        if (!placeholder && !opts.allowEmptyOption) {
-            placeholder = $input.children('option[value=""]').text();
-        }
-
-        var optsElement = {
-            'placeholder' : placeholder,
-            'options'     : [],
-            'optgroups'   : [],
-            'items'       : []
-        };
-
-        if (tagName === 'select') {
-            initSelect($input, optsElement);
-        } else {
-            initTextbox($input, optsElement);
-        }
-
-        instance = new Selectize($input, $.extend(true, {}, defaults$1, optsElement, optsUser));
-    });
-}
-
-// ../../hanzo/el-controls/lib/el-controls.mjs
-// src/utils/patches.coffee
-if (window.Promise == null) {
-  window.Promise = Promise$2;
-}
-
-if (window.requestAnimationFrame == null) {
-  window.requestAnimationFrame = raf$1;
-}
-
-if (window.cancelAnimationFrame == null) {
-  window.cancelAnimationFrame = raf$1.cancel;
-}
-
-// src/events.coffee
-var Events;
-
-var Events$1 = Events = {
-  Change: 'change',
-  ChangeSuccess: 'change-success',
-  ChangeFailed: 'change-failed'
-};
-
-// src/controls/control.coffee
+// node_modules/el-controls/src/controls/control.coffee
 var Control;
 var scrolling;
-var extend$1$2 = function(child, parent) { for (var key in parent) { if (hasProp$1$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$1$2 = {}.hasOwnProperty;
+var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$4 = {}.hasOwnProperty;
 
 scrolling = false;
 
 var Control$1 = Control = (function(superClass) {
-  extend$1$2(Control, superClass);
+  extend$5(Control, superClass);
 
   function Control() {
     return Control.__super__.constructor.apply(this, arguments);
@@ -14507,16 +9706,16 @@ var Control$1 = Control = (function(superClass) {
         return autoPlay(false);
       }).start();
     }
-    return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+    return this.mediator.trigger(ControlEvents.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
   };
 
   Control.prototype.change = function() {
     Control.__super__.change.apply(this, arguments);
-    return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
+    return this.mediator.trigger(ControlEvents.Change, this.input.name, this.input.ref.get(this.input.name));
   };
 
   Control.prototype.changed = function(value) {
-    this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
+    this.mediator.trigger(ControlEvents.ChangeSuccess, this.input.name, value);
     return El$1.scheduleUpdate();
   };
 
@@ -14528,191 +9727,7 @@ var Control$1 = Control = (function(superClass) {
 
 })(El$1.Input);
 
-// templates/controls/checkbox.pug
-var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
-
-// src/controls/checkbox.coffee
-var CheckBox;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
-
-var checkbox = CheckBox = (function(superClass) {
-  extend$4(CheckBox, superClass);
-
-  function CheckBox() {
-    return CheckBox.__super__.constructor.apply(this, arguments);
-  }
-
-  CheckBox.prototype.tag = 'checkbox';
-
-  CheckBox.prototype.html = html;
-
-  CheckBox.prototype.getValue = function(event) {
-    return event.target.checked;
-  };
-
-  return CheckBox;
-
-})(Control$1);
-
-CheckBox.register();
-
-// templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
-
-// src/controls/select.coffee
-var Select;
-var extend$3$1 = function(child, parent) { for (var key in parent) { if (hasProp$3$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3$1 = {}.hasOwnProperty;
-
-var Select$1 = Select = (function(superClass) {
-  extend$3$1(Select, superClass);
-
-  function Select() {
-    return Select.__super__.constructor.apply(this, arguments);
-  }
-
-  Select.prototype.tag = 'selection';
-
-  Select.prototype.html = html$1;
-
-  Select.prototype.instructions = 'Select an Option';
-
-  Select.prototype.autofocus = false;
-
-  Select.prototype.disabled = false;
-
-  Select.prototype.multiple = false;
-
-  Select.prototype.size = null;
-
-  Select.prototype._optionsHash = 'default';
-
-  Select.prototype.selectOptions = {};
-
-  Select.prototype.hasOptions = function() {
-    this.options;
-    return this._optionsHash.length > 2;
-  };
-
-  Select.prototype.options = function() {
-    var optionsHash;
-    optionsHash = JSON.stringify(this.selectOptions);
-    if (this._optionsHash !== optionsHash) {
-      this._optionsHash = optionsHash;
-    }
-    return this.selectOptions;
-  };
-
-  Select.prototype.getValue = function(e) {
-    var el, ref, ref1, ref2;
-    el = e.target;
-    return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
-  };
-
-  Select.prototype.init = function(opts) {
-    return Select.__super__.init.apply(this, arguments);
-  };
-
-  return Select;
-
-})(Control$1);
-
-Select.register();
-
-// src/controls/country-select.coffee
-var CountrySelect;
-var extend$2$1 = function(child, parent) { for (var key in parent) { if (hasProp$2$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$2$1 = {}.hasOwnProperty;
-
-var countrySelect = CountrySelect = (function(superClass) {
-  extend$2$1(CountrySelect, superClass);
-
-  function CountrySelect() {
-    return CountrySelect.__super__.constructor.apply(this, arguments);
-  }
-
-  CountrySelect.prototype.tag = 'country-selection';
-
-  CountrySelect.prototype.options = function() {
-    var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
-    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    optionsHash = JSON.stringify(countries);
-    if (this._optionsHash === optionsHash) {
-      return this.selectOptions;
-    }
-    countries = countries.slice(0);
-    this._optionsHash = optionsHash;
-    this.selectOptions = options = {};
-    this.input.ref.set(this.input.name, '');
-    countries.sort(function(a, b) {
-      var nameA, nameB;
-      nameA = a.name.toUpperCase();
-      nameB = b.name.toUpperCase();
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) {
-        return 1;
-      }
-      return 0;
-    });
-    for (i = 0, len = countries.length; i < len; i++) {
-      country = countries[i];
-      options[country.code.toUpperCase()] = country.name;
-    }
-    return options;
-  };
-
-  CountrySelect.prototype.init = function() {
-    return CountrySelect.__super__.init.apply(this, arguments);
-  };
-
-  return CountrySelect;
-
-})(Select$1);
-
-CountrySelect.register();
-
-// src/$.coffee
-var $$2;
-
-$$2 = zepto;
-
-if (window.$ == null) {
-  ['width', 'height'].forEach(function(dimension) {
-    var Dimension;
-    Dimension = dimension.replace(/./, function(m) {
-      return m[0].toUpperCase();
-    });
-    return $$2.fn['outer' + Dimension] = function(margin) {
-      var elem, sides, size;
-      elem = this;
-      if (elem) {
-        size = elem[dimension]();
-        sides = {
-          width: ['left', 'right'],
-          height: ['top', 'bottom']
-        };
-        sides[dimension].forEach(function(side) {
-          if (margin) {
-            return size += parseInt(elem.css('margin-' + side), 10);
-          }
-        });
-        return size;
-      } else {
-        return null;
-      }
-    };
-  });
-  window.$ = $$2;
-} else {
-  $$2 = window.$;
-}
-
-var $$1$1 = $$2;
-
-// src/utils/placeholder.coffee
+// node_modules/el-controls/src/utils/placeholder.coffee
 var exports$1;
 var hidePlaceholderOnFocus;
 var unfocusOnAnElement;
@@ -14761,16 +9776,16 @@ if (document.createElement("input").placeholder == null) {
 
 var placeholder = exports$1;
 
-// templates/controls/text.pug
-var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+// node_modules/el-controls/templates/controls/text.pug
+var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
-// src/controls/text.coffee
+// node_modules/el-controls/src/controls/text.coffee
 var Text;
-var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5 = {}.hasOwnProperty;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
 
 var Text$1 = Text = (function(superClass) {
-  extend$5(Text, superClass);
+  extend$4(Text, superClass);
 
   function Text() {
     return Text.__super__.constructor.apply(this, arguments);
@@ -14778,7 +9793,7 @@ var Text$1 = Text = (function(superClass) {
 
   Text.prototype.tag = 'text';
 
-  Text.prototype.html = html$2;
+  Text.prototype.html = html;
 
   Text.prototype.type = 'text';
 
@@ -14812,263 +9827,6 @@ var Text$1 = Text = (function(superClass) {
 })(Control$1);
 
 Text.register();
-
-// templates/controls/dropdown.pug
-var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
-
-// src/controls/dropdown.coffee
-var Select$2;
-var coolDown;
-var isABrokenBrowser;
-var extend$4$1 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4 = {}.hasOwnProperty;
-
-isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
-
-coolDown = -1;
-
-var dropdown = Select$2 = (function(superClass) {
-  extend$4$1(Select, superClass);
-
-  function Select() {
-    return Select.__super__.constructor.apply(this, arguments);
-  }
-
-  Select.prototype.tag = 'dropdown';
-
-  Select.prototype.html = html$3;
-
-  Select.prototype.selectOptions = {};
-
-  Select.prototype.options = function() {
-    return this.selectOptions;
-  };
-
-  Select.prototype.readOnly = false;
-
-  Select.prototype.ignore = false;
-
-  Select.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    },
-    mount: function() {
-      return this.onUpdated();
-    }
-  };
-
-  Select.prototype.getValue = function(event) {
-    var ref;
-    return (ref = $$1$1(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-  };
-
-  Select.prototype.initSelect = function($select) {
-    var $input, invertedOptions, name, options, ref, select, value;
-    options = [];
-    invertedOptions = {};
-    ref = this.options();
-    for (value in ref) {
-      name = ref[value];
-      options.push({
-        text: name,
-        value: value
-      });
-      invertedOptions[name] = value;
-    }
-    selectize($select, {
-      dropdownParent: 'body'
-    }).on('change', (function(_this) {
-      return function(event) {
-        if (coolDown !== -1) {
-          return;
-        }
-        coolDown = setTimeout(function() {
-          return coolDown = -1;
-        }, 100);
-        _this.change(event);
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      };
-    })(this));
-    select = $select[0];
-    select.selectize.addOption(options);
-    select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
-    select.selectize.refreshOptions(false);
-    $input = $select.parent().find('.selectize-input input:first');
-    $input.on('change', function(event) {
-      var val;
-      val = $$1$1(event.target).val();
-      if (invertedOptions[val] != null) {
-        return $select[0].selectize.setValue(invertedOptions[val]);
-      }
-    });
-    if (this.readOnly) {
-      return $input.attr('readonly', true);
-    }
-  };
-
-  Select.prototype.init = function(opts) {
-    Select.__super__.init.apply(this, arguments);
-    return this.style = this.style || 'width:100%';
-  };
-
-  Select.prototype.onUpdated = function() {
-    var $control, $select, select, v;
-    if (this.input == null) {
-      return;
-    }
-    $select = $$1$1(this.root).find('select');
-    select = $select[0];
-    if (select != null) {
-      v = this.input.ref.get(this.input.name);
-      if (!this.initialized) {
-        return raf$1((function(_this) {
-          return function() {
-            _this.initSelect($select);
-            return _this.initialized = true;
-          };
-        })(this));
-      } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
-        select.selectize.clear(true);
-        return select.selectize.addItem(v, true);
-      }
-    } else {
-      $control = $$1$1(this.root).find('.selectize-control');
-      if ($control[0] == null) {
-        return raf$1((function(_this) {
-          return function() {
-            return _this.scheduleUpdate();
-          };
-        })(this));
-      }
-    }
-  };
-
-  return Select;
-
-})(Text$1);
-
-Select$2.register();
-
-// src/controls/state-select.coffee
-var StateSelect;
-var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
-
-var stateSelect = StateSelect = (function(superClass) {
-  extend$6(StateSelect, superClass);
-
-  function StateSelect() {
-    return StateSelect.__super__.constructor.apply(this, arguments);
-  }
-
-  StateSelect.prototype.tag = 'state-selection';
-
-  StateSelect.prototype.options = function() {
-    var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
-    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    code = this.getCountry();
-    if (!code || code.length !== 2) {
-      this._optionsHash = '';
-      return;
-    }
-    code = code.toUpperCase();
-    found = false;
-    for (i = 0, len = countries.length; i < len; i++) {
-      country = countries[i];
-      if (country.code.toUpperCase() === code) {
-        found = true;
-        subdivisions = country.subdivisions;
-        optionsHash = JSON.stringify(subdivisions);
-        if (this._optionsHash === optionsHash) {
-          return this.selectOptions;
-        }
-        subdivisions = subdivisions.slice(0);
-        this._optionsHash = optionsHash;
-        this.selectOptions = options = {};
-        this.input.ref.set(this.input.name, '');
-        subdivisions.sort(function(a, b) {
-          var nameA, nameB;
-          nameA = a.name.toUpperCase();
-          nameB = b.name.toUpperCase();
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-          return 0;
-        });
-        for (j = 0, len1 = subdivisions.length; j < len1; j++) {
-          subdivision = subdivisions[j];
-          options[subdivision.code.toUpperCase()] = subdivision.name;
-        }
-        break;
-      }
-    }
-    if (!found) {
-      this._optionsHash = '';
-    }
-    return options;
-  };
-
-  StateSelect.prototype.getCountry = function() {
-    return '';
-  };
-
-  StateSelect.prototype.init = function() {
-    return StateSelect.__super__.init.apply(this, arguments);
-  };
-
-  return StateSelect;
-
-})(Select$1);
-
-StateSelect.register();
-
-// templates/controls/textarea.pug
-var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
-
-// src/controls/textbox.coffee
-var TextBox;
-var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
-
-TextBox = (function(superClass) {
-  extend$7(TextBox, superClass);
-
-  function TextBox() {
-    return TextBox.__super__.constructor.apply(this, arguments);
-  }
-
-  TextBox.prototype.tag = 'textbox';
-
-  TextBox.prototype.html = html$4;
-
-  TextBox.prototype.formElement = 'textarea';
-
-  TextBox.prototype.instructions = '';
-
-  TextBox.prototype.rows = null;
-
-  TextBox.prototype.cols = null;
-
-  TextBox.prototype.disabled = false;
-
-  TextBox.prototype.maxlength = null;
-
-  TextBox.prototype.readonly = false;
-
-  TextBox.prototype.wrap = null;
-
-  return TextBox;
-
-})(Text$1);
-
-TextBox.register();
-
-var TextBox$1 = TextBox;
 
 // src/utils/keys.coffee
 var keys = {
@@ -15281,12 +10039,12 @@ var CardCVC$1 = CardCVC;
 
 // src/controls/card/card-expiry.coffee
 var CardExpiry;
-var extend$6$1 = function(child, parent) { for (var key in parent) { if (hasProp$4$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4$1 = {}.hasOwnProperty;
+var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5 = {}.hasOwnProperty;
 var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 CardExpiry = (function(superClass) {
-  extend$6$1(CardExpiry, superClass);
+  extend$6(CardExpiry, superClass);
 
   function CardExpiry() {
     return CardExpiry.__super__.constructor.apply(this, arguments);
@@ -15346,11 +10104,11 @@ var CardExpiry$1 = CardExpiry;
 
 // src/controls/card/card-name.coffee
 var CardName;
-var extend$7$1 = function(child, parent) { for (var key in parent) { if (hasProp$5$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5$1 = {}.hasOwnProperty;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
 
 CardName = (function(superClass) {
-  extend$7$1(CardName, superClass);
+  extend$7(CardName, superClass);
 
   function CardName() {
     return CardName.__super__.constructor.apply(this, arguments);
@@ -15370,8 +10128,8 @@ var CardName$1 = CardName;
 
 // src/controls/card/card-number.coffee
 var CardNumber;
-var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$6$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6$1 = {}.hasOwnProperty;
+var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
 var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 CardNumber = (function(superClass) {
@@ -15467,13 +10225,13 @@ CardNumber.register();
 
 var CardNumber$1 = CardNumber;
 
-// ../../hanzo/el-controls/templates/controls/input-normal-placeholder.pug
-var html$1$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+// node_modules/el-controls/templates/controls/input-normal-placeholder.pug
+var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/checkout/promocode.coffee
 var PromoCode;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7$1 = {}.hasOwnProperty;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
 
 var PromoCode$1 = PromoCode = (function(superClass) {
   extend$9(PromoCode, superClass);
@@ -15484,7 +10242,7 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 
   PromoCode.prototype.tag = 'promocode';
 
-  PromoCode.prototype.html = html$1$1;
+  PromoCode.prototype.html = html$1;
 
   PromoCode.prototype.bind = 'order.promoCode';
 
@@ -15494,13 +10252,76 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 
 PromoCode.register();
 
+// node_modules/el-controls/templates/controls/select.pug
+var html$2 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/select.coffee
+var Select;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10 = {}.hasOwnProperty;
+
+var Select$1 = Select = (function(superClass) {
+  extend$11(Select, superClass);
+
+  function Select() {
+    return Select.__super__.constructor.apply(this, arguments);
+  }
+
+  Select.prototype.tag = 'selection';
+
+  Select.prototype.html = html$2;
+
+  Select.prototype.instructions = 'Select an Option';
+
+  Select.prototype.autofocus = false;
+
+  Select.prototype.disabled = false;
+
+  Select.prototype.multiple = false;
+
+  Select.prototype.size = null;
+
+  Select.prototype._optionsHash = 'default';
+
+  Select.prototype.selectOptions = {};
+
+  Select.prototype.hasOptions = function() {
+    this.options;
+    return this._optionsHash.length > 2;
+  };
+
+  Select.prototype.options = function() {
+    var optionsHash;
+    optionsHash = JSON.stringify(this.selectOptions);
+    if (this._optionsHash !== optionsHash) {
+      this._optionsHash = optionsHash;
+    }
+    return this.selectOptions;
+  };
+
+  Select.prototype.getValue = function(e) {
+    var el, ref, ref1, ref2;
+    el = e.target;
+    return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
+  };
+
+  Select.prototype.init = function(opts) {
+    return Select.__super__.init.apply(this, arguments);
+  };
+
+  return Select;
+
+})(Control$1);
+
+Select.register();
+
 // src/controls/checkout/quantity-select.coffee
 var QuantitySelect;
 var i$1;
 var j;
 var opts$1;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
+var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
 
 opts$1 = {};
 
@@ -15554,11 +10375,11 @@ QuantitySelect.register();
 
 // src/controls/checkout/shippingaddress-city.coffee
 var ShippingAddressCity;
-var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9 = {}.hasOwnProperty;
+var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$11 = {}.hasOwnProperty;
 
 var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
-  extend$11(ShippingAddressCity, superClass);
+  extend$12(ShippingAddressCity, superClass);
 
   function ShippingAddressCity() {
     return ShippingAddressCity.__super__.constructor.apply(this, arguments);
@@ -15574,13 +10395,67 @@ var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
 
 ShippingAddressCity.register();
 
+// node_modules/el-controls/src/controls/country-select.coffee
+var CountrySelect;
+var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13 = {}.hasOwnProperty;
+
+var CountrySelect$1 = CountrySelect = (function(superClass) {
+  extend$14(CountrySelect, superClass);
+
+  function CountrySelect() {
+    return CountrySelect.__super__.constructor.apply(this, arguments);
+  }
+
+  CountrySelect.prototype.tag = 'country-selection';
+
+  CountrySelect.prototype.options = function() {
+    var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
+    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+    optionsHash = JSON.stringify(countries);
+    if (this._optionsHash === optionsHash) {
+      return this.selectOptions;
+    }
+    countries = countries.slice(0);
+    this._optionsHash = optionsHash;
+    this.selectOptions = options = {};
+    this.input.ref.set(this.input.name, '');
+    countries.sort(function(a, b) {
+      var nameA, nameB;
+      nameA = a.name.toUpperCase();
+      nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
+    for (i = 0, len = countries.length; i < len; i++) {
+      country = countries[i];
+      options[country.code.toUpperCase()] = country.name;
+    }
+    return options;
+  };
+
+  CountrySelect.prototype.init = function() {
+    return CountrySelect.__super__.init.apply(this, arguments);
+  };
+
+  return CountrySelect;
+
+})(Select$1);
+
+CountrySelect.register();
+
 // src/controls/checkout/shippingaddress-country.coffee
 var ShippingAddressCountry;
-var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$10 = {}.hasOwnProperty;
+var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12 = {}.hasOwnProperty;
 
 var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
-  extend$12(ShippingAddressCountry, superClass);
+  extend$13(ShippingAddressCountry, superClass);
 
   function ShippingAddressCountry() {
     return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
@@ -15604,17 +10479,17 @@ var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
 
   return ShippingAddressCountry;
 
-})(countrySelect);
+})(CountrySelect$1);
 
 ShippingAddressCountry.register();
 
 // src/controls/checkout/shippingaddress-line1.coffee
 var ShippingAddressLine1;
-var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$11 = {}.hasOwnProperty;
+var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$14 = {}.hasOwnProperty;
 
 var ShippingAddressLine1$1 = ShippingAddressLine1 = (function(superClass) {
-  extend$13(ShippingAddressLine1, superClass);
+  extend$15(ShippingAddressLine1, superClass);
 
   function ShippingAddressLine1() {
     return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
@@ -15632,11 +10507,11 @@ ShippingAddressLine1.register();
 
 // src/controls/checkout/shippingaddress-line2.coffee
 var ShippingAddressLine2;
-var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12 = {}.hasOwnProperty;
+var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$15 = {}.hasOwnProperty;
 
 var ShippingAddressLine2$1 = ShippingAddressLine2 = (function(superClass) {
-  extend$14(ShippingAddressLine2, superClass);
+  extend$16(ShippingAddressLine2, superClass);
 
   function ShippingAddressLine2() {
     return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
@@ -15654,11 +10529,11 @@ ShippingAddressLine2.register();
 
 // src/controls/checkout/shippingaddress-name.coffee
 var ShippingAddressName;
-var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$13 = {}.hasOwnProperty;
+var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$16 = {}.hasOwnProperty;
 
 var ShippingAddressName$1 = ShippingAddressName = (function(superClass) {
-  extend$15(ShippingAddressName, superClass);
+  extend$17(ShippingAddressName, superClass);
 
   function ShippingAddressName() {
     return ShippingAddressName.__super__.constructor.apply(this, arguments);
@@ -15676,11 +10551,11 @@ ShippingAddressName.register();
 
 // src/controls/checkout/shippingaddress-postalcode.coffee
 var ShippingAddressPostalCode;
-var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$14 = {}.hasOwnProperty;
+var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$17 = {}.hasOwnProperty;
 
 var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superClass) {
-  extend$16(ShippingAddressPostalCode, superClass);
+  extend$18(ShippingAddressPostalCode, superClass);
 
   function ShippingAddressPostalCode() {
     return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
@@ -15696,13 +10571,89 @@ var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superCla
 
 ShippingAddressPostalCode.register();
 
+// node_modules/el-controls/src/controls/state-select.coffee
+var StateSelect;
+var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$19 = {}.hasOwnProperty;
+
+var StateSelect$1 = StateSelect = (function(superClass) {
+  extend$20(StateSelect, superClass);
+
+  function StateSelect() {
+    return StateSelect.__super__.constructor.apply(this, arguments);
+  }
+
+  StateSelect.prototype.tag = 'state-selection';
+
+  StateSelect.prototype.options = function() {
+    var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
+    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+    code = this.getCountry();
+    if (!code || code.length !== 2) {
+      this._optionsHash = '';
+      return;
+    }
+    code = code.toUpperCase();
+    found = false;
+    for (i = 0, len = countries.length; i < len; i++) {
+      country = countries[i];
+      if (country.code.toUpperCase() === code) {
+        found = true;
+        subdivisions = country.subdivisions;
+        optionsHash = JSON.stringify(subdivisions);
+        if (this._optionsHash === optionsHash) {
+          return this.selectOptions;
+        }
+        subdivisions = subdivisions.slice(0);
+        this._optionsHash = optionsHash;
+        this.selectOptions = options = {};
+        this.input.ref.set(this.input.name, '');
+        subdivisions.sort(function(a, b) {
+          var nameA, nameB;
+          nameA = a.name.toUpperCase();
+          nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+          subdivision = subdivisions[j];
+          options[subdivision.code.toUpperCase()] = subdivision.name;
+        }
+        break;
+      }
+    }
+    if (!found) {
+      this._optionsHash = '';
+    }
+    return options;
+  };
+
+  StateSelect.prototype.getCountry = function() {
+    return '';
+  };
+
+  StateSelect.prototype.init = function() {
+    return StateSelect.__super__.init.apply(this, arguments);
+  };
+
+  return StateSelect;
+
+})(Select$1);
+
+StateSelect.register();
+
 // src/controls/checkout/shippingaddress-state.coffee
 var ShippingAddressState;
-var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$15 = {}.hasOwnProperty;
+var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$18 = {}.hasOwnProperty;
 
 var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
-  extend$17(ShippingAddressState, superClass);
+  extend$19(ShippingAddressState, superClass);
 
   function ShippingAddressState() {
     return ShippingAddressState.__super__.constructor.apply(this, arguments);
@@ -15730,17 +10681,46 @@ var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
 
   return ShippingAddressState;
 
-})(stateSelect);
+})(StateSelect$1);
 
 ShippingAddressState.register();
 
+// node_modules/el-controls/templates/controls/checkbox.pug
+var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/checkbox.coffee
+var CheckBox;
+var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$21 = {}.hasOwnProperty;
+
+var CheckBox$1 = CheckBox = (function(superClass) {
+  extend$22(CheckBox, superClass);
+
+  function CheckBox() {
+    return CheckBox.__super__.constructor.apply(this, arguments);
+  }
+
+  CheckBox.prototype.tag = 'checkbox';
+
+  CheckBox.prototype.html = html$3;
+
+  CheckBox.prototype.getValue = function(event) {
+    return event.target.checked;
+  };
+
+  return CheckBox;
+
+})(Control$1);
+
+CheckBox.register();
+
 // src/controls/checkout/terms.coffee
 var Terms;
-var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$16 = {}.hasOwnProperty;
+var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$20 = {}.hasOwnProperty;
 
 var Terms$1 = Terms = (function(superClass) {
-  extend$18(Terms, superClass);
+  extend$21(Terms, superClass);
 
   function Terms() {
     return Terms.__super__.constructor.apply(this, arguments);
@@ -15752,17 +10732,17 @@ var Terms$1 = Terms = (function(superClass) {
 
   return Terms;
 
-})(checkbox);
+})(CheckBox$1);
 
 Terms.register();
 
 // src/controls/user/user-current-password.coffee
 var UserCurrentPassword;
-var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$17 = {}.hasOwnProperty;
+var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$22 = {}.hasOwnProperty;
 
 var UserCurrentPassword$1 = UserCurrentPassword = (function(superClass) {
-  extend$19(UserCurrentPassword, superClass);
+  extend$23(UserCurrentPassword, superClass);
 
   function UserCurrentPassword() {
     return UserCurrentPassword.__super__.constructor.apply(this, arguments);
@@ -15788,11 +10768,11 @@ UserCurrentPassword.register();
 
 // src/controls/user/user-email.coffee
 var UserEmail;
-var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$18 = {}.hasOwnProperty;
+var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$23 = {}.hasOwnProperty;
 
 var UserEmail$1 = UserEmail = (function(superClass) {
-  extend$20(UserEmail, superClass);
+  extend$24(UserEmail, superClass);
 
   function UserEmail() {
     return UserEmail.__super__.constructor.apply(this, arguments);
@@ -15810,11 +10790,11 @@ UserEmail.register();
 
 // src/controls/user/user-name.coffee
 var UserName;
-var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$19 = {}.hasOwnProperty;
+var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$24 = {}.hasOwnProperty;
 
 var UserName$1 = UserName = (function(superClass) {
-  extend$21(UserName, superClass);
+  extend$25(UserName, superClass);
 
   function UserName() {
     return UserName.__super__.constructor.apply(this, arguments);
@@ -15832,11 +10812,11 @@ UserName.register();
 
 // src/controls/user/user-password-confirm.coffee
 var UserPasswordConfirm;
-var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$20 = {}.hasOwnProperty;
+var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$25 = {}.hasOwnProperty;
 
 var UserPasswordConfirm$1 = UserPasswordConfirm = (function(superClass) {
-  extend$22(UserPasswordConfirm, superClass);
+  extend$26(UserPasswordConfirm, superClass);
 
   function UserPasswordConfirm() {
     return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
@@ -15862,11 +10842,11 @@ UserPasswordConfirm.register();
 
 // src/controls/user/user-password.coffee
 var UserPassword;
-var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$21 = {}.hasOwnProperty;
+var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$26 = {}.hasOwnProperty;
 
 var UserPassword$1 = UserPassword = (function(superClass) {
-  extend$23(UserPassword, superClass);
+  extend$27(UserPassword, superClass);
 
   function UserPassword() {
     return UserPassword.__super__.constructor.apply(this, arguments);
@@ -15886,11 +10866,11 @@ UserPassword.register();
 
 // src/controls/gift/gift-email.coffee
 var GiftEmail;
-var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$22 = {}.hasOwnProperty;
+var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$27 = {}.hasOwnProperty;
 
 GiftEmail = (function(superClass) {
-  extend$24(GiftEmail, superClass);
+  extend$28(GiftEmail, superClass);
 
   function GiftEmail() {
     return GiftEmail.__super__.constructor.apply(this, arguments);
@@ -15908,13 +10888,56 @@ var GiftEmail$1 = GiftEmail;
 
 GiftEmail.register();
 
+// node_modules/el-controls/templates/controls/textarea.pug
+var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/textbox.coffee
+var TextBox;
+var extend$30 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$29 = {}.hasOwnProperty;
+
+TextBox = (function(superClass) {
+  extend$30(TextBox, superClass);
+
+  function TextBox() {
+    return TextBox.__super__.constructor.apply(this, arguments);
+  }
+
+  TextBox.prototype.tag = 'textbox';
+
+  TextBox.prototype.html = html$4;
+
+  TextBox.prototype.formElement = 'textarea';
+
+  TextBox.prototype.instructions = '';
+
+  TextBox.prototype.rows = null;
+
+  TextBox.prototype.cols = null;
+
+  TextBox.prototype.disabled = false;
+
+  TextBox.prototype.maxlength = null;
+
+  TextBox.prototype.readonly = false;
+
+  TextBox.prototype.wrap = null;
+
+  return TextBox;
+
+})(Text$1);
+
+TextBox.register();
+
+var TextBox$1 = TextBox;
+
 // src/controls/gift/gift-message.coffee
 var GiftMessage;
-var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$23 = {}.hasOwnProperty;
+var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$28 = {}.hasOwnProperty;
 
 var GiftMessage$1 = GiftMessage = (function(superClass) {
-  extend$25(GiftMessage, superClass);
+  extend$29(GiftMessage, superClass);
 
   function GiftMessage() {
     return GiftMessage.__super__.constructor.apply(this, arguments);
@@ -15932,11 +10955,11 @@ GiftMessage.register();
 
 // src/controls/gift/gift-toggle.coffee
 var GiftToggle;
-var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$24 = {}.hasOwnProperty;
+var extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$30 = {}.hasOwnProperty;
 
 var GiftToggle$1 = GiftToggle = (function(superClass) {
-  extend$26(GiftToggle, superClass);
+  extend$31(GiftToggle, superClass);
 
   function GiftToggle() {
     return GiftToggle.__super__.constructor.apply(this, arguments);
@@ -15948,17 +10971,17 @@ var GiftToggle$1 = GiftToggle = (function(superClass) {
 
   return GiftToggle;
 
-})(checkbox);
+})(CheckBox$1);
 
 GiftToggle.register();
 
 // src/controls/gift/gift-type.coffee
 var GiftType;
-var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$25 = {}.hasOwnProperty;
+var extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$31.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$31 = {}.hasOwnProperty;
 
 GiftType = (function(superClass) {
-  extend$27(GiftType, superClass);
+  extend$32(GiftType, superClass);
 
   function GiftType() {
     return GiftType.__super__.constructor.apply(this, arguments);
@@ -15979,17 +11002,19 @@ var GiftType$1 = GiftType;
 // src/controls/index.coffee
 
 // src/events.coffee
-var Events$1$1;
+var Events$1;
 
-var Events$2 = Events$1$1 = {
+var Events$2 = Events$1 = {
+  Started: 'started',
   Ready: 'ready',
-  LoadData: 'load-data',
+  AsyncReady: 'async-ready',
+  GeoReady: 'geo-ready',
   TryUpdateItem: 'try-update-item',
   UpdateItem: 'update-item',
   UpdateItems: 'update-items',
-  Change: Events$1.Change,
-  ChangeSuccess: Events$1.ChangeSuccess,
-  ChangeFailed: Events$1.ChangeFailed,
+  Change: ControlEvents.Change,
+  ChangeSuccess: ControlEvents.ChangeSuccess,
+  ChangeFailed: ControlEvents.ChangeFailed,
   Checkout: 'checkout',
   ContinueShopping: 'continue-shopping',
   Submit: 'submit',
@@ -16269,15 +11294,15 @@ var configs = config = {
 };
 
 // templates/containers/checkout.pug
-var html$2$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
+var html$5 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
 
 // src/containers/checkout.coffee
 var CheckoutForm;
-var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$26 = {}.hasOwnProperty;
+var extend$33 = function(child, parent) { for (var key in parent) { if (hasProp$32.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$32 = {}.hasOwnProperty;
 
 CheckoutForm = (function(superClass) {
-  extend$28(CheckoutForm, superClass);
+  extend$33(CheckoutForm, superClass);
 
   function CheckoutForm() {
     return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -16285,7 +11310,7 @@ CheckoutForm = (function(superClass) {
 
   CheckoutForm.prototype.tag = 'checkout';
 
-  CheckoutForm.prototype.html = html$2$1;
+  CheckoutForm.prototype.html = html$5;
 
   CheckoutForm.prototype.errorMessage = '';
 
@@ -16436,15 +11461,15 @@ CheckoutForm.register();
 var Checkout = CheckoutForm;
 
 // templates/containers/checkout-card.pug
-var html$3$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$6 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-card.coffee
 var CheckoutCardForm;
-var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$27 = {}.hasOwnProperty;
+var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$33 = {}.hasOwnProperty;
 
 CheckoutCardForm = (function(superClass) {
-  extend$29(CheckoutCardForm, superClass);
+  extend$34(CheckoutCardForm, superClass);
 
   function CheckoutCardForm() {
     return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -16452,7 +11477,7 @@ CheckoutCardForm = (function(superClass) {
 
   CheckoutCardForm.prototype.tag = 'checkout-card';
 
-  CheckoutCardForm.prototype.html = html$3$1;
+  CheckoutCardForm.prototype.html = html$6;
 
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -16485,15 +11510,15 @@ CheckoutCardForm.register();
 var CheckoutCard = CheckoutCardForm;
 
 // templates/containers/checkout-shippingaddress.pug
-var html$4$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-shippingaddress.coffee
 var CheckoutShippingAddressForm;
-var extend$30 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$28 = {}.hasOwnProperty;
+var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$34 = {}.hasOwnProperty;
 
 CheckoutShippingAddressForm = (function(superClass) {
-  extend$30(CheckoutShippingAddressForm, superClass);
+  extend$35(CheckoutShippingAddressForm, superClass);
 
   function CheckoutShippingAddressForm() {
     return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -16501,7 +11526,7 @@ CheckoutShippingAddressForm = (function(superClass) {
 
   CheckoutShippingAddressForm.prototype.tag = 'checkout-shippingaddress';
 
-  CheckoutShippingAddressForm.prototype.html = html$4$1;
+  CheckoutShippingAddressForm.prototype.html = html$7;
 
   CheckoutShippingAddressForm.prototype.paged = false;
 
@@ -16547,15 +11572,15 @@ CheckoutShippingAddressForm.register();
 var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
 // templates/containers/cart.pug
-var html$5 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+var html$8 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
 // src/containers/cart.coffee
 var CartForm;
-var extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$29 = {}.hasOwnProperty;
+var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$35 = {}.hasOwnProperty;
 
 CartForm = (function(superClass) {
-  extend$31(CartForm, superClass);
+  extend$36(CartForm, superClass);
 
   function CartForm() {
     return CartForm.__super__.constructor.apply(this, arguments);
@@ -16563,7 +11588,7 @@ CartForm = (function(superClass) {
 
   CartForm.prototype.tag = 'cart';
 
-  CartForm.prototype.html = html$5;
+  CartForm.prototype.html = html$8;
 
   CartForm.prototype.init = function() {
     var promoCode;
@@ -16674,15 +11699,15 @@ CartForm.register();
 var Cart$1$1 = CartForm;
 
 // templates/containers/lineitem.pug
-var html$6 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+var html$9 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
 // src/containers/lineitem.coffee
 var LineItemForm;
-var extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$30 = {}.hasOwnProperty;
+var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$36 = {}.hasOwnProperty;
 
 LineItemForm = (function(superClass) {
-  extend$32(LineItemForm, superClass);
+  extend$37(LineItemForm, superClass);
 
   function LineItemForm() {
     return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -16690,7 +11715,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$6;
+  LineItemForm.prototype.html = html$9;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -16713,15 +11738,15 @@ LineItemForm.register();
 var LineItem = LineItemForm;
 
 // templates/containers/lineitems.pug
-var html$7 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$10 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/containers/lineitems.coffee
 var LineItems;
-var extend$33 = function(child, parent) { for (var key in parent) { if (hasProp$31.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$31 = {}.hasOwnProperty;
+var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$37 = {}.hasOwnProperty;
 
 LineItems = (function(superClass) {
-  extend$33(LineItems, superClass);
+  extend$38(LineItems, superClass);
 
   function LineItems() {
     return LineItems.__super__.constructor.apply(this, arguments);
@@ -16729,7 +11754,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$7;
+  LineItems.prototype.html = html$10;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -16754,15 +11779,15 @@ LineItems.register();
 var LineItems$1 = LineItems;
 
 // templates/containers/login.pug
-var html$8 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
+var html$11 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
 
 // src/containers/login.coffee
 var LoginForm;
-var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$32.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$32 = {}.hasOwnProperty;
+var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$38 = {}.hasOwnProperty;
 
 LoginForm = (function(superClass) {
-  extend$34(LoginForm, superClass);
+  extend$39(LoginForm, superClass);
 
   function LoginForm() {
     return LoginForm.__super__.constructor.apply(this, arguments);
@@ -16770,7 +11795,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$8;
+  LoginForm.prototype.html = html$11;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -16811,15 +11836,15 @@ LoginForm.register();
 var Login = LoginForm;
 
 // templates/containers/order.pug
-var html$9 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+var html$12 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
 // src/containers/order.coffee
 var OrderForm;
-var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$33 = {}.hasOwnProperty;
+var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$39 = {}.hasOwnProperty;
 
 OrderForm = (function(superClass) {
-  extend$35(OrderForm, superClass);
+  extend$40(OrderForm, superClass);
 
   function OrderForm() {
     return OrderForm.__super__.constructor.apply(this, arguments);
@@ -16827,7 +11852,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$9;
+  OrderForm.prototype.html = html$12;
 
   OrderForm.prototype.parentData = null;
 
@@ -16867,15 +11892,15 @@ OrderForm.register();
 var Order = OrderForm;
 
 // templates/containers/orders.pug
-var html$10 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+var html$13 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
 // src/containers/orders.coffee
 var Orders;
-var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$34 = {}.hasOwnProperty;
+var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$40 = {}.hasOwnProperty;
 
 Orders = (function(superClass) {
-  extend$36(Orders, superClass);
+  extend$41(Orders, superClass);
 
   function Orders() {
     return Orders.__super__.constructor.apply(this, arguments);
@@ -16883,7 +11908,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$10;
+  Orders.prototype.html = html$13;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -16898,15 +11923,15 @@ Orders.register();
 var Orders$1 = Orders;
 
 // templates/containers/form.pug
-var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/containers/profile.coffee
 var ProfileForm;
-var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$35 = {}.hasOwnProperty;
+var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$41 = {}.hasOwnProperty;
 
 ProfileForm = (function(superClass) {
-  extend$37(ProfileForm, superClass);
+  extend$42(ProfileForm, superClass);
 
   function ProfileForm() {
     return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -16914,7 +11939,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$11;
+  ProfileForm.prototype.html = html$14;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -17016,15 +12041,15 @@ ProfileForm.register();
 var Profile = ProfileForm;
 
 // templates/containers/register.pug
-var html$12 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
+var html$15 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
 
 // src/containers/register.coffee
 var RegisterForm;
-var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$36 = {}.hasOwnProperty;
+var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$42 = {}.hasOwnProperty;
 
 RegisterForm = (function(superClass) {
-  extend$38(RegisterForm, superClass);
+  extend$43(RegisterForm, superClass);
 
   function RegisterForm() {
     return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -17032,7 +12057,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$12;
+  RegisterForm.prototype.html = html$15;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -17109,11 +12134,11 @@ var Register = RegisterForm;
 
 // src/containers/register-complete.coffee
 var RegisterCompleteForm;
-var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$37 = {}.hasOwnProperty;
+var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$43 = {}.hasOwnProperty;
 
 RegisterCompleteForm = (function(superClass) {
-  extend$39(RegisterCompleteForm, superClass);
+  extend$44(RegisterCompleteForm, superClass);
 
   function RegisterCompleteForm() {
     return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17121,7 +12146,7 @@ RegisterCompleteForm = (function(superClass) {
 
   RegisterCompleteForm.prototype.tag = 'register-complete';
 
-  RegisterCompleteForm.prototype.html = html$11;
+  RegisterCompleteForm.prototype.html = html$14;
 
   RegisterCompleteForm.prototype.twoStageSignUp = false;
 
@@ -17184,15 +12209,15 @@ RegisterCompleteForm.register();
 var RegisterComplete = RegisterCompleteForm;
 
 // templates/containers/reset-password.pug
-var html$13 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
+var html$16 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
 
 // src/containers/reset-password.coffee
 var ResetPasswordForm;
-var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$38 = {}.hasOwnProperty;
+var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$44 = {}.hasOwnProperty;
 
 ResetPasswordForm = (function(superClass) {
-  extend$40(ResetPasswordForm, superClass);
+  extend$45(ResetPasswordForm, superClass);
 
   function ResetPasswordForm() {
     return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -17200,7 +12225,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$13;
+  ResetPasswordForm.prototype.html = html$16;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -17243,15 +12268,15 @@ ResetPasswordForm.register();
 var ResetPassword = ResetPasswordForm;
 
 // templates/containers/reset-password-complete.pug
-var html$14 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
+var html$17 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
 
 // src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
-var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$39 = {}.hasOwnProperty;
+var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$45 = {}.hasOwnProperty;
 
 ResetPasswordCompleteForm = (function(superClass) {
-  extend$41(ResetPasswordCompleteForm, superClass);
+  extend$46(ResetPasswordCompleteForm, superClass);
 
   function ResetPasswordCompleteForm() {
     return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17259,7 +12284,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$14;
+  ResetPasswordCompleteForm.prototype.html = html$17;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -17309,11 +12334,11 @@ var ResetPasswordComplete = ResetPasswordCompleteForm;
 
 // src/containers/shippingaddress.coffee
 var ShippingAddressForm;
-var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$40 = {}.hasOwnProperty;
+var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$46 = {}.hasOwnProperty;
 
 ShippingAddressForm = (function(superClass) {
-  extend$42(ShippingAddressForm, superClass);
+  extend$47(ShippingAddressForm, superClass);
 
   function ShippingAddressForm() {
     return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -17321,7 +12346,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$11;
+  ShippingAddressForm.prototype.html = html$14;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -17402,15 +12427,15 @@ var Containers = Forms = {
 };
 
 // templates/widgets/cart-counter.pug
-var html$15 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$18 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$41 = {}.hasOwnProperty;
+var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$47 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$43(CartCounter, superClass);
+  extend$48(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -17418,7 +12443,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$15;
+  CartCounter.prototype.html = html$18;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -17455,18 +12480,18 @@ CartCounter.register();
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$16 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$19 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$42 = {}.hasOwnProperty;
+var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$48 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$44(CheckoutModal, superClass);
+  extend$49(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -17474,7 +12499,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$16;
+  CheckoutModal.prototype.html = html$19;
 
   CheckoutModal.prototype.names = null;
 
@@ -17582,15 +12607,15 @@ CheckoutModal.register();
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/side-pane.pug
-var html$17 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$20 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$43 = {}.hasOwnProperty;
+var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$49 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$45(SidePane, superClass);
+  extend$50(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -17598,7 +12623,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$17;
+  SidePane.prototype.html = html$20;
 
   SidePane.prototype.id = '';
 
@@ -17844,7 +12869,7 @@ function setHookCallback (callback) {
 }
 
 // node_modules/moment/src/lib/utils/is-array.js
-function isArray$5(input) {
+function isArray$2(input) {
     return input instanceof Array || Object.prototype.toString.call(input) === '[object Array]';
 }
 
@@ -17895,7 +12920,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$46(a, b) {
+function extend$51(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -18002,7 +13027,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$46(getParsingFlags(m), flags);
+        extend$51(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -18134,7 +13159,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$46(function () {
+    return extend$51(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -18202,13 +13227,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$46({}, parentConfig), prop;
+    var res = extend$51({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                 res[prop] = {};
-                extend$46(res[prop], parentConfig[prop]);
-                extend$46(res[prop], childConfig[prop]);
+                extend$51(res[prop], parentConfig[prop]);
+                extend$51(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -18221,7 +13246,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$3(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$46({}, res[prop]);
+            res[prop] = extend$51({}, res[prop]);
         }
     }
     return res;
@@ -18705,20 +13730,20 @@ var MONTHS_IN_FORMAT = /D[oD]?(\[[^\[\]]*\]|\s)+MMMM?/;
 var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
 function localeMonths (m, format) {
     if (!m) {
-        return isArray$5(this._months) ? this._months :
+        return isArray$2(this._months) ? this._months :
             this._months['standalone'];
     }
-    return isArray$5(this._months) ? this._months[m.month()] :
+    return isArray$2(this._months) ? this._months[m.month()] :
         this._months[(this._months.isFormat || MONTHS_IN_FORMAT).test(format) ? 'format' : 'standalone'][m.month()];
 }
 
 var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
 function localeMonthsShort (m, format) {
     if (!m) {
-        return isArray$5(this._monthsShort) ? this._monthsShort :
+        return isArray$2(this._monthsShort) ? this._monthsShort :
             this._monthsShort['standalone'];
     }
-    return isArray$5(this._monthsShort) ? this._monthsShort[m.month()] :
+    return isArray$2(this._monthsShort) ? this._monthsShort[m.month()] :
         this._monthsShort[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
 }
 
@@ -19220,10 +14245,10 @@ function parseIsoWeekday(input, locale) {
 var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
 function localeWeekdays (m, format) {
     if (!m) {
-        return isArray$5(this._weekdays) ? this._weekdays :
+        return isArray$2(this._weekdays) ? this._weekdays :
             this._weekdays['standalone'];
     }
-    return isArray$5(this._weekdays) ? this._weekdays[m.day()] :
+    return isArray$2(this._weekdays) ? this._weekdays[m.day()] :
         this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
 }
 
@@ -19804,7 +14829,7 @@ function getLocale (key) {
         return globalLocale;
     }
 
-    if (!isArray$5(key)) {
+    if (!isArray$2(key)) {
         //short-circuit everything else
         locale = loadLocale(key);
         if (locale) {
@@ -20052,7 +15077,7 @@ hooks.createFromInputFallback = deprecate(
 
 // node_modules/moment/src/lib/utils/defaults.js
 // Pick the first defined of two or three arguments.
-function defaults$2(a, b, c) {
+function defaults$1(a, b, c) {
     if (a != null) {
         return a;
     }
@@ -20092,7 +15117,7 @@ function configFromArray (config) {
 
     //if the day of the year is set, figure out what it is
     if (config._dayOfYear != null) {
-        yearToUse = defaults$2(config._a[YEAR], currentDate[YEAR]);
+        yearToUse = defaults$1(config._a[YEAR], currentDate[YEAR]);
 
         if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
             getParsingFlags(config)._overflowDayOfYear = true;
@@ -20150,9 +15175,9 @@ function dayOfYearFromWeekInfo(config) {
         // how we interpret now (local, utc, fixed offset). So create
         // a now version of current config (take local/utc/offset flags, and
         // create now).
-        weekYear = defaults$2(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
-        week = defaults$2(w.W, 1);
-        weekday = defaults$2(w.E, 1);
+        weekYear = defaults$1(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
+        week = defaults$1(w.W, 1);
+        weekday = defaults$1(w.E, 1);
         if (weekday < 1 || weekday > 7) {
             weekdayOverflow = true;
         }
@@ -20162,10 +15187,10 @@ function dayOfYearFromWeekInfo(config) {
 
         var curWeek = weekOfYear(createLocal(), dow, doy);
 
-        weekYear = defaults$2(w.gg, config._a[YEAR], curWeek.year);
+        weekYear = defaults$1(w.gg, config._a[YEAR], curWeek.year);
 
         // Default to current week.
-        week = defaults$2(w.w, curWeek.week);
+        week = defaults$1(w.w, curWeek.week);
 
         if (w.d != null) {
             // weekday -- low day numbers are considered next week
@@ -20343,7 +15368,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$46(config, bestMoment || tempConfig);
+    extend$51(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -20390,7 +15415,7 @@ function prepareConfig (config) {
         return new Moment(checkOverflow(input));
     } else if (isDate(input)) {
         config._d = input;
-    } else if (isArray$5(format)) {
+    } else if (isArray$2(format)) {
         configFromStringAndArray(config);
     } else if (format) {
         configFromStringAndFormat(config);
@@ -20413,7 +15438,7 @@ function configFromInput(config) {
         config._d = new Date(input.valueOf());
     } else if (typeof input === 'string') {
         configFromString(config);
-    } else if (isArray$5(input)) {
+    } else if (isArray$2(input)) {
         config._a = map(input.slice(0), function (obj) {
             return parseInt(obj, 10);
         });
@@ -20437,7 +15462,7 @@ function createLocalOrUTC (input, format, locale, strict, isUTC) {
     }
 
     if ((isObject$3(input) && isObjectEmpty(input)) ||
-            (isArray$5(input) && input.length === 0)) {
+            (isArray$2(input) && input.length === 0)) {
         input = undefined;
     }
     // object construction must be done this way.
@@ -20489,7 +15514,7 @@ var prototypeMax = deprecate(
 // first element is an array of moment objects.
 function pickBy(fn, moments) {
     var res, i;
-    if (moments.length === 1 && isArray$5(moments[0])) {
+    if (moments.length === 1 && isArray$2(moments[0])) {
         moments = moments[0];
     }
     if (!moments.length) {
@@ -21352,7 +16377,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$46({}, getParsingFlags(this));
+    return extend$51({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -23076,7 +18101,7 @@ Controls = {
   Control: Control$1,
   Text: Text$1,
   TextBox: TextBox$1,
-  Checkbox: checkbox,
+  Checkbox: CheckBox$1,
   Select: Select$1,
   QuantitySelect: QuantitySelect$1,
   UserEmail: UserEmail$1,
@@ -23114,10 +18139,6 @@ Shop$1.Containers = Containers;
 Shop$1.Widgets = Widgets$1;
 
 Shop$1.El = El$1;
-
-window.renderCurrency = renderUICurrencyFromJSON;
-
-window.renderDate = renderDate;
 
 Shop$1.use = function(templates) {
   var ref, ref1;
@@ -23265,13 +18286,24 @@ initData = function(opts) {
                 index$1.set('default-country', country);
                 if (countriesReady) {
                   data.set('order.shippingAddress.country', country);
-                  return data.set('order.shippingAddress.state', state);
+                  data.set('order.shippingAddress.state', state);
                 }
               }
+              return m$1.trigger(Events$2.GeoReady, {
+                status: 'success',
+                geolocation: position,
+                gmaps: results
+              });
             }
           });
         };
       })(this));
+    } else {
+      requestAnimationFrame(function() {
+        return m$1.trigger(Events$2.GeoReady, {
+          status: 'disabled'
+        });
+      });
     }
   }
   data.on('set', function(k, v) {
@@ -23297,10 +18329,10 @@ initClient = function(opts) {
 };
 
 initCart = function(client, data, cartOptions) {
-  var cart, countries, i, item, items, lastChecked, len, shippingRates, taxRates;
+  var cart, countries, i, item, items, lastChecked, len, ref4, shippingRates, taxRates;
   cart = new Cart$1(client, data);
   lastChecked = index$1.get('lastChecked');
-  countries = index$1.get('countries');
+  countries = (ref4 = index$1.get('countries')) != null ? ref4 : [];
   taxRates = index$1.get('taxRates');
   shippingRates = index$1.get('shippingRates');
   data.set('countries', countries);
@@ -23308,15 +18340,15 @@ initCart = function(client, data, cartOptions) {
   data.set('shippingRates', shippingRates);
   lastChecked = renderDate(new Date(), rfc3339);
   client.library.shopjs({
-    hasCountries: !!countries,
+    hasCountries: !!countries && countries.length !== 0,
     hasTaxRates: !!taxRates,
     hasShippingRates: !!shippingRates,
     lastChecked: renderDate(lastChecked || '2000-01-01', rfc3339)
   }).then(function(res) {
-    var ref4, ref5, ref6, ref7, ref8;
-    countries = (ref4 = res.countries) != null ? ref4 : countries;
-    taxRates = (ref5 = res.taxRates) != null ? ref5 : taxRates;
-    shippingRates = (ref6 = res.shippingRates) != null ? ref6 : shippingRates;
+    var ref5, ref6, ref7, ref8, ref9;
+    countries = (ref5 = res.countries) != null ? ref5 : countries;
+    taxRates = (ref6 = res.taxRates) != null ? ref6 : taxRates;
+    shippingRates = (ref7 = res.shippingRates) != null ? ref7 : shippingRates;
     index$1.set('countries', countries);
     index$1.set('taxRates', taxRates);
     index$1.set('shippingRates', shippingRates);
@@ -23327,15 +18359,16 @@ initCart = function(client, data, cartOptions) {
     if (res.currency) {
       data.set('order.currency', res.currency);
     }
-    cart.taxRates((ref7 = res.taxRates) != null ? ref7 : taxRates);
-    cart.shippingRates((ref8 = res.shippingRates) != null ? ref8 : shippingRates);
+    cart.taxRates((ref8 = res.taxRates) != null ? ref8 : taxRates);
+    cart.shippingRates((ref9 = res.shippingRates) != null ? ref9 : shippingRates);
     cart.invoice();
+    m$1.trigger(Events$2.AsyncReady, res);
     return El$1.scheduleUpdate();
   });
   cart.onCart = function() {
-    var _, mcCId, ref4;
+    var _, mcCId, ref5;
     index$1.set('cartId', data.get('order.cartId'));
-    ref4 = getMCIds(), _ = ref4[0], mcCId = ref4[1];
+    ref5 = getMCIds(), _ = ref5[0], mcCId = ref5[1];
     cart = {
       mailchimp: {
         checkoutUrl: data.get('order.checkoutUrl')
@@ -23383,7 +18416,7 @@ initCart = function(client, data, cartOptions) {
 };
 
 initMediator = function(data, cart) {
-  m$1.on(Events$2.LoadData, function(data) {
+  m$1.on(Events$2.Started, function(data) {
     cart.invoice();
     return El$1.scheduleUpdate();
   });
@@ -23465,7 +18498,7 @@ Shop$1.start = function(opts) {
     var ref5;
     return typeof window !== "undefined" && window !== null ? (ref5 = window.Raven) != null ? ref5.captureException(err) : void 0 : void 0;
   });
-  m$1.trigger(Events$2.LoadData, this.data);
+  m$1.trigger(Events$2.Started, this.data);
   return m$1;
 };
 
@@ -23475,6 +18508,14 @@ Shop$1.initCart = function() {
 
 Shop$1.clear = function() {
   return this.cart.clear();
+};
+
+Shop$1.getMediator = function() {
+  return m$1;
+};
+
+Shop$1.getData = function() {
+  return this.data;
 };
 
 Shop$1.isEmpty = function() {
@@ -23536,6 +18577,12 @@ if ((typeof document !== "undefined" && document !== null ? document.currentScri
       return Shop$1.start(opts);
     });
   }
+}
+
+if (typeof window !== "undefined" && window !== null) {
+  window.Shop = Shop$1;
+  window.renderCurrency = renderUICurrencyFromJSON;
+  window.renderDate = renderDate;
 }
 
 var Shop$2 = Shop$1;
