@@ -350,8 +350,8 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 [ludela]:           https://ludela.com
 [stonedaudio]:      https://stoned.audio
 
-[build-img]:        https://img.shields.io/travis/hanzo-io/shop.js.svg
-[build-url]:        https://travis-ci.org/hanzo-io/shop.js
+[build-img]:        https://circleci.com/gh/hanzoai/shop.js.svg?style=shield&circle-token=:circle-token
+[build-url]:        https://circleci.com/gh/hanzoai/shop.js
 [chat-img]:         https://badges.gitter.im/join-chat.svg
 [chat-url]:         https://gitter.im/hanzo-io/chat
 [coverage-img]:     https://coveralls.io/repos/hanzo-io/shop.js/badge.svg?branch=master&service=github
