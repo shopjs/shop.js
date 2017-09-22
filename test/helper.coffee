@@ -8,8 +8,8 @@ Nightmare = require 'nightmare'
 
 before ->
   browser = Nightmare
-    show: true
-    # show: process.env.VERBOSE is 'true'
+    # show: true
+    show: process.env.VERBOSE is 'true'
     # switches:
     #   'proxy-server':              'http://localhost:4010'
     #   'ignore-certificate-errors': true
