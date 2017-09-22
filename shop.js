@@ -9777,7 +9777,7 @@ if (document.createElement("input").placeholder == null) {
 var placeholder = exports$1;
 
 // node_modules/el-controls/templates/controls/text.pug
-var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // node_modules/el-controls/src/controls/text.coffee
 var Text;
@@ -10226,7 +10226,7 @@ CardNumber.register();
 var CardNumber$1 = CardNumber;
 
 // node_modules/el-controls/templates/controls/input-normal-placeholder.pug
-var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/checkout/promocode.coffee
 var PromoCode;
@@ -10253,7 +10253,7 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 PromoCode.register();
 
 // node_modules/el-controls/templates/controls/select.pug
-var html$2 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$2 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // node_modules/el-controls/src/controls/select.coffee
 var Select;
@@ -10686,7 +10686,7 @@ var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
 ShippingAddressState.register();
 
 // node_modules/el-controls/templates/controls/checkbox.pug
-var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // node_modules/el-controls/src/controls/checkbox.coffee
 var CheckBox;
@@ -10889,7 +10889,7 @@ var GiftEmail$1 = GiftEmail;
 GiftEmail.register();
 
 // node_modules/el-controls/templates/controls/textarea.pug
-var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // node_modules/el-controls/src/controls/textbox.coffee
 var TextBox;

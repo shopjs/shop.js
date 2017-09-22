@@ -94,7 +94,7 @@ describe 'Shop.js', ->
     data.countries.length.should.eq 247
 
   it 'should initialize the checkout modal', ->
-    console.log 'This test needs internet access and is syncrhonous'
+    console.log 'This test needs internet access and is synchronous'
 
     ret = yield browser.evaluate (key, endpoint)->
       ret = []
@@ -102,21 +102,23 @@ describe 'Shop.js', ->
       m = Shop.getMediator()
       data = Shop.getData()
 
+      Shop.addItem 'red-shirt', 1
+
       return new Promise (resolve, reject)->
         m.one 'checkout-open', ->
-          $userName = $('[id="user.name"]')
+          $userName = $('#user-name')
             .val 'FirstName LastName'
-          $userEmail = $('[id="user.email"]')
+          $userEmail = $('#user-email')
             .val 'email@email.com'
 
           # this should be automatic
-          # $paymentAccountName = $('[id="payment.account.name"]')
+          # $paymentAccountName = $('#payment.account.name')
           #   .val 'FirstName LastName'
-          $paymentAccountNumber = $('[id="payment.account.number"]')
+          $paymentAccountNumber = $('#payment-account-number')
             .val '4242 4242 4242 4242'
-          $paymentAccountExpiry = $('[id="payment.account.expiry"]')
+          $paymentAccountExpiry = $('#payment-account-expiry')
             .val '04 / 24'
-          $paymentAccountCVC = $('[id="payment.account.cvc"]')
+          $paymentAccountCVC = $('#payment-account-cvc')
             .val '424'
 
           fireEvent($userName[0], 'change')
@@ -127,15 +129,40 @@ describe 'Shop.js', ->
           fireEvent($paymentAccountCVC[0], 'change')
 
           setTimeout ->
-            $('.checkout-next').click()
+            $('checkout-card .checkout-next').click()
           , 1000
 
         m.one 'submit-card', ->
-          $shippingAddressLine1 = $('id=["order.shippingAddress.line1"]')
-            .val '405 Southwest Blvd'
-          $shippingAddressLine2 = $('id=["order.shippingAddress.line2"]')
-            .val '#200'
+          $shippingAddressCountry = $('#order-shippingAddress-country')
+            .val 'US'
+          fireEvent($shippingAddressCountry[0], 'change')
 
+          # Address needs to be changed after country is
+          setTimeout ->
+            $shippingAddressLine1 = $('#order-shippingAddress-line1')
+              .val '405 Southwest Blvd'
+            $shippingAddressLine2 = $('#order-shippingAddress-line2')
+              .val '#200'
+            $shippingAddressCity = $('#order-shippingAddress-city')
+              .val 'Kansas City'
+            $shippingAddressState = $('#order-shippingAddress-state')
+              .val 'MO'
+            $shippingAddressPostalCode = $('#order-shippingAddress-postalCode')
+              .val '64108'
+            $terms = $('#terms')
+              .prop 'checked', true
+
+            fireEvent($shippingAddressLine1[0], 'change')
+            fireEvent($shippingAddressLine2[0], 'change')
+            fireEvent($shippingAddressCity[0], 'change')
+            fireEvent($shippingAddressState[0], 'change')
+            fireEvent($shippingAddressPostalCode[0], 'change')
+            fireEvent($terms[0], 'change')
+          , 500
+
+          setTimeout ->
+            $('checkout .checkout-next').click()
+          , 1500
 
         m.one 'submit-success', ->
           resolve true
