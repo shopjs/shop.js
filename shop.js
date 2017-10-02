@@ -442,13 +442,141 @@ var caf = cancelAnimationFrame = function(handle) {
   }
 };
 
-// src/utils/patches.coffee
-var agent;
-var ieMajor;
-var ieMinor;
-var matches;
-var reg;
+// src/utils/polyfills/addeventlistener.coffee
+var addEventPoly = function() {
+  var addEvent, addListen, doc, docHijack, win;
+  if (!window || !document) {
+    return;
+  }
+  win = window;
+  doc = document;
+  docHijack = function(p) {
+    var old;
+    old = doc[p];
+    doc[p] = function(v) {
+      return addListen(old(v));
+    };
+  };
+  addEvent = function(event, fn, self) {
+    return (self = this).attachEvent('on' + event, function(ev) {
+      var e;
+      e = ev || win.event;
+      e.preventDefault = e.preventDefault || function() {
+        e.returnValue = false;
+      };
+      e.stopPropagation = e.stopPropagation || function() {
+        e.cancelBubble = true;
+      };
+      fn.call(self, e);
+    });
+  };
+  addListen = function(obj, i) {
+    if (i = obj.length) {
+      while (i--) {
+        obj[i].addEventListener = addEvent;
+      }
+    } else {
+      obj.addEventListener = addEvent;
+    }
+    return obj;
+  };
+  if (win.addEventListener) {
+    return;
+  }
+  addListen([doc, win]);
+  if ('Element' in win) {
+    return win.Element.prototype.addEventListener = addEvent;
+  } else {
+    doc.attachEvent('onreadystatechange', function() {
+      addListen(doc.all);
+    });
+    docHijack('getElementsByTagName');
+    docHijack('getElementById');
+    docHijack('createElement');
+    return addListen(doc.all);
+  }
+};
 
+// src/utils/polyfills/classlist.coffee
+var classListPoly = function() {
+  var DOMTokenList, defineElementGetter, join, prototype, push, splice;
+  if (!window) {
+    return;
+  }
+  DOMTokenList = function(el) {
+    var classes, i;
+    this.el = el;
+    classes = el.className.replace(/^\s+|\s+$/g, '').split(/\s+/);
+    i = 0;
+    while (i < classes.length) {
+      push.call(this, classes[i]);
+      i++;
+    }
+  };
+  defineElementGetter = function(obj, prop, getter) {
+    if (Object.defineProperty) {
+      Object.defineProperty(obj, prop, {
+        get: getter
+      });
+    } else {
+      obj.__defineGetter__(prop, getter);
+    }
+  };
+  if (typeof window.Element === 'undefined' || 'classList' in document.documentElement) {
+    return;
+  }
+  prototype = Array.prototype;
+  push = prototype.push;
+  splice = prototype.splice;
+  join = prototype.join;
+  DOMTokenList.prototype = {
+    add: function(token) {
+      if (this.contains(token)) {
+        return;
+      }
+      push.call(this, token);
+      this.el.className = this.toString();
+    },
+    contains: function(token) {
+      return this.el.className.indexOf(token) !== -1;
+    },
+    item: function(index) {
+      return this[index] || null;
+    },
+    remove: function(token) {
+      var i;
+      if (!this.contains(token)) {
+        return;
+      }
+      i = 0;
+      while (i < this.length) {
+        if (this[i] === token) {
+          break;
+        }
+        i++;
+      }
+      splice.call(this, i, 1);
+      this.el.className = this.toString();
+    },
+    toString: function() {
+      return join.call(this, ' ');
+    },
+    toggle: function(token) {
+      if (!this.contains(token)) {
+        this.add(token);
+      } else {
+        this.remove(token);
+      }
+      return this.contains(token);
+    }
+  };
+  window.DOMTokenList = DOMTokenList;
+  return defineElementGetter(Element.prototype, 'classList', function() {
+    return new DOMTokenList(this);
+  });
+};
+
+// src/utils/patches.coffee
 if (window.Promise == null) {
   window.Promise = Promise$2;
 }
@@ -461,16 +589,9 @@ if (window.cancelAnimationFrame == null) {
   window.cancelAnimationFrame = raf$1.cancel;
 }
 
-agent = navigator.userAgent;
+addEventPoly();
 
-reg = /MSIE\s?(\d+)(?:\.(\d+))?/i;
-
-matches = agent.match(reg);
-
-if (matches != null) {
-  ieMajor = matches[1];
-  ieMinor = matches[2];
-}
+classListPoly();
 
 // node_modules/es-tostring/index.mjs
 var toString = function(obj) {
@@ -5375,6 +5496,13 @@ createBlueprint = function(name) {
 };
 
 blueprints = {
+  library: {
+    shopjs: {
+      url: '/library/shopjs',
+      method: POST,
+      expects: statusOk
+    }
+  },
   account: {
     get: {
       url: '/account',
@@ -5589,6 +5717,73 @@ var analytics$1 = analytics = {
       }
     }
   }
+};
+
+// src/util.coffee
+var clean = function(str) {
+  if (str == null) {
+    str = '';
+  }
+  return str.toUpperCase().replace(/\s/g, '');
+};
+
+var matchesGeoRate = function(g, country, state, city, postalCode) {
+  var code, codes, ct, ctr, j, len, pc, st;
+  ctr = clean(country);
+  st = clean(state);
+  ct = clean(city);
+  pc = clean(postalCode);
+  if (!ctr || !st || (!ct && !pc)) {
+    return [false, 0];
+  }
+  if (!g.country) {
+    return [true, 0];
+  }
+  if (g.country === ctr) {
+    if (!g.state) {
+      return [true, 1];
+    }
+    if (g.state === st) {
+      if (!g.city && !g.postalCodes) {
+        return [true, 2];
+      }
+      if (g.city && g.city === ct) {
+        return [true, 3];
+      }
+      if (g.postalCodes) {
+        codes = g.postalCodes.split(',');
+        for (j = 0, len = codes.length; j < len; j++) {
+          code = codes[j];
+          if (code === pc) {
+            return [true, 3];
+          }
+        }
+      }
+      return [false, 2];
+    }
+    return [false, 1];
+  }
+  return [false, 0];
+};
+
+var closestGeoRate = function(grs, ctr, st, ct, pc) {
+  var currentLevel, gr, i, idx, isMatch, level, ref, retGr;
+  retGr = null;
+  currentLevel = -1;
+  idx = -1;
+  for (i in grs) {
+    gr = grs[i];
+    ref = matchesGeoRate(gr, ctr, st, ct, pc), isMatch = ref[0], level = ref[1];
+    if (isMatch && level > currentLevel) {
+      if (level === 3) {
+        return [gr, level, parseInt(i, 10)];
+      }
+      retGr = grs[i];
+      currentLevel = level;
+      idx = i;
+    }
+  }
+  return [retGr, currentLevel, parseInt(idx, 10)];
 };
 
 // src/cart.coffee
@@ -5980,7 +6175,7 @@ Cart = (function() {
   };
 
   Cart.prototype.invoice = function() {
-    var city, country, coupon, discount, item, items, j, k, l, len, len1, len2, len3, len4, len5, m, n, o, postalCode, quantity, rate, ref, ref1, ref2, ref3, ref4, shipping, shippingRate, shippingRateFilter, shippingRates, state, subtotal, tax, taxRate, taxRateFilter, taxRates;
+    var city, country, coupon, discount, gr, i, item, items, j, k, l, len, len1, len2, len3, m, n, postalCode, quantity, rate, ref, ref1, ref10, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, shipping, shippingRate, shippingRates, state, subtotal, tax, taxRate, taxRates;
     items = this.data.get('order.items');
     discount = 0;
     coupon = this.data.get('order.coupon');
@@ -6016,8 +6211,8 @@ Cart = (function() {
             }
           } else {
             ref2 = this.data.get('order.items');
-            for (l = 0, len2 = ref2.length; l < len2; l++) {
-              item = ref2[l];
+            for (m = 0, len2 = ref2.length; m < len2; m++) {
+              item = ref2[m];
               if (item.productId === coupon.productId) {
                 quantity = item.quantity;
                 if (coupon.once) {
@@ -6033,71 +6228,61 @@ Cart = (function() {
     this.data.set('order.discount', discount);
     items = this.data.get('order.items');
     subtotal = -discount;
-    for (m = 0, len3 = items.length; m < len3; m++) {
-      item = items[m];
+    for (n = 0, len3 = items.length; n < len3; n++) {
+      item = items[n];
       subtotal += item.price * item.quantity;
     }
     this.data.set('order.subtotal', subtotal);
     taxRates = this.data.get('taxRates');
     rate = this.data.get('order.taxRate');
     if (rate == null) {
-      this.data.set('order.taxRate', 0);
+      rate = {
+        percent: 0,
+        cost: 0
+      };
+      this.data.set('order.taxRate', rate);
     }
     if (taxRates != null) {
-      for (n = 0, len4 = taxRates.length; n < len4; n++) {
-        taxRateFilter = taxRates[n];
-        city = this.data.get('order.shippingAddress.city');
-        if ((!city && taxRateFilter.city) || ((taxRateFilter.city != null) && taxRateFilter.city.toLowerCase() !== city.toLowerCase())) {
-          continue;
-        }
-        postalCode = this.data.get('order.shippingAddress.postalCode');
-        if ((!postalCode && taxRateFilter.postalCode) || ((taxRateFilter.postalCode != null) && taxRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
-          continue;
-        }
-        state = this.data.get('order.shippingAddress.state');
-        if ((!state && taxRateFilter.state) || ((taxRateFilter.state != null) && taxRateFilter.state.toLowerCase() !== state.toLowerCase())) {
-          continue;
-        }
-        country = this.data.get('order.shippingAddress.country');
-        if ((!country && taxRateFilter.country) || ((taxRateFilter.country != null) && taxRateFilter.country.toLowerCase() !== country.toLowerCase())) {
-          continue;
-        }
-        this.data.set('order.taxRate', taxRateFilter.taxRate);
-        break;
+      country = this.data.get('order.shippingAddress.country');
+      state = this.data.get('order.shippingAddress.state');
+      city = this.data.get('order.shippingAddress.city');
+      postalCode = this.data.get('order.shippingAddress.postalCode');
+      ref3 = closestGeoRate(taxRates.geoRates, country, state, city, postalCode), gr = ref3[0], l = ref3[1], i = ref3[2];
+      if (gr == null) {
+        gr = rate;
       }
+      this.data.set('order.taxRate', gr);
     }
     shippingRates = this.data.get('shippingRates');
     rate = this.data.get('order.shippingRate');
     if (rate == null) {
-      this.data.set('order.shippingRate', 0);
+      rate = {
+        percent: 0,
+        cost: 0
+      };
+      this.data.set('order.shippingRate', rate);
     }
     if (shippingRates != null) {
-      for (o = 0, len5 = shippingRates.length; o < len5; o++) {
-        shippingRateFilter = shippingRates[o];
-        city = this.data.get('order.shippingAddress.city');
-        if ((!city && shippingRateFilter.city) || ((shippingRateFilter.city != null) && shippingRateFilter.city.toLowerCase() !== city.toLowerCase())) {
-          continue;
-        }
-        postalCode = this.data.get('order.shippingAddress.postalCode');
-        if ((!postalCode && shippingRateFilter.postalCode) || ((shippingRateFilter.postalCode != null) && shippingRateFilter.postalCode.toLowerCase() !== postalCode.toLowerCase())) {
-          continue;
-        }
-        state = this.data.get('order.shippingAddress.state');
-        if ((!state && shippingRateFilter.state) || ((shippingRateFilter.state != null) && shippingRateFilter.state.toLowerCase() !== state.toLowerCase())) {
-          continue;
-        }
-        country = this.data.get('order.shippingAddress.country');
-        if ((!country && shippingRateFilter.country) || ((shippingRateFilter.country != null) && shippingRateFilter.country.toLowerCase() !== country.toLowerCase())) {
-          continue;
-        }
-        this.data.set('order.shippingRate', shippingRateFilter.shippingRate);
-        break;
+      country = this.data.get('order.shippingAddress.country');
+      state = this.data.get('order.shippingAddress.state');
+      city = this.data.get('order.shippingAddress.city');
+      postalCode = this.data.get('order.shippingAddress.postalCode');
+      ref4 = closestGeoRate(shippingRates.geoRates, country, state, city, postalCode), gr = ref4[0], l = ref4[1], i = ref4[2];
+      if (gr == null) {
+        gr = rate;
       }
+      this.data.set('order.shippingRate', gr);
     }
-    taxRate = (ref3 = this.data.get('order.taxRate')) != null ? ref3 : 0;
-    tax = Math.ceil((taxRate != null ? taxRate : 0) * subtotal);
-    shippingRate = (ref4 = this.data.get('order.shippingRate')) != null ? ref4 : 0;
-    shipping = shippingRate;
+    taxRate = (ref5 = this.data.get('order.taxRate')) != null ? ref5 : {
+      percent: 0,
+      cost: 0
+    };
+    tax = Math.ceil(((ref6 = taxRate.percent) != null ? ref6 : 0) * subtotal + ((ref7 = taxRate.cost) != null ? ref7 : 0));
+    shippingRate = (ref8 = this.data.get('order.shippingRate')) != null ? ref8 : {
+      percent: 0,
+      cost: 0
+    };
+    shipping = Math.ceil(((ref9 = shippingRate.percent) != null ? ref9 : 0) * subtotal + ((ref10 = shippingRate.cost) != null ? ref10 : 0));
     this.data.set('order.shipping', shipping);
     this.data.set('order.tax', tax);
     return this.data.set('order.total', subtotal + shipping + tax);
@@ -6199,5137 +6384,3454 @@ Cart = (function() {
 
 var Cart$1 = Cart;
 
-// node_modules/zepto-modules/zepto.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//  commonjsHelpers
 
-var Zepto = (function() {
-  var undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
-    document = window.document,
-    elementDisplay = {}, classCache = {},
-    cssNumber = { 'column-count': 1, 'columns': 1, 'font-weight': 1, 'line-height': 1,'opacity': 1, 'z-index': 1, 'zoom': 1 },
-    fragmentRE = /^\s*<(\w+|!)[^>]*>/,
-    singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
-    tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
-    rootNodeRE = /^(?:body|html)$/i,
-    capitalRE = /([A-Z])/g,
+var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-    // special attributes that should be get/set via method calls
-    methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'],
 
-    adjacencyOperators = [ 'after', 'prepend', 'before', 'append' ],
-    table = document.createElement('table'),
-    tableRow = document.createElement('tr'),
-    containers = {
-      'tr': document.createElement('tbody'),
-      'tbody': table, 'thead': table, 'tfoot': table,
-      'td': tableRow, 'th': tableRow,
-      '*': document.createElement('div')
-    },
-    readyRE = /complete|loaded|interactive/,
-    simpleSelectorRE = /^[\w-]*$/,
-    class2type = {},
-    toString = class2type.toString,
-    zepto = {},
-    camelize, uniq,
-    tempParent = document.createElement('div'),
-    propMap = {
-      'tabindex': 'tabIndex',
-      'readonly': 'readOnly',
-      'for': 'htmlFor',
-      'class': 'className',
-      'maxlength': 'maxLength',
-      'cellspacing': 'cellSpacing',
-      'cellpadding': 'cellPadding',
-      'rowspan': 'rowSpan',
-      'colspan': 'colSpan',
-      'usemap': 'useMap',
-      'frameborder': 'frameBorder',
-      'contenteditable': 'contentEditable'
-    },
-    isArray = Array.isArray ||
-      function(object){ return object instanceof Array };
 
-  zepto.matches = function(element, selector) {
-    if (!selector || !element || element.nodeType !== 1) return false
-    var matchesSelector = element.matches || element.webkitMatchesSelector ||
-                          element.mozMatchesSelector || element.oMatchesSelector ||
-                          element.matchesSelector;
-    if (matchesSelector) return matchesSelector.call(element, selector)
-    // fall back to performing a selector:
-    var match, parent = element.parentNode, temp = !parent;
-    if (temp) (parent = tempParent).appendChild(element);
-    match = ~zepto.qsa(parent, selector).indexOf(element);
-    temp && tempParent.removeChild(element);
-    return match
-  };
 
-  function type(obj) {
-    return obj == null ? String(obj) :
-      class2type[toString.call(obj)] || "object"
+
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+var gmaps = createCommonjsModule(function (module, exports) {
+// node_modules/gmaps/gmaps.js
+"use strict";
+(function(root, factory) {
+  {
+    module.exports = factory();
   }
 
-  function isFunction(value) { return type(value) == "function" }
-  function isWindow(obj)     { return obj != null && obj == obj.window }
-  function isDocument(obj)   { return obj != null && obj.nodeType == obj.DOCUMENT_NODE }
-  function isObject(obj)     { return type(obj) == "object" }
-  function isPlainObject(obj) {
-    return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype
+
+}(commonjsGlobal, function() {
+
+/*!
+ * GMaps.js v0.4.24
+ * http://hpneo.github.com/gmaps/
+ *
+ * Copyright 2016, Gustavo Leon
+ * Released under the MIT License.
+ */
+
+var extend_object = function(obj, new_obj) {
+  var name;
+
+  if (obj === new_obj) {
+    return obj;
   }
 
-  function likeArray(obj) {
-    var length = !!obj && 'length' in obj && obj.length,
-      type = $.type(obj);
-
-    return 'function' != type && !isWindow(obj) && (
-      'array' == type || length === 0 ||
-        (typeof length == 'number' && length > 0 && (length - 1) in obj)
-    )
-  }
-
-  function compact(array) { return filter.call(array, function(item){ return item != null }) }
-  function flatten(array) { return array.length > 0 ? $.fn.concat.apply([], array) : array }
-  camelize = function(str){ return str.replace(/-+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : '' }) };
-  function dasherize(str) {
-    return str.replace(/::/g, '/')
-           .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
-           .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-           .replace(/_/g, '-')
-           .toLowerCase()
-  }
-  uniq = function(array){ return filter.call(array, function(item, idx){ return array.indexOf(item) == idx }) };
-
-  function classRE(name) {
-    return name in classCache ?
-      classCache[name] : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'))
-  }
-
-  function maybeAddPx(name, value) {
-    return (typeof value == "number" && !cssNumber[dasherize(name)]) ? value + "px" : value
-  }
-
-  function defaultDisplay(nodeName) {
-    var element, display;
-    if (!elementDisplay[nodeName]) {
-      element = document.createElement(nodeName);
-      document.body.appendChild(element);
-      display = getComputedStyle(element, '').getPropertyValue("display");
-      element.parentNode.removeChild(element);
-      display == "none" && (display = "block");
-      elementDisplay[nodeName] = display;
+  for (name in new_obj) {
+    if (new_obj[name] !== undefined) {
+      obj[name] = new_obj[name];
     }
-    return elementDisplay[nodeName]
   }
 
-  function children(element) {
-    return 'children' in element ?
-      slice.call(element.children) :
-      $.map(element.childNodes, function(node){ if (node.nodeType == 1) return node })
+  return obj;
+};
+
+var replace_object = function(obj, replace) {
+  var name;
+
+  if (obj === replace) {
+    return obj;
   }
 
-  function Z(dom, selector) {
-    var i, len = dom ? dom.length : 0;
-    for (i = 0; i < len; i++) this[i] = dom[i];
-    this.length = len;
-    this.selector = selector || '';
+  for (name in replace) {
+    if (obj[name] != undefined) {
+      obj[name] = replace[name];
+    }
   }
 
-  // `$.zepto.fragment` takes a html string and an optional tag name
-  // to generate DOM nodes from the given html string.
-  // The generated DOM nodes are returned as an array.
-  // This function can be overridden in plugins for example to make
-  // it compatible with browsers that don't support the DOM fully.
-  zepto.fragment = function(html, name, properties) {
-    var dom, nodes, container;
+  return obj;
+};
 
-    // A special case optimization for a single tag
-    if (singleTagRE.test(html)) dom = $(document.createElement(RegExp.$1));
+var array_map = function(array, callback) {
+  var original_callback_params = Array.prototype.slice.call(arguments, 2),
+      array_return = [],
+      array_length = array.length,
+      i;
 
-    if (!dom) {
-      if (html.replace) html = html.replace(tagExpanderRE, "<$1></$2>");
-      if (name === undefined) name = fragmentRE.test(html) && RegExp.$1;
-      if (!(name in containers)) name = '*';
+  if (Array.prototype.map && array.map === Array.prototype.map) {
+    array_return = Array.prototype.map.call(array, function(item) {
+      var callback_params = original_callback_params.slice(0);
+      callback_params.splice(0, 0, item);
 
-      container = containers[name];
-      container.innerHTML = '' + html;
-      dom = $.each(slice.call(container.childNodes), function(){
-        container.removeChild(this);
-      });
+      return callback.apply(this, callback_params);
+    });
+  }
+  else {
+    for (i = 0; i < array_length; i++) {
+      callback_params = original_callback_params;
+      callback_params.splice(0, 0, array[i]);
+      array_return.push(callback.apply(this, callback_params));
     }
+  }
 
-    if (isPlainObject(properties)) {
-      nodes = $(dom);
-      $.each(properties, function(key, value) {
-        if (methodAttributes.indexOf(key) > -1) nodes[key](value);
-        else nodes.attr(key, value);
-      });
-    }
+  return array_return;
+};
 
-    return dom
-  };
+var array_flat = function(array) {
+  var new_array = [],
+      i;
 
-  // `$.zepto.Z` swaps out the prototype of the given `dom` array
-  // of nodes with `$.fn` and thus supplying all the Zepto functions
-  // to the array. This method can be overridden in plugins.
-  zepto.Z = function(dom, selector) {
-    return new Z(dom, selector)
-  };
+  for (i = 0; i < array.length; i++) {
+    new_array = new_array.concat(array[i]);
+  }
 
-  // `$.zepto.isZ` should return `true` if the given object is a Zepto
-  // collection. This method can be overridden in plugins.
-  zepto.isZ = function(object) {
-    return object instanceof zepto.Z
-  };
+  return new_array;
+};
 
-  // `$.zepto.init` is Zepto's counterpart to jQuery's `$.fn.init` and
-  // takes a CSS selector and an optional context (and handles various
-  // special cases).
-  // This method can be overridden in plugins.
-  zepto.init = function(selector, context) {
-    var dom;
-    // If nothing given, return an empty Zepto collection
-    if (!selector) return zepto.Z()
-    // Optimize for string selectors
-    else if (typeof selector == 'string') {
-      selector = selector.trim();
-      // If it's a html fragment, create nodes from it
-      // Note: In both Chrome 21 and Firefox 15, DOM error 12
-      // is thrown if the fragment doesn't begin with <
-      if (selector[0] == '<' && fragmentRE.test(selector))
-        dom = zepto.fragment(selector, RegExp.$1, context), selector = null;
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector)
-      // If it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector);
-    }
-    // If a function is given, call it when the DOM is ready
-    else if (isFunction(selector)) return $(document).ready(selector)
-    // If a Zepto collection is given, just return it
-    else if (zepto.isZ(selector)) return selector
-    else {
-      // normalize array if an array of nodes is given
-      if (isArray(selector)) dom = compact(selector);
-      // Wrap DOM nodes.
-      else if (isObject(selector))
-        dom = [selector], selector = null;
-      // If it's a html fragment, create nodes from it
-      else if (fragmentRE.test(selector))
-        dom = zepto.fragment(selector.trim(), RegExp.$1, context), selector = null;
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector)
-      // And last but no least, if it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector);
-    }
-    // create a new Zepto collection from the nodes found
-    return zepto.Z(dom, selector)
-  };
+var coordsToLatLngs = function(coords, useGeoJSON) {
+  var first_coord = coords[0],
+      second_coord = coords[1];
 
-  // `$` will be the base `Zepto` object. When calling this
-  // function just call `$.zepto.init, which makes the implementation
-  // details of selecting nodes and creating Zepto collections
-  // patchable in plugins.
-  $ = function(selector, context){
-    return zepto.init(selector, context)
-  };
+  if (useGeoJSON) {
+    first_coord = coords[1];
+    second_coord = coords[0];
+  }
 
-  function extend(target, source, deep) {
-    for (key in source)
-      if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-        if (isPlainObject(source[key]) && !isPlainObject(target[key]))
-          target[key] = {};
-        if (isArray(source[key]) && !isArray(target[key]))
-          target[key] = [];
-        extend(target[key], source[key], deep);
+  return new google.maps.LatLng(first_coord, second_coord);
+};
+
+var arrayToLatLng = function(coords, useGeoJSON) {
+  var i;
+
+  for (i = 0; i < coords.length; i++) {
+    if (!(coords[i] instanceof google.maps.LatLng)) {
+      if (coords[i].length > 0 && typeof(coords[i][0]) === "object") {
+        coords[i] = arrayToLatLng(coords[i], useGeoJSON);
       }
-      else if (source[key] !== undefined) target[key] = source[key];
-  }
-
-  // Copy all but undefined properties from one or more
-  // objects to the `target` object.
-  $.extend = function(target){
-    var deep, args = slice.call(arguments, 1);
-    if (typeof target == 'boolean') {
-      deep = target;
-      target = args.shift();
+      else {
+        coords[i] = coordsToLatLngs(coords[i], useGeoJSON);
+      }
     }
-    args.forEach(function(arg){ extend(target, arg, deep); });
-    return target
-  };
-
-  // `$.zepto.qsa` is Zepto's CSS selector implementation which
-  // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
-  // This method can be overridden in plugins.
-  zepto.qsa = function(element, selector){
-    var found,
-        maybeID = selector[0] == '#',
-        maybeClass = !maybeID && selector[0] == '.',
-        nameOnly = maybeID || maybeClass ? selector.slice(1) : selector, // Ensure that a 1 char tag name still gets checked
-        isSimple = simpleSelectorRE.test(nameOnly);
-    return (element.getElementById && isSimple && maybeID) ? // Safari DocumentFragment doesn't have getElementById
-      ( (found = element.getElementById(nameOnly)) ? [found] : [] ) :
-      (element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11) ? [] :
-      slice.call(
-        isSimple && !maybeID && element.getElementsByClassName ? // DocumentFragment doesn't have getElementsByClassName/TagName
-          maybeClass ? element.getElementsByClassName(nameOnly) : // If it's simple, it could be a class
-          element.getElementsByTagName(selector) : // Or a tag
-          element.querySelectorAll(selector) // Or it's not simple, and we need to query all
-      )
-  };
-
-  function filtered(nodes, selector) {
-    return selector == null ? $(nodes) : $(nodes).filter(selector)
   }
 
-  $.contains = document.documentElement.contains ?
-    function(parent, node) {
-      return parent !== node && parent.contains(node)
-    } :
-    function(parent, node) {
-      while (node && (node = node.parentNode))
-        if (node === parent) return true
-      return false
+  return coords;
+};
+
+var getElementsByClassName = function (class_name, context) {
+    var element,
+        _class = class_name.replace('.', '');
+
+    if ('jQuery' in this && context) {
+        element = $("." + _class, context)[0];
+    } else {
+        element = document.getElementsByClassName(_class)[0];
+    }
+    return element;
+
+};
+
+var getElementById = function(id, context) {
+  var element,
+  id = id.replace('#', '');
+
+  if ('jQuery' in window && context) {
+    element = $('#' + id, context)[0];
+  } else {
+    element = document.getElementById(id);
+  }
+
+  return element;
+};
+
+var findAbsolutePosition = function(obj)  {
+  var curleft = 0,
+      curtop = 0;
+
+  if (obj.offsetParent) {
+    do {
+      curleft += obj.offsetLeft;
+      curtop += obj.offsetTop;
+    } while (obj = obj.offsetParent);
+  }
+
+  return [curleft, curtop];
+};
+
+var GMaps = (function(global) {
+  "use strict";
+
+  var doc = document;
+  /**
+   * Creates a new GMaps instance, including a Google Maps map.
+   * @class GMaps
+   * @constructs
+   * @param {object} options - `options` accepts all the [MapOptions](https://developers.google.com/maps/documentation/javascript/reference#MapOptions) and [events](https://developers.google.com/maps/documentation/javascript/reference#Map) listed in the Google Maps API. Also accepts:
+   * * `lat` (number): Latitude of the map's center
+   * * `lng` (number): Longitude of the map's center
+   * * `el` (string or HTMLElement): container where the map will be rendered
+   * * `markerClusterer` (function): A function to create a marker cluster. You can use MarkerClusterer or MarkerClustererPlus.
+   */
+  var GMaps = function(options) {
+
+    if (!(typeof window.google === 'object' && window.google.maps)) {
+      if (typeof window.console === 'object' && window.console.error) {
+        console.error('Google Maps API is required. Please register the following JavaScript library https://maps.googleapis.com/maps/api/js.');
+      }
+
+      return function() {};
+    }
+
+    if (!this) return new GMaps(options);
+
+    options.zoom = options.zoom || 15;
+    options.mapType = options.mapType || 'roadmap';
+
+    var valueOrDefault = function(value, defaultValue) {
+      return value === undefined ? defaultValue : value;
     };
 
-  function funcArg(context, arg, idx, payload) {
-    return isFunction(arg) ? arg.call(context, idx, payload) : arg
+    var self = this,
+        i,
+        events_that_hide_context_menu = [
+          'bounds_changed', 'center_changed', 'click', 'dblclick', 'drag',
+          'dragend', 'dragstart', 'idle', 'maptypeid_changed', 'projection_changed',
+          'resize', 'tilesloaded', 'zoom_changed'
+        ],
+        events_that_doesnt_hide_context_menu = ['mousemove', 'mouseout', 'mouseover'],
+        options_to_be_deleted = ['el', 'lat', 'lng', 'mapType', 'width', 'height', 'markerClusterer', 'enableNewStyle'],
+        identifier = options.el || options.div,
+        markerClustererFunction = options.markerClusterer,
+        mapType = google.maps.MapTypeId[options.mapType.toUpperCase()],
+        map_center = new google.maps.LatLng(options.lat, options.lng),
+        zoomControl = valueOrDefault(options.zoomControl, true),
+        zoomControlOpt = options.zoomControlOpt || {
+          style: 'DEFAULT',
+          position: 'TOP_LEFT'
+        },
+        zoomControlStyle = zoomControlOpt.style || 'DEFAULT',
+        zoomControlPosition = zoomControlOpt.position || 'TOP_LEFT',
+        panControl = valueOrDefault(options.panControl, true),
+        mapTypeControl = valueOrDefault(options.mapTypeControl, true),
+        scaleControl = valueOrDefault(options.scaleControl, true),
+        streetViewControl = valueOrDefault(options.streetViewControl, true),
+        overviewMapControl = valueOrDefault(overviewMapControl, true),
+        map_options = {},
+        map_base_options = {
+          zoom: this.zoom,
+          center: map_center,
+          mapTypeId: mapType
+        },
+        map_controls_options = {
+          panControl: panControl,
+          zoomControl: zoomControl,
+          zoomControlOptions: {
+            style: google.maps.ZoomControlStyle[zoomControlStyle],
+            position: google.maps.ControlPosition[zoomControlPosition]
+          },
+          mapTypeControl: mapTypeControl,
+          scaleControl: scaleControl,
+          streetViewControl: streetViewControl,
+          overviewMapControl: overviewMapControl
+        };
+
+      if (typeof(options.el) === 'string' || typeof(options.div) === 'string') {
+        if (identifier.indexOf("#") > -1) {
+            /**
+             * Container element
+             *
+             * @type {HTMLElement}
+             */
+            this.el = getElementById(identifier, options.context);
+        } else {
+            this.el = getElementsByClassName.apply(this, [identifier, options.context]);
+        }
+      } else {
+          this.el = identifier;
+      }
+
+    if (typeof(this.el) === 'undefined' || this.el === null) {
+      throw 'No element defined.';
+    }
+
+    window.context_menu = window.context_menu || {};
+    window.context_menu[self.el.id] = {};
+
+    /**
+     * Collection of custom controls in the map UI
+     *
+     * @type {array}
+     */
+    this.controls = [];
+    /**
+     * Collection of map's overlays
+     *
+     * @type {array}
+     */
+    this.overlays = [];
+    /**
+     * Collection of KML/GeoRSS and FusionTable layers
+     *
+     * @type {array}
+     */
+    this.layers = [];
+    /**
+     * Collection of data layers (See {@link GMaps#addLayer})
+     *
+     * @type {object}
+     */
+    this.singleLayers = {};
+    /**
+     * Collection of map's markers
+     *
+     * @type {array}
+     */
+    this.markers = [];
+    /**
+     * Collection of map's lines
+     *
+     * @type {array}
+     */
+    this.polylines = [];
+    /**
+     * Collection of map's routes requested by {@link GMaps#getRoutes}, {@link GMaps#renderRoute}, {@link GMaps#drawRoute}, {@link GMaps#travelRoute} or {@link GMaps#drawSteppedRoute}
+     *
+     * @type {array}
+     */
+    this.routes = [];
+    /**
+     * Collection of map's polygons
+     *
+     * @type {array}
+     */
+    this.polygons = [];
+    this.infoWindow = null;
+    this.overlay_el = null;
+    /**
+     * Current map's zoom
+     *
+     * @type {number}
+     */
+    this.zoom = options.zoom;
+    this.registered_events = {};
+
+    this.el.style.width = options.width || this.el.scrollWidth || this.el.offsetWidth;
+    this.el.style.height = options.height || this.el.scrollHeight || this.el.offsetHeight;
+
+    google.maps.visualRefresh = options.enableNewStyle;
+
+    for (i = 0; i < options_to_be_deleted.length; i++) {
+      delete options[options_to_be_deleted[i]];
+    }
+
+    if(options.disableDefaultUI != true) {
+      map_base_options = extend_object(map_base_options, map_controls_options);
+    }
+
+    map_options = extend_object(map_base_options, options);
+
+    for (i = 0; i < events_that_hide_context_menu.length; i++) {
+      delete map_options[events_that_hide_context_menu[i]];
+    }
+
+    for (i = 0; i < events_that_doesnt_hide_context_menu.length; i++) {
+      delete map_options[events_that_doesnt_hide_context_menu[i]];
+    }
+
+    /**
+     * Google Maps map instance
+     *
+     * @type {google.maps.Map}
+     */
+    this.map = new google.maps.Map(this.el, map_options);
+
+    if (markerClustererFunction) {
+      /**
+       * Marker Clusterer instance
+       *
+       * @type {object}
+       */
+      this.markerClusterer = markerClustererFunction.apply(this, [this.map]);
+    }
+
+    var buildContextMenuHTML = function(control, e) {
+      var html = '',
+          options = window.context_menu[self.el.id][control];
+
+      for (var i in options){
+        if (options.hasOwnProperty(i)) {
+          var option = options[i];
+
+          html += '<li><a id="' + control + '_' + i + '" href="#">' + option.title + '</a></li>';
+        }
+      }
+
+      if (!getElementById('gmaps_context_menu')) return;
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      context_menu_element.innerHTML = html;
+
+      var context_menu_items = context_menu_element.getElementsByTagName('a'),
+          context_menu_items_count = context_menu_items.length,
+          i;
+
+      for (i = 0; i < context_menu_items_count; i++) {
+        var context_menu_item = context_menu_items[i];
+
+        var assign_menu_item_action = function(ev){
+          ev.preventDefault();
+
+          options[this.id.replace(control + '_', '')].action.apply(self, [e]);
+          self.hideContextMenu();
+        };
+
+        google.maps.event.clearListeners(context_menu_item, 'click');
+        google.maps.event.addDomListenerOnce(context_menu_item, 'click', assign_menu_item_action, false);
+      }
+
+      var position = findAbsolutePosition.apply(this, [self.el]),
+          left = position[0] + e.pixel.x - 15,
+          top = position[1] + e.pixel.y- 15;
+
+      context_menu_element.style.left = left + "px";
+      context_menu_element.style.top = top + "px";
+
+      // context_menu_element.style.display = 'block';
+    };
+
+    this.buildContextMenu = function(control, e) {
+      if (control === 'marker') {
+        e.pixel = {};
+
+        var overlay = new google.maps.OverlayView();
+        overlay.setMap(self.map);
+
+        overlay.draw = function() {
+          var projection = overlay.getProjection(),
+              position = e.marker.getPosition();
+
+          e.pixel = projection.fromLatLngToContainerPixel(position);
+
+          buildContextMenuHTML(control, e);
+        };
+      }
+      else {
+        buildContextMenuHTML(control, e);
+      }
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      setTimeout(function() {
+        context_menu_element.style.display = 'block';
+      }, 0);
+    };
+
+    /**
+     * Add a context menu for a map or a marker.
+     *
+     * @param {object} options - The `options` object should contain:
+     * * `control` (string): Kind of control the context menu will be attached. Can be "map" or "marker".
+     * * `options` (array): A collection of context menu items:
+     *   * `title` (string): Item's title shown in the context menu.
+     *   * `name` (string): Item's identifier.
+     *   * `action` (function): Function triggered after selecting the context menu item.
+     */
+    this.setContextMenu = function(options) {
+      window.context_menu[self.el.id][options.control] = {};
+
+      var i,
+          ul = doc.createElement('ul');
+
+      for (i in options.options) {
+        if (options.options.hasOwnProperty(i)) {
+          var option = options.options[i];
+
+          window.context_menu[self.el.id][options.control][option.name] = {
+            title: option.title,
+            action: option.action
+          };
+        }
+      }
+
+      ul.id = 'gmaps_context_menu';
+      ul.style.display = 'none';
+      ul.style.position = 'absolute';
+      ul.style.minWidth = '100px';
+      ul.style.background = 'white';
+      ul.style.listStyle = 'none';
+      ul.style.padding = '8px';
+      ul.style.boxShadow = '2px 2px 6px #ccc';
+
+      if (!getElementById('gmaps_context_menu')) {
+        doc.body.appendChild(ul);
+      }
+
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      google.maps.event.addDomListener(context_menu_element, 'mouseout', function(ev) {
+        if (!ev.relatedTarget || !this.contains(ev.relatedTarget)) {
+          window.setTimeout(function(){
+            context_menu_element.style.display = 'none';
+          }, 400);
+        }
+      }, false);
+    };
+
+    /**
+     * Hide the current context menu
+     */
+    this.hideContextMenu = function() {
+      var context_menu_element = getElementById('gmaps_context_menu');
+
+      if (context_menu_element) {
+        context_menu_element.style.display = 'none';
+      }
+    };
+
+    var setupListener = function(object, name) {
+      google.maps.event.addListener(object, name, function(e){
+        if (e == undefined) {
+          e = this;
+        }
+
+        options[name].apply(this, [e]);
+
+        self.hideContextMenu();
+      });
+    };
+
+    //google.maps.event.addListener(this.map, 'idle', this.hideContextMenu);
+    google.maps.event.addListener(this.map, 'zoom_changed', this.hideContextMenu);
+
+    for (var ev = 0; ev < events_that_hide_context_menu.length; ev++) {
+      var name = events_that_hide_context_menu[ev];
+
+      if (name in options) {
+        setupListener(this.map, name);
+      }
+    }
+
+    for (var ev = 0; ev < events_that_doesnt_hide_context_menu.length; ev++) {
+      var name = events_that_doesnt_hide_context_menu[ev];
+
+      if (name in options) {
+        setupListener(this.map, name);
+      }
+    }
+
+    google.maps.event.addListener(this.map, 'rightclick', function(e) {
+      if (options.rightclick) {
+        options.rightclick.apply(this, [e]);
+      }
+
+      if(window.context_menu[self.el.id]['map'] != undefined) {
+        self.buildContextMenu('map', e);
+      }
+    });
+
+    /**
+     * Trigger a `resize` event, useful if you need to repaint the current map (for changes in the viewport or display / hide actions).
+     */
+    this.refresh = function() {
+      google.maps.event.trigger(this.map, 'resize');
+    };
+
+    /**
+     * Adjust the map zoom to include all the markers added in the map.
+     */
+    this.fitZoom = function() {
+      var latLngs = [],
+          markers_length = this.markers.length,
+          i;
+
+      for (i = 0; i < markers_length; i++) {
+        if(typeof(this.markers[i].visible) === 'boolean' && this.markers[i].visible) {
+          latLngs.push(this.markers[i].getPosition());
+        }
+      }
+
+      this.fitLatLngBounds(latLngs);
+    };
+
+    /**
+     * Adjust the map zoom to include all the coordinates in the `latLngs` array.
+     *
+     * @param {array} latLngs - Collection of `google.maps.LatLng` objects.
+     */
+    this.fitLatLngBounds = function(latLngs) {
+      var total = latLngs.length,
+          bounds = new google.maps.LatLngBounds(),
+          i;
+
+      for(i = 0; i < total; i++) {
+        bounds.extend(latLngs[i]);
+      }
+
+      this.map.fitBounds(bounds);
+    };
+
+    /**
+     * Center the map using the `lat` and `lng` coordinates.
+     *
+     * @param {number} lat - Latitude of the coordinate.
+     * @param {number} lng - Longitude of the coordinate.
+     * @param {function} [callback] - Callback that will be executed after the map is centered.
+     */
+    this.setCenter = function(lat, lng, callback) {
+      this.map.panTo(new google.maps.LatLng(lat, lng));
+
+      if (callback) {
+        callback();
+      }
+    };
+
+    /**
+     * Return the HTML element container of the map.
+     *
+     * @returns {HTMLElement} the element container.
+     */
+    this.getElement = function() {
+      return this.el;
+    };
+
+    /**
+     * Increase the map's zoom.
+     *
+     * @param {number} [magnitude] - The number of times the map will be zoomed in.
+     */
+    this.zoomIn = function(value) {
+      value = value || 1;
+
+      this.zoom = this.map.getZoom() + value;
+      this.map.setZoom(this.zoom);
+    };
+
+    /**
+     * Decrease the map's zoom.
+     *
+     * @param {number} [magnitude] - The number of times the map will be zoomed out.
+     */
+    this.zoomOut = function(value) {
+      value = value || 1;
+
+      this.zoom = this.map.getZoom() - value;
+      this.map.setZoom(this.zoom);
+    };
+
+    var native_methods = [],
+        method;
+
+    for (method in this.map) {
+      if (typeof(this.map[method]) == 'function' && !this[method]) {
+        native_methods.push(method);
+      }
+    }
+
+    for (i = 0; i < native_methods.length; i++) {
+      (function(gmaps, scope, method_name) {
+        gmaps[method_name] = function(){
+          return scope[method_name].apply(scope, arguments);
+        };
+      })(this, this.map, native_methods[i]);
+    }
+  };
+
+  return GMaps;
+})(this);
+
+GMaps.prototype.createControl = function(options) {
+  var control = document.createElement('div');
+
+  control.style.cursor = 'pointer';
+
+  if (options.disableDefaultStyles !== true) {
+    control.style.fontFamily = 'Roboto, Arial, sans-serif';
+    control.style.fontSize = '11px';
+    control.style.boxShadow = 'rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px';
   }
 
-  function setAttribute(node, name, value) {
-    value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
+  for (var option in options.style) {
+    control.style[option] = options.style[option];
   }
 
-  // access className property while respecting SVGAnimatedString
-  function className(node, value){
-    var klass = node.className || '',
-        svg   = klass && klass.baseVal !== undefined;
-
-    if (value === undefined) return svg ? klass.baseVal : klass
-    svg ? (klass.baseVal = value) : (node.className = value);
+  if (options.id) {
+    control.id = options.id;
   }
 
-  // "true"  => true
-  // "false" => false
-  // "null"  => null
-  // "42"    => 42
-  // "42.5"  => 42.5
-  // "08"    => "08"
-  // JSON    => parse if valid
-  // String  => self
-  function deserializeValue(value) {
-    try {
-      return value ?
-        value == "true" ||
-        ( value == "false" ? false :
-          value == "null" ? null :
-          +value + "" == value ? +value :
-          /^[\[\{]/.test(value) ? $.parseJSON(value) :
-          value )
-        : value
-    } catch(e) {
-      return value
+  if (options.title) {
+    control.title = options.title;
+  }
+
+  if (options.classes) {
+    control.className = options.classes;
+  }
+
+  if (options.content) {
+    if (typeof options.content === 'string') {
+      control.innerHTML = options.content;
+    }
+    else if (options.content instanceof HTMLElement) {
+      control.appendChild(options.content);
     }
   }
 
-  $.type = type;
-  $.isFunction = isFunction;
-  $.isWindow = isWindow;
-  $.isArray = isArray;
-  $.isPlainObject = isPlainObject;
+  if (options.position) {
+    control.position = google.maps.ControlPosition[options.position.toUpperCase()];
+  }
 
-  $.isEmptyObject = function(obj) {
-    var name;
-    for (name in obj) return false
-    return true
-  };
+  for (var ev in options.events) {
+    (function(object, name) {
+      google.maps.event.addDomListener(object, name, function(){
+        options.events[name].apply(this, [this]);
+      });
+    })(control, ev);
+  }
 
-  $.isNumeric = function(val) {
-    var num = Number(val), type = typeof val;
-    return val != null && type != 'boolean' &&
-      (type != 'string' || val.length) &&
-      !isNaN(num) && isFinite(num) || false
-  };
+  control.index = 1;
 
-  $.inArray = function(elem, array, i){
-    return emptyArray.indexOf.call(array, elem, i)
-  };
+  return control;
+};
 
-  $.camelCase = camelize;
-  $.trim = function(str) {
-    return str == null ? "" : String.prototype.trim.call(str)
-  };
+/**
+ * Add a custom control to the map UI.
+ *
+ * @param {object} options - The `options` object should contain:
+ * * `style` (object): The keys and values of this object should be valid CSS properties and values.
+ * * `id` (string): The HTML id for the custom control.
+ * * `classes` (string): A string containing all the HTML classes for the custom control.
+ * * `content` (string or HTML element): The content of the custom control.
+ * * `position` (string): Any valid [`google.maps.ControlPosition`](https://developers.google.com/maps/documentation/javascript/controls#ControlPositioning) value, in lower or upper case.
+ * * `events` (object): The keys of this object should be valid DOM events. The values should be functions.
+ * * `disableDefaultStyles` (boolean): If false, removes the default styles for the controls like font (family and size), and box shadow.
+ * @returns {HTMLElement}
+ */
+GMaps.prototype.addControl = function(options) {
+  var control = this.createControl(options);
 
-  // plugin compatibility
-  $.uuid = 0;
-  $.support = { };
-  $.expr = { };
-  $.noop = function() {};
+  this.controls.push(control);
+  this.map.controls[control.position].push(control);
 
-  $.map = function(elements, callback){
-    var value, values = [], i, key;
-    if (likeArray(elements))
-      for (i = 0; i < elements.length; i++) {
-        value = callback(elements[i], i);
-        if (value != null) values.push(value);
+  return control;
+};
+
+/**
+ * Remove a control from the map. `control` should be a control returned by `addControl()`.
+ *
+ * @param {HTMLElement} control - One of the controls returned by `addControl()`.
+ * @returns {HTMLElement} the removed control.
+ */
+GMaps.prototype.removeControl = function(control) {
+  var position = null,
+      i;
+
+  for (i = 0; i < this.controls.length; i++) {
+    if (this.controls[i] == control) {
+      position = this.controls[i].position;
+      this.controls.splice(i, 1);
+    }
+  }
+
+  if (position) {
+    for (i = 0; i < this.map.controls.length; i++) {
+      var controlsForPosition = this.map.controls[control.position];
+
+      if (controlsForPosition.getAt(i) == control) {
+        controlsForPosition.removeAt(i);
+
+        break;
       }
-    else
-      for (key in elements) {
-        value = callback(elements[key], key);
-        if (value != null) values.push(value);
-      }
-    return flatten(values)
-  };
+    }
+  }
 
-  $.each = function(elements, callback){
-    var i, key;
-    if (likeArray(elements)) {
-      for (i = 0; i < elements.length; i++)
-        if (callback.call(elements[i], i, elements[i]) === false) return elements
-    } else {
-      for (key in elements)
-        if (callback.call(elements[key], key, elements[key]) === false) return elements
+  return control;
+};
+
+GMaps.prototype.createMarker = function(options) {
+  if (options.lat == undefined && options.lng == undefined && options.position == undefined) {
+    throw 'No latitude or longitude defined.';
+  }
+
+  var self = this,
+      details = options.details,
+      fences = options.fences,
+      outside = options.outside,
+      base_options = {
+        position: new google.maps.LatLng(options.lat, options.lng),
+        map: null
+      },
+      marker_options = extend_object(base_options, options);
+
+  delete marker_options.lat;
+  delete marker_options.lng;
+  delete marker_options.fences;
+  delete marker_options.outside;
+
+  var marker = new google.maps.Marker(marker_options);
+
+  marker.fences = fences;
+
+  if (options.infoWindow) {
+    marker.infoWindow = new google.maps.InfoWindow(options.infoWindow);
+
+    var info_window_events = ['closeclick', 'content_changed', 'domready', 'position_changed', 'zindex_changed'];
+
+    for (var ev = 0; ev < info_window_events.length; ev++) {
+      (function(object, name) {
+        if (options.infoWindow[name]) {
+          google.maps.event.addListener(object, name, function(e){
+            options.infoWindow[name].apply(this, [e]);
+          });
+        }
+      })(marker.infoWindow, info_window_events[ev]);
+    }
+  }
+
+  var marker_events = ['animation_changed', 'clickable_changed', 'cursor_changed', 'draggable_changed', 'flat_changed', 'icon_changed', 'position_changed', 'shadow_changed', 'shape_changed', 'title_changed', 'visible_changed', 'zindex_changed'];
+
+  var marker_events_with_mouse = ['dblclick', 'drag', 'dragend', 'dragstart', 'mousedown', 'mouseout', 'mouseover', 'mouseup'];
+
+  for (var ev = 0; ev < marker_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(){
+          options[name].apply(this, [this]);
+        });
+      }
+    })(marker, marker_events[ev]);
+  }
+
+  for (var ev = 0; ev < marker_events_with_mouse.length; ev++) {
+    (function(map, object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(me){
+          if(!me.pixel){
+            me.pixel = map.getProjection().fromLatLngToPoint(me.latLng);
+          }
+
+          options[name].apply(this, [me]);
+        });
+      }
+    })(this.map, marker, marker_events_with_mouse[ev]);
+  }
+
+  google.maps.event.addListener(marker, 'click', function() {
+    this.details = details;
+
+    if (options.click) {
+      options.click.apply(this, [this]);
     }
 
-    return elements
-  };
-
-  $.grep = function(elements, callback){
-    return filter.call(elements, callback)
-  };
-
-  if (window.JSON) $.parseJSON = JSON.parse;
-
-  // Populate the class2type map
-  $.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
-    class2type[ "[object " + name + "]" ] = name.toLowerCase();
+    if (marker.infoWindow) {
+      self.hideInfoWindows();
+      marker.infoWindow.open(self.map, marker);
+    }
   });
 
-  // Define methods that will be available on all
-  // Zepto collections
-  $.fn = {
-    constructor: zepto.Z,
-    length: 0,
+  google.maps.event.addListener(marker, 'rightclick', function(e) {
+    e.marker = this;
 
-    // Because a collection acts like an array
-    // copy over these useful array functions.
-    forEach: emptyArray.forEach,
-    reduce: emptyArray.reduce,
-    push: emptyArray.push,
-    sort: emptyArray.sort,
-    splice: emptyArray.splice,
-    indexOf: emptyArray.indexOf,
-    concat: function(){
-      var i, value, args = [];
-      for (i = 0; i < arguments.length; i++) {
-        value = arguments[i];
-        args[i] = zepto.isZ(value) ? value.toArray() : value;
-      }
-      return concat.apply(zepto.isZ(this) ? this.toArray() : this, args)
-    },
+    if (options.rightclick) {
+      options.rightclick.apply(this, [e]);
+    }
 
-    // `map` and `slice` in the jQuery API work differently
-    // from their array counterparts
-    map: function(fn){
-      return $($.map(this, function(el, i){ return fn.call(el, i, el) }))
-    },
-    slice: function(){
-      return $(slice.apply(this, arguments))
-    },
+    if (window.context_menu[self.el.id]['marker'] != undefined) {
+      self.buildContextMenu('marker', e);
+    }
+  });
 
-    ready: function(callback){
-      // need to check if document.body exists for IE as that browser reports
-      // document ready when it hasn't yet created the body element
-      if (readyRE.test(document.readyState) && document.body) callback($);
-      else document.addEventListener('DOMContentLoaded', function(){ callback($); }, false);
-      return this
-    },
-    get: function(idx){
-      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
-    },
-    toArray: function(){ return this.get() },
-    size: function(){
-      return this.length
-    },
-    remove: function(){
-      return this.each(function(){
-        if (this.parentNode != null)
-          this.parentNode.removeChild(this);
-      })
-    },
-    each: function(callback){
-      emptyArray.every.call(this, function(el, idx){
-        return callback.call(el, idx, el) !== false
+  if (marker.fences) {
+    google.maps.event.addListener(marker, 'dragend', function() {
+      self.checkMarkerGeofence(marker, function(m, f) {
+        outside(m, f);
       });
-      return this
-    },
-    filter: function(selector){
-      if (isFunction(selector)) return this.not(this.not(selector))
-      return $(filter.call(this, function(element){
-        return zepto.matches(element, selector)
-      }))
-    },
-    add: function(selector,context){
-      return $(uniq(this.concat($(selector,context))))
-    },
-    is: function(selector){
-      return this.length > 0 && zepto.matches(this[0], selector)
-    },
-    not: function(selector){
-      var nodes=[];
-      if (isFunction(selector) && selector.call !== undefined)
-        this.each(function(idx){
-          if (!selector.call(this,idx)) nodes.push(this);
-        });
-      else {
-        var excludes = typeof selector == 'string' ? this.filter(selector) :
-          (likeArray(selector) && isFunction(selector.item)) ? slice.call(selector) : $(selector);
-        this.forEach(function(el){
-          if (excludes.indexOf(el) < 0) nodes.push(el);
-        });
+    });
+  }
+
+  return marker;
+};
+
+GMaps.prototype.addMarker = function(options) {
+  var marker;
+  if(options.hasOwnProperty('gm_accessors_')) {
+    // Native google.maps.Marker object
+    marker = options;
+  }
+  else {
+    if ((options.hasOwnProperty('lat') && options.hasOwnProperty('lng')) || options.position) {
+      marker = this.createMarker(options);
+    }
+    else {
+      throw 'No latitude or longitude defined.';
+    }
+  }
+
+  marker.setMap(this.map);
+
+  if(this.markerClusterer) {
+    this.markerClusterer.addMarker(marker);
+  }
+
+  this.markers.push(marker);
+
+  GMaps.fire('marker_added', marker, this);
+
+  return marker;
+};
+
+GMaps.prototype.addMarkers = function(array) {
+  for (var i = 0, marker; marker=array[i]; i++) {
+    this.addMarker(marker);
+  }
+
+  return this.markers;
+};
+
+GMaps.prototype.hideInfoWindows = function() {
+  for (var i = 0, marker; marker = this.markers[i]; i++){
+    if (marker.infoWindow) {
+      marker.infoWindow.close();
+    }
+  }
+};
+
+GMaps.prototype.removeMarker = function(marker) {
+  for (var i = 0; i < this.markers.length; i++) {
+    if (this.markers[i] === marker) {
+      this.markers[i].setMap(null);
+      this.markers.splice(i, 1);
+
+      if(this.markerClusterer) {
+        this.markerClusterer.removeMarker(marker);
       }
-      return $(nodes)
-    },
-    has: function(selector){
-      return this.filter(function(){
-        return isObject(selector) ?
-          $.contains(this, selector) :
-          $(this).find(selector).size()
-      })
-    },
-    eq: function(idx){
-      return idx === -1 ? this.slice(idx) : this.slice(idx, + idx + 1)
-    },
-    first: function(){
-      var el = this[0];
-      return el && !isObject(el) ? el : $(el)
-    },
-    last: function(){
-      var el = this[this.length - 1];
-      return el && !isObject(el) ? el : $(el)
-    },
-    find: function(selector){
-      var result, $this = this;
-      if (!selector) result = $();
-      else if (typeof selector == 'object')
-        result = $(selector).filter(function(){
-          var node = this;
-          return emptyArray.some.call($this, function(parent){
-            return $.contains(parent, node)
-          })
-        });
-      else if (this.length == 1) result = $(zepto.qsa(this[0], selector));
-      else result = this.map(function(){ return zepto.qsa(this, selector) });
-      return result
-    },
-    closest: function(selector, context){
-      var nodes = [], collection = typeof selector == 'object' && $(selector);
-      this.each(function(_, node){
-        while (node && !(collection ? collection.indexOf(node) >= 0 : zepto.matches(node, selector)))
-          node = node !== context && !isDocument(node) && node.parentNode;
-        if (node && nodes.indexOf(node) < 0) nodes.push(node);
-      });
-      return $(nodes)
-    },
-    parents: function(selector){
-      var ancestors = [], nodes = this;
-      while (nodes.length > 0)
-        nodes = $.map(nodes, function(node){
-          if ((node = node.parentNode) && !isDocument(node) && ancestors.indexOf(node) < 0) {
-            ancestors.push(node);
-            return node
+
+      GMaps.fire('marker_removed', marker, this);
+
+      break;
+    }
+  }
+
+  return marker;
+};
+
+GMaps.prototype.removeMarkers = function (collection) {
+  var new_markers = [];
+
+  if (typeof collection == 'undefined') {
+    for (var i = 0; i < this.markers.length; i++) {
+      var marker = this.markers[i];
+      marker.setMap(null);
+
+      GMaps.fire('marker_removed', marker, this);
+    }
+
+    if(this.markerClusterer && this.markerClusterer.clearMarkers) {
+      this.markerClusterer.clearMarkers();
+    }
+
+    this.markers = new_markers;
+  }
+  else {
+    for (var i = 0; i < collection.length; i++) {
+      var index = this.markers.indexOf(collection[i]);
+
+      if (index > -1) {
+        var marker = this.markers[index];
+        marker.setMap(null);
+
+        if(this.markerClusterer) {
+          this.markerClusterer.removeMarker(marker);
+        }
+
+        GMaps.fire('marker_removed', marker, this);
+      }
+    }
+
+    for (var i = 0; i < this.markers.length; i++) {
+      var marker = this.markers[i];
+      if (marker.getMap() != null) {
+        new_markers.push(marker);
+      }
+    }
+
+    this.markers = new_markers;
+  }
+};
+
+GMaps.prototype.drawOverlay = function(options) {
+  var overlay = new google.maps.OverlayView(),
+      auto_show = true;
+
+  overlay.setMap(this.map);
+
+  if (options.auto_show != null) {
+    auto_show = options.auto_show;
+  }
+
+  overlay.onAdd = function() {
+    var el = document.createElement('div');
+
+    el.style.borderStyle = "none";
+    el.style.borderWidth = "0px";
+    el.style.position = "absolute";
+    el.style.zIndex = 100;
+    el.innerHTML = options.content;
+
+    overlay.el = el;
+
+    if (!options.layer) {
+      options.layer = 'overlayLayer';
+    }
+    
+    var panes = this.getPanes(),
+        overlayLayer = panes[options.layer],
+        stop_overlay_events = ['contextmenu', 'DOMMouseScroll', 'dblclick', 'mousedown'];
+
+    overlayLayer.appendChild(el);
+
+    for (var ev = 0; ev < stop_overlay_events.length; ev++) {
+      (function(object, name) {
+        google.maps.event.addDomListener(object, name, function(e){
+          if (navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
+            e.cancelBubble = true;
+            e.returnValue = false;
+          }
+          else {
+            e.stopPropagation();
           }
         });
-      return filtered(ancestors, selector)
-    },
-    parent: function(selector){
-      return filtered(uniq(this.pluck('parentNode')), selector)
-    },
-    children: function(selector){
-      return filtered(this.map(function(){ return children(this) }), selector)
-    },
-    contents: function() {
-      return this.map(function() { return this.contentDocument || slice.call(this.childNodes) })
-    },
-    siblings: function(selector){
-      return filtered(this.map(function(i, el){
-        return filter.call(children(el.parentNode), function(child){ return child!==el })
-      }), selector)
-    },
-    empty: function(){
-      return this.each(function(){ this.innerHTML = ''; })
-    },
-    // `pluck` is borrowed from Prototype.js
-    pluck: function(property){
-      return $.map(this, function(el){ return el[property] })
-    },
-    show: function(){
-      return this.each(function(){
-        this.style.display == "none" && (this.style.display = '');
-        if (getComputedStyle(this, '').getPropertyValue("display") == "none")
-          this.style.display = defaultDisplay(this.nodeName);
-      })
-    },
-    replaceWith: function(newContent){
-      return this.before(newContent).remove()
-    },
-    wrap: function(structure){
-      var func = isFunction(structure);
-      if (this[0] && !func)
-        var dom   = $(structure).get(0),
-            clone = dom.parentNode || this.length > 1;
+      })(el, stop_overlay_events[ev]);
+    }
 
-      return this.each(function(index){
-        $(this).wrapAll(
-          func ? structure.call(this, index) :
-            clone ? dom.cloneNode(true) : dom
-        );
-      })
-    },
-    wrapAll: function(structure){
-      if (this[0]) {
-        $(this[0]).before(structure = $(structure));
-        var children;
-        // drill down to the inmost element
-        while ((children = structure.children()).length) structure = children.first();
-        $(structure).append(this);
-      }
-      return this
-    },
-    wrapInner: function(structure){
-      var func = isFunction(structure);
-      return this.each(function(index){
-        var self = $(this), contents = self.contents(),
-            dom  = func ? structure.call(this, index) : structure;
-        contents.length ? contents.wrapAll(dom) : self.append(dom);
-      })
-    },
-    unwrap: function(){
-      this.parent().each(function(){
-        $(this).replaceWith($(this).children());
+    if (options.click) {
+      panes.overlayMouseTarget.appendChild(overlay.el);
+      google.maps.event.addDomListener(overlay.el, 'click', function() {
+        options.click.apply(overlay, [overlay]);
       });
-      return this
-    },
-    clone: function(){
-      return this.map(function(){ return this.cloneNode(true) })
-    },
-    hide: function(){
-      return this.css("display", "none")
-    },
-    toggle: function(setting){
-      return this.each(function(){
-        var el = $(this);(setting === undefined ? el.css("display") == "none" : setting) ? el.show() : el.hide();
-      })
-    },
-    prev: function(selector){ return $(this.pluck('previousElementSibling')).filter(selector || '*') },
-    next: function(selector){ return $(this.pluck('nextElementSibling')).filter(selector || '*') },
-    html: function(html){
-      return 0 in arguments ?
-        this.each(function(idx){
-          var originHtml = this.innerHTML;
-          $(this).empty().append( funcArg(this, html, idx, originHtml) );
-        }) :
-        (0 in this ? this[0].innerHTML : null)
-    },
-    text: function(text){
-      return 0 in arguments ?
-        this.each(function(idx){
-          var newText = funcArg(this, text, idx, this.textContent);
-          this.textContent = newText == null ? '' : ''+newText;
-        }) :
-        (0 in this ? this.pluck('textContent').join("") : null)
-    },
-    attr: function(name, value){
-      var result;
-      return (typeof name == 'string' && !(1 in arguments)) ?
-        (0 in this && this[0].nodeType == 1 && (result = this[0].getAttribute(name)) != null ? result : undefined) :
-        this.each(function(idx){
-          if (this.nodeType !== 1) return
-          if (isObject(name)) for (key in name) setAttribute(this, key, name[key]);
-          else setAttribute(this, name, funcArg(this, value, idx, this.getAttribute(name)));
-        })
-    },
-    removeAttr: function(name){
-      return this.each(function(){ this.nodeType === 1 && name.split(' ').forEach(function(attribute){
-        setAttribute(this, attribute);
-      }, this);})
-    },
-    prop: function(name, value){
-      name = propMap[name] || name;
-      return (1 in arguments) ?
-        this.each(function(idx){
-          this[name] = funcArg(this, value, idx, this[name]);
-        }) :
-        (this[0] && this[0][name])
-    },
-    removeProp: function(name){
-      name = propMap[name] || name;
-      return this.each(function(){ delete this[name]; })
-    },
-    data: function(name, value){
-      var attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
+    }
 
-      var data = (1 in arguments) ?
-        this.attr(attrName, value) :
-        this.attr(attrName);
+    google.maps.event.trigger(this, 'ready');
+  };
 
-      return data !== null ? deserializeValue(data) : undefined
-    },
-    val: function(value){
-      if (0 in arguments) {
-        if (value == null) value = "";
-        return this.each(function(idx){
-          this.value = funcArg(this, value, idx, this.value);
-        })
-      } else {
-        return this[0] && (this[0].multiple ?
-           $(this[0]).find('option').filter(function(){ return this.selected }).pluck('value') :
-           this[0].value)
+  overlay.draw = function() {
+    var projection = this.getProjection(),
+        pixel = projection.fromLatLngToDivPixel(new google.maps.LatLng(options.lat, options.lng));
+
+    options.horizontalOffset = options.horizontalOffset || 0;
+    options.verticalOffset = options.verticalOffset || 0;
+
+    var el = overlay.el,
+        content = el.children[0],
+        content_height = content.clientHeight,
+        content_width = content.clientWidth;
+
+    switch (options.verticalAlign) {
+      case 'top':
+        el.style.top = (pixel.y - content_height + options.verticalOffset) + 'px';
+        break;
+      default:
+      case 'middle':
+        el.style.top = (pixel.y - (content_height / 2) + options.verticalOffset) + 'px';
+        break;
+      case 'bottom':
+        el.style.top = (pixel.y + options.verticalOffset) + 'px';
+        break;
+    }
+
+    switch (options.horizontalAlign) {
+      case 'left':
+        el.style.left = (pixel.x - content_width + options.horizontalOffset) + 'px';
+        break;
+      default:
+      case 'center':
+        el.style.left = (pixel.x - (content_width / 2) + options.horizontalOffset) + 'px';
+        break;
+      case 'right':
+        el.style.left = (pixel.x + options.horizontalOffset) + 'px';
+        break;
+    }
+
+    el.style.display = auto_show ? 'block' : 'none';
+
+    if (!auto_show) {
+      options.show.apply(this, [el]);
+    }
+  };
+
+  overlay.onRemove = function() {
+    var el = overlay.el;
+
+    if (options.remove) {
+      options.remove.apply(this, [el]);
+    }
+    else {
+      overlay.el.parentNode.removeChild(overlay.el);
+      overlay.el = null;
+    }
+  };
+
+  this.overlays.push(overlay);
+  return overlay;
+};
+
+GMaps.prototype.removeOverlay = function(overlay) {
+  for (var i = 0; i < this.overlays.length; i++) {
+    if (this.overlays[i] === overlay) {
+      this.overlays[i].setMap(null);
+      this.overlays.splice(i, 1);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removeOverlays = function() {
+  for (var i = 0, item; item = this.overlays[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.overlays = [];
+};
+
+GMaps.prototype.drawPolyline = function(options) {
+  var path = [],
+      points = options.path;
+
+  if (points.length) {
+    if (points[0][0] === undefined) {
+      path = points;
+    }
+    else {
+      for (var i = 0, latlng; latlng = points[i]; i++) {
+        path.push(new google.maps.LatLng(latlng[0], latlng[1]));
       }
-    },
-    offset: function(coordinates){
-      if (coordinates) return this.each(function(index){
-        var $this = $(this),
-            coords = funcArg(this, coordinates, index, $this.offset()),
-            parentOffset = $this.offsetParent().offset(),
-            props = {
-              top:  coords.top  - parentOffset.top,
-              left: coords.left - parentOffset.left
-            };
+    }
+  }
 
-        if ($this.css('position') == 'static') props['position'] = 'relative';
-        $this.css(props);
-      })
-      if (!this.length) return null
-      if (document.documentElement !== this[0] && !$.contains(document.documentElement, this[0]))
-        return {top: 0, left: 0}
-      var obj = this[0].getBoundingClientRect();
-      return {
-        left: obj.left + window.pageXOffset,
-        top: obj.top + window.pageYOffset,
-        width: Math.round(obj.width),
-        height: Math.round(obj.height)
+  var polyline_options = {
+    map: this.map,
+    path: path,
+    strokeColor: options.strokeColor,
+    strokeOpacity: options.strokeOpacity,
+    strokeWeight: options.strokeWeight,
+    geodesic: options.geodesic,
+    clickable: true,
+    editable: false,
+    visible: true
+  };
+
+  if (options.hasOwnProperty("clickable")) {
+    polyline_options.clickable = options.clickable;
+  }
+
+  if (options.hasOwnProperty("editable")) {
+    polyline_options.editable = options.editable;
+  }
+
+  if (options.hasOwnProperty("icons")) {
+    polyline_options.icons = options.icons;
+  }
+
+  if (options.hasOwnProperty("zIndex")) {
+    polyline_options.zIndex = options.zIndex;
+  }
+
+  var polyline = new google.maps.Polyline(polyline_options);
+
+  var polyline_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polyline_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
       }
-    },
-    css: function(property, value){
-      if (arguments.length < 2) {
-        var element = this[0];
-        if (typeof property == 'string') {
-          if (!element) return
-          return element.style[camelize(property)] || getComputedStyle(element, '').getPropertyValue(property)
-        } else if (isArray(property)) {
-          if (!element) return
-          var props = {};
-          var computedStyle = getComputedStyle(element, '');
-          $.each(property, function(_, prop){
-            props[prop] = (element.style[camelize(prop)] || computedStyle.getPropertyValue(prop));
+    })(polyline, polyline_events[ev]);
+  }
+
+  this.polylines.push(polyline);
+
+  GMaps.fire('polyline_added', polyline, this);
+
+  return polyline;
+};
+
+GMaps.prototype.removePolyline = function(polyline) {
+  for (var i = 0; i < this.polylines.length; i++) {
+    if (this.polylines[i] === polyline) {
+      this.polylines[i].setMap(null);
+      this.polylines.splice(i, 1);
+
+      GMaps.fire('polyline_removed', polyline, this);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removePolylines = function() {
+  for (var i = 0, item; item = this.polylines[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.polylines = [];
+};
+
+GMaps.prototype.drawCircle = function(options) {
+  options =  extend_object({
+    map: this.map,
+    center: new google.maps.LatLng(options.lat, options.lng)
+  }, options);
+
+  delete options.lat;
+  delete options.lng;
+
+  var polygon = new google.maps.Circle(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  return polygon;
+};
+
+GMaps.prototype.drawRectangle = function(options) {
+  options = extend_object({
+    map: this.map
+  }, options);
+
+  var latLngBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(options.bounds[0][0], options.bounds[0][1]),
+    new google.maps.LatLng(options.bounds[1][0], options.bounds[1][1])
+  );
+
+  options.bounds = latLngBounds;
+
+  var polygon = new google.maps.Rectangle(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  return polygon;
+};
+
+GMaps.prototype.drawPolygon = function(options) {
+  var useGeoJSON = false;
+
+  if(options.hasOwnProperty("useGeoJSON")) {
+    useGeoJSON = options.useGeoJSON;
+  }
+
+  delete options.useGeoJSON;
+
+  options = extend_object({
+    map: this.map
+  }, options);
+
+  if (useGeoJSON == false) {
+    options.paths = [options.paths.slice(0)];
+  }
+
+  if (options.paths.length > 0) {
+    if (options.paths[0].length > 0) {
+      options.paths = array_flat(array_map(options.paths, arrayToLatLng, useGeoJSON));
+    }
+  }
+
+  var polygon = new google.maps.Polygon(options),
+      polygon_events = ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'rightclick'];
+
+  for (var ev = 0; ev < polygon_events.length; ev++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(e){
+          options[name].apply(this, [e]);
+        });
+      }
+    })(polygon, polygon_events[ev]);
+  }
+
+  this.polygons.push(polygon);
+
+  GMaps.fire('polygon_added', polygon, this);
+
+  return polygon;
+};
+
+GMaps.prototype.removePolygon = function(polygon) {
+  for (var i = 0; i < this.polygons.length; i++) {
+    if (this.polygons[i] === polygon) {
+      this.polygons[i].setMap(null);
+      this.polygons.splice(i, 1);
+
+      GMaps.fire('polygon_removed', polygon, this);
+
+      break;
+    }
+  }
+};
+
+GMaps.prototype.removePolygons = function() {
+  for (var i = 0, item; item = this.polygons[i]; i++) {
+    item.setMap(null);
+  }
+
+  this.polygons = [];
+};
+
+GMaps.prototype.getFromFusionTables = function(options) {
+  var events = options.events;
+
+  delete options.events;
+
+  var fusion_tables_options = options,
+      layer = new google.maps.FusionTablesLayer(fusion_tables_options);
+
+  for (var ev in events) {
+    (function(object, name) {
+      google.maps.event.addListener(object, name, function(e) {
+        events[name].apply(this, [e]);
+      });
+    })(layer, ev);
+  }
+
+  this.layers.push(layer);
+
+  return layer;
+};
+
+GMaps.prototype.loadFromFusionTables = function(options) {
+  var layer = this.getFromFusionTables(options);
+  layer.setMap(this.map);
+
+  return layer;
+};
+
+GMaps.prototype.getFromKML = function(options) {
+  var url = options.url,
+      events = options.events;
+
+  delete options.url;
+  delete options.events;
+
+  var kml_options = options,
+      layer = new google.maps.KmlLayer(url, kml_options);
+
+  for (var ev in events) {
+    (function(object, name) {
+      google.maps.event.addListener(object, name, function(e) {
+        events[name].apply(this, [e]);
+      });
+    })(layer, ev);
+  }
+
+  this.layers.push(layer);
+
+  return layer;
+};
+
+GMaps.prototype.loadFromKML = function(options) {
+  var layer = this.getFromKML(options);
+  layer.setMap(this.map);
+
+  return layer;
+};
+
+GMaps.prototype.addLayer = function(layerName, options) {
+  //var default_layers = ['weather', 'clouds', 'traffic', 'transit', 'bicycling', 'panoramio', 'places'];
+  options = options || {};
+  var layer;
+
+  switch(layerName) {
+    case 'weather': this.singleLayers.weather = layer = new google.maps.weather.WeatherLayer();
+      break;
+    case 'clouds': this.singleLayers.clouds = layer = new google.maps.weather.CloudLayer();
+      break;
+    case 'traffic': this.singleLayers.traffic = layer = new google.maps.TrafficLayer();
+      break;
+    case 'transit': this.singleLayers.transit = layer = new google.maps.TransitLayer();
+      break;
+    case 'bicycling': this.singleLayers.bicycling = layer = new google.maps.BicyclingLayer();
+      break;
+    case 'panoramio':
+        this.singleLayers.panoramio = layer = new google.maps.panoramio.PanoramioLayer();
+        layer.setTag(options.filter);
+        delete options.filter;
+
+        //click event
+        if (options.click) {
+          google.maps.event.addListener(layer, 'click', function(event) {
+            options.click(event);
+            delete options.click;
           });
-          return props
+        }
+      break;
+      case 'places':
+        this.singleLayers.places = layer = new google.maps.places.PlacesService(this.map);
+
+        //search, nearbySearch, radarSearch callback, Both are the same
+        if (options.search || options.nearbySearch || options.radarSearch) {
+          var placeSearchRequest  = {
+            bounds : options.bounds || null,
+            keyword : options.keyword || null,
+            location : options.location || null,
+            name : options.name || null,
+            radius : options.radius || null,
+            rankBy : options.rankBy || null,
+            types : options.types || null
+          };
+
+          if (options.radarSearch) {
+            layer.radarSearch(placeSearchRequest, options.radarSearch);
+          }
+
+          if (options.search) {
+            layer.search(placeSearchRequest, options.search);
+          }
+
+          if (options.nearbySearch) {
+            layer.nearbySearch(placeSearchRequest, options.nearbySearch);
+          }
+        }
+
+        //textSearch callback
+        if (options.textSearch) {
+          var textSearchRequest  = {
+            bounds : options.bounds || null,
+            location : options.location || null,
+            query : options.query || null,
+            radius : options.radius || null
+          };
+
+          layer.textSearch(textSearchRequest, options.textSearch);
+        }
+      break;
+  }
+
+  if (layer !== undefined) {
+    if (typeof layer.setOptions == 'function') {
+      layer.setOptions(options);
+    }
+    if (typeof layer.setMap == 'function') {
+      layer.setMap(this.map);
+    }
+
+    return layer;
+  }
+};
+
+GMaps.prototype.removeLayer = function(layer) {
+  if (typeof(layer) == "string" && this.singleLayers[layer] !== undefined) {
+     this.singleLayers[layer].setMap(null);
+
+     delete this.singleLayers[layer];
+  }
+  else {
+    for (var i = 0; i < this.layers.length; i++) {
+      if (this.layers[i] === layer) {
+        this.layers[i].setMap(null);
+        this.layers.splice(i, 1);
+
+        break;
+      }
+    }
+  }
+};
+
+var travelMode, unitSystem;
+
+GMaps.prototype.getRoutes = function(options) {
+  switch (options.travelMode) {
+    case 'bicycling':
+      travelMode = google.maps.TravelMode.BICYCLING;
+      break;
+    case 'transit':
+      travelMode = google.maps.TravelMode.TRANSIT;
+      break;
+    case 'driving':
+      travelMode = google.maps.TravelMode.DRIVING;
+      break;
+    default:
+      travelMode = google.maps.TravelMode.WALKING;
+      break;
+  }
+
+  if (options.unitSystem === 'imperial') {
+    unitSystem = google.maps.UnitSystem.IMPERIAL;
+  }
+  else {
+    unitSystem = google.maps.UnitSystem.METRIC;
+  }
+
+  var base_options = {
+        avoidHighways: false,
+        avoidTolls: false,
+        optimizeWaypoints: false,
+        waypoints: []
+      },
+      request_options =  extend_object(base_options, options);
+
+  request_options.origin = /string/.test(typeof options.origin) ? options.origin : new google.maps.LatLng(options.origin[0], options.origin[1]);
+  request_options.destination = /string/.test(typeof options.destination) ? options.destination : new google.maps.LatLng(options.destination[0], options.destination[1]);
+  request_options.travelMode = travelMode;
+  request_options.unitSystem = unitSystem;
+
+  delete request_options.callback;
+  delete request_options.error;
+
+  var self = this,
+      routes = [],
+      service = new google.maps.DirectionsService();
+
+  service.route(request_options, function(result, status) {
+    if (status === google.maps.DirectionsStatus.OK) {
+      for (var r in result.routes) {
+        if (result.routes.hasOwnProperty(r)) {
+          routes.push(result.routes[r]);
         }
       }
 
-      var css = '';
-      if (type(property) == 'string') {
-        if (!value && value !== 0)
-          this.each(function(){ this.style.removeProperty(dasherize(property)); });
-        else
-          css = dasherize(property) + ":" + maybeAddPx(property, value);
-      } else {
-        for (key in property)
-          if (!property[key] && property[key] !== 0)
-            this.each(function(){ this.style.removeProperty(dasherize(key)); });
-          else
-            css += dasherize(key) + ':' + maybeAddPx(key, property[key]) + ';';
+      if (options.callback) {
+        options.callback(routes, result, status);
       }
-
-      return this.each(function(){ this.style.cssText += ';' + css; })
-    },
-    index: function(element){
-      return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0])
-    },
-    hasClass: function(name){
-      if (!name) return false
-      return emptyArray.some.call(this, function(el){
-        return this.test(className(el))
-      }, classRE(name))
-    },
-    addClass: function(name){
-      if (!name) return this
-      return this.each(function(idx){
-        if (!('className' in this)) return
-        classList = [];
-        var cls = className(this), newName = funcArg(this, name, idx, cls);
-        newName.split(/\s+/g).forEach(function(klass){
-          if (!$(this).hasClass(klass)) classList.push(klass);
-        }, this);
-        classList.length && className(this, cls + (cls ? " " : "") + classList.join(" "));
-      })
-    },
-    removeClass: function(name){
-      return this.each(function(idx){
-        if (!('className' in this)) return
-        if (name === undefined) return className(this, '')
-        classList = className(this);
-        funcArg(this, name, idx, classList).split(/\s+/g).forEach(function(klass){
-          classList = classList.replace(classRE(klass), " ");
-        });
-        className(this, classList.trim());
-      })
-    },
-    toggleClass: function(name, when){
-      if (!name) return this
-      return this.each(function(idx){
-        var $this = $(this), names = funcArg(this, name, idx, className(this));
-        names.split(/\s+/g).forEach(function(klass){
-          (when === undefined ? !$this.hasClass(klass) : when) ?
-            $this.addClass(klass) : $this.removeClass(klass);
-        });
-      })
-    },
-    scrollTop: function(value){
-      if (!this.length) return
-      var hasScrollTop = 'scrollTop' in this[0];
-      if (value === undefined) return hasScrollTop ? this[0].scrollTop : this[0].pageYOffset
-      return this.each(hasScrollTop ?
-        function(){ this.scrollTop = value; } :
-        function(){ this.scrollTo(this.scrollX, value); })
-    },
-    scrollLeft: function(value){
-      if (!this.length) return
-      var hasScrollLeft = 'scrollLeft' in this[0];
-      if (value === undefined) return hasScrollLeft ? this[0].scrollLeft : this[0].pageXOffset
-      return this.each(hasScrollLeft ?
-        function(){ this.scrollLeft = value; } :
-        function(){ this.scrollTo(value, this.scrollY); })
-    },
-    position: function() {
-      if (!this.length) return
-
-      var elem = this[0],
-        // Get *real* offsetParent
-        offsetParent = this.offsetParent(),
-        // Get correct offsets
-        offset       = this.offset(),
-        parentOffset = rootNodeRE.test(offsetParent[0].nodeName) ? { top: 0, left: 0 } : offsetParent.offset();
-
-      // Subtract element margins
-      // note: when an element has margin: auto the offsetLeft and marginLeft
-      // are the same in Safari causing offset.left to incorrectly be 0
-      offset.top  -= parseFloat( $(elem).css('margin-top') ) || 0;
-      offset.left -= parseFloat( $(elem).css('margin-left') ) || 0;
-
-      // Add offsetParent borders
-      parentOffset.top  += parseFloat( $(offsetParent[0]).css('border-top-width') ) || 0;
-      parentOffset.left += parseFloat( $(offsetParent[0]).css('border-left-width') ) || 0;
-
-      // Subtract the two offsets
-      return {
-        top:  offset.top  - parentOffset.top,
-        left: offset.left - parentOffset.left
-      }
-    },
-    offsetParent: function() {
-      return this.map(function(){
-        var parent = this.offsetParent || document.body;
-        while (parent && !rootNodeRE.test(parent.nodeName) && $(parent).css("position") == "static")
-          parent = parent.offsetParent;
-        return parent
-      })
     }
-  };
-
-  // for now
-  $.fn.detach = $.fn.remove
-
-  // Generate the `width` and `height` functions
-  ;['width', 'height'].forEach(function(dimension){
-    var dimensionProperty =
-      dimension.replace(/./, function(m){ return m[0].toUpperCase() });
-
-    $.fn[dimension] = function(value){
-      var offset, el = this[0];
-      if (value === undefined) return isWindow(el) ? el['inner' + dimensionProperty] :
-        isDocument(el) ? el.documentElement['scroll' + dimensionProperty] :
-        (offset = this.offset()) && offset[dimension]
-      else return this.each(function(idx){
-        el = $(this);
-        el.css(dimension, funcArg(this, value, idx, el[dimension]()));
-      })
-    };
+    else {
+      if (options.error) {
+        options.error(result, status);
+      }
+    }
   });
+};
 
-  function traverseNode(node, fun) {
-    fun(node);
-    for (var i = 0, len = node.childNodes.length; i < len; i++)
-      traverseNode(node.childNodes[i], fun);
+GMaps.prototype.removeRoutes = function() {
+  this.routes.length = 0;
+};
+
+GMaps.prototype.getElevations = function(options) {
+  options = extend_object({
+    locations: [],
+    path : false,
+    samples : 256
+  }, options);
+
+  if (options.locations.length > 0) {
+    if (options.locations[0].length > 0) {
+      options.locations = array_flat(array_map([options.locations], arrayToLatLng,  false));
+    }
   }
 
-  // Generate the `after`, `prepend`, `before`, `append`,
-  // `insertAfter`, `insertBefore`, `appendTo`, and `prependTo` methods.
-  adjacencyOperators.forEach(function(operator, operatorIndex) {
-    var inside = operatorIndex % 2; //=> prepend, append
+  var callback = options.callback;
+  delete options.callback;
 
-    $.fn[operator] = function(){
-      // arguments can be nodes, arrays of nodes, Zepto objects and HTML strings
-      var argType, nodes = $.map(arguments, function(arg) {
-            var arr = [];
-            argType = type(arg);
-            if (argType == "array") {
-              arg.forEach(function(el) {
-                if (el.nodeType !== undefined) return arr.push(el)
-                else if ($.zepto.isZ(el)) return arr = arr.concat(el.get())
-                arr = arr.concat(zepto.fragment(el));
-              });
-              return arr
-            }
-            return argType == "object" || arg == null ?
-              arg : zepto.fragment(arg)
-          }),
-          parent, copyByClone = this.length > 1;
-      if (nodes.length < 1) return this
+  var service = new google.maps.ElevationService();
 
-      return this.each(function(_, target){
-        parent = inside ? target : target.parentNode;
+  //location request
+  if (!options.path) {
+    delete options.path;
+    delete options.samples;
 
-        // convert all methods to a "before" operation
-        target = operatorIndex == 0 ? target.nextSibling :
-                 operatorIndex == 1 ? target.firstChild :
-                 operatorIndex == 2 ? target :
-                 null;
-
-        var parentInDocument = $.contains(document.documentElement, parent);
-
-        nodes.forEach(function(node){
-          if (copyByClone) node = node.cloneNode(true);
-          else if (!parent) return $(node).remove()
-
-          parent.insertBefore(node, target);
-          if (parentInDocument) traverseNode(node, function(el){
-            if (el.nodeName != null && el.nodeName.toUpperCase() === 'SCRIPT' &&
-               (!el.type || el.type === 'text/javascript') && !el.src){
-              var target = el.ownerDocument ? el.ownerDocument.defaultView : window;
-              target['eval'].call(target, el.innerHTML);
-            }
-          });
-        });
-      })
+    service.getElevationForLocations(options, function(result, status) {
+      if (callback && typeof(callback) === "function") {
+        callback(result, status);
+      }
+    });
+  //path request
+  } else {
+    var pathRequest = {
+      path : options.locations,
+      samples : options.samples
     };
 
-    // after    => insertAfter
-    // prepend  => prependTo
-    // before   => insertBefore
-    // append   => appendTo
-    $.fn[inside ? operator+'To' : 'insert'+(operatorIndex ? 'Before' : 'After')] = function(html){
-      $(html)[operator](this);
-      return this
-    };
-  });
-
-  zepto.Z.prototype = Z.prototype = $.fn;
-
-  // Export internal API functions in the `$.zepto` namespace
-  zepto.uniq = uniq;
-  zepto.deserializeValue = deserializeValue;
-  $.zepto = zepto;
-
-  return $
-})();
-
-var zepto = Zepto;
-
-//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/zepto-modules/zepto.js
-
-// node_modules/zepto-modules/event.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  var _zid = 1, undefined,
-      slice = Array.prototype.slice,
-      isFunction = $.isFunction,
-      isString = function(obj){ return typeof obj == 'string' },
-      handlers = {},
-      specialEvents={},
-      focusinSupported = 'onfocusin' in window,
-      focus = { focus: 'focusin', blur: 'focusout' },
-      hover = { mouseenter: 'mouseover', mouseleave: 'mouseout' };
-
-  specialEvents.click = specialEvents.mousedown = specialEvents.mouseup = specialEvents.mousemove = 'MouseEvents';
-
-  function zid(element) {
-    return element._zid || (element._zid = _zid++)
-  }
-  function findHandlers(element, event, fn, selector) {
-    event = parse(event);
-    if (event.ns) var matcher = matcherFor(event.ns);
-    return (handlers[zid(element)] || []).filter(function(handler) {
-      return handler
-        && (!event.e  || handler.e == event.e)
-        && (!event.ns || matcher.test(handler.ns))
-        && (!fn       || zid(handler.fn) === zid(fn))
-        && (!selector || handler.sel == selector)
-    })
-  }
-  function parse(event) {
-    var parts = ('' + event).split('.');
-    return {e: parts[0], ns: parts.slice(1).sort().join(' ')}
-  }
-  function matcherFor(ns) {
-    return new RegExp('(?:^| )' + ns.replace(' ', ' .* ?') + '(?: |$)')
-  }
-
-  function eventCapture(handler, captureSetting) {
-    return handler.del &&
-      (!focusinSupported && (handler.e in focus)) ||
-      !!captureSetting
-  }
-
-  function realEvent(type) {
-    return hover[type] || (focusinSupported && focus[type]) || type
-  }
-
-  function add(element, events, fn, data, selector, delegator, capture){
-    var id = zid(element), set = (handlers[id] || (handlers[id] = []));
-    events.split(/\s/).forEach(function(event){
-      if (event == 'ready') return $(document).ready(fn)
-      var handler   = parse(event);
-      handler.fn    = fn;
-      handler.sel   = selector;
-      // emulate mouseenter, mouseleave
-      if (handler.e in hover) fn = function(e){
-        var related = e.relatedTarget;
-        if (!related || (related !== this && !$.contains(this, related)))
-          return handler.fn.apply(this, arguments)
-      };
-      handler.del   = delegator;
-      var callback  = delegator || fn;
-      handler.proxy = function(e){
-        e = compatible(e);
-        if (e.isImmediatePropagationStopped()) return
-        e.data = data;
-        var result = callback.apply(element, e._args == undefined ? [e] : [e].concat(e._args));
-        if (result === false) e.preventDefault(), e.stopPropagation();
-        return result
-      };
-      handler.i = set.length;
-      set.push(handler);
-      if ('addEventListener' in element)
-        element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture));
+    service.getElevationAlongPath(pathRequest, function(result, status) {
+     if (callback && typeof(callback) === "function") {
+        callback(result, status);
+      }
     });
   }
-  function remove(element, events, fn, selector, capture){
-    var id = zid(element);(events || '').split(/\s/).forEach(function(event){
-      findHandlers(element, event, fn, selector).forEach(function(handler){
-        delete handlers[id][handler.i];
-      if ('removeEventListener' in element)
-        element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture));
-      });
-    });
-  }
+};
 
-  $.event = { add: add, remove: remove };
+GMaps.prototype.cleanRoute = GMaps.prototype.removePolylines;
 
-  $.proxy = function(fn, context) {
-    var args = (2 in arguments) && slice.call(arguments, 2);
-    if (isFunction(fn)) {
-      var proxyFn = function(){ return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments) };
-      proxyFn._zid = zid(fn);
-      return proxyFn
-    } else if (isString(context)) {
-      if (args) {
-        args.unshift(fn[context], fn);
-        return $.proxy.apply(null, args)
-      } else {
-        return $.proxy(fn[context], fn)
+GMaps.prototype.renderRoute = function(options, renderOptions) {
+  var self = this,
+      panel = ((typeof renderOptions.panel === 'string') ? document.getElementById(renderOptions.panel.replace('#', '')) : renderOptions.panel),
+      display;
+
+  renderOptions.panel = panel;
+  renderOptions = extend_object({
+    map: this.map
+  }, renderOptions);
+  display = new google.maps.DirectionsRenderer(renderOptions);
+
+  this.getRoutes({
+    origin: options.origin,
+    destination: options.destination,
+    travelMode: options.travelMode,
+    waypoints: options.waypoints,
+    unitSystem: options.unitSystem,
+    error: options.error,
+    avoidHighways: options.avoidHighways,
+    avoidTolls: options.avoidTolls,
+    optimizeWaypoints: options.optimizeWaypoints,
+    callback: function(routes, response, status) {
+      if (status === google.maps.DirectionsStatus.OK) {
+        display.setDirections(response);
       }
-    } else {
-      throw new TypeError("expected function")
     }
-  };
+  });
+};
 
-  $.fn.bind = function(event, data, callback){
-    return this.on(event, data, callback)
-  };
-  $.fn.unbind = function(event, callback){
-    return this.off(event, callback)
-  };
-  $.fn.one = function(event, selector, data, callback){
-    return this.on(event, selector, data, callback, 1)
-  };
+GMaps.prototype.drawRoute = function(options) {
+  var self = this;
 
-  var returnTrue = function(){return true},
-      returnFalse = function(){return false},
-      ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$|webkitMovement[XY]$)/,
-      eventMethods = {
-        preventDefault: 'isDefaultPrevented',
-        stopImmediatePropagation: 'isImmediatePropagationStopped',
-        stopPropagation: 'isPropagationStopped'
-      };
-
-  function compatible(event, source) {
-    if (source || !event.isDefaultPrevented) {
-      source || (source = event);
-
-      $.each(eventMethods, function(name, predicate) {
-        var sourceMethod = source[name];
-        event[name] = function(){
-          this[predicate] = returnTrue;
-          return sourceMethod && sourceMethod.apply(source, arguments)
+  this.getRoutes({
+    origin: options.origin,
+    destination: options.destination,
+    travelMode: options.travelMode,
+    waypoints: options.waypoints,
+    unitSystem: options.unitSystem,
+    error: options.error,
+    avoidHighways: options.avoidHighways,
+    avoidTolls: options.avoidTolls,
+    optimizeWaypoints: options.optimizeWaypoints,
+    callback: function(routes) {
+      if (routes.length > 0) {
+        var polyline_options = {
+          path: routes[routes.length - 1].overview_path,
+          strokeColor: options.strokeColor,
+          strokeOpacity: options.strokeOpacity,
+          strokeWeight: options.strokeWeight
         };
-        event[predicate] = returnFalse;
-      });
 
-      try {
-        event.timeStamp || (event.timeStamp = Date.now());
-      } catch (ignored) { }
-
-      if (source.defaultPrevented !== undefined ? source.defaultPrevented :
-          'returnValue' in source ? source.returnValue === false :
-          source.getPreventDefault && source.getPreventDefault())
-        event.isDefaultPrevented = returnTrue;
-    }
-    return event
-  }
-
-  function createProxy(event) {
-    var key, proxy = { originalEvent: event };
-    for (key in event)
-      if (!ignoreProperties.test(key) && event[key] !== undefined) proxy[key] = event[key];
-
-    return compatible(proxy, event)
-  }
-
-  $.fn.delegate = function(selector, event, callback){
-    return this.on(event, selector, callback)
-  };
-  $.fn.undelegate = function(selector, event, callback){
-    return this.off(event, selector, callback)
-  };
-
-  $.fn.live = function(event, callback){
-    $(document.body).delegate(this.selector, event, callback);
-    return this
-  };
-  $.fn.die = function(event, callback){
-    $(document.body).undelegate(this.selector, event, callback);
-    return this
-  };
-
-  $.fn.on = function(event, selector, data, callback, one){
-    var autoRemove, delegator, $this = this;
-    if (event && !isString(event)) {
-      $.each(event, function(type, fn){
-        $this.on(type, selector, data, fn, one);
-      });
-      return $this
-    }
-
-    if (!isString(selector) && !isFunction(callback) && callback !== false)
-      callback = data, data = selector, selector = undefined;
-    if (callback === undefined || data === false)
-      callback = data, data = undefined;
-
-    if (callback === false) callback = returnFalse;
-
-    return $this.each(function(_, element){
-      if (one) autoRemove = function(e){
-        remove(element, e.type, callback);
-        return callback.apply(this, arguments)
-      };
-
-      if (selector) delegator = function(e){
-        var evt, match = $(e.target).closest(selector, element).get(0);
-        if (match && match !== element) {
-          evt = $.extend(createProxy(e), {currentTarget: match, liveFired: element});
-          return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
+        if (options.hasOwnProperty("icons")) {
+          polyline_options.icons = options.icons;
         }
-      };
 
-      add(element, event, callback, data, selector, delegator || autoRemove);
-    })
-  };
-  $.fn.off = function(event, selector, callback){
-    var $this = this;
-    if (event && !isString(event)) {
-      $.each(event, function(type, fn){
-        $this.off(type, selector, fn);
-      });
-      return $this
+        self.drawPolyline(polyline_options);
+
+        if (options.callback) {
+          options.callback(routes[routes.length - 1]);
+        }
+      }
     }
+  });
+};
 
-    if (!isString(selector) && !isFunction(callback) && callback !== false)
-      callback = selector, selector = undefined;
+GMaps.prototype.travelRoute = function(options) {
+  if (options.origin && options.destination) {
+    this.getRoutes({
+      origin: options.origin,
+      destination: options.destination,
+      travelMode: options.travelMode,
+      waypoints : options.waypoints,
+      unitSystem: options.unitSystem,
+      error: options.error,
+      callback: function(e) {
+        //start callback
+        if (e.length > 0 && options.start) {
+          options.start(e[e.length - 1]);
+        }
 
-    if (callback === false) callback = returnFalse;
+        //step callback
+        if (e.length > 0 && options.step) {
+          var route = e[e.length - 1];
+          if (route.legs.length > 0) {
+            var steps = route.legs[0].steps;
+            for (var i = 0, step; step = steps[i]; i++) {
+              step.step_number = i;
+              options.step(step, (route.legs[0].steps.length - 1));
+            }
+          }
+        }
 
-    return $this.each(function(){
-      remove(this, event, callback, selector);
-    })
-  };
-
-  $.fn.trigger = function(event, args){
-    event = (isString(event) || $.isPlainObject(event)) ? $.Event(event) : compatible(event);
-    event._args = args;
-    return this.each(function(){
-      // handle focus(), blur() by calling them directly
-      if (event.type in focus && typeof this[event.type] == "function") this[event.type]();
-      // items in the collection might not be DOM elements
-      else if ('dispatchEvent' in this) this.dispatchEvent(event);
-      else $(this).triggerHandler(event, args);
-    })
-  };
-
-  // triggers event handlers on current element just as if an event occurred,
-  // doesn't trigger an actual event, doesn't bubble
-  $.fn.triggerHandler = function(event, args){
-    var e, result;
-    this.each(function(i, element){
-      e = createProxy(isString(event) ? $.Event(event) : event);
-      e._args = args;
-      e.target = element;
-      $.each(findHandlers(element, event.type || event), function(i, handler){
-        result = handler.proxy(e);
-        if (e.isImmediatePropagationStopped()) return false
-      });
+        //end callback
+        if (e.length > 0 && options.end) {
+           options.end(e[e.length - 1]);
+        }
+      }
     });
-    return result
   }
-
-  // shortcut methods for `.bind(event, fn)` for each event type
-  ;('focusin focusout focus blur load resize scroll unload click dblclick '+
-  'mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave '+
-  'change select keydown keypress keyup error').split(' ').forEach(function(event) {
-    $.fn[event] = function(callback) {
-      return (0 in arguments) ?
-        this.bind(event, callback) :
-        this.trigger(event)
-    };
-  });
-
-  $.Event = function(type, props) {
-    if (!isString(type)) props = type, type = props.type;
-    var event = document.createEvent(specialEvents[type] || 'Events'), bubbles = true;
-    if (props) for (var name in props) (name == 'bubbles') ? (bubbles = !!props[name]) : (event[name] = props[name]);
-    event.initEvent(type, bubbles, true);
-    return compatible(event)
-  };
-
-})(zepto);
-
-// node_modules/zepto-modules/ie.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-(function(){
-  // getComputedStyle shouldn't freak out when called
-  // without a valid element as argument
-  try {
-    getComputedStyle(undefined);
-  } catch(e) {
-    var nativeGetComputedStyle = getComputedStyle;
-    window.getComputedStyle = function(element, pseudoElement){
-      try {
-        return nativeGetComputedStyle(element, pseudoElement)
-      } catch(e) {
-        return null
-      }
-    };
-  }
-})();
-
-// node_modules/zepto-modules/stack.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  $.fn.end = function(){
-    return this.prevObject || $()
-  };
-
-  $.fn.andSelf = function(){
-    return this.add(this.prevObject || $())
-  };
-
-  'filter,add,not,eq,first,last,find,closest,parents,parent,children,siblings'.split(',').forEach(function(property){
-    var fn = $.fn[property];
-    $.fn[property] = function(){
-      var ret = fn.apply(this, arguments);
-      ret.prevObject = this;
-      return ret
-    };
-  });
-})(zepto);
-
-// node_modules/zepto-modules/selector.js
-//     Zepto.js
-//     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
-
-
-
-(function($){
-  var zepto$$1 = $.zepto, oldQsa = zepto$$1.qsa, oldMatches = zepto$$1.matches;
-
-  function visible(elem){
-    elem = $(elem);
-    return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
-  }
-
-  // Implements a subset from:
-  // http://api.jquery.com/category/selectors/jquery-selector-extensions/
-  //
-  // Each filter function receives the current index, all nodes in the
-  // considered set, and a value if there were parentheses. The value
-  // of `this` is the node currently being considered. The function returns the
-  // resulting node(s), null, or undefined.
-  //
-  // Complex selectors are not supported:
-  //   li:has(label:contains("foo")) + li:has(label:contains("bar"))
-  //   ul.inner:first > li
-  var filters = $.expr[':'] = {
-    visible:  function(){ if (visible(this)) return this },
-    hidden:   function(){ if (!visible(this)) return this },
-    selected: function(){ if (this.selected) return this },
-    checked:  function(){ if (this.checked) return this },
-    parent:   function(){ return this.parentNode },
-    first:    function(idx){ if (idx === 0) return this },
-    last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
-    eq:       function(idx, _, value){ if (idx === value) return this },
-    contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
-    has:      function(idx, _, sel){ if (zepto$$1.qsa(this, sel).length) return this }
-  };
-
-  var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
-      childRe  = /^\s*>/,
-      classTag = 'Zepto' + (+new Date());
-
-  function process(sel, fn) {
-    // quote the hash in `a[href^=#]` expression
-    sel = sel.replace(/=#\]/g, '="#"]');
-    var filter, arg, match = filterRe.exec(sel);
-    if (match && match[2] in filters) {
-      filter = filters[match[2]], arg = match[3];
-      sel = match[1];
-      if (arg) {
-        var num = Number(arg);
-        if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '');
-        else arg = num;
+  else if (options.route) {
+    if (options.route.legs.length > 0) {
+      var steps = options.route.legs[0].steps;
+      for (var i = 0, step; step = steps[i]; i++) {
+        step.step_number = i;
+        options.step(step);
       }
     }
-    return fn(sel, filter, arg)
   }
-
-  zepto$$1.qsa = function(node, selector) {
-    return process(selector, function(sel, filter, arg){
-      try {
-        var taggedParent;
-        if (!sel && filter) sel = '*';
-        else if (childRe.test(sel))
-          // support "> *" child queries by tagging the parent node with a
-          // unique class and prepending that classname onto the selector
-          taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel;
-
-        var nodes = oldQsa(node, sel);
-      } catch(e) {
-        console.error('error performing selector: %o', selector);
-        throw e
-      } finally {
-        if (taggedParent) taggedParent.removeClass(classTag);
-      }
-      return !filter ? nodes :
-        zepto$$1.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
-    })
-  };
-
-  zepto$$1.matches = function(node, selector){
-    return process(selector, function(sel, filter, arg){
-      return (!sel || oldMatches(node, sel)) &&
-        (!filter || filter.call(node, null, arg) === node)
-    })
-  };
-})(zepto);
-
-// node_modules/es-sifter/sifter.mjs
-var DIACRITICS = {
-    'a': '[aḀḁĂăÂâǍǎȺⱥȦȧẠạÄäÀàÁáĀāÃãÅåąĄÃąĄ]',
-    'b': '[b␢βΒB฿𐌁ᛒ]',
-    'c': '[cĆćĈĉČčĊċC̄c̄ÇçḈḉȻȼƇƈɕᴄＣｃ]',
-    'd': '[dĎďḊḋḐḑḌḍḒḓḎḏĐđD̦d̦ƉɖƊɗƋƌᵭᶁᶑȡᴅＤｄð]',
-    'e': '[eÉéÈèÊêḘḙĚěĔĕẼẽḚḛẺẻĖėËëĒēȨȩĘęᶒɆɇȄȅẾếỀềỄễỂểḜḝḖḗḔḕȆȇẸẹỆệⱸᴇＥｅɘǝƏƐε]',
-    'f': '[fƑƒḞḟ]',
-    'g': '[gɢ₲ǤǥĜĝĞğĢģƓɠĠġ]',
-    'h': '[hĤĥĦħḨḩẖẖḤḥḢḣɦʰǶƕ]',
-    'i': '[iÍíÌìĬĭÎîǏǐÏïḮḯĨĩĮįĪīỈỉȈȉȊȋỊịḬḭƗɨɨ̆ᵻᶖİiIıɪＩｉ]',
-    'j': '[jȷĴĵɈɉʝɟʲ]',
-    'k': '[kƘƙꝀꝁḰḱǨǩḲḳḴḵκϰ₭]',
-    'l': '[lŁłĽľĻļĹĺḶḷḸḹḼḽḺḻĿŀȽƚⱠⱡⱢɫɬᶅɭȴʟＬｌ]',
-    'n': '[nŃńǸǹŇňÑñṄṅŅņṆṇṊṋṈṉN̈n̈ƝɲȠƞᵰᶇɳȵɴＮｎŊŋ]',
-    'o': '[oØøÖöÓóÒòÔôǑǒŐőŎŏȮȯỌọƟɵƠơỎỏŌōÕõǪǫȌȍՕօ]',
-    'p': '[pṔṕṖṗⱣᵽƤƥᵱ]',
-    'q': '[qꝖꝗʠɊɋꝘꝙq̃]',
-    'r': '[rŔŕɌɍŘřŖŗṘṙȐȑȒȓṚṛⱤɽ]',
-    's': '[sŚśṠṡṢṣꞨꞩŜŝŠšŞşȘșS̈s̈]',
-    't': '[tŤťṪṫŢţṬṭƮʈȚțṰṱṮṯƬƭ]',
-    'u': '[uŬŭɄʉỤụÜüÚúÙùÛûǓǔŰűŬŭƯưỦủŪūŨũŲųȔȕ∪]',
-    'v': '[vṼṽṾṿƲʋꝞꝟⱱʋ]',
-    'w': '[wẂẃẀẁŴŵẄẅẆẇẈẉ]',
-    'x': '[xẌẍẊẋχ]',
-    'y': '[yÝýỲỳŶŷŸÿỸỹẎẏỴỵɎɏƳƴ]',
-    'z': '[zŹźẐẑŽžŻżẒẓẔẕƵƶ]'
 };
 
-var asciifold = (function() {
-    var i, n, k, chunk;
-    var foreignletters = '';
-    var lookup = {};
-    for (k in DIACRITICS) {
-        if (DIACRITICS.hasOwnProperty(k)) {
-            chunk = DIACRITICS[k].substring(2, DIACRITICS[k].length - 1);
-            foreignletters += chunk;
-            for (i = 0, n = chunk.length; i < n; i++) {
-                lookup[chunk.charAt(i)] = k;
-            }
+GMaps.prototype.drawSteppedRoute = function(options) {
+  var self = this;
+
+  if (options.origin && options.destination) {
+    this.getRoutes({
+      origin: options.origin,
+      destination: options.destination,
+      travelMode: options.travelMode,
+      waypoints : options.waypoints,
+      error: options.error,
+      callback: function(e) {
+        //start callback
+        if (e.length > 0 && options.start) {
+          options.start(e[e.length - 1]);
         }
-    }
-    var regexp = new RegExp('[' +  foreignletters + ']', 'g');
-    return function(str) {
-        return str.replace(regexp, function(foreignletter) {
-            return lookup[foreignletter];
-        }).toLowerCase();
-    };
-})();
 
-function cmp(a, b) {
-    if (typeof a === 'number' && typeof b === 'number') {
-        return a > b ? 1 : (a < b ? -1 : 0);
-    }
-    a = asciifold(String(a || ''));
-    b = asciifold(String(b || ''));
-    if (a > b) return 1;
-    if (b > a) return -1;
-    return 0;
-}
+        //step callback
+        if (e.length > 0 && options.step) {
+          var route = e[e.length - 1];
+          if (route.legs.length > 0) {
+            var steps = route.legs[0].steps;
+            for (var i = 0, step; step = steps[i]; i++) {
+              step.step_number = i;
+              var polyline_options = {
+                path: step.path,
+                strokeColor: options.strokeColor,
+                strokeOpacity: options.strokeOpacity,
+                strokeWeight: options.strokeWeight
+              };
 
-function extend$4$1(a, b) {
-    var i, n, k, object;
-    for (i = 1, n = arguments.length; i < n; i++) {
-        object = arguments[i];
-        if (!object) continue;
-        for (k in object) {
-            if (object.hasOwnProperty(k)) {
-                a[k] = object[k];
+              if (options.hasOwnProperty("icons")) {
+                polyline_options.icons = options.icons;
+              }
+
+              self.drawPolyline(polyline_options);
+              options.step(step, (route.legs[0].steps.length - 1));
             }
+          }
         }
+
+        //end callback
+        if (e.length > 0 && options.end) {
+           options.end(e[e.length - 1]);
+        }
+      }
+    });
+  }
+  else if (options.route) {
+    if (options.route.legs.length > 0) {
+      var steps = options.route.legs[0].steps;
+      for (var i = 0, step; step = steps[i]; i++) {
+        step.step_number = i;
+        var polyline_options = {
+          path: step.path,
+          strokeColor: options.strokeColor,
+          strokeOpacity: options.strokeOpacity,
+          strokeWeight: options.strokeWeight
+        };
+
+        if (options.hasOwnProperty("icons")) {
+          polyline_options.icons = options.icons;
+        }
+
+        self.drawPolyline(polyline_options);
+        options.step(step);
+      }
     }
-    return a;
-}
-
-/**
- * A property getter resolving dot-notation
- * @param  {Object}  obj     The root object to fetch property on
- * @param  {String}  name    The optionally dotted property name to fetch
- * @param  {Boolean} nesting Handle nesting or not
- * @return {Object}          The resolved property value
- */
-function getattr(obj, name, nesting) {
-    if (!obj || !name) return;
-    if (!nesting) return obj[name];
-    var names = name.split('.');
-    while(names.length && (obj = obj[names.shift()]));
-    return obj;
-}
-
-function trim$1(str) {
-    return (str + '').replace(/^\s+|\s+$|/g, '');
-}
-
-function escapeRegex(str) {
-    return (str + '').replace(/([.?*+^$[\]\\(){}|-])/g, '\\$1');
-}
-
-const isArray$2 = Array.isArray || (typeof $ !== 'undefined' && $.isArray) || function(object) {
-    return Object.prototype.toString.call(object) === '[object Array]';
+  }
 };
 
-/**
- * sifter.js
- * Copyright (c) 2013 Brian Reavis & contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
- * file except in compliance with the License. You may obtain a copy of the License at:
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- *
- * @author Brian Reavis <brian@thirdroute.com>
- */
+GMaps.Route = function(options) {
+  this.origin = options.origin;
+  this.destination = options.destination;
+  this.waypoints = options.waypoints;
 
+  this.map = options.map;
+  this.route = options.route;
+  this.step_count = 0;
+  this.steps = this.route.legs[0].steps;
+  this.steps_length = this.steps.length;
+
+  var polyline_options = {
+    path: new google.maps.MVCArray(),
+    strokeColor: options.strokeColor,
+    strokeOpacity: options.strokeOpacity,
+    strokeWeight: options.strokeWeight
+  };
+
+  if (options.hasOwnProperty("icons")) {
+    polyline_options.icons = options.icons;
+  }
+
+  this.polyline = this.map.drawPolyline(polyline_options).getPath();
+};
+
+GMaps.Route.prototype.getRoute = function(options) {
+  var self = this;
+
+  this.map.getRoutes({
+    origin : this.origin,
+    destination : this.destination,
+    travelMode : options.travelMode,
+    waypoints : this.waypoints || [],
+    error: options.error,
+    callback : function() {
+      self.route = e[0];
+
+      if (options.callback) {
+        options.callback.call(self);
+      }
+    }
+  });
+};
+
+GMaps.Route.prototype.back = function() {
+  if (this.step_count > 0) {
+    this.step_count--;
+    var path = this.route.legs[0].steps[this.step_count].path;
+
+    for (var p in path){
+      if (path.hasOwnProperty(p)){
+        this.polyline.pop();
+      }
+    }
+  }
+};
+
+GMaps.Route.prototype.forward = function() {
+  if (this.step_count < this.steps_length) {
+    var path = this.route.legs[0].steps[this.step_count].path;
+
+    for (var p in path){
+      if (path.hasOwnProperty(p)){
+        this.polyline.push(path[p]);
+      }
+    }
+    this.step_count++;
+  }
+};
+
+GMaps.prototype.checkGeofence = function(lat, lng, fence) {
+  return fence.containsLatLng(new google.maps.LatLng(lat, lng));
+};
+
+GMaps.prototype.checkMarkerGeofence = function(marker, outside_callback) {
+  if (marker.fences) {
+    for (var i = 0, fence; fence = marker.fences[i]; i++) {
+      var pos = marker.getPosition();
+      if (!this.checkGeofence(pos.lat(), pos.lng(), fence)) {
+        outside_callback(marker, fence);
+      }
+    }
+  }
+};
+
+GMaps.prototype.toImage = function(options) {
+  var options = options || {},
+      static_map_options = {};
+
+  static_map_options['size'] = options['size'] || [this.el.clientWidth, this.el.clientHeight];
+  static_map_options['lat'] = this.getCenter().lat();
+  static_map_options['lng'] = this.getCenter().lng();
+
+  if (this.markers.length > 0) {
+    static_map_options['markers'] = [];
+    
+    for (var i = 0; i < this.markers.length; i++) {
+      static_map_options['markers'].push({
+        lat: this.markers[i].getPosition().lat(),
+        lng: this.markers[i].getPosition().lng()
+      });
+    }
+  }
+
+  if (this.polylines.length > 0) {
+    var polyline = this.polylines[0];
+    
+    static_map_options['polyline'] = {};
+    static_map_options['polyline']['path'] = google.maps.geometry.encoding.encodePath(polyline.getPath());
+    static_map_options['polyline']['strokeColor'] = polyline.strokeColor;
+    static_map_options['polyline']['strokeOpacity'] = polyline.strokeOpacity;
+    static_map_options['polyline']['strokeWeight'] = polyline.strokeWeight;
+  }
+
+  return GMaps.staticMapURL(static_map_options);
+};
+
+GMaps.staticMapURL = function(options){
+  var parameters = [],
+      data,
+      static_root = (location.protocol === 'file:' ? 'http:' : location.protocol ) + '//maps.googleapis.com/maps/api/staticmap';
+
+  if (options.url) {
+    static_root = options.url;
+    delete options.url;
+  }
+
+  static_root += '?';
+
+  var markers = options.markers;
+  
+  delete options.markers;
+
+  if (!markers && options.marker) {
+    markers = [options.marker];
+    delete options.marker;
+  }
+
+  var styles = options.styles;
+
+  delete options.styles;
+
+  var polyline = options.polyline;
+  delete options.polyline;
+
+  /** Map options **/
+  if (options.center) {
+    parameters.push('center=' + options.center);
+    delete options.center;
+  }
+  else if (options.address) {
+    parameters.push('center=' + options.address);
+    delete options.address;
+  }
+  else if (options.lat) {
+    parameters.push(['center=', options.lat, ',', options.lng].join(''));
+    delete options.lat;
+    delete options.lng;
+  }
+  else if (options.visible) {
+    var visible = encodeURI(options.visible.join('|'));
+    parameters.push('visible=' + visible);
+  }
+
+  var size = options.size;
+  if (size) {
+    if (size.join) {
+      size = size.join('x');
+    }
+    delete options.size;
+  }
+  else {
+    size = '630x300';
+  }
+  parameters.push('size=' + size);
+
+  if (!options.zoom && options.zoom !== false) {
+    options.zoom = 15;
+  }
+
+  var sensor = options.hasOwnProperty('sensor') ? !!options.sensor : true;
+  delete options.sensor;
+  parameters.push('sensor=' + sensor);
+
+  for (var param in options) {
+    if (options.hasOwnProperty(param)) {
+      parameters.push(param + '=' + options[param]);
+    }
+  }
+
+  /** Markers **/
+  if (markers) {
+    var marker, loc;
+
+    for (var i = 0; data = markers[i]; i++) {
+      marker = [];
+
+      if (data.size && data.size !== 'normal') {
+        marker.push('size:' + data.size);
+        delete data.size;
+      }
+      else if (data.icon) {
+        marker.push('icon:' + encodeURI(data.icon));
+        delete data.icon;
+      }
+
+      if (data.color) {
+        marker.push('color:' + data.color.replace('#', '0x'));
+        delete data.color;
+      }
+
+      if (data.label) {
+        marker.push('label:' + data.label[0].toUpperCase());
+        delete data.label;
+      }
+
+      loc = (data.address ? data.address : data.lat + ',' + data.lng);
+      delete data.address;
+      delete data.lat;
+      delete data.lng;
+
+      for(var param in data){
+        if (data.hasOwnProperty(param)) {
+          marker.push(param + ':' + data[param]);
+        }
+      }
+
+      if (marker.length || i === 0) {
+        marker.push(loc);
+        marker = marker.join('|');
+        parameters.push('markers=' + encodeURI(marker));
+      }
+      // New marker without styles
+      else {
+        marker = parameters.pop() + encodeURI('|' + loc);
+        parameters.push(marker);
+      }
+    }
+  }
+
+  /** Map Styles **/
+  if (styles) {
+    for (var i = 0; i < styles.length; i++) {
+      var styleRule = [];
+      if (styles[i].featureType){
+        styleRule.push('feature:' + styles[i].featureType.toLowerCase());
+      }
+
+      if (styles[i].elementType) {
+        styleRule.push('element:' + styles[i].elementType.toLowerCase());
+      }
+
+      for (var j = 0; j < styles[i].stylers.length; j++) {
+        for (var p in styles[i].stylers[j]) {
+          var ruleArg = styles[i].stylers[j][p];
+          if (p == 'hue' || p == 'color') {
+            ruleArg = '0x' + ruleArg.substring(1);
+          }
+          styleRule.push(p + ':' + ruleArg);
+        }
+      }
+
+      var rule = styleRule.join('|');
+      if (rule != '') {
+        parameters.push('style=' + rule);
+      }
+    }
+  }
+
+  /** Polylines **/
+  function parseColor(color, opacity) {
+    if (color[0] === '#'){
+      color = color.replace('#', '0x');
+
+      if (opacity) {
+        opacity = parseFloat(opacity);
+        opacity = Math.min(1, Math.max(opacity, 0));
+        if (opacity === 0) {
+          return '0x00000000';
+        }
+        opacity = (opacity * 255).toString(16);
+        if (opacity.length === 1) {
+          opacity += opacity;
+        }
+
+        color = color.slice(0,8) + opacity;
+      }
+    }
+    return color;
+  }
+
+  if (polyline) {
+    data = polyline;
+    polyline = [];
+
+    if (data.strokeWeight) {
+      polyline.push('weight:' + parseInt(data.strokeWeight, 10));
+    }
+
+    if (data.strokeColor) {
+      var color = parseColor(data.strokeColor, data.strokeOpacity);
+      polyline.push('color:' + color);
+    }
+
+    if (data.fillColor) {
+      var fillcolor = parseColor(data.fillColor, data.fillOpacity);
+      polyline.push('fillcolor:' + fillcolor);
+    }
+
+    var path = data.path;
+    if (path.join) {
+      for (var j=0, pos; pos=path[j]; j++) {
+        polyline.push(pos.join(','));
+      }
+    }
+    else {
+      polyline.push('enc:' + path);
+    }
+
+    polyline = polyline.join('|');
+    parameters.push('path=' + encodeURI(polyline));
+  }
+
+  /** Retina support **/
+  var dpi = window.devicePixelRatio || 1;
+  parameters.push('scale=' + dpi);
+
+  parameters = parameters.join('&');
+  return static_root + parameters;
+};
+
+GMaps.prototype.addMapType = function(mapTypeId, options) {
+  if (options.hasOwnProperty("getTileUrl") && typeof(options["getTileUrl"]) == "function") {
+    options.tileSize = options.tileSize || new google.maps.Size(256, 256);
+
+    var mapType = new google.maps.ImageMapType(options);
+
+    this.map.mapTypes.set(mapTypeId, mapType);
+  }
+  else {
+    throw "'getTileUrl' function required.";
+  }
+};
+
+GMaps.prototype.addOverlayMapType = function(options) {
+  if (options.hasOwnProperty("getTile") && typeof(options["getTile"]) == "function") {
+    var overlayMapTypeIndex = options.index;
+
+    delete options.index;
+
+    this.map.overlayMapTypes.insertAt(overlayMapTypeIndex, options);
+  }
+  else {
+    throw "'getTile' function required.";
+  }
+};
+
+GMaps.prototype.removeOverlayMapType = function(overlayMapTypeIndex) {
+  this.map.overlayMapTypes.removeAt(overlayMapTypeIndex);
+};
+
+GMaps.prototype.addStyle = function(options) {
+  var styledMapType = new google.maps.StyledMapType(options.styles, { name: options.styledMapName });
+
+  this.map.mapTypes.set(options.mapTypeId, styledMapType);
+};
+
+GMaps.prototype.setStyle = function(mapTypeId) {
+  this.map.setMapTypeId(mapTypeId);
+};
+
+GMaps.prototype.createPanorama = function(streetview_options) {
+  if (!streetview_options.hasOwnProperty('lat') || !streetview_options.hasOwnProperty('lng')) {
+    streetview_options.lat = this.getCenter().lat();
+    streetview_options.lng = this.getCenter().lng();
+  }
+
+  this.panorama = GMaps.createPanorama(streetview_options);
+
+  this.map.setStreetView(this.panorama);
+
+  return this.panorama;
+};
+
+GMaps.createPanorama = function(options) {
+  var el = getElementById(options.el, options.context);
+
+  options.position = new google.maps.LatLng(options.lat, options.lng);
+
+  delete options.el;
+  delete options.context;
+  delete options.lat;
+  delete options.lng;
+
+  var streetview_events = ['closeclick', 'links_changed', 'pano_changed', 'position_changed', 'pov_changed', 'resize', 'visible_changed'],
+      streetview_options = extend_object({visible : true}, options);
+
+  for (var i = 0; i < streetview_events.length; i++) {
+    delete streetview_options[streetview_events[i]];
+  }
+
+  var panorama = new google.maps.StreetViewPanorama(el, streetview_options);
+
+  for (var i = 0; i < streetview_events.length; i++) {
+    (function(object, name) {
+      if (options[name]) {
+        google.maps.event.addListener(object, name, function(){
+          options[name].apply(this);
+        });
+      }
+    })(panorama, streetview_events[i]);
+  }
+
+  return panorama;
+};
+
+GMaps.prototype.on = function(event_name, handler) {
+  return GMaps.on(event_name, this, handler);
+};
+
+GMaps.prototype.off = function(event_name) {
+  GMaps.off(event_name, this);
+};
+
+GMaps.prototype.once = function(event_name, handler) {
+  return GMaps.once(event_name, this, handler);
+};
+
+GMaps.custom_events = ['marker_added', 'marker_removed', 'polyline_added', 'polyline_removed', 'polygon_added', 'polygon_removed', 'geolocated', 'geolocation_failed'];
+
+GMaps.on = function(event_name, object, handler) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map; 
+    return google.maps.event.addListener(object, event_name, handler);
+  }
+  else {
+    var registered_event = {
+      handler : handler,
+      eventName : event_name
+    };
+
+    object.registered_events[event_name] = object.registered_events[event_name] || [];
+    object.registered_events[event_name].push(registered_event);
+
+    return registered_event;
+  }
+};
+
+GMaps.off = function(event_name, object) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map; 
+    google.maps.event.clearListeners(object, event_name);
+  }
+  else {
+    object.registered_events[event_name] = [];
+  }
+};
+
+GMaps.once = function(event_name, object, handler) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    if(object instanceof GMaps) object = object.map;
+    return google.maps.event.addListenerOnce(object, event_name, handler);
+  }
+};
+
+GMaps.fire = function(event_name, object, scope) {
+  if (GMaps.custom_events.indexOf(event_name) == -1) {
+    google.maps.event.trigger(object, event_name, Array.prototype.slice.apply(arguments).slice(2));
+  }
+  else {
+    if(event_name in scope.registered_events) {
+      var firing_events = scope.registered_events[event_name];
+
+      for(var i = 0; i < firing_events.length; i++) {
+        (function(handler, scope, object) {
+          handler.apply(scope, [object]);
+        })(firing_events[i]['handler'], scope, object);
+      }
+    }
+  }
+};
+
+GMaps.geolocate = function(options) {
+  var complete_callback = options.always || options.complete;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      options.success(position);
+
+      if (complete_callback) {
+        complete_callback();
+      }
+    }, function(error) {
+      options.error(error);
+
+      if (complete_callback) {
+        complete_callback();
+      }
+    }, options.options);
+  }
+  else {
+    options.not_supported();
+
+    if (complete_callback) {
+      complete_callback();
+    }
+  }
+};
+
+GMaps.geocode = function(options) {
+  this.geocoder = new google.maps.Geocoder();
+  var callback = options.callback;
+  if (options.hasOwnProperty('lat') && options.hasOwnProperty('lng')) {
+    options.latLng = new google.maps.LatLng(options.lat, options.lng);
+  }
+
+  delete options.lat;
+  delete options.lng;
+  delete options.callback;
+  
+  this.geocoder.geocode(options, function(results, status) {
+    callback(results, status);
+  });
+};
+
+if (typeof window.google === 'object' && window.google.maps) {
+  //==========================
+  // Polygon containsLatLng
+  // https://github.com/tparkin/Google-Maps-Point-in-Polygon
+  // Poygon getBounds extension - google-maps-extensions
+  // http://code.google.com/p/google-maps-extensions/source/browse/google.maps.Polygon.getBounds.js
+  if (!google.maps.Polygon.prototype.getBounds) {
+    google.maps.Polygon.prototype.getBounds = function(latLng) {
+      var bounds = new google.maps.LatLngBounds();
+      var paths = this.getPaths();
+      var path;
+
+      for (var p = 0; p < paths.getLength(); p++) {
+        path = paths.getAt(p);
+        for (var i = 0; i < path.getLength(); i++) {
+          bounds.extend(path.getAt(i));
+        }
+      }
+
+      return bounds;
+    };
+  }
+
+  if (!google.maps.Polygon.prototype.containsLatLng) {
+    // Polygon containsLatLng - method to determine if a latLng is within a polygon
+    google.maps.Polygon.prototype.containsLatLng = function(latLng) {
+      // Exclude points outside of bounds as there is no way they are in the poly
+      var bounds = this.getBounds();
+
+      if (bounds !== null && !bounds.contains(latLng)) {
+        return false;
+      }
+
+      // Raycast point in polygon method
+      var inPoly = false;
+
+      var numPaths = this.getPaths().getLength();
+      for (var p = 0; p < numPaths; p++) {
+        var path = this.getPaths().getAt(p);
+        var numPoints = path.getLength();
+        var j = numPoints - 1;
+
+        for (var i = 0; i < numPoints; i++) {
+          var vertex1 = path.getAt(i);
+          var vertex2 = path.getAt(j);
+
+          if (vertex1.lng() < latLng.lng() && vertex2.lng() >= latLng.lng() || vertex2.lng() < latLng.lng() && vertex1.lng() >= latLng.lng()) {
+            if (vertex1.lat() + (latLng.lng() - vertex1.lng()) / (vertex2.lng() - vertex1.lng()) * (vertex2.lat() - vertex1.lat()) < latLng.lat()) {
+              inPoly = !inPoly;
+            }
+          }
+
+          j = i;
+        }
+      }
+
+      return inPoly;
+    };
+  }
+
+  if (!google.maps.Circle.prototype.containsLatLng) {
+    google.maps.Circle.prototype.containsLatLng = function(latLng) {
+      if (google.maps.geometry) {
+        return google.maps.geometry.spherical.computeDistanceBetween(this.getCenter(), latLng) <= this.getRadius();
+      }
+      else {
+        return true;
+      }
+    };
+  }
+
+  google.maps.Rectangle.prototype.containsLatLng = function(latLng) {
+    return this.getBounds().contains(latLng);
+  };
+
+  google.maps.LatLngBounds.prototype.containsLatLng = function(latLng) {
+    return this.contains(latLng);
+  };
+
+  google.maps.Marker.prototype.setFences = function(fences) {
+    this.fences = fences;
+  };
+
+  google.maps.Marker.prototype.addFence = function(fence) {
+    this.fences.push(fence);
+  };
+
+  google.maps.Marker.prototype.getId = function() {
+    return this['__gm_id'];
+  };
+}
+
+//==========================
+// Array indexOf
+// https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/indexOf
+if (!Array.prototype.indexOf) {
+  Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
+      "use strict";
+      if (this == null) {
+          throw new TypeError();
+      }
+      var t = Object(this);
+      var len = t.length >>> 0;
+      if (len === 0) {
+          return -1;
+      }
+      var n = 0;
+      if (arguments.length > 1) {
+          n = Number(arguments[1]);
+          if (n != n) { // shortcut for verifying if it's NaN
+              n = 0;
+          } else if (n != 0 && n != Infinity && n != -Infinity) {
+              n = (n > 0 || -1) * Math.floor(Math.abs(n));
+          }
+      }
+      if (n >= len) {
+          return -1;
+      }
+      var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+      for (; k < len; k++) {
+          if (k in t && t[k] === searchElement) {
+              return k;
+          }
+      }
+      return -1;
+  };
+}
+
+return GMaps;
+}));
+});
+
+// src/utils/uri.coffee
+var queries;
+
+queries = null;
+
+var getQueries = function() {
+  var err, k, match, q, qs, search, v;
+  if (queries) {
+    return queries;
+  }
+  search = /([^&=]+)=?([^&]*)/g;
+  q = window.location.href.split('?')[1];
+  qs = {};
+  if (q != null) {
+    while ((match = search.exec(q))) {
+      k = match[1];
+      try {
+        k = decodeURIComponent(k);
+      } catch (error) {}
+      v = match[2];
+      try {
+        v = decodeURIComponent(v);
+      } catch (error) {
+        err = error;
+      }
+      qs[k] = v;
+    }
+  }
+  return queries = qs;
+};
+
+var getReferrer = function(hashReferrer) {
+  var r, ref, referrer;
+  if (hashReferrer == null) {
+    hashReferrer = false;
+  }
+  ref = null;
+  if (getQueries().referrer != null) {
+    ref = getQueries().referrer;
+  } else {
+    ref = index$1.get('referrer');
+  }
+  if (hashReferrer) {
+    r = window.location.hash.replace('#', '');
+    if (r !== '') {
+      return referrer = r;
+    } else {
+      return referrer = ref;
+    }
+  } else {
+    return referrer = ref;
+  }
+};
+
+var getMCIds = function() {
+  return [getQueries().mc_eid, getQueries().mc_cid];
+};
+
+// node_modules/el-controls/src/events.coffee
+var Events;
+
+var ControlEvents = Events = {
+  Change: 'change',
+  ChangeSuccess: 'change-success',
+  ChangeFailed: 'change-failed'
+};
+
+// node_modules/es6-tween/src/shim.js
+/* global global */
+
+
+let root$1 = typeof (window) !== 'undefined' ? window : typeof (global) !== 'undefined' ? global : undefined;
+let requestAnimationFrame$2 = root$1.requestAnimationFrame || (fn => root$1.setTimeout(fn, 16));
+let cancelAnimationFrame$1 = root$1.cancelAnimationFrame || (id => root$1.clearTimeout(id));
+
+// node_modules/es6-tween/src/core.js
+/* global process */
 /**
- * Textually searches arrays and hashes of objects
- * by property (or multiple properties). Designed
- * specifically for autocomplete.
+ * Lightweight, effecient and modular ES6 version of tween.js
+ * @copyright 2017 @dalisoft and es6-tween contributors
+ * @license MIT
+ * @namespace TWEEN
+ * @example
+ * // ES6
+ * const {add, remove, isRunning, autoPlay} = TWEEN
+ */
+const _tweens = [];
+let isStarted = false;
+let _autoPlay = false;
+let _tick;
+const _ticker = requestAnimationFrame$2;
+const _stopTicker = cancelAnimationFrame$1;
+/**
+ * Adds tween to list
+ * @param {Tween} tween Tween instance
+ * @memberof TWEEN
+ * @example
+ * let tween = new Tween({x:0})
+ * tween.to({x:200}, 1000)
+ * TWEEN.add(tween)
+ */
+const add = (tween) => {
+  _tweens.push(tween);
+  if (_autoPlay && !isStarted) {
+    _tick = _ticker(update$2);
+    isStarted = true;
+  }
+};
+/**
+ * Runs update loop automaticlly
+ * @param {Boolean} state State of auto-run of update loop
+ * @example TWEEN.autoPlay(true)
+ * @memberof TWEEN
+ */
+const autoPlay = (state) => {
+  _autoPlay = state;
+};
+/**
+ * Removes tween from list
+ * @param {Tween} tween Tween instance
+ * @memberof TWEEN
+ * @example
+ * TWEEN.remove(tween)
+ */
+const remove$1 = (tween) => {
+  const i = _tweens.indexOf(tween);
+  if (i !== -1) {
+    _tweens.splice(i, 1);
+  }
+};
+const now = (function () {
+  if (typeof (process) !== 'undefined' && process.hrtime !== undefined) {
+    return function () {
+      const time = process.hrtime();
+      // Convert [seconds, nanoseconds] to milliseconds.
+      return time[0] * 1000 + time[1] / 1000000
+    }
+    // In a browser, use window.performance.now if it is available.
+  } else if (root$1.performance !== undefined &&
+        root$1.performance.now !== undefined) {
+    // This must be bound, because directly assigning this function
+    // leads to an invocation exception in Chrome.
+    return root$1.performance.now.bind(root$1.performance)
+    // Use Date.now if it is available.
+  } else {
+    const offset = root$1.performance && root$1.performance.timing && root$1.performance.timing.navigationStart ? root$1.performance.timing.navigationStart : Date.now();
+    return function () {
+      return Date.now() - offset
+    }
+  }
+}());
+/**
+ * Updates global tweens by given time
+ * @param {number|Time} time Timestamp
+ * @param {Boolean=} preserve Prevents tween to be removed after finish
+ * @memberof TWEEN
+ * @example
+ * TWEEN.update(500)
+ */
+const update$2 = (time, preserve) => {
+  time = time !== undefined ? time : now();
+  if (_autoPlay && isStarted) {
+    _tick = _ticker(update$2);
+  }
+  if (_tweens.length === 0) {
+    _stopTicker(_tick);
+    isStarted = false;
+    return false
+  }
+  let i = 0;
+  while (i < _tweens.length) {
+    _tweens[i].update(time, preserve);
+    i++;
+  }
+  return true
+};
+// Normalise time when visiblity is changed (if available) ...
+if (root$1.document && root$1.document.addEventListener) {
+  const doc = root$1.document;
+  let timeDiff = 0;
+  let timePause = 0;
+  doc.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      timePause = now();
+      _stopTicker(_tick);
+      isStarted = false;
+    } else {
+      timeDiff = now() - timePause;
+      for (let i = 0, length = _tweens.length; i < length; i++) {
+        _tweens[i]._startTime += timeDiff;
+      }
+      _tick = _ticker(update$2);
+      isStarted = true;
+    }
+    return true
+  });
+}
+
+// node_modules/es6-tween/src/Easing.js
+/**
+ * List of full easings
+ * @namespace TWEEN.Easing
+ * @example
+ * import {Tween, Easing} from 'es6-tween'
  *
+ * // then set via new Tween({x:0}).to({x:100}, 1000).easing(Easing.Quadratic.InOut).start()
+ */
+const Easing = {
+  Linear: {
+    None (k) {
+      return k
+    }
+  },
+  Quadratic: {
+    In (k) {
+      return k * k
+    },
+    Out (k) {
+      return k * (2 - k)
+    },
+    InOut (k) {
+      if ((k *= 2) < 1) {
+        return 0.5 * k * k
+      }
+      return -0.5 * (--k * (k - 2) - 1)
+    }
+  },
+  Cubic: {
+    In (k) {
+      return k * k * k
+    },
+    Out (k) {
+      return --k * k * k + 1
+    },
+    InOut (k) {
+      if ((k *= 2) < 1) {
+        return 0.5 * k * k * k
+      }
+      return 0.5 * ((k -= 2) * k * k + 2)
+    }
+  },
+  Quartic: {
+    In (k) {
+      return k * k * k * k
+    },
+    Out (k) {
+      return 1 - (--k * k * k * k)
+    },
+    InOut (k) {
+      if ((k *= 2) < 1) {
+        return 0.5 * k * k * k * k
+      }
+      return -0.5 * ((k -= 2) * k * k * k - 2)
+    }
+  },
+  Quintic: {
+    In (k) {
+      return k * k * k * k * k
+    },
+    Out (k) {
+      return --k * k * k * k * k + 1
+    },
+    InOut (k) {
+      if ((k *= 2) < 1) {
+        return 0.5 * k * k * k * k * k
+      }
+      return 0.5 * ((k -= 2) * k * k * k * k + 2)
+    }
+  },
+  Sinusoidal: {
+    In (k) {
+      return 1 - Math.cos(k * Math.PI / 2)
+    },
+    Out (k) {
+      return Math.sin(k * Math.PI / 2)
+    },
+    InOut (k) {
+      return 0.5 * (1 - Math.cos(Math.PI * k))
+    }
+  },
+  Exponential: {
+    In (k) {
+      return k === 0 ? 0 : Math.pow(1024, k - 1)
+    },
+    Out (k) {
+      return k === 1 ? 1 : 1 - Math.pow(2, -10 * k)
+    },
+    InOut (k) {
+      if (k === 0) {
+        return 0
+      }
+      if (k === 1) {
+        return 1
+      }
+      if ((k *= 2) < 1) {
+        return 0.5 * Math.pow(1024, k - 1)
+      }
+      return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2)
+    }
+  },
+  Circular: {
+    In (k) {
+      return 1 - Math.sqrt(1 - k * k)
+    },
+    Out (k) {
+      return Math.sqrt(1 - (--k * k))
+    },
+    InOut (k) {
+      if ((k *= 2) < 1) {
+        return -0.5 * (Math.sqrt(1 - k * k) - 1)
+      }
+      return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1)
+    }
+  },
+  Elastic: {
+    In (k) {
+      if (k === 0) {
+        return 0
+      }
+      if (k === 1) {
+        return 1
+      }
+      return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+    },
+    Out (k) {
+      if (k === 0) {
+        return 0
+      }
+      if (k === 1) {
+        return 1
+      }
+      return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1
+    },
+    InOut (k) {
+      if (k === 0) {
+        return 0
+      }
+      if (k === 1) {
+        return 1
+      }
+      k *= 2;
+      if (k < 1) {
+        return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+      }
+      return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1
+    }
+  },
+  Back: {
+    In (k) {
+      const s = 1.70158;
+      return k * k * ((s + 1) * k - s)
+    },
+    Out (k) {
+      const s = 1.70158;
+      return --k * k * ((s + 1) * k + s) + 1
+    },
+    InOut (k) {
+      const s = 1.70158 * 1.525;
+      if ((k *= 2) < 1) {
+        return 0.5 * (k * k * ((s + 1) * k - s))
+      }
+      return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2)
+    }
+  },
+  Bounce: {
+    In (k) {
+      return 1 - Easing.Bounce.Out(1 - k)
+    },
+    Out (k) {
+      if (k < (1 / 2.75)) {
+        return 7.5625 * k * k
+      } else if (k < (2 / 2.75)) {
+        return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75
+      } else if (k < (2.5 / 2.75)) {
+        return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375
+      } else {
+        return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375
+      }
+    },
+    InOut (k) {
+      if (k < 0.5) {
+        return Easing.Bounce.In(k * 2) * 0.5
+      }
+      return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5
+    }
+  }
+};
+
+// node_modules/es6-tween/src/Interpolation.js
+/**
+ * List of full Interpolation
+ * @namespace TWEEN.Interpolation
+ * @example
+ * import {Interpolation, Tween} from 'es6-tween'
+ *
+ * let bezier = Interpolation.Bezier
+ * new Tween({x:0}).to({x:[0, 4, 8, 12, 15, 20, 30, 40, 20, 40, 10, 50]}, 1000).interpolation(bezier).start()
+ * @memberof TWEEN
+ */
+const Interpolation = {
+  Linear (v, k) {
+    const m = v.length - 1;
+    const f = m * k;
+    const i = Math.floor(f);
+    const fn = Interpolation.Utils.Linear;
+    if (k < 0) {
+      return fn(v[0], v[1], f)
+    }
+    if (k > 1) {
+      return fn(v[m], v[m - 1], m - f)
+    }
+    return fn(v[i], v[i + 1 > m ? m : i + 1], f - i)
+  },
+  Bezier (v, k) {
+    let b = 0;
+    const n = v.length - 1;
+    const pw = Math.pow;
+    const bn = Interpolation.Utils.Bernstein;
+    for (let i = 0; i <= n; i++) {
+      b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+    }
+    return b
+  },
+  CatmullRom (v, k) {
+    const m = v.length - 1;
+    let f = m * k;
+    let i = Math.floor(f);
+    const fn = Interpolation.Utils.CatmullRom;
+    if (v[0] === v[m]) {
+      if (k < 0) {
+        i = Math.floor(f = m * (1 + k));
+      }
+      return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i)
+    } else {
+      if (k < 0) {
+        return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0])
+      }
+      if (k > 1) {
+        return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m])
+      }
+      return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i)
+    }
+  },
+  Utils: {
+    Linear (p0, p1, t) {
+      return typeof p0 === 'function' ? p0(t) : (p1 - p0) * t + p0
+    },
+    Bernstein (n, i) {
+      const fc = Interpolation.Utils.Factorial;
+      return fc(n) / fc(i) / fc(n - i)
+    },
+    Factorial: (function () {
+      const a = [1];
+      return (n) => {
+        let s = 1;
+        if (a[n]) {
+          return a[n]
+        }
+        for (let i = n; i > 1; i--) {
+          s *= i;
+        }
+        a[n] = s;
+        return s
+      }
+    })(),
+    CatmullRom (p0, p1, p2, p3, t) {
+      const v0 = (p2 - p0) * 0.5;
+      const v1 = (p3 - p1) * 0.5;
+      const t2 = t * t;
+      const t3 = t * t2;
+      return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1
+    }
+  }
+};
+
+// node_modules/es6-tween/src/lite.js
+let _id = 0; // Unique ID
+/**
+ * Tween Lite main constructor
  * @constructor
- * @param {array|object} items
- * @param {object} items
+ * @class
+ * @namespace Lite
+ * @param {object} object initial object
+ * @example
+ * import {Tween} from 'es6-tween/src/Tween.Lite'
+ *
+ * let tween = new Tween({x:0}).to({x:100}, 2000).start()
  */
-function Sifter(items, settings) {
-    this.items = items;
-    this.settings = settings || {diacritics: true};
-}
-
-/**
- * Splits a search string into an array of individual
- * regexps to be used to match results.
- *
- * @param {string} query
- * @returns {array}
- */
-Sifter.prototype.tokenize = function(query) {
-    query = trim$1(String(query || '').toLowerCase());
-    if (!query || !query.length) return [];
-
-    var i, n, regex, letter;
-    var tokens = [];
-    var words = query.split(/ +/);
-
-    for (i = 0, n = words.length; i < n; i++) {
-        regex = escapeRegex(words[i]);
-        if (this.settings.diacritics) {
-            for (letter in DIACRITICS) {
-                if (DIACRITICS.hasOwnProperty(letter)) {
-                    regex = regex.replace(new RegExp(letter, 'g'), DIACRITICS[letter]);
-                }
-            }
-        }
-        tokens.push({
-            string : words[i],
-            regex  : new RegExp(regex, 'i')
-        });
-    }
-
-    return tokens;
-};
-
-/**
- * Iterates over arrays and hashes.
- *
- * ```
- * this.iterator(this.items, function(item, id) {
- *    // invoked for each item
- * });
- * ```
- *
- * @param {array|object} object
- */
-Sifter.prototype.iterator = function(object, callback) {
-    var iterator;
-    if (isArray$2(object)) {
-        iterator = Array.prototype.forEach || function(callback) {
-            for (var i = 0, n = this.length; i < n; i++) {
-                callback(this[i], i, this);
-            }
-        };
-    } else {
-        iterator = function(callback) {
-            for (var key in this) {
-                if (this.hasOwnProperty(key)) {
-                    callback(this[key], key, this);
-                }
-            }
-        };
-    }
-
-    iterator.apply(object, [callback]);
-};
-
-/**
- * Returns a function to be used to score individual results.
- *
- * Good matches will have a higher score than poor matches.
- * If an item is not a match, 0 will be returned by the function.
- *
- * @param {object|string} search
- * @param {object} options (optional)
- * @returns {function}
- */
-Sifter.prototype.getScoreFunction = function(search, options) {
-    var self, fields, tokens, tokenCount, nesting;
-
-    self       = this;
-    search     = self.prepareSearch(search, options);
-    tokens     = search.tokens;
-    fields     = search.options.fields;
-    tokenCount = tokens.length;
-    nesting    = search.options.nesting;
-
-    /**
-     * Calculates how close of a match the
-     * given value is against a search token.
-     *
-     * @param {mixed} value
-     * @param {object} token
-     * @return {number}
+class Lite {
+  constructor (object) {
+    this.id = _id++;
+    this.object = object;
+    this._valuesStart = {};
+    this._valuesEnd = null;
+    this._valuesStartRepeat = {};
+    this._duration = 1000;
+    this._easingFunction = Easing.Linear.None;
+    this._interpolationFunction = Interpolation.Linear;
+    this._startTime = 0;
+    this._delayTime = 0;
+    this._repeat = 0;
+    this._r = 0;
+    this._isPlaying = false;
+    this._yoyo = false;
+    this._reversed = false;
+    this._onStartCallbackFired = false;
+    this._pausedTime = null;
+    this._isFinite = true;
+    /* Callbacks */
+    this._onStartCallback = null;
+    this._onUpdateCallback = null;
+    this._onCompleteCallback = null;
+    return this
+  }
+  /**
+     * onStart callback
+     * @param {Function} callback Function should be fired after tween is started
+     * @example tween.onStart(object => console.log(object))
+     * @memberof Lite
      */
-     function scoreValue(value, token) {
-        var score, pos;
-
-        if (!value) return 0;
-        value = String(value || '');
-        pos = value.search(token.regex);
-        if (pos === -1) return 0;
-        score = token.string.length / value.length;
-        if (pos === 0) score += 0.5;
-        return score;
-    }
-
-    /**
-     * Calculates the score of an object
-     * against the search query.
-     *
-     * @param {object} token
-     * @param {object} data
-     * @return {number}
+  onStart (callback) {
+    this._onStartCallback = callback;
+    return this
+  }
+  /**
+     * onUpdate callback
+     * @param {Function} callback Function should be fired while tween is in progress
+     * @example tween.onUpdate(object => console.log(object))
+     * @memberof Lite
      */
-    var scoreObject = (function() {
-        var fieldCount = fields.length;
-        if (!fieldCount) {
-            return function() { return 0; };
-        }
-        if (fieldCount === 1) {
-            return function(token, data) {
-                return scoreValue(getattr(data, fields[0], nesting), token);
-            };
-        }
-        return function(token, data) {
-            for (var i = 0, sum = 0; i < fieldCount; i++) {
-                sum += scoreValue(getattr(data, fields[i], nesting), token);
-            }
-            return sum / fieldCount;
-        };
-    })();
-
-    if (!tokenCount) {
-        return function() { return 0; };
-    }
-    if (tokenCount === 1) {
-        return function(data) {
-            return scoreObject(tokens[0], data);
-        };
-    }
-
-    if (search.options.conjunction === 'and') {
-        return function(data) {
-            var score;
-            for (var i = 0, sum = 0; i < tokenCount; i++) {
-                score = scoreObject(tokens[i], data);
-                if (score <= 0) return 0;
-                sum += score;
-            }
-            return sum / tokenCount;
-        };
-    } else {
-        return function(data) {
-            for (var i = 0, sum = 0; i < tokenCount; i++) {
-                sum += scoreObject(tokens[i], data);
-            }
-            return sum / tokenCount;
-        };
-    }
-};
-
-/**
- * Returns a function that can be used to compare two
- * results, for sorting purposes. If no sorting should
- * be performed, `null` will be returned.
- *
- * @param {string|object} search
- * @param {object} options
- * @return function(a,b)
- */
-Sifter.prototype.getSortFunction = function(search, options) {
-    var i, n, self, field, fields, fieldsCount, multiplier, multipliers, sort, implicitScore;
-
-    self   = this;
-    search = self.prepareSearch(search, options);
-    sort   = (!search.query && options.sortEmpty) || options.sort;
-
-    /**
-     * Fetches the specified sort field value
-     * from a search result item.
-     *
-     * @param  {string} name
-     * @param  {object} result
-     * @return {mixed}
+  onUpdate (callback) {
+    this._onUpdateCallback = callback;
+    return this
+  }
+  /**
+     * onComplete callback
+     * @param {Function} callback Function should be fired after tween is finished
+     * @example tween.onComplete(object => console.log(object))
+     * @memberof Lite
      */
-    function getField(name, result) {
-        if (name === '$score') return result.score;
-        return getattr(self.items[result.id], name, options.nesting);
-    }
-
-    // parse options
-    fields = [];
-    if (sort) {
-        for (i = 0, n = sort.length; i < n; i++) {
-            if (search.query || sort[i].field !== '$score') {
-                fields.push(sort[i]);
-            }
-        }
-    }
-
-    // the "$score" field is implied to be the primary
-    // sort field, unless it's manually specified
-    if (search.query) {
-        implicitScore = true;
-        for (i = 0, n = fields.length; i < n; i++) {
-            if (fields[i].field === '$score') {
-                implicitScore = false;
-                break;
-            }
-        }
-        if (implicitScore) {
-            fields.unshift({field: '$score', direction: 'desc'});
-        }
-    } else {
-        for (i = 0, n = fields.length; i < n; i++) {
-            if (fields[i].field === '$score') {
-                fields.splice(i, 1);
-                break;
-            }
-        }
-    }
-
-    multipliers = [];
-    for (i = 0, n = fields.length; i < n; i++) {
-        multipliers.push(fields[i].direction === 'desc' ? -1 : 1);
-    }
-
-    // build function
-    fieldsCount = fields.length;
-    if (!fieldsCount) {
-        return null;
-    } else if (fieldsCount === 1) {
-        field = fields[0].field;
-        multiplier = multipliers[0];
-        return function(a, b) {
-            return multiplier * cmp(
-                getField(field, a),
-                getField(field, b)
-            );
-        };
-    } else {
-        return function(a, b) {
-            var i, result, field;
-            for (i = 0; i < fieldsCount; i++) {
-                field = fields[i].field;
-                result = multipliers[i] * cmp(
-                    getField(field, a),
-                    getField(field, b)
-                );
-                if (result) return result;
-            }
-            return 0;
-        };
-    }
-};
-
-/**
- * Parses a search query and returns an object
- * with tokens and fields ready to be populated
- * with results.
- *
- * @param {string} query
- * @param {object} options
- * @returns {object}
- */
-Sifter.prototype.prepareSearch = function(query, options) {
-    if (typeof query === 'object') return query;
-
-    options = extend$4$1({}, options);
-
-    var optionFields     = options.fields;
-    var optionSort       = options.sort;
-    var optionSortEmpty = options.sortEmpty;
-
-    if (optionFields && !isArray$2(optionFields)) options.fields = [optionFields];
-    if (optionSort && !isArray$2(optionSort)) options.sort = [optionSort];
-    if (optionSortEmpty && !isArray$2(optionSortEmpty)) options.sortEmpty = [optionSortEmpty];
-
-    return {
-        options : options,
-        query   : String(query || '').toLowerCase(),
-        tokens  : this.tokenize(query),
-        total   : 0,
-        items   : []
-    };
-};
-
-/**
- * Searches through all items and returns a sorted array of matches.
- *
- * The `options` parameter can contain:
- *
- *   - fields {string|array}
- *   - sort {array}
- *   - score {function}
- *   - filter {bool}
- *   - limit {integer}
- *
- * Returns an object containing:
- *
- *   - options {object}
- *   - query {string}
- *   - tokens {array}
- *   - total {int}
- *   - items {array}
- *
- * @param {string} query
- * @param {object} options
- * @returns {object}
- */
-Sifter.prototype.search = function(query, options) {
-    var self = this, score, search;
-    var fnSort;
-    var fnScore;
-
-    search  = this.prepareSearch(query, options);
-    options = search.options;
-    query   = search.query;
-
-    // generate result scoring function
-    fnScore = options.score || self.getScoreFunction(search);
-
-    // perform search and sort
-    if (query.length) {
-        self.iterator(self.items, function(item, id) {
-            score = fnScore(item);
-            if (options.filter === false || score > 0) {
-                search.items.push({'score': score, 'id': id});
-            }
-        });
-    } else {
-        self.iterator(self.items, function(item, id) {
-            search.items.push({'score': 1, 'id': id});
-        });
-    }
-
-    fnSort = self.getSortFunction(search, options);
-    if (fnSort) search.items.sort(fnSort);
-
-    // apply limits
-    search.total = search.items.length;
-    if (typeof options.limit === 'number') {
-        search.items = search.items.slice(0, options.limit);
-    }
-
-    return search;
-};
-
-// node_modules/es-is/array.js
-// Generated by CoffeeScript 1.12.5
-var isArray$3;
-
-var isArray$4 = isArray$3 = Array.isArray || function(value) {
-  return toString(value) === '[object Array]';
-};
-
-// node_modules/es-microplugin/microplugin.mjs
-// src/index.js
-/**
- * microplugin.js
- * Copyright (c) 2013 Brian Reavis & contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
- * file except in compliance with the License. You may obtain a copy of the License at:
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- *
- * @author Brian Reavis <brian@thirdroute.com>
- */
-
-const MicroPlugin = {};
-
-MicroPlugin.mixin = function(Interface) {
-    Interface.plugins = {};
-
-    /**
-     * Initializes the listed plugins (with options).
-     * Acceptable formats:
-     *
-     * List (without options):
-     *   ['a', 'b', 'c']
-     *
-     * List (with options):
-     *   [{'name': 'a', options: {}}, {'name': 'b', options: {}}]
-     *
-     * Hash (with options):
-     *   {'a': { ... }, 'b': { ... }, 'c': { ... }}
-     *
-     * @param {mixed} plugins
+  onComplete (callback) {
+    this._onCompleteCallback = callback;
+    return this
+  }
+  /**
+     * @return {boolean} State of playing of tween
+     * @example tween.isPlaying() // returns `true` if tween in progress
+     * @memberof Lite
      */
-    Interface.prototype.initializePlugins = function(plugins) {
-        var i, n, key;
-        var self  = this;
-        var queue = [];
-
-        self.plugins = {
-            names     : [],
-            settings  : {},
-            requested : {},
-            loaded    : {}
-        };
-
-        if (isArray$4(plugins)) {
-            for (i = 0, n = plugins.length; i < n; i++) {
-                if (typeof plugins[i] === 'string') {
-                    queue.push(plugins[i]);
-                } else {
-                    self.plugins.settings[plugins[i].name] = plugins[i].options;
-                    queue.push(plugins[i].name);
-                }
-            }
-        } else if (plugins) {
-            for (key in plugins) {
-                if (plugins.hasOwnProperty(key)) {
-                    self.plugins.settings[key] = plugins[key];
-                    queue.push(key);
-                }
-            }
-        }
-
-        while (queue.length) {
-            self.require(queue.shift());
-        }
-    };
-
-    Interface.prototype.loadPlugin = function(name) {
-        var self    = this;
-        var plugins = self.plugins;
-        var plugin  = Interface.plugins[name];
-
-        if (!Interface.plugins.hasOwnProperty(name)) {
-            throw new Error('Unable to find "' +  name + '" plugin');
-        }
-
-        plugins.requested[name] = true;
-        plugins.loaded[name] = plugin.fn.apply(self, [self.plugins.settings[name] || {}]);
-        plugins.names.push(name);
-    };
-
-    /**
-     * Initializes a plugin.
-     *
-     * @param {string} name
+  isPlaying () {
+    return this._isPlaying
+  }
+  /**
+     * @return {boolean} State of started of tween
+     * @example tween.isStarted() // returns `true` if tween in started
+     * @memberof Lite
      */
-    Interface.prototype.require = function(name) {
-        var self = this;
-        var plugins = self.plugins;
-
-        if (!self.plugins.loaded.hasOwnProperty(name)) {
-            if (plugins.requested[name]) {
-                throw new Error('Plugin has circular dependency ("' + name + '")');
-            }
-            self.loadPlugin(name);
-        }
-
-        return plugins.loaded[name];
-    };
-
-    /**
-     * Registers a plugin.
-     *
-     * @param {string} name
-     * @param {function} fn
+  isStarted () {
+    return this._onStartCallbackFired
+  }
+  /**
+     * Pauses tween
+     * @example tween.pause()
+     * @memberof Lite
      */
-    Interface.define = function(name, fn) {
-        Interface.plugins[name] = {
-            'name' : name,
-            'fn'   : fn
-        };
-    };
-};
-
-// node_modules/es-selectize/dist/js/selectize.mjs
-// src/contrib/microevent.js
-/**
- * MicroEvent - to make any js object an event emitter
- *
- * - pure javascript - server compatible, browser compatible
- * - dont rely on the browser doms
- * - super simple - you get it immediatly, no mistery, no magic involved
- *
- * @author Jerome Etienne (https://github.com/jeromeetienne)
- */
-
-function MicroEvent() {}
-
-MicroEvent.prototype = {
-	on: function(event, fct){
-		this._events = this._events || {};
-		this._events[event] = this._events[event] || [];
-		this._events[event].push(fct);
-	},
-	off: function(event, fct){
-		var n = arguments.length;
-		if (n === 0) return delete this._events;
-		if (n === 1) return delete this._events[event];
-
-		this._events = this._events || {};
-		if (event in this._events === false) return;
-		this._events[event].splice(this._events[event].indexOf(fct), 1);
-	},
-	trigger: function(event /* , args... */){
-		this._events = this._events || {};
-		if (event in this._events === false) return;
-		for (var i = 0; i < this._events[event].length; i++){
-			this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
-		}
-	}
-};
-
-/**
- * Mixin will delegate all MicroEvent.js function in the destination object.
- *
- * - MicroEvent.mixin(Foobar) will make Foobar able to use MicroEvent
- *
- * @param {object} the object which will support MicroEvent
- */
-MicroEvent.mixin = function(destObject){
-	var props = ['on', 'off', 'trigger'];
-	for (var i = 0; i < props.length; i++){
-		destObject.prototype[props[i]] = MicroEvent.prototype[props[i]];
-	}
-};
-
-// src/contrib/highlight.js
-/**
- * highlight v3 | MIT license | Johann Burkard <jb@eaio.com>
- * Highlights arbitrary terms in a node.
- *
- * - Modified by Marshal <beatgates@gmail.com> 2011-6-24 (added regex)
- * - Modified by Brian Reavis <brian@thirdroute.com> 2012-8-27 (cleanup)
- */
-
-function highlight($element, pattern) {
-	if (typeof pattern === 'string' && !pattern.length) return;
-	var regex = (typeof pattern === 'string') ? new RegExp(pattern, 'i') : pattern;
-
-	var highlight = function(node) {
-		var skip = 0;
-		if (node.nodeType === 3) {
-			var pos = node.data.search(regex);
-			if (pos >= 0 && node.data.length > 0) {
-				// var match = node.data.match(regex);
-				var spannode = document.createElement('span');
-				spannode.className = 'highlight';
-				var middlebit = node.splitText(pos);
-				// var endbit = middlebit.splitText(match[0].length);
-				var middleclone = middlebit.cloneNode(true);
-				spannode.appendChild(middleclone);
-				middlebit.parentNode.replaceChild(spannode, middlebit);
-				skip = 1;
-			}
-		} else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
-			for (var i = 0; i < node.childNodes.length; ++i) {
-				i += highlight(node.childNodes[i]);
-			}
-		}
-		return skip;
-	};
-
-	return $element.each(function() {
-		highlight(this);
-	});
-}
-
-/**
- * removeHighlight fn copied from highlight v5 and
- * edited to remove with() and pass js strict mode
- */
-function init$1() {
-    $.fn.removeHighlight = function() {
-        return this.find('span.highlight').each(function() {
-            // this.parentNode.firstChild.nodeName;
-            var parent = this.parentNode;
-            parent.replaceChild(this.firstChild, this);
-            parent.normalize();
-        }).end();
-    };
-}
-
-// src/defaults.js
-var defaults$1 = {
-	options: [],
-	optgroups: [],
-
-	plugins: [],
-	delimiter: ',',
-	splitOn: null, // regexp or string for splitting up values from a paste command
-	persist: true,
-	diacritics: true,
-	create: false,
-	createOnBlur: false,
-	createFilter: null,
-	highlight: true,
-	openOnFocus: true,
-	maxOptions: 1000,
-	maxItems: null,
-	hideSelected: null,
-	addPrecedence: false,
-	selectOnTab: false,
-	preload: false,
-	allowEmptyOption: false,
-	closeAfterSelect: false,
-
-	scrollDuration: 60,
-	loadThrottle: 300,
-	loadingClass: 'loading',
-
-	dataAttr: 'data-data',
-	optgroupField: 'optgroup',
-	valueField: 'value',
-	labelField: 'text',
-	optgroupLabelField: 'label',
-	optgroupValueField: 'value',
-	lockOptgroupOrder: false,
-
-	sortField: '$order',
-	searchField: ['text'],
-	searchConjunction: 'and',
-
-	mode: null,
-	wrapperClass: 'selectize-control',
-	inputClass: 'selectize-input',
-	dropdownClass: 'selectize-dropdown',
-	dropdownContentClass: 'selectize-dropdown-content',
-
-	dropdownParent: null,
-
-	copyClassesToDropdown: true,
-
-	/*
-	load                 : null, // function(query, callback) { ... }
-	score                : null, // function(search) { ... }
-	onInitialize         : null, // function() { ... }
-	onChange             : null, // function(value) { ... }
-	onItemAdd            : null, // function(value, $item) { ... }
-	onItemRemove         : null, // function(value) { ... }
-	onClear              : null, // function() { ... }
-	onOptionAdd          : null, // function(value, data) { ... }
-	onOptionRemove       : null, // function(value) { ... }
-	onOptionClear        : null, // function() { ... }
-	onOptionGroupAdd     : null, // function(id, data) { ... }
-	onOptionGroupRemove  : null, // function(id) { ... }
-	onOptionGroupClear   : null, // function() { ... }
-	onDropdownOpen       : null, // function($dropdown) { ... }
-	onDropdownClose      : null, // function($dropdown) { ... }
-	onType               : null, // function(str) { ... }
-	onDelete             : null, // function(values) { ... }
-	*/
-
-	render: {
-		/*
-		item: null,
-		optgroup: null,
-		optgroup_header: null,
-		option: null,
-		option_create: null
-		*/
-	}
-};
-
-// src/consts.js
-var IS_MAC        = /Mac/.test(navigator.userAgent);
-
-var KEY_A         = 65;
-
-var KEY_RETURN    = 13;
-var KEY_ESC       = 27;
-var KEY_LEFT      = 37;
-var KEY_UP        = 38;
-var KEY_P         = 80;
-var KEY_RIGHT     = 39;
-var KEY_DOWN      = 40;
-var KEY_N         = 78;
-var KEY_BACKSPACE = 8;
-var KEY_DELETE    = 46;
-var KEY_SHIFT     = 16;
-var KEY_CMD       = IS_MAC ? 91 : 17;
-var KEY_CTRL      = IS_MAC ? 18 : 17;
-var KEY_TAB       = 9;
-
-var TAG_SELECT    = 1;
-var TAG_INPUT     = 2;
-
-// for now, android support in general is too spotty to support validity
-var SUPPORTS_VALIDITY_API = !/android/i.test(window.navigator.userAgent) && !!document.createElement('input').validity;
-
-// src/utils.js
-/**
- * Determines if the provided value has been defined.
- *
- * @param {mixed} object
- * @returns {boolean}
- */
-function isSet(object) {
-	return typeof object !== 'undefined';
-}
-
-/**
- * Converts a scalar to its best string representation
- * for hash keys and HTML attribute values.
- *
- * Transformations:
- *   'str'     -> 'str'
- *   null      -> ''
- *   undefined -> ''
- *   true      -> '1'
- *   false     -> '0'
- *   0         -> '0'
- *   1         -> '1'
- *
- * @param {string} value
- * @returns {string|null}
- */
-function hashKey(value) {
-	if (typeof value === 'undefined' || value === null) return null;
-	if (typeof value === 'boolean') return value ? '1' : '0';
-	return value + '';
-}
-
-/**
- * Escapes a string for use within HTML.
- *
- * @param {string} str
- * @returns {string}
- */
-function escapeHtml(str) {
-	return (str + '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
-}
-
-/**
- * Escapes "$" characters in replacement strings.
- *
- * @param {string} str
- * @returns {string}
- */
-
-
-
-
-/**
- * Wraps `fn` so that it can only be invoked once.
- *
- * @param {function} fn
- * @returns {function}
- */
-function once(fn) {
-	var called = false;
-	return function() {
-		if (called) return;
-		called = true;
-		fn.apply(this, arguments);
-	};
-}
-
-/**
- * Wraps `fn` so that it can only be called once
- * every `delay` milliseconds (invoked on the falling edge).
- *
- * @param {function} fn
- * @param {int} delay
- * @returns {function}
- */
-function debounce(fn, delay) {
-	var timeout;
-	return function() {
-		var self = this;
-		var args = arguments;
-		window.clearTimeout(timeout);
-		timeout = window.setTimeout(function() {
-			fn.apply(self, args);
-		}, delay);
-	};
-}
-
-/**
- * Debounce all fired events types listed in `types`
- * while executing the provided `fn`.
- *
- * @param {object} self
- * @param {array} types
- * @param {function} fn
- */
-function debounceEvents(self, types, fn) {
-	var type;
-	var trigger = self.trigger;
-	var eventArgs = {};
-
-	// override trigger method
-	self.trigger = function() {
-		var type = arguments[0];
-		if (types.indexOf(type) !== -1) {
-			eventArgs[type] = arguments;
-		} else {
-			return trigger.apply(self, arguments);
-		}
-	};
-
-	// invoke provided function
-	fn.apply(self, []);
-	self.trigger = trigger;
-
-	// trigger queued events
-	for (type in eventArgs) {
-		if (eventArgs.hasOwnProperty(type)) {
-			trigger.apply(self, eventArgs[type]);
-		}
-	}
-}
-
-/**
- * A workaround for http://bugs.jquery.com/ticket/6696
- *
- * @param {object} $parent - Parent element to listen on.
- * @param {string} event - Event name.
- * @param {string} selector - Descendant selector to filter by.
- * @param {function} fn - Event handler.
- */
-function watchChildEvent($parent, event, selector, fn) {
-	$parent.on(event, selector, function(e) {
-		var child = e.target;
-		while (child && child.parentNode !== $parent[0]) {
-			child = child.parentNode;
-		}
-		e.currentTarget = child;
-		return fn.apply(this, [e]);
-	});
-}
-
-/**
- * Determines the current selection within a text input control.
- * Returns an object containing:
- *   - start
- *   - length
- *
- * @param {object} input
- * @returns {object}
- */
-function getSelection(input) {
-	var result = {};
-	if ('selectionStart' in input) {
-		result.start = input.selectionStart;
-		result.length = input.selectionEnd - result.start;
-	} else if (document.selection) {
-		input.focus();
-		var sel = document.selection.createRange();
-		var selLen = document.selection.createRange().text.length;
-		sel.moveStart('character', -input.value.length);
-		result.start = sel.text.length - selLen;
-		result.length = selLen;
-	}
-	return result;
-}
-
-/**
- * Copies CSS properties from one element to another.
- *
- * @param {object} $from
- * @param {object} $to
- * @param {array} properties
- */
-function transferStyles($from, $to, properties) {
-	var i, n, styles = {};
-	if (properties) {
-		for (i = 0, n = properties.length; i < n; i++) {
-			styles[properties[i]] = $from.css(properties[i]);
-		}
-	} else {
-		styles = $from.css();
-	}
-	$to.css(styles);
-}
-
-/**
- * Measures the width of a string within a
- * parent element (in pixels).
- *
- * @param {string} str
- * @param {object} $parent
- * @returns {int}
- */
-function measureString(str, $parent) {
-	if (!str) {
-		return 0;
-	}
-
-	var $test = $('<test>').css({
-		position: 'absolute',
-		top: -99999,
-		left: -99999,
-		width: 'auto',
-		padding: 0,
-		whiteSpace: 'pre'
-	}).text(str).appendTo('body');
-
-	transferStyles($parent, $test, [
-		'letterSpacing',
-		'fontSize',
-		'fontFamily',
-		'fontWeight',
-		'textTransform'
-	]);
-
-	var width = $test.width();
-	$test.remove();
-
-	return width;
-}
-
-/**
- * Sets up an input to grow horizontally as the user
- * types. If the value is changed manually, you can
- * trigger the "update" handler to resize:
- *
- * $input.trigger('update');
- *
- * @param {object} $input
- */
-function autoGrow($input) {
-	var currentWidth = null;
-
-	var update = function(e, options) {
-		var value, keyCode, printable, placeholder, width;
-		var shift, character, selection;
-		e = e || window.event || {};
-		options = options || {};
-
-		if (e.metaKey || e.altKey) return;
-		if (!options.force && $input.data('grow') === false) return;
-
-		value = $input.val();
-		if (e.type && e.type.toLowerCase() === 'keydown') {
-			keyCode = e.keyCode;
-			printable = (
-				(keyCode >= 97 && keyCode <= 122) || // a-z
-				(keyCode >= 65 && keyCode <= 90)  || // A-Z
-				(keyCode >= 48 && keyCode <= 57)  || // 0-9
-				keyCode === 32 // space
-			);
-
-			if (keyCode === KEY_DELETE || keyCode === KEY_BACKSPACE) {
-				selection = getSelection($input[0]);
-				if (selection.length) {
-					value = value.substring(0, selection.start) + value.substring(selection.start + selection.length);
-				} else if (keyCode === KEY_BACKSPACE && selection.start) {
-					value = value.substring(0, selection.start - 1) + value.substring(selection.start + 1);
-				} else if (keyCode === KEY_DELETE && typeof selection.start !== 'undefined') {
-					value = value.substring(0, selection.start) + value.substring(selection.start + 1);
-				}
-			} else if (printable) {
-				shift = e.shiftKey;
-				character = String.fromCharCode(e.keyCode);
-				if (shift) character = character.toUpperCase();
-				else character = character.toLowerCase();
-				value += character;
-			}
-		}
-
-		placeholder = $input.attr('placeholder');
-		if (!value && placeholder) {
-			value = placeholder;
-		}
-
-		width = measureString(value, $input) + 4;
-		if (width !== currentWidth) {
-			currentWidth = width;
-			$input.width(width);
-			$input.triggerHandler('resize');
-		}
-	};
-
-	$input.on('keydown keyup update blur', update);
-	update();
-}
-
-function domToString(d) {
-	var tmp = document.createElement('div');
-
-	tmp.appendChild(d.cloneNode(true));
-
-	return tmp.innerHTML;
-}
-
-// src/selectize.js
-var inited = false;
-
-function Selectize($input, settings) {
-    if (!inited) {
-      init$$1();
-      inited = true;
+  pause () {
+    if (!this._isPlaying) {
+      return this
     }
-
-	var i, n, dir, input, self = this;
-	input = $input[0];
-	input.selectize = self;
-
-	// detect rtl environment
-	var computedStyle = window.getComputedStyle && window.getComputedStyle(input, null);
-	dir = computedStyle ? computedStyle.getPropertyValue('direction') : input.currentStyle && input.currentStyle.direction;
-	dir = dir || $input.parents('[dir]:first').attr('dir') || '';
-
-	// setup default state
-	$.extend(self, {
-		order            : 0,
-		settings         : settings,
-		$input           : $input,
-		tabIndex         : $input.attr('tabindex') || '',
-		tagType          : input.tagName.toLowerCase() === 'select' ? TAG_SELECT : TAG_INPUT,
-		rtl              : /rtl/i.test(dir),
-
-		eventNS          : '.selectize' + (++Selectize.count),
-		highlightedValue : null,
-		isOpen           : false,
-		isDisabled       : false,
-		isRequired       : $input.is('[required]'),
-		isInvalid        : false,
-		isLocked         : false,
-		isFocused        : false,
-		isInputHidden    : false,
-		isSetup          : false,
-		isShiftDown      : false,
-		isCmdDown        : false,
-		isCtrlDown       : false,
-		ignoreFocus      : false,
-		ignoreBlur       : false,
-		ignoreHover      : false,
-		hasOptions       : false,
-		currentResults   : null,
-		lastValue        : '',
-		caretPos         : 0,
-		loading          : 0,
-		loadedSearches   : {},
-
-		$activeOption    : null,
-		$activeItems     : [],
-
-		optgroups        : {},
-		options          : {},
-		userOptions      : {},
-		items            : [],
-		renderCache      : {},
-		onSearchChange   : settings.loadThrottle === null ? self.onSearchChange : debounce(self.onSearchChange, settings.loadThrottle)
-	});
-
-	// search system
-	self.sifter = new Sifter(this.options, {diacritics: settings.diacritics});
-
-	// build options table
-	if (self.settings.options) {
-		for (i = 0, n = self.settings.options.length; i < n; i++) {
-			self.registerOption(self.settings.options[i]);
-		}
-		delete self.settings.options;
-	}
-
-	// build optgroup table
-	if (self.settings.optgroups) {
-		for (i = 0, n = self.settings.optgroups.length; i < n; i++) {
-			self.registerOptionGroup(self.settings.optgroups[i]);
-		}
-		delete self.settings.optgroups;
-	}
-
-	// option-dependent defaults
-	self.settings.mode = self.settings.mode || (self.settings.maxItems === 1 ? 'single' : 'multi');
-	if (typeof self.settings.hideSelected !== 'boolean') {
-		self.settings.hideSelected = self.settings.mode === 'multi';
-	}
-
-	self.initializePlugins(self.settings.plugins);
-	self.setupCallbacks();
-	self.setupTemplates();
-	self.setup();
-}
-
-function init$$1() {
-    // initialize highlight
-    init$1();
-
-    // defaults
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Selectize.defaults = defaults$1;
-    Selectize.count    = 0;
-
-    // mixins
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    MicroEvent.mixin(Selectize);
-    MicroPlugin.mixin(Selectize);
-
-    // methods
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    $.extend(Selectize.prototype, {
-
-        /**
-         * Creates all elements and sets up event bindings.
-         */
-        setup: function() {
-            var self      = this;
-            var settings  = self.settings;
-            var eventNS   = self.eventNS;
-            var $window   = $(window);
-            var $document = $(document);
-            var $input    = self.$input;
-
-            var $wrapper;
-            var $control;
-            var $controlInput;
-            var $dropdown;
-            var $dropdownContent;
-            var $dropdownParent;
-            var inputMode;
-            var classes;
-            var classesPlugins;
-            var inputId;
-
-            inputMode         = self.settings.mode;
-            classes           = $input.attr('class') || '';
-
-            $wrapper          = $('<div>').addClass(settings.wrapperClass).addClass(classes).addClass(inputMode);
-            $control          = $('<div>').addClass(settings.inputClass).addClass('items').appendTo($wrapper);
-            $controlInput    = $('<input type="text" autocomplete="off" />').appendTo($control).attr('tabindex', $input.is(':disabled') ? '-1' : self.tabIndex);
-            $dropdownParent  = $(settings.dropdownParent || $wrapper);
-            $dropdown         = $('<div>').addClass(settings.dropdownClass).addClass(inputMode).hide().appendTo($dropdownParent);
-            $dropdownContent = $('<div>').addClass(settings.dropdownContentClass).appendTo($dropdown);
-
-            if(inputId = $input.attr('id')) {
-                $controlInput.attr('id', inputId + '-selectized');
-                $('label[for="'+inputId+'"]').attr('for', inputId + '-selectized');
-            }
-
-            if(self.settings.copyClassesToDropdown) {
-                $dropdown.addClass(classes);
-            }
-
-            $wrapper.css({
-                width: $input[0].style.width
-            });
-
-            if (self.plugins.names.length) {
-                classesPlugins = 'plugin-' + self.plugins.names.join(' plugin-');
-                $wrapper.addClass(classesPlugins);
-                $dropdown.addClass(classesPlugins);
-            }
-
-            if ((settings.maxItems === null || settings.maxItems > 1) && self.tagType === TAG_SELECT) {
-                $input.attr('multiple', 'multiple');
-            }
-
-            if (self.settings.placeholder) {
-                $controlInput.attr('placeholder', settings.placeholder);
-            }
-
-            // if splitOn was not passed in, construct it from the delimiter to allow pasting universally
-            if (!self.settings.splitOn && self.settings.delimiter) {
-                var delimiterEscaped = self.settings.delimiter.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                self.settings.splitOn = new RegExp('\\s*' + delimiterEscaped + '+\\s*');
-            }
-
-            if ($input.attr('autocorrect')) {
-                $controlInput.attr('autocorrect', $input.attr('autocorrect'));
-            }
-
-            if ($input.attr('autocapitalize')) {
-                $controlInput.attr('autocapitalize', $input.attr('autocapitalize'));
-            }
-
-            self.$wrapper          = $wrapper;
-            self.$control          = $control;
-            self.$controlInput    = $controlInput;
-            self.$dropdown         = $dropdown;
-            self.$dropdownContent = $dropdownContent;
-
-            $dropdown.on('mouseenter', '[data-selectable]', function() { return self.onOptionHover.apply(self, arguments); });
-            $dropdown.on('mousedown click', '[data-selectable]', function() { return self.onOptionSelect.apply(self, arguments); });
-            watchChildEvent($control, 'mousedown', '*:not(input)', function() { return self.onItemSelect.apply(self, arguments); });
-            autoGrow($controlInput);
-
-            $control.on({
-                mousedown : function() { return self.onMouseDown.apply(self, arguments); },
-                click     : function() { return self.onClick.apply(self, arguments); }
-            });
-
-            $controlInput.on({
-                mousedown : function(e) { e.stopPropagation(); },
-                keydown   : function() { return self.onKeyDown.apply(self, arguments); },
-                keyup     : function() { return self.onKeyUp.apply(self, arguments); },
-                keypress  : function() { return self.onKeyPress.apply(self, arguments); },
-                resize    : function() { self.positionDropdown.apply(self, []); },
-                blur      : function() { return self.onBlur.apply(self, arguments); },
-                focus     : function() { self.ignoreBlur = false; return self.onFocus.apply(self, arguments); },
-                paste     : function() { return self.onPaste.apply(self, arguments); }
-            });
-
-            $document.on('keydown' + eventNS, function(e) {
-                self.isCmdDown = e[IS_MAC ? 'metaKey' : 'ctrlKey'];
-                self.isCtrlDown = e[IS_MAC ? 'altKey' : 'ctrlKey'];
-                self.isShiftDown = e.shiftKey;
-            });
-
-            $document.on('keyup' + eventNS, function(e) {
-                if (e.keyCode === KEY_CTRL) self.isCtrlDown = false;
-                if (e.keyCode === KEY_SHIFT) self.isShiftDown = false;
-                if (e.keyCode === KEY_CMD) self.isCmdDown = false;
-            });
-
-            $document.on('mousedown' + eventNS, function(e) {
-                if (self.isFocused) {
-                    // prevent events on the dropdown scrollbar from causing the control to blur
-                    if (e.target === self.$dropdown[0] || e.target.parentNode === self.$dropdown[0]) {
-                        return false;
-                    }
-                    // blur on click outside
-                    if (!self.$control.has(e.target).length && e.target !== self.$control[0]) {
-                        self.blur(e.target);
-                    }
-                }
-            });
-
-            $window.on(['scroll' + eventNS, 'resize' + eventNS].join(' '), function() {
-                if (self.isOpen) {
-                    self.positionDropdown.apply(self, arguments);
-                }
-            });
-            $window.on('mousemove' + eventNS, function() {
-                self.ignoreHover = false;
-            });
-
-            // store original children and tab index so that they can be
-            // restored when the destroy() method is called.
-            this.revertSettings = {
-                $children : $input.children().detach(),
-                tabindex  : $input.attr('tabindex')
-            };
-
-            $input.attr('tabindex', -1).hide().after(self.$wrapper);
-
-            if ($.isArray(settings.items)) {
-                self.setValue(settings.items);
-                delete settings.items;
-            }
-
-            // feature detect for the validation API
-            if (SUPPORTS_VALIDITY_API) {
-                $input.on('invalid' + eventNS, function(e) {
-                    e.preventDefault();
-                    self.isInvalid = true;
-                    self.refreshState();
-                });
-            }
-
-            self.updateOriginalInput();
-            self.refreshItems();
-            self.refreshState();
-            self.updatePlaceholder();
-            self.isSetup = true;
-
-            if ($input.is(':disabled')) {
-                self.disable();
-            }
-
-            self.on('change', this.onChange);
-
-            $input.data('selectize', self);
-            $input.addClass('selectized');
-            self.trigger('initialize');
-
-            // preload options
-            if (settings.preload === true) {
-                self.onSearchChange('');
-            }
-
-        },
-
-        /**
-         * Sets up default rendering functions.
-         */
-        setupTemplates: function() {
-            var self = this;
-            var fieldLabel = self.settings.labelField;
-            var fieldOptgroup = self.settings.optgroupLabelField;
-
-            var templates = {
-                'optgroup': function(data) {
-                    return '<div class="optgroup">' + data.html + '</div>';
-                },
-                'optgroupHeader': function(data, escape) {
-                    return '<div class="optgroup-header">' + escape(data[fieldOptgroup]) + '</div>';
-                },
-                'option': function(data, escape) {
-                    return '<div class="option">' + escape(data[fieldLabel]) + '</div>';
-                },
-                'item': function(data, escape) {
-                    return '<div class="item">' + escape(data[fieldLabel]) + '</div>';
-                },
-                'optionCreate': function(data, escape) {
-                    return '<div class="create">Add <strong>' + escape(data.input) + '</strong>&hellip;</div>';
-                }
-            };
-
-            self.settings.render = $.extend({}, templates, self.settings.render);
-        },
-
-        /**
-         * Maps fired events to callbacks provided
-         * in the settings used when creating the control.
-         */
-        setupCallbacks: function() {
-            var key, fn, callbacks = {
-                'initialize'      : 'onInitialize',
-                'change'          : 'onChange',
-                'itemAdd'        : 'onItemAdd',
-                'itemRemove'     : 'onItemRemove',
-                'clear'           : 'onClear',
-                'optionAdd'      : 'onOptionAdd',
-                'optionRemove'   : 'onOptionRemove',
-                'optionClear'    : 'onOptionClear',
-                'optgroupAdd'    : 'onOptionGroupAdd',
-                'optgroupRemove' : 'onOptionGroupRemove',
-                'optgroupClear'  : 'onOptionGroupClear',
-                'dropdownOpen'   : 'onDropdownOpen',
-                'dropdownClose'  : 'onDropdownClose',
-                'type'            : 'onType',
-                'load'            : 'onLoad',
-                'focus'           : 'onFocus',
-                'blur'            : 'onBlur'
-            };
-
-            for (key in callbacks) {
-                if (callbacks.hasOwnProperty(key)) {
-                    fn = this.settings[callbacks[key]];
-                    if (fn) this.on(key, fn);
-                }
-            }
-        },
-
-        /**
-         * Triggered when the main control element
-         * has a click event.
-         *
-         * @param {object} e
-         * @return {boolean}
-         */
-        onClick: function(e) {
-            var self = this;
-
-            // necessary for mobile webkit devices (manual focus triggering
-            // is ignored unless invoked within a click event)
-            if (!self.isFocused) {
-                self.focus();
-                e.preventDefault();
-            }
-        },
-
-        /**
-         * Triggered when the main control element
-         * has a mouse down event.
-         *
-         * @param {object} e
-         * @return {boolean}
-         */
-        onMouseDown: function(e) {
-            var self = this;
-            var defaultPrevented = e.isDefaultPrevented();
-
-            if (self.isFocused) {
-                // retain focus by preventing native handling. if the
-                // event target is the input it should not be modified.
-                // otherwise, text selection within the input won't work.
-                if (e.target !== self.$controlInput[0]) {
-                    if (self.settings.mode === 'single') {
-                        // toggle dropdown
-                        if (self.isOpen)
-                          self.close();
-                        else
-                          self.open();
-                    } else if (!defaultPrevented) {
-                        self.setActiveItem(null);
-                    }
-                    return false
-                }
-            } else {
-                // give control focus
-                if (!defaultPrevented) {
-                    window.setTimeout(function() {
-                        self.focus();
-                    }, 0);
-                }
-            }
-        },
-
-        /**
-         * Triggered when the value of the control has been changed.
-         * This should propagate the event to the original DOM
-         * input / select element.
-         */
-        onChange: function() {
-            this.$input.trigger('change');
-        },
-
-        /**
-         * Triggered on <input> paste.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onPaste: function(e) {
-            var self = this;
-
-            if (self.isFull() || self.isInputHidden || self.isLocked) {
-                e.preventDefault();
-                return;
-            }
-
-            // If a regex or string is included, this will split the pasted
-            // input and create Items for each separate value
-            if (self.settings.splitOn) {
-
-                // Wait for pasted text to be recognized in value
-                setTimeout(function() {
-                    var pastedText = self.$controlInput.val();
-                    if(!pastedText.match(self.settings.splitOn)){ return }
-
-                    var splitInput = $.trim(pastedText).split(self.settings.splitOn);
-                    for (var i = 0, n = splitInput.length; i < n; i++) {
-                        self.createItem(splitInput[i]);
-                    }
-                }, 0);
-            }
-        },
-
-        /**
-         * Triggered on <input> keypress.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyPress: function(e) {
-            if (this.isLocked) return e && e.preventDefault();
-            var character = String.fromCharCode(e.keyCode || e.which);
-            if (this.settings.create && this.settings.mode === 'multi' && character === this.settings.delimiter) {
-                this.createItem();
-                e.preventDefault();
-                return false;
-            }
-        },
-
-        /**
-         * Triggered on <input> keydown.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyDown: function(e) {
-            var self = this;
-
-            if (self.isLocked) {
-                if (e.keyCode !== KEY_TAB) {
-                    e.preventDefault();
-                }
-                return;
-            }
-
-            switch (e.keyCode) {
-                case KEY_A:
-                    if (self.isCmdDown) {
-                        self.selectAll();
-                        return;
-                    }
-                    break;
-                case KEY_ESC:
-                    if (self.isOpen) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self.close();
-                    }
-                    return;
-                case KEY_N:
-                    if (!e.ctrlKey || e.altKey) break;
-                case KEY_DOWN:
-                    if (!self.isOpen && self.hasOptions) {
-                        self.open();
-                    } else if (self.$activeOption) {
-                        self.ignoreHover = true;
-                        var $next = self.getAdjacentOption(self.$activeOption, 1);
-                        if ($next.length) self.setActiveOption($next, true, true);
-                    }
-                    e.preventDefault();
-                    return;
-                case KEY_P:
-                    if (!e.ctrlKey || e.altKey) break;
-                case KEY_UP:
-                    if (self.$activeOption) {
-                        self.ignoreHover = true;
-                        var $prev = self.getAdjacentOption(self.$activeOption, -1);
-                        if ($prev.length) self.setActiveOption($prev, true, true);
-                    }
-                    e.preventDefault();
-                    return;
-                case KEY_RETURN:
-                    if (self.isOpen && self.$activeOption) {
-                        self.onOptionSelect({currentTarget: self.$activeOption});
-                        e.preventDefault();
-                    }
-                    return;
-                case KEY_LEFT:
-                    self.advanceSelection(-1, e);
-                    return;
-                case KEY_RIGHT:
-                    self.advanceSelection(1, e);
-                    return;
-                case KEY_TAB:
-                    if (self.settings.selectOnTab && self.isOpen && self.$activeOption) {
-                        self.onOptionSelect({currentTarget: self.$activeOption});
-
-                        // Default behaviour is to jump to the next field, we only want this
-                        // if the current field doesn't accept any more entries
-                        if (!self.isFull()) {
-                            e.preventDefault();
-                        }
-                    }
-                    if (self.settings.create && self.createItem()) {
-                        e.preventDefault();
-                    }
-                    return;
-                case KEY_BACKSPACE:
-                case KEY_DELETE:
-                    self.deleteSelection(e);
-                    return;
-            }
-
-            if ((self.isFull() || self.isInputHidden) && !(IS_MAC ? e.metaKey : e.ctrlKey)) {
-                e.preventDefault();
-                return;
-            }
-        },
-
-        /**
-         * Triggered on <input> keyup.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onKeyUp: function(e) {
-            var self = this;
-
-            if (self.isLocked) return e && e.preventDefault();
-            var value = self.$controlInput.val() || '';
-            if (self.lastValue !== value) {
-                self.lastValue = value;
-                self.onSearchChange(value);
-                self.refreshOptions();
-                self.trigger('type', value);
-            }
-        },
-
-        /**
-         * Invokes the user-provide option provider / loader.
-         *
-         * Note: this function is debounced in the Selectize
-         * constructor (by `settings.loadThrottle` milliseconds)
-         *
-         * @param {string} value
-         */
-        onSearchChange: function(value) {
-            var self = this;
-            var fn = self.settings.load;
-            if (!fn) return;
-            if (self.loadedSearches.hasOwnProperty(value)) return;
-            self.loadedSearches[value] = true;
-            self.load(function(callback) {
-                fn.apply(self, [value, callback]);
-            });
-        },
-
-        /**
-         * Triggered on <input> focus.
-         *
-         * @param {object} e (optional)
-         * @returns {boolean}
-         */
-        onFocus: function(e) {
-            var self = this;
-            var wasFocused = self.isFocused;
-
-            if (self.isDisabled) {
-                self.blur();
-                if (e) e.preventDefault();
-                return false;
-            }
-
-            if (self.ignoreFocus) return;
-            self.isFocused = true;
-            if (self.settings.preload === 'focus') self.onSearchChange('');
-
-            if (!wasFocused) self.trigger('focus');
-
-            if (!self.$activeItems.length) {
-                self.showInput();
-                self.setActiveItem(null);
-                self.refreshOptions(!!self.settings.openOnFocus);
-            }
-
-            self.refreshState();
-        },
-
-        /**
-         * Triggered on <input> blur.
-         *
-         * @param {object} e
-         * @param {Element} dest
-         */
-        onBlur: function(e, dest) {
-            var self = this;
-            if (!self.isFocused) return;
-            self.isFocused = false;
-
-            if (self.ignoreFocus) {
-                return;
-            } else if (!self.ignoreBlur && document.activeElement === self.$dropdownContent[0]) {
-                // necessary to prevent IE closing the dropdown when the scrollbar is clicked
-                self.ignoreBlur = true;
-                self.onFocus(e);
-                return;
-            }
-
-            var deactivate = function() {
-                self.close();
-                self.setTextboxValue('');
-                self.setActiveItem(null);
-                self.setActiveOption(null);
-                self.setCaret(self.items.length);
-                self.refreshState();
-
-                // IE11 bug: element still marked as active
-                if (dest && dest.focus) dest.focus();
-
-                self.ignoreFocus = false;
-                self.trigger('blur');
-            };
-
-            self.ignoreFocus = true;
-            if (self.settings.create && self.settings.createOnBlur) {
-                self.createItem(null, false, deactivate);
-            } else {
-                deactivate();
-            }
-        },
-
-        /**
-         * Triggered when the user rolls over
-         * an option in the autocomplete dropdown menu.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onOptionHover: function(e) {
-            if (this.ignoreHover) return;
-            this.setActiveOption(e.currentTarget, false);
-        },
-
-        /**
-         * Triggered when the user clicks on an option
-         * in the autocomplete dropdown menu.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onOptionSelect: function(e) {
-            var value, $target, self = this;
-
-            if (e.preventDefault) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            $target = $(e.currentTarget);
-            if ($target.hasClass('create')) {
-                self.createItem(null, function() {
-                    if (self.settings.closeAfterSelect) {
-                        self.close();
-                    }
-                });
-            } else {
-                value = $target.attr('data-value');
-                if (typeof value !== 'undefined') {
-                    self.lastQuery = null;
-                    self.setTextboxValue('');
-                    self.addItem(value);
-                    if (self.settings.closeAfterSelect) {
-                        self.close();
-                    } else if (!self.settings.hideSelected && e.type && /mouse/.test(e.type)) {
-                        self.setActiveOption(self.getOption(value));
-                    }
-                }
-            }
-        },
-
-        /**
-         * Triggered when the user clicks on an item
-         * that has been selected.
-         *
-         * @param {object} e
-         * @returns {boolean}
-         */
-        onItemSelect: function(e) {
-            var self = this;
-
-            if (self.isLocked) return;
-            if (self.settings.mode === 'multi') {
-                e.preventDefault();
-                self.setActiveItem(e.currentTarget, e);
-            }
-        },
-
-        /**
-         * Invokes the provided method that provides
-         * results to a callback---which are then added
-         * as options to the control.
-         *
-         * @param {function} fn
-         */
-        load: function(fn) {
-            var self = this;
-            var $wrapper = self.$wrapper.addClass(self.settings.loadingClass);
-
-            self.loading++;
-            fn.apply(self, [function(results) {
-                self.loading = Math.max(self.loading - 1, 0);
-                if (results && results.length) {
-                    self.addOption(results);
-                    self.refreshOptions(self.isFocused && !self.isInputHidden);
-                }
-                if (!self.loading) {
-                    $wrapper.removeClass(self.settings.loadingClass);
-                }
-                self.trigger('load', results);
-            }]);
-        },
-
-        /**
-         * Sets the input field of the control to the specified value.
-         *
-         * @param {string} value
-         */
-        setTextboxValue: function(value) {
-            var $input = this.$controlInput;
-            var changed = $input.val() !== value;
-            if (changed) {
-                $input.val(value).triggerHandler('update');
-                this.lastValue = value;
-            }
-        },
-
-        /**
-         * Returns the value of the control. If multiple items
-         * can be selected (e.g. <select multiple>), this returns
-         * an array. If only one item can be selected, this
-         * returns a string.
-         *
-         * @returns {mixed}
-         */
-        getValue: function() {
-            if (this.tagType === TAG_SELECT && this.$input.attr('multiple')) {
-                return this.items;
-            } else {
-                return this.items.join(this.settings.delimiter);
-            }
-        },
-
-        /**
-         * Resets the selected items to the given value.
-         *
-         * @param {mixed} value
-         */
-        setValue: function(value, silent) {
-            var events = silent ? [] : ['change'];
-
-            debounceEvents(this, events, function() {
-                this.clear(silent);
-                this.addItems(value, silent);
-            });
-        },
-
-        /**
-         * Sets the selected item.
-         *
-         * @param {object} $item
-         * @param {object} e (optional)
-         */
-        setActiveItem: function($item, e) {
-            var self = this;
-            var eventName;
-            var i, idx, begin, end, item, swap;
-            var $last;
-
-            if (self.settings.mode === 'single') return;
-            $item = $($item);
-
-            // clear the active selection
-            if (!$item.length) {
-                $(self.$activeItems).removeClass('active');
-                self.$activeItems = [];
-                if (self.isFocused) {
-                    self.showInput();
-                }
-                return;
-            }
-
-            // modify selection
-            eventName = e && e.type.toLowerCase();
-
-            if (eventName === 'mousedown' && self.isShiftDown && self.$activeItems.length) {
-                $last = self.$control.children('.active:last');
-                begin = Array.prototype.indexOf.apply(self.$control[0].childNodes, [$last[0]]);
-                end   = Array.prototype.indexOf.apply(self.$control[0].childNodes, [$item[0]]);
-                if (begin > end) {
-                    swap  = begin;
-                    begin = end;
-                    end   = swap;
-                }
-                for (i = begin; i <= end; i++) {
-                    item = self.$control[0].childNodes[i];
-                    if (self.$activeItems.indexOf(item) === -1) {
-                        $(item).addClass('active');
-                        self.$activeItems.push(item);
-                    }
-                }
-                e.preventDefault();
-            } else if ((eventName === 'mousedown' && self.isCtrlDown) || (eventName === 'keydown' && this.isShiftDown)) {
-                if ($item.hasClass('active')) {
-                    idx = self.$activeItems.indexOf($item[0]);
-                    self.$activeItems.splice(idx, 1);
-                    $item.removeClass('active');
-                } else {
-                    self.$activeItems.push($item.addClass('active')[0]);
-                }
-            } else {
-                $(self.$activeItems).removeClass('active');
-                self.$activeItems = [$item.addClass('active')[0]];
-            }
-
-            // ensure control has focus
-            self.hideInput();
-            if (!this.isFocused) {
-                self.focus();
-            }
-        },
-
-        /**
-         * Sets the selected item in the dropdown menu
-         * of available options.
-         *
-         * @param {object} $object
-         * @param {boolean} scroll
-         * @param {boolean} animate
-         */
-        setActiveOption: function($option, scroll, animate) {
-            var heightMenu, heightItem, y;
-            var scrollTop, scrollBottom;
-            var self = this;
-
-            if (self.$activeOption) self.$activeOption.removeClass('active');
-            self.$activeOption = null;
-
-            $option = $($option);
-            if (!$option.length) return;
-
-            self.$activeOption = $option.addClass('active');
-
-            if (scroll || !isSet(scroll)) {
-
-                heightMenu   = self.$dropdownContent.height();
-                heightItem   = self.$activeOption.outerHeight(true);
-                scroll        = self.$dropdownContent.scrollTop() || 0;
-                y             = self.$activeOption.offset().top - self.$dropdownContent.offset().top + scroll;
-                scrollTop    = y;
-                scrollBottom = y - heightMenu + heightItem;
-
-                if (y + heightItem > heightMenu + scroll) {
-                    self.$dropdownContent.stop().animate({scrollTop: scrollBottom}, animate ? self.settings.scrollDuration : 0);
-                } else if (y < scroll) {
-                    self.$dropdownContent.stop().animate({scrollTop: scrollTop}, animate ? self.settings.scrollDuration : 0);
-                }
-
-            }
-        },
-
-        /**
-         * Selects all items (CTRL + A).
-         */
-        selectAll: function() {
-            var self = this;
-            if (self.settings.mode === 'single') return;
-
-            self.$activeItems = Array.prototype.slice.apply(self.$control.children(':not(input)').addClass('active'));
-            if (self.$activeItems.length) {
-                self.hideInput();
-                self.close();
-            }
-            self.focus();
-        },
-
-        /**
-         * Hides the input element out of view, while
-         * retaining its focus.
-         */
-        hideInput: function() {
-            var self = this;
-
-            self.setTextboxValue('');
-            self.$controlInput.css({opacity: 0, position: 'absolute', left: self.rtl ? 10000 : -10000});
-            self.isInputHidden = true;
-        },
-
-        /**
-         * Restores input visibility.
-         */
-        showInput: function() {
-            this.$controlInput.css({opacity: 1, position: 'relative', left: 0});
-            this.isInputHidden = false;
-        },
-
-        /**
-         * Gives the control focus.
-         */
-        focus: function() {
-            var self = this;
-            if (self.isDisabled) return;
-
-            self.ignoreFocus = true;
-            self.$controlInput[0].focus();
-            window.setTimeout(function() {
-                self.ignoreFocus = false;
-                self.onFocus();
-            }, 0);
-        },
-
-        /**
-         * Forces the control out of focus.
-         *
-         * @param {Element} dest
-         */
-        blur: function(dest) {
-            this.$controlInput[0].blur();
-            this.onBlur(null, dest);
-        },
-
-        /**
-         * Returns a function that scores an object
-         * to show how good of a match it is to the
-         * provided query.
-         *
-         * @param {string} query
-         * @param {object} options
-         * @return {function}
-         */
-        getScoreFunction: function(query) {
-            return this.sifter.getScoreFunction(query, this.getSearchOptions());
-        },
-
-        /**
-         * Returns search options for sifter (the system
-         * for scoring and sorting results).
-         *
-         * @see https://github.com/brianreavis/sifter.js
-         * @return {object}
-         */
-        getSearchOptions: function() {
-            var settings = this.settings;
-            var sort = settings.sortField;
-            if (typeof sort === 'string') {
-                sort = [{field: sort}];
-            }
-
-            return {
-                fields      : settings.searchField,
-                conjunction : settings.searchConjunction,
-                sort        : sort
-            };
-        },
-
-        /**
-         * Searches through available options and returns
-         * a sorted array of matches.
-         *
-         * Returns an object containing:
-         *
-         *   - query {string}
-         *   - tokens {array}
-         *   - total {int}
-         *   - items {array}
-         *
-         * @param {string} query
-         * @returns {object}
-         */
-        search: function(query) {
-            var i, result, calculateScore;
-            var self     = this;
-            var settings = self.settings;
-            var options  = this.getSearchOptions();
-
-            // validate user-provided result scoring function
-            if (settings.score) {
-                calculateScore = self.settings.score.apply(this, [query]);
-                if (typeof calculateScore !== 'function') {
-                    throw new Error('Selectize "score" setting must be a function that returns a function');
-                }
-            }
-
-            // perform search
-            if (query !== self.lastQuery) {
-                self.lastQuery = query;
-                result = self.sifter.search(query, $.extend(options, {score: calculateScore}));
-                self.currentResults = result;
-            } else {
-                result = $.extend(true, {}, self.currentResults);
-            }
-
-            // filter out selected items
-            if (settings.hideSelected) {
-                for (i = result.items.length - 1; i >= 0; i--) {
-                    if (self.items.indexOf(hashKey(result.items[i].id)) !== -1) {
-                        result.items.splice(i, 1);
-                    }
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * Refreshes the list of available options shown
-         * in the autocomplete dropdown menu.
-         *
-         * @param {boolean} triggerDropdown
-         */
-        refreshOptions: function(triggerDropdown) {
-            var i, j, k, n, groups, groupsOrder, option, optionHtml, optgroup, optgroups, html, htmlChildren, hasCreateOption;
-            var $active, $activeBefore, $create;
-
-            if (typeof triggerDropdown === 'undefined') {
-                triggerDropdown = true;
-            }
-
-            var self              = this;
-            var query             = $.trim(self.$controlInput.val());
-            var results           = self.search(query);
-            var $dropdownContent = self.$dropdownContent;
-            var activeBefore     = self.$activeOption && hashKey(self.$activeOption.attr('data-value'));
-
-            // build markup
-            n = results.items.length;
-            if (typeof self.settings.maxOptions === 'number') {
-                n = Math.min(n, self.settings.maxOptions);
-            }
-
-            // render and group available options individually
-            groups = {};
-            groupsOrder = [];
-
-            for (i = 0; i < n; i++) {
-                option      = self.options[results.items[i].id];
-                optionHtml = self.render('option', option);
-                optgroup    = option[self.settings.optgroupField] || '';
-                optgroups   = $.isArray(optgroup) ? optgroup : [optgroup];
-
-                for (j = 0, k = optgroups && optgroups.length; j < k; j++) {
-                    optgroup = optgroups[j];
-                    if (!self.optgroups.hasOwnProperty(optgroup)) {
-                        optgroup = '';
-                    }
-                    if (!groups.hasOwnProperty(optgroup)) {
-                        groups[optgroup] = document.createDocumentFragment();
-                        groupsOrder.push(optgroup);
-                    }
-                    groups[optgroup].appendChild(optionHtml);
-                }
-            }
-
-            // sort optgroups
-            if (this.settings.lockOptgroupOrder) {
-                groupsOrder.sort(function(a, b) {
-                    var aOrder = self.optgroups[a].$order || 0;
-                    var bOrder = self.optgroups[b].$order || 0;
-                    return aOrder - bOrder;
-                });
-            }
-
-            // render optgroup headers & join groups
-            html = document.createDocumentFragment();
-            for (i = 0, n = groupsOrder.length; i < n; i++) {
-                optgroup = groupsOrder[i];
-                if (self.optgroups.hasOwnProperty(optgroup) && groups[optgroup].childNodes.length) {
-                    // render the optgroup header and options within it,
-                    // then pass it to the wrapper template
-                    htmlChildren = document.createDocumentFragment();
-                    htmlChildren.appendChild(self.render('optgroupHeader', self.optgroups[optgroup]));
-                    htmlChildren.appendChild(groups[optgroup]);
-
-                    html.appendChild(self.render('optgroup', $.extend({}, self.optgroups[optgroup], {
-                        html: domToString(htmlChildren),
-                        dom:  htmlChildren
-                    })));
-                } else {
-                    html.appendChild(groups[optgroup]);
-                }
-            }
-
-            $dropdownContent.html(html);
-
-            // highlight matching terms inline
-            if (self.settings.highlight && results.query.length && results.tokens.length) {
-                $dropdownContent.removeHighlight();
-                for (i = 0, n = results.tokens.length; i < n; i++) {
-                    highlight($dropdownContent, results.tokens[i].regex);
-                }
-            }
-
-            // add "selected" class to selected options
-            if (!self.settings.hideSelected) {
-                for (i = 0, n = self.items.length; i < n; i++) {
-                    self.getOption(self.items[i]).addClass('selected');
-                }
-            }
-
-            // add create option
-            hasCreateOption = self.canCreate(query);
-            if (hasCreateOption) {
-                $dropdownContent.prepend(self.render('optionCreate', {input: query}));
-                $create = $($dropdownContent[0].childNodes[0]);
-            }
-
-            // activate
-            self.hasOptions = results.items.length > 0 || hasCreateOption;
-            if (self.hasOptions) {
-                if (results.items.length > 0) {
-                    $activeBefore = activeBefore && self.getOption(activeBefore);
-                    if ($activeBefore && $activeBefore.length) {
-                        $active = $activeBefore;
-                    } else if (self.settings.mode === 'single' && self.items.length) {
-                        $active = self.getOption(self.items[0]);
-                    }
-                    if (!$active || !$active.length) {
-                        if ($create && !self.settings.addPrecedence) {
-                            $active = self.getAdjacentOption($create, 1);
-                        } else {
-                            $active = $dropdownContent.find('[data-selectable]:first');
-                        }
-                    }
-                } else {
-                    $active = $create;
-                }
-                self.setActiveOption($active);
-                if (triggerDropdown && !self.isOpen) { self.open(); }
-            } else {
-                self.setActiveOption(null);
-                if (triggerDropdown && self.isOpen) { self.close(); }
-            }
-        },
-
-        /**
-         * Adds an available option. If it already exists,
-         * nothing will happen. Note: this does not refresh
-         * the options list dropdown (use `refreshOptions`
-         * for that).
-         *
-         * Usage:
-         *
-         *   this.addOption(data)
-         *
-         * @param {object|array} data
-         */
-        addOption: function(data) {
-            var i, n, value, self = this;
-
-            if ($.isArray(data)) {
-                for (i = 0, n = data.length; i < n; i++) {
-                    self.addOption(data[i]);
-                }
-                return;
-            }
-
-            if (value = self.registerOption(data)) {
-                self.userOptions[value] = true;
-                self.lastQuery = null;
-                self.trigger('optionAdd', value, data);
-            }
-        },
-
-        /**
-         * Registers an option to the pool of options.
-         *
-         * @param {object} data
-         * @return {boolean|string}
-         */
-        registerOption: function(data) {
-            var key = hashKey(data[this.settings.valueField]);
-            if (typeof key === 'undefined' || key === null || this.options.hasOwnProperty(key)) return false;
-            data.$order = data.$order || ++this.order;
-            this.options[key] = data;
-            return key;
-        },
-
-        /**
-         * Registers an option group to the pool of option groups.
-         *
-         * @param {object} data
-         * @return {boolean|string}
-         */
-        registerOptionGroup: function(data) {
-            var key = hashKey(data[this.settings.optgroupValueField]);
-            if (!key) return false;
-
-            data.$order = data.$order || ++this.order;
-            this.optgroups[key] = data;
-            return key;
-        },
-
-        /**
-         * Registers a new optgroup for options
-         * to be bucketed into.
-         *
-         * @param {string} id
-         * @param {object} data
-         */
-        addOptionGroup: function(id, data) {
-            data[this.settings.optgroupValueField] = id;
-            if (id = this.registerOptionGroup(data)) {
-                this.trigger('optgroupAdd', id, data);
-            }
-        },
-
-        /**
-         * Removes an existing option group.
-         *
-         * @param {string} id
-         */
-        removeOptionGroup: function(id) {
-            if (this.optgroups.hasOwnProperty(id)) {
-                delete this.optgroups[id];
-                this.renderCache = {};
-                this.trigger('optgroupRemove', id);
-            }
-        },
-
-        /**
-         * Clears all existing option groups.
-         */
-        clearOptionGroups: function() {
-            this.optgroups = {};
-            this.renderCache = {};
-            this.trigger('optgroupClear');
-        },
-
-        /**
-         * Updates an option available for selection. If
-         * it is visible in the selected items or options
-         * dropdown, it will be re-rendered automatically.
-         *
-         * @param {string} value
-         * @param {object} data
-         */
-        updateOption: function(value, data) {
-            var self = this;
-            var $item, $itemNew;
-            var valueNew, indexItem, cacheItems, cacheOptions, orderOld;
-
-            value     = hashKey(value);
-            valueNew = hashKey(data[self.settings.valueField]);
-
-            // sanity checks
-            if (value === null) return;
-            if (!self.options.hasOwnProperty(value)) return;
-            if (typeof valueNew !== 'string') throw new Error('Value must be set in option data');
-
-            orderOld = self.options[value].$order;
-
-            // update references
-            if (valueNew !== value) {
-                delete self.options[value];
-                indexItem = self.items.indexOf(value);
-                if (indexItem !== -1) {
-                    self.items.splice(indexItem, 1, valueNew);
-                }
-            }
-            data.$order = data.$order || orderOld;
-            self.options[valueNew] = data;
-
-            // invalidate render cache
-            cacheItems = self.renderCache.item;
-            cacheOptions = self.renderCache.option;
-
-            if (cacheItems) {
-                delete cacheItems[value];
-                delete cacheItems[valueNew];
-            }
-            if (cacheOptions) {
-                delete cacheOptions[value];
-                delete cacheOptions[valueNew];
-            }
-
-            // update the item if it's selected
-            if (self.items.indexOf(valueNew) !== -1) {
-                $item = self.getItem(value);
-                $itemNew = $(self.render('item', data));
-                if ($item.hasClass('active')) $itemNew.addClass('active');
-                $item.replaceWith($itemNew);
-            }
-
-            // invalidate last query because we might have updated the sortField
-            self.lastQuery = null;
-
-            // update dropdown contents
-            if (self.isOpen) {
-                self.refreshOptions(false);
-            }
-        },
-
-        /**
-         * Removes a single option.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        removeOption: function(value, silent) {
-            var self = this;
-            value = hashKey(value);
-
-            var cacheItems = self.renderCache.item;
-            var cacheOptions = self.renderCache.option;
-            if (cacheItems) delete cacheItems[value];
-            if (cacheOptions) delete cacheOptions[value];
-
-            delete self.userOptions[value];
-            delete self.options[value];
-            self.lastQuery = null;
-            self.trigger('optionRemove', value);
-            self.removeItem(value, silent);
-        },
-
-        /**
-         * Clears all options.
-         */
-        clearOptions: function() {
-            var self = this;
-
-            self.loadedSearches = {};
-            self.userOptions = {};
-            self.renderCache = {};
-            self.options = self.sifter.items = {};
-            self.lastQuery = null;
-            self.trigger('optionClear');
-            self.clear();
-        },
-
-        /**
-         * Returns the jQuery element of the option
-         * matching the given value.
-         *
-         * @param {string} value
-         * @returns {object}
-         */
-        getOption: function(value) {
-            return this.getElementWithValue(value, this.$dropdownContent.find('[data-selectable]'));
-        },
-
-        /**
-         * Returns the jQuery element of the next or
-         * previous selectable option.
-         *
-         * @param {object} $option
-         * @param {int} direction  can be 1 for next or -1 for previous
-         * @return {object}
-         */
-        getAdjacentOption: function($option, direction) {
-            var $options = this.$dropdown.find('[data-selectable]');
-            var index    = $options.index($option) + direction;
-
-            return index >= 0 && index < $options.length ? $options.eq(index) : $();
-        },
-
-        /**
-         * Finds the first element with a "data-value" attribute
-         * that matches the given value.
-         *
-         * @param {mixed} value
-         * @param {object} $els
-         * @return {object}
-         */
-        getElementWithValue: function(value, $els) {
-            value = hashKey(value);
-
-            if (typeof value !== 'undefined' && value !== null) {
-                for (var i = 0, n = $els.length; i < n; i++) {
-                    if ($els[i].getAttribute('data-value') === value) {
-                        return $($els[i]);
-                    }
-                }
-            }
-
-            return $();
-        },
-
-        /**
-         * Returns the jQuery element of the item
-         * matching the given value.
-         *
-         * @param {string} value
-         * @returns {object}
-         */
-        getItem: function(value) {
-            return this.getElementWithValue(value, this.$control.children());
-        },
-
-        /**
-         * "Selects" multiple items at once. Adds them to the list
-         * at the current caret position.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        addItems: function(values, silent) {
-            var items = $.isArray(values) ? values : [values];
-            for (var i = 0, n = items.length; i < n; i++) {
-                this.isPending = (i < n - 1);
-                this.addItem(items[i], silent);
-            }
-        },
-
-        /**
-         * "Selects" an item. Adds it to the list
-         * at the current caret position.
-         *
-         * @param {string} value
-         * @param {boolean} silent
-         */
-        addItem: function(value, silent) {
-            var events = silent ? [] : ['change'];
-
-            debounceEvents(this, events, function() {
-                var $item, $option, $options;
-                var self = this;
-                var inputMode = self.settings.mode;
-                var valueNext, wasFull;
-                value = hashKey(value);
-
-                if (self.items.indexOf(value) !== -1) {
-                    if (inputMode === 'single') self.close();
-                    return;
-                }
-
-                if (!self.options.hasOwnProperty(value)) return;
-                if (inputMode === 'single') self.clear(silent);
-                if (inputMode === 'multi' && self.isFull()) return;
-
-                $item = $(self.render('item', self.options[value]));
-                wasFull = self.isFull();
-                self.items.splice(self.caretPos, 0, value);
-                self.insertAtCaret($item);
-                if (!self.isPending || (!wasFull && self.isFull())) {
-                    self.refreshState();
-                }
-
-                if (self.isSetup) {
-                    $options = self.$dropdownContent.find('[data-selectable]');
-
-                    // update menu / remove the option (if this is not one item being added as part of series)
-                    if (!self.isPending) {
-                        $option = self.getOption(value);
-                        valueNext = self.getAdjacentOption($option, 1).attr('data-value');
-                        self.refreshOptions(self.isFocused && inputMode !== 'single');
-                        if (valueNext) {
-                            self.setActiveOption(self.getOption(valueNext));
-                        }
-                    }
-
-                    // hide the menu if the maximum number of items have been selected or no options are left
-                    if (!$options.length || self.isFull()) {
-                        self.close();
-                    } else {
-                        self.positionDropdown();
-                    }
-
-                    self.updatePlaceholder();
-                    self.trigger('itemAdd', value, $item);
-                    self.updateOriginalInput({silent: silent});
-                }
-            });
-        },
-
-        /**
-         * Removes the selected item matching
-         * the provided value.
-         *
-         * @param {string} value
-         */
-        removeItem: function(value, silent) {
-            var self = this;
-            var $item, i, idx;
-
-            $item = (value instanceof $) ? value : self.getItem(value);
-            value = hashKey($item.attr('data-value'));
-            i = self.items.indexOf(value);
-
-            if (i !== -1) {
-                $item.remove();
-                if ($item.hasClass('active')) {
-                    idx = self.$activeItems.indexOf($item[0]);
-                    self.$activeItems.splice(idx, 1);
-                }
-
-                self.items.splice(i, 1);
-                self.lastQuery = null;
-                if (!self.settings.persist && self.userOptions.hasOwnProperty(value)) {
-                    self.removeOption(value, silent);
-                }
-
-                if (i < self.caretPos) {
-                    self.setCaret(self.caretPos - 1);
-                }
-
-                self.refreshState();
-                self.updatePlaceholder();
-                self.updateOriginalInput({silent: silent});
-                self.positionDropdown();
-                self.trigger('itemRemove', value, $item);
-            }
-        },
-
-        /**
-         * Invokes the `create` method provided in the
-         * selectize options that should provide the data
-         * for the new item, given the user input.
-         *
-         * Once this completes, it will be added
-         * to the item list.
-         *
-         * @param {string} value
-         * @param {boolean} [triggerDropdown]
-         * @param {function} [callback]
-         * @return {boolean}
-         */
-        createItem: function(input, triggerDropdown) {
-            var self  = this;
-            var caret = self.caretPos;
-            input = input || $.trim(self.$controlInput.val() || '');
-
-            var callback = arguments[arguments.length - 1];
-            if (typeof callback !== 'function') callback = function() {};
-
-            if (typeof triggerDropdown !== 'boolean') {
-                triggerDropdown = true;
-            }
-
-            if (!self.canCreate(input)) {
-                callback();
-                return false;
-            }
-
-            self.lock();
-
-            var setup = (typeof self.settings.create === 'function') ? this.settings.create : function(input) {
-                var data = {};
-                data[self.settings.labelField] = input;
-                data[self.settings.valueField] = input;
-                return data;
-            };
-
-            var create = once(function(data) {
-                self.unlock();
-
-                if (!data || typeof data !== 'object') return callback();
-                var value = hashKey(data[self.settings.valueField]);
-                if (typeof value !== 'string') return callback();
-
-                self.setTextboxValue('');
-                self.addOption(data);
-                self.setCaret(caret);
-                self.addItem(value);
-                self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
-                callback(data);
-            });
-
-            var output = setup.apply(this, [input, create]);
-            if (typeof output !== 'undefined') {
-                create(output);
-            }
-
-            return true;
-        },
-
-        /**
-         * Re-renders the selected item lists.
-         */
-        refreshItems: function() {
-            this.lastQuery = null;
-
-            if (this.isSetup) {
-                this.addItem(this.items);
-            }
-
-            this.refreshState();
-            this.updateOriginalInput();
-        },
-
-        /**
-         * Updates all state-dependent attributes
-         * and CSS classes.
-         */
-        refreshState: function() {
-            this.refreshValidityState();
-            this.refreshClasses();
-        },
-
-        /**
-         * Update the `required` attribute of both input and control input.
-         *
-         * The `required` property needs to be activated on the control input
-         * for the error to be displayed at the right place. `required` also
-         * needs to be temporarily deactivated on the input since the input is
-         * hidden and can't show errors.
-         */
-        refreshValidityState: function() {
-            if (!this.isRequired) return false;
-
-            var invalid = !this.items.length;
-
-            this.isInvalid = invalid;
-            this.$controlInput.prop('required', invalid);
-            this.$input.prop('required', !invalid);
-        },
-
-        /**
-         * Updates all state-dependent CSS classes.
-         */
-        refreshClasses: function() {
-            var self     = this;
-            var isFull   = self.isFull();
-            var isLocked = self.isLocked;
-
-            self.$wrapper
-                .toggleClass('rtl', self.rtl);
-
-            self.$control
-                .toggleClass('focus', self.isFocused)
-                .toggleClass('disabled', self.isDisabled)
-                .toggleClass('required', self.isRequired)
-                .toggleClass('invalid', self.isInvalid)
-                .toggleClass('locked', isLocked)
-                .toggleClass('full', isFull).toggleClass('not-full', !isFull)
-                .toggleClass('input-active', self.isFocused && !self.isInputHidden)
-                .toggleClass('dropdown-active', self.isOpen)
-                .toggleClass('has-options', !$.isEmptyObject(self.options))
-                .toggleClass('has-items', self.items.length > 0);
-
-            self.$controlInput.data('grow', !isFull && !isLocked);
-        },
-
-        /**
-         * Determines whether or not more items can be added
-         * to the control without exceeding the user-defined maximum.
-         *
-         * @returns {boolean}
-         */
-        isFull: function() {
-            return this.settings.maxItems !== null && this.items.length >= this.settings.maxItems;
-        },
-
-        /**
-         * Refreshes the original <select> or <input>
-         * element to reflect the current state.
-         */
-        updateOriginalInput: function(opts) {
-            var i, n, options, label, self = this;
-            opts = opts || {};
-
-            if (self.tagType === TAG_SELECT) {
-                options = [];
-                for (i = 0, n = self.items.length; i < n; i++) {
-                    label = self.options[self.items[i]][self.settings.labelField] || '';
-                    options.push('<option value="' + escapeHtml(self.items[i]) + '" selected="selected">' + escapeHtml(label) + '</option>');
-                }
-                if (!options.length && !this.$input.attr('multiple')) {
-                    options.push('<option value="" selected="selected"></option>');
-                }
-                self.$input.html(options.join(''));
-            } else {
-                self.$input.val(self.getValue());
-                self.$input.attr('value',self.$input.val());
-            }
-
-            if (self.isSetup) {
-                if (!opts.silent) {
-                    self.trigger('change', self.$input.val());
-                }
-            }
-        },
-
-        /**
-         * Shows/hide the input placeholder depending
-         * on if there items in the list already.
-         */
-        updatePlaceholder: function() {
-            if (!this.settings.placeholder) return;
-            var $input = this.$controlInput;
-
-            if (this.items.length) {
-                $input.removeAttr('placeholder');
-            } else {
-                $input.attr('placeholder', this.settings.placeholder);
-            }
-            $input.triggerHandler('update', {force: true});
-        },
-
-        /**
-         * Shows the autocomplete dropdown containing
-         * the available options.
-         */
-        open: function() {
-            var self = this;
-
-            if (self.isLocked || self.isOpen || (self.settings.mode === 'multi' && self.isFull())) return;
-            self.focus();
-            self.isOpen = true;
-            self.refreshState();
-            self.$dropdown.css({visibility: 'hidden', display: 'block'});
-            self.positionDropdown();
-            self.$dropdown.css({visibility: 'visible'});
-            self.trigger('dropdownOpen', self.$dropdown);
-        },
-
-        /**
-         * Closes the autocomplete dropdown menu.
-         */
-        close: function() {
-            var self = this;
-            var trigger = self.isOpen;
-
-            if (self.settings.mode === 'single' && self.items.length) {
-                self.hideInput();
-                self.$controlInput.blur(); // close keyboard on iOS
-            }
-
-            self.isOpen = false;
-            self.$dropdown.hide();
-            self.setActiveOption(null);
-            self.refreshState();
-
-            if (trigger) self.trigger('dropdownClose', self.$dropdown);
-        },
-
-        /**
-         * Calculates and applies the appropriate
-         * position of the dropdown.
-         */
-        positionDropdown: function() {
-            var $control = this.$control;
-            var offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
-            offset.top += $control.outerHeight(true);
-
-            this.$dropdown.css({
-                width : $control.outerWidth(),
-                top   : offset.top,
-                left  : offset.left
-            });
-        },
-
-        /**
-         * Resets / clears all selected items
-         * from the control.
-         *
-         * @param {boolean} silent
-         */
-        clear: function(silent) {
-            var self = this;
-
-            if (!self.items.length) return;
-            self.$control.children(':not(input)').remove();
-            self.items = [];
-            self.lastQuery = null;
-            self.setCaret(0);
-            self.setActiveItem(null);
-            self.updatePlaceholder();
-            self.updateOriginalInput({silent: silent});
-            self.refreshState();
-            self.showInput();
-            self.trigger('clear');
-        },
-
-        /**
-         * A helper method for inserting an element
-         * at the current caret position.
-         *
-         * @param {object} $el
-         */
-        insertAtCaret: function($el) {
-            var caret = Math.min(this.caretPos, this.items.length);
-            if (caret === 0) {
-                this.$control.prepend($el);
-            } else {
-                $(this.$control[0].childNodes[caret]).before($el);
-            }
-            this.setCaret(caret + 1);
-        },
-
-        /**
-         * Removes the current selected item(s).
-         *
-         * @param {object} e (optional)
-         * @returns {boolean}
-         */
-        deleteSelection: function(e) {
-            var i, n, direction, selection, values, caret, optionSelect, $optionSelect, $tail;
-            var self = this;
-
-            direction = (e && e.keyCode === KEY_BACKSPACE) ? -1 : 1;
-            selection = getSelection(self.$controlInput[0]);
-
-            if (self.$activeOption && !self.settings.hideSelected) {
-                optionSelect = self.getAdjacentOption(self.$activeOption, -1).attr('data-value');
-            }
-
-            // determine items that will be removed
-            values = [];
-
-            if (self.$activeItems.length) {
-                $tail = self.$control.children('.active:' + (direction > 0 ? 'last' : 'first'));
-                caret = self.$control.children(':not(input)').index($tail);
-                if (direction > 0) { caret++; }
-
-                for (i = 0, n = self.$activeItems.length; i < n; i++) {
-                    values.push($(self.$activeItems[i]).attr('data-value'));
-                }
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            } else if ((self.isFocused || self.settings.mode === 'single') && self.items.length) {
-                if (direction < 0 && selection.start === 0 && selection.length === 0) {
-                    values.push(self.items[self.caretPos - 1]);
-                } else if (direction > 0 && selection.start === self.$controlInput.val().length) {
-                    values.push(self.items[self.caretPos]);
-                }
-            }
-
-            // allow the callback to abort
-            if (!values.length || (typeof self.settings.onDelete === 'function' && self.settings.onDelete.apply(self, [values]) === false)) {
-                return false;
-            }
-
-            // perform removal
-            if (typeof caret !== 'undefined') {
-                self.setCaret(caret);
-            }
-            while (values.length) {
-                self.removeItem(values.pop());
-            }
-
-            self.showInput();
-            self.positionDropdown();
-            self.refreshOptions(true);
-
-            // select previous option
-            if (optionSelect) {
-                $optionSelect = self.getOption(optionSelect);
-                if ($optionSelect.length) {
-                    self.setActiveOption($optionSelect);
-                }
-            }
-
-            return true;
-        },
-
-        /**
-         * Selects the previous / next item (depending
-         * on the `direction` argument).
-         *
-         * > 0 - right
-         * < 0 - left
-         *
-         * @param {int} direction
-         * @param {object} e (optional)
-         */
-        advanceSelection: function(direction, e) {
-            var tail, selection, idx, valueLength, cursorAtEdge, $tail;
-            var self = this;
-
-            if (direction === 0) return;
-            if (self.rtl) direction *= -1;
-
-            tail = direction > 0 ? 'last' : 'first';
-            selection = getSelection(self.$controlInput[0]);
-
-            if (self.isFocused && !self.isInputHidden) {
-                valueLength = self.$controlInput.val().length;
-                cursorAtEdge = direction < 0 ? selection.start === 0 &&
-                  selection.length === 0 : selection.start === valueLength;
-
-                if (cursorAtEdge && !valueLength) {
-                    self.advanceCaret(direction, e);
-                }
-            } else {
-                $tail = self.$control.children('.active:' + tail);
-                if ($tail.length) {
-                    idx = self.$control.children(':not(input)').index($tail);
-                    self.setActiveItem(null);
-                    self.setCaret(direction > 0 ? idx + 1 : idx);
-                }
-            }
-        },
-
-        /**
-         * Moves the caret left / right.
-         *
-         * @param {int} direction
-         * @param {object} e (optional)
-         */
-        advanceCaret: function(direction, e) {
-            var self = this, fn, $adj;
-
-            if (direction === 0) return;
-
-            fn = direction > 0 ? 'next' : 'prev';
-            if (self.isShiftDown) {
-                $adj = self.$controlInput[fn]();
-                if ($adj.length) {
-                    self.hideInput();
-                    self.setActiveItem($adj);
-                    if(e) e.preventDefault();
-                }
-            } else {
-                self.setCaret(self.caretPos + direction);
-            }
-        },
-
-        /**
-         * Moves the caret to the specified index.
-         *
-         * @param {int} i
-         */
-        setCaret: function(i) {
-            var self = this;
-
-            if (self.settings.mode === 'single') {
-                i = self.items.length;
-            } else {
-                i = Math.max(0, Math.min(self.items.length, i));
-            }
-
-            if(!self.isPending) {
-                // the input must be moved by leaving it in place and moving the
-                // siblings, due to the fact that focus cannot be restored once lost
-                // on mobile webkit devices
-                var j, n, $children, $child;
-                $children = self.$control.children(':not(input)');
-                for (j = 0, n = $children.length; j < n; j++) {
-                    $child = $($children[j]).detach();
-                    if (j <  i) {
-                        self.$controlInput.before($child);
-                    } else {
-                        self.$control.append($child);
-                    }
-                }
-            }
-
-            self.caretPos = i;
-        },
-
-        /**
-         * Disables user input on the control. Used while
-         * items are being asynchronously created.
-         */
-        lock: function() {
-            this.close();
-            this.isLocked = true;
-            this.refreshState();
-        },
-
-        /**
-         * Re-enables user input on the control.
-         */
-        unlock: function() {
-            this.isLocked = false;
-            this.refreshState();
-        },
-
-        /**
-         * Disables user input on the control completely.
-         * While disabled, it cannot receive focus.
-         */
-        disable: function() {
-            var self = this;
-            self.$input.prop('disabled', true);
-            self.$controlInput.prop('disabled', true).prop('tabindex', -1);
-            self.isDisabled = true;
-            self.lock();
-        },
-
-        /**
-         * Enables the control so that it can respond
-         * to focus and user input.
-         */
-        enable: function() {
-            var self = this;
-            self.$input.prop('disabled', false);
-            self.$controlInput.prop('disabled', false).prop('tabindex', self.tabIndex);
-            self.isDisabled = false;
-            self.unlock();
-        },
-
-        /**
-         * Completely destroys the control and
-         * unbinds all event listeners so that it can
-         * be garbage collected.
-         */
-        destroy: function() {
-            var self = this;
-            var eventNS = self.eventNS;
-            var revertSettings = self.revertSettings;
-
-            self.trigger('destroy');
-            self.off();
-            self.$wrapper.remove();
-            self.$dropdown.remove();
-
-            self.$input
-                .html('')
-                .append(revertSettings.$children)
-                .removeAttr('tabindex')
-                .removeClass('selectized')
-                .attr({tabindex: revertSettings.tabindex})
-                .show();
-
-            self.$controlInput.removeData('grow');
-            self.$input.removeData('selectize');
-
-            $(window).off(eventNS);
-            $(document).off(eventNS);
-            $(document.body).off(eventNS);
-
-            delete self.$input[0].selectize;
-        },
-
-        /**
-         * A helper method for rendering "item" and
-         * "option" templates, given the data.
-         *
-         * @param {string} templateName
-         * @param {object} data
-         * @returns {string}
-         */
-        render: function(templateName, data) {
-            var value, id;
-            var html = '';
-            var cache = false;
-            var self = this;
-            // var regexTag = /^[\t \r\n]*<([a-z][a-z0-9\-]*(?:\:[a-z][a-z0-9\-]*)?)/i;
-
-            if (templateName === 'option' || templateName === 'item') {
-                value = hashKey(data[self.settings.valueField]);
-                cache = !!value;
-            }
-
-            // pull markup from cache if it exists
-            if (cache) {
-                if (!isSet(self.renderCache[templateName])) {
-                    self.renderCache[templateName] = {};
-                }
-                if (self.renderCache[templateName].hasOwnProperty(value)) {
-                    return self.renderCache[templateName][value];
-                }
-            }
-
-            // render markup
-            html = $(self.settings.render[templateName].apply(this, [data, escapeHtml]));
-
-            // add mandatory attributes
-            if (templateName === 'option' || templateName === 'optionCreate') {
-                html.attr('data-selectable', '');
-            }
-            else if (templateName === 'optgroup') {
-                id = data[self.settings.optgroupValueField] || '';
-                html.attr('data-group', id);
-            }
-            if (templateName === 'option' || templateName === 'item') {
-                html.attr('data-value', value || '');
-            }
-
-            // update cache
-            if (cache) {
-                self.renderCache[templateName][value] = html[0];
-            }
-
-            return html[0];
-        },
-
-        /**
-         * Clears the render cache for a template. If
-         * no template is given, clears all render
-         * caches.
-         *
-         * @param {string} templateName
-         */
-        clearCache: function(templateName) {
-            var self = this;
-            if (typeof templateName === 'undefined') {
-                self.renderCache = {};
-            } else {
-                delete self.renderCache[templateName];
-            }
-        },
-
-        /**
-         * Determines whether or not to display the
-         * create item prompt, given a user input.
-         *
-         * @param {string} input
-         * @return {boolean}
-         */
-        canCreate: function(input) {
-            var self = this;
-            if (!self.settings.create) return false;
-            var filter = self.settings.createFilter;
-            return input.length
-                && (typeof filter !== 'function' || filter.apply(self, [input]))
-                && (typeof filter !== 'string' || new RegExp(filter).test(input))
-                && (!(filter instanceof RegExp) || filter.test(input));
-        }
-
-    });
-}
-
-// src/index.js
-function selectize($select, optsUser) {
-    var opts               = $.extend({}, defaults$1, optsUser);
-    var attrData           = opts.dataAttr;
-    var fieldLabel         = opts.labelField;
-    var fieldValue         = opts.valueField;
-    var fieldOptgroup      = opts.optgroupField;
-    var fieldOptgroupLabel = opts.optgroupLabelField;
-    var fieldOptgroupValue = opts.optgroupValueField;
-
-    /**
-     * Initializes selectize from a <input type="text"> element.
-     *
-     * @param {object} $input
-     * @param {object} optsElement
+    this._isPlaying = false;
+    remove$1(this);
+    this._pausedTime = now();
+    return this
+  }
+  /**
+     * Play/Resume the tween
+     * @example tween.play()
+     * @memberof Lite
      */
-    var initTextbox = function($input, optsElement) {
-        var i, n, values, option;
-
-        var dataRaw = $input.attr(attrData);
-
-        if (!dataRaw) {
-            var value = $.trim($input.val() || '');
-            if (!opts.allowEmptyOption && !value.length) return;
-            values = value.split(opts.delimiter);
-            for (i = 0, n = values.length; i < n; i++) {
-                option = {};
-                option[fieldLabel] = values[i];
-                option[fieldValue] = values[i];
-                optsElement.options.push(option);
+  play () {
+    if (this._isPlaying) {
+      return this
+    }
+    this._isPlaying = true;
+    this._startTime += now() - this._pausedTime;
+    add(this);
+    this._pausedTime = now();
+    return this
+  }
+  /**
+     * Sets tween duration
+     * @param {number} amount Duration is milliseconds
+     * @example tween.duration(2000)
+     * @memberof Lite
+     */
+  duration (amount) {
+    this._duration = typeof (amount) === 'function' ? amount(this._duration) : amount;
+    return this
+  }
+  /**
+     * Sets target value and duration
+     * @param {object} properties Target value (to value)
+     * @param {number} [duration=1000] Duration of tween
+     * @example new Tween({x:0}).to({x:200}, 2000)
+     * @memberof Lite
+     */
+  to (properties, duration = 1000) {
+    this._valuesEnd = properties;
+    this._duration = duration;
+    return this
+  }
+  /**
+     * Start the tweening
+     * @param {number} time setting manual time instead of Current browser timestamp
+     * @example tween.start()
+     * @memberof Lite
+     */
+  start (time) {
+    this._startTime = time !== undefined ? time : now();
+    this._startTime += this._delayTime;
+    const { _valuesEnd, _valuesStartRepeat, _valuesStart, _interpolationFunction, object } = this;
+    for (const property in _valuesEnd) {
+      const start = object[property];
+      let end = _valuesEnd[property];
+      if (!object || object[property] === undefined) {
+        continue
+      }
+      const obj = object[property];
+      if (typeof start === 'number') {
+        if (typeof end === 'string') {
+          _valuesStartRepeat[property] = end;
+          end = start + parseFloat(end);
+        } else if (Array.isArray(end)) {
+          end.unshift(start);
+          const _endArr = end;
+          end = (t) => {
+            return _interpolationFunction(_endArr, t)
+          };
+        }
+      } else if (typeof end === 'object') {
+        if (Array.isArray(end)) {
+          const _endArr = end;
+          const _start = start.map((item) => item);
+          let i;
+          const len = end.length;
+          end = (t) => {
+            i = 0;
+            for (; i < len; i++) {
+              obj[i] = typeof _start[i] === 'number' ? _start[i] + (_endArr[i] - _start[i]) * t : _endArr[i];
             }
-            optsElement.items = values;
+            return obj
+          };
         } else {
-            optsElement.options = JSON.parse(dataRaw);
-            for (i = 0, n = optsElement.options.length; i < n; i++) {
-                optsElement.items.push(optsElement.options[i][fieldValue]);
+          const _endObj = end;
+          const _start = {};
+          for (const p in start) {
+            _start[p] = start[p];
+          }
+          end = (t) => {
+            for (const i in end) {
+              obj[i] = typeof _start[i] === 'number' ? _start[i] + (_endObj[i] - _start[i]) * t : _endObj[i];
             }
+            return obj
+          };
         }
-    };
-
-    /**
-     * Initializes selectize from a <select> element.
-     *
-     * @param {object} $input
-     * @param {object} optsElement
+      }
+      _valuesStart[property] = start;
+      _valuesEnd[property] = end;
+    }
+    add(this);
+    this._isPlaying = true;
+    return this
+  }
+  /**
+     * Stops the tween
+     * @example tween.stop()
+     * @memberof Lite
      */
-    var initSelect = function($input, optsElement) {
-        var i, n, tagName, $children;
-        var options = optsElement.options;
-        var optionsMap = {};
-
-        var readData = function($el) {
-            var data = attrData && $el.attr(attrData);
-            if (typeof data === 'string' && data.length) {
-                return JSON.parse(data);
-            }
-            return null;
-        };
-
-        var addOption = function($option, group) {
-            $option = $($option);
-
-            var value = hashKey($option.val());
-            if (!value && !opts.allowEmptyOption) return;
-
-            // if the option already exists, it's probably been
-            // duplicated in another optgroup. in this case, push
-            // the current group to the "optgroup" property on the
-            // existing option so that it's rendered in both places.
-            if (optionsMap.hasOwnProperty(value)) {
-                if (group) {
-                    var arr = optionsMap[value][fieldOptgroup];
-                    if (!arr) {
-                        optionsMap[value][fieldOptgroup] = group;
-                    } else if (!$.isArray(arr)) {
-                        optionsMap[value][fieldOptgroup] = [arr, group];
-                    } else {
-                        arr.push(group);
-                    }
-                }
-                return;
-            }
-
-            var option            = readData($option) || {};
-            option[fieldLabel]    = option[fieldLabel] || $option.text();
-            option[fieldValue]    = option[fieldValue] || value;
-            option[fieldOptgroup] = option[fieldOptgroup] || group;
-
-            optionsMap[value] = option;
-            options.push(option);
-
-            if ($option.is(':selected')) {
-                optsElement.items.push(value);
-            }
-        };
-
-        var addGroup = function($optgroup) {
-            var i, n, id, optgroup, $options;
-
-            $optgroup = $($optgroup);
-            id = $optgroup.attr('label');
-
-            if (id) {
-                optgroup = readData($optgroup) || {};
-                optgroup[fieldOptgroupLabel] = id;
-                optgroup[fieldOptgroupValue] = id;
-                optsElement.optgroups.push(optgroup);
-            }
-
-            $options = $('option', $optgroup);
-            for (i = 0, n = $options.length; i < n; i++) {
-                addOption($options[i], id);
-            }
-        };
-
-        optsElement.maxItems = $input.attr('multiple') ? null : 1;
-
-        $children = $input.children();
-        for (i = 0, n = $children.length; i < n; i++) {
-            tagName = $children[i].tagName.toLowerCase();
-            if (tagName === 'optgroup') {
-                addGroup($children[i]);
-            } else if (tagName === 'option') {
-                addOption($children[i]);
-            }
+  stop () {
+    const { _isPlaying, _startTime, _duration } = this;
+    if (!_isPlaying) {
+      return this
+    }
+    this.update(_startTime + _duration);
+    remove$1(this);
+    this._isPlaying = false;
+    return this
+  }
+  /**
+     * Set delay of tween
+     * @param {number} amount Sets tween delay / wait duration
+     * @example tween.delay(500)
+     * @memberof Lite
+     */
+  delay (amount) {
+    this._delayTime = typeof (amount) === 'function' ? amount(this._delayTime) : amount;
+    return this
+  }
+  /**
+     * Sets how times tween is repeating
+     * @param {amount} amount the times of repeat
+     * @example tween.repeat(2)
+     * @memberof Lite
+     */
+  repeat (amount) {
+    this._repeat = typeof (amount) === 'function' ? amount(this._repeat) : amount;
+    this._r = this._repeat;
+    this._isFinite = isFinite(amount);
+    return this
+  }
+  /**
+     * Set delay of each repeat of tween
+     * @param {number} amount Sets tween repeat delay / repeat wait duration
+     * @example tween.repeatDelay(500)
+     * @memberof Lite
+     */
+  repeatDelay (amount) {
+    this._repeatDelayTime = typeof (amount) === 'function' ? amount(this._repeatDelayTime) : amount;
+    return this
+  }
+  /**
+     * Set delay of each repeat alternate of tween
+     * @param {number} amount Sets tween repeat alternate delay / repeat alternate wait duration
+     * @example tween.reverseDelay(500)
+     * @memberof Lite
+     */
+  reverseDelay (amount) {
+    this._reverseDelayTime = typeof (amount) === 'function' ? amount(this._reverseDelayTime) : amount;
+    return this
+  }
+  /**
+     * Set `yoyo` state (enables reverse in repeat)
+     * @param {boolean} state Enables alternate direction for repeat
+     * @example tween.yoyo(true)
+     * @memberof Lite
+     */
+  yoyo (state) {
+    this._yoyo = typeof (state) === 'function' ? state(this._yoyo) : state;
+    return this
+  }
+  /**
+     * Set easing
+     * @param {Function} _easingFunction Easing function
+     * @example tween.easing(Easing.Quadratic.InOut)
+     * @memberof Lite
+     */
+  easing (fn) {
+    if (typeof fn === 'function') {
+      this._easingFunction = fn;
+    }
+    return this
+  }
+  /**
+     * Set interpolation
+     * @param {Function} _interpolationFunction Interpolation function
+     * @example tween.interpolation(Interpolation.Bezier)
+     * @memberof Lite
+     */
+  interpolation (_interpolationFunction) {
+    if (typeof _interpolationFunction === 'function') {
+      this._interpolationFunction = _interpolationFunction;
+    }
+    return this
+  }
+  reassignValues () {
+    const { _valuesStart, _valuesEnd, object } = this;
+    for (const property in _valuesEnd) {
+      const start = _valuesStart[property];
+      object[property] = start;
+    }
+    return this
+  }
+  /**
+     * Updates initial object to target value by given `time`
+     * @param {Time} time Current time
+     * @param {boolean=} preserve Prevents from removing tween from store
+     * @example tween.update(500)
+     * @memberof Lite
+     */
+  update (time, preserve) {
+    const { _onStartCallbackFired, _easingFunction, _repeat, _repeatDelayTime, _reverseDelayTime, _yoyo, _reversed, _startTime, _duration, _valuesStart, _valuesEnd, _valuesStartRepeat, object, _isFinite, _isPlaying, _onStartCallback, _onUpdateCallback, _onCompleteCallback } = this;
+    let elapsed;
+    let value;
+    let property;
+    time = time !== undefined ? time : now();
+    if (!_isPlaying || time < _startTime) {
+      return true
+    }
+    if (!_onStartCallbackFired) {
+      if (_onStartCallback) {
+        _onStartCallback(object);
+      }
+      this._onStartCallbackFired = true;
+    }
+    elapsed = (time - _startTime) / _duration;
+    elapsed = elapsed > 1 ? 1 : elapsed;
+    elapsed = _reversed ? 1 - elapsed : elapsed;
+    value = _easingFunction(elapsed);
+    for (property in _valuesEnd) {
+      const start = _valuesStart[property];
+      const end = _valuesEnd[property];
+      if (start === undefined) {
+        continue
+      } else if (typeof end === 'function') {
+        object[property] = end(value);
+      } else if (typeof end === 'number') {
+        object[property] = start + (end - start) * value;
+      }
+    }
+    if (_onUpdateCallback) {
+      _onUpdateCallback(object, elapsed);
+    }
+    if (elapsed === 1 || (_reversed && elapsed === 0)) {
+      if (_repeat) {
+        if (_isFinite) {
+          this._repeat--;
         }
-    };
-
-    return $select.each(function() {
-        if (this.selectize) return;
-
-        var instance;
-        var $input = $(this);
-        var tagName = this.tagName.toLowerCase();
-        var placeholder = $input.attr('placeholder') || $input.attr('data-placeholder');
-        if (!placeholder && !opts.allowEmptyOption) {
-            placeholder = $input.children('option[value=""]').text();
+        if (!_reversed) {
+          for (property in _valuesStartRepeat) {
+            _valuesStart[property] = _valuesEnd[property];
+            _valuesEnd[property] += parseFloat(_valuesStartRepeat[property]);
+          }
         }
-
-        var optsElement = {
-            'placeholder' : placeholder,
-            'options'     : [],
-            'optgroups'   : [],
-            'items'       : []
-        };
-
-        if (tagName === 'select') {
-            initSelect($input, optsElement);
+        if (_yoyo) {
+          this._reversed = !_reversed;
+        }
+        if (!_reversed && _repeatDelayTime) {
+          this._startTime = time + _repeatDelayTime;
+        } else if (_reversed && _reverseDelayTime) {
+          this._startTime = time + _reverseDelayTime;
         } else {
-            initTextbox($input, optsElement);
+          this._startTime = time;
         }
-
-        instance = new Selectize($input, $.extend(true, {}, defaults$1, optsElement, optsUser));
-    });
+        return true
+      } else {
+        if (!preserve) {
+          remove$1(this);
+        }
+        this._isPlaying = false;
+        if (_onCompleteCallback) {
+          _onCompleteCallback();
+        }
+        this._repeat = this._r;
+        _id--;
+        return false
+      }
+    }
+    return true
+  }
 }
 
-// node_modules/el-controls/lib/el-controls.mjs
-// src/utils/patches.coffee
-var agent$1;
-var ieMajor$1;
-var ieMinor$1;
-var matches$1;
-var reg$1;
+// node_modules/es6-tween/src/index.lite.js
 
-if (window.Promise == null) {
-  window.Promise = Promise$2;
-}
+// node_modules/el-controls/src/controls/control.coffee
+var Control;
+var scrolling;
+var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$4 = {}.hasOwnProperty;
 
-if (window.requestAnimationFrame == null) {
-  window.requestAnimationFrame = raf$1;
-}
+scrolling = false;
 
-if (window.cancelAnimationFrame == null) {
-  window.cancelAnimationFrame = raf$1.cancel;
-}
+var Control$1 = Control = (function(superClass) {
+  extend$5(Control, superClass);
 
-agent$1 = navigator.userAgent;
+  function Control() {
+    return Control.__super__.constructor.apply(this, arguments);
+  }
 
-reg$1 = /MSIE\s?(\d+)(?:\.(\d+))?/i;
+  Control.prototype.init = function() {
+    return Control.__super__.init.apply(this, arguments);
+  };
 
-matches$1 = agent$1.match(reg$1);
+  Control.prototype.getValue = function(event) {
+    var ref;
+    return (ref = event.target.value) != null ? ref.trim() : void 0;
+  };
 
-if (matches$1 != null) {
-  ieMajor$1 = matches$1[1];
-  ieMinor$1 = matches$1[2];
-}
+  Control.prototype.error = function(err) {
+    var elTop, rect, t, wTop;
+    if (err instanceof DOMException) {
+      console.log('WARNING: Error in riot dom manipulation ignored:', err);
+      return;
+    }
+    Control.__super__.error.apply(this, arguments);
+    rect = this.root.getBoundingClientRect();
+    elTop = rect.top - window.innerHeight / 2;
+    wTop = window.pageYOffset;
+    if (!scrolling && elTop <= wTop) {
+      scrolling = true;
+      autoPlay(true);
+      t = new Lite({
+        x: wTop
+      }).to({
+        x: wTop + elTop
+      }, 500, Easing.Cubic).onUpdate(function(arg) {
+        var x;
+        x = arg.x;
+        return window.scrollTo(window.pageXOffset, x);
+      }).onComplete(function() {
+        scrolling = false;
+        return autoPlay(false);
+      }).start();
+    }
+    return this.mediator.trigger(ControlEvents.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+  };
 
-// src/data/countries.coffee
-var countries = {
-  data: {
-    af: "Afghanistan",
-    ax: "Åland Islands",
-    al: "Albania",
-    dz: "Algeria",
-    as: "American Samoa",
-    ad: "Andorra",
-    ao: "Angola",
-    ai: "Anguilla",
-    aq: "Antarctica",
-    ag: "Antigua and Barbuda",
-    ar: "Argentina",
-    am: "Armenia",
-    aw: "Aruba",
-    au: "Australia",
-    at: "Austria",
-    az: "Azerbaijan",
-    bs: "Bahamas",
-    bh: "Bahrain",
-    bd: "Bangladesh",
-    bb: "Barbados",
-    by: "Belarus",
-    be: "Belgium",
-    bz: "Belize",
-    bj: "Benin",
-    bm: "Bermuda",
-    bt: "Bhutan",
-    bo: "Bolivia",
-    bq: "Bonaire, Sint Eustatius and Saba",
-    ba: "Bosnia and Herzegovina",
-    bw: "Botswana",
-    bv: "Bouvet Island",
-    br: "Brazil",
-    io: "British Indian Ocean Territory",
-    bn: "Brunei Darussalam",
-    bg: "Bulgaria",
-    bf: "Burkina Faso",
-    bi: "Burundi",
-    kh: "Cambodia",
-    cm: "Cameroon",
-    ca: "Canada",
-    cv: "Cabo Verde",
-    ky: "Cayman Islands",
-    cf: "Central African Republic",
-    td: "Chad",
-    cl: "Chile",
-    cn: "China",
-    cx: "Christmas Island",
-    cc: "Cocos (Keeling) Islands",
-    co: "Colombia",
-    km: "Comoros",
-    cg: "Congo",
-    cd: "Congo (Democratic Republic)",
-    ck: "Cook Islands",
-    cr: "Costa Rica",
-    ci: "Côte d'Ivoire",
-    hr: "Croatia",
-    cu: "Cuba",
-    cw: "Curaçao",
-    cy: "Cyprus",
-    cz: "Czech Republic",
-    dk: "Denmark",
-    dj: "Djibouti",
-    dm: "Dominica",
-    "do": "Dominican Republic",
-    ec: "Ecuador",
-    eg: "Egypt",
-    sv: "El Salvador",
-    gq: "Equatorial Guinea",
-    er: "Eritrea",
-    ee: "Estonia",
-    et: "Ethiopia",
-    fk: "Falkland Islands",
-    fo: "Faroe Islands",
-    fj: "Fiji",
-    fi: "Finland",
-    fr: "France",
-    gf: "French Guiana",
-    pf: "French Polynesia",
-    tf: "French Southern Territories",
-    ga: "Gabon",
-    gm: "Gambia",
-    ge: "Georgia",
-    de: "Germany",
-    gh: "Ghana",
-    gi: "Gibraltar",
-    gr: "Greece",
-    gl: "Greenland",
-    gd: "Grenada",
-    gp: "Guadeloupe",
-    gu: "Guam",
-    gt: "Guatemala",
-    gg: "Guernsey",
-    gn: "Guinea",
-    gw: "Guinea-Bissau",
-    gy: "Guyana",
-    ht: "Haiti",
-    hm: "Heard Island and McDonald Islands",
-    va: "Holy See",
-    hn: "Honduras",
-    hk: "Hong Kong",
-    hu: "Hungary",
-    is: "Iceland",
-    "in": "India",
-    id: "Indonesia",
-    ir: "Iran",
-    iq: "Iraq",
-    ie: "Ireland",
-    im: "Isle of Man",
-    il: "Israel",
-    it: "Italy",
-    jm: "Jamaica",
-    jp: "Japan",
-    je: "Jersey",
-    jo: "Jordan",
-    kz: "Kazakhstan",
-    ke: "Kenya",
-    ki: "Kiribati",
-    kp: "Korea (Democratic People's Republic of)",
-    kr: "Korea (Republic of)",
-    kw: "Kuwait",
-    kg: "Kyrgyzstan",
-    la: "Lao People's Democratic Republic",
-    lv: "Latvia",
-    lb: "Lebanon",
-    ls: "Lesotho",
-    lr: "Liberia",
-    ly: "Libya",
-    li: "Liechtenstein",
-    lt: "Lithuania",
-    lu: "Luxembourg",
-    mo: "Macao",
-    mk: "Macedonia",
-    mg: "Madagascar",
-    mw: "Malawi",
-    my: "Malaysia",
-    mv: "Maldives",
-    ml: "Mali",
-    mt: "Malta",
-    mh: "Marshall Islands",
-    mq: "Martinique",
-    mr: "Mauritania",
-    mu: "Mauritius",
-    yt: "Mayotte",
-    mx: "Mexico",
-    fm: "Micronesia",
-    md: "Moldova",
-    mc: "Monaco",
-    mn: "Mongolia",
-    me: "Montenegro",
-    ms: "Montserrat",
-    ma: "Morocco",
-    mz: "Mozambique",
-    mm: "Myanmar",
-    na: "Namibia",
-    nr: "Nauru",
-    np: "Nepal",
-    nl: "Netherlands",
-    nc: "New Caledonia",
-    nz: "New Zealand",
-    ni: "Nicaragua",
-    ne: "Niger",
-    ng: "Nigeria",
-    nu: "Niue",
-    nf: "Norfolk Island",
-    mp: "Northern Mariana Islands",
-    no: "Norway",
-    om: "Oman",
-    pk: "Pakistan",
-    pw: "Palau",
-    ps: "Palestine",
-    pa: "Panama",
-    pg: "Papua New Guinea",
-    py: "Paraguay",
-    pe: "Peru",
-    ph: "Philippines",
-    pn: "Pitcairn",
-    pl: "Poland",
-    pt: "Portugal",
-    pr: "Puerto Rico",
-    qa: "Qatar",
-    re: "Réunion",
-    ro: "Romania",
-    ru: "Russian Federation",
-    rw: "Rwanda",
-    bl: "Saint Barthélemy",
-    sh: "Saint Helena, Ascension and Tristan da Cunha",
-    kn: "Saint Kitts and Nevis",
-    lc: "Saint Lucia",
-    mf: "Saint Martin (French)",
-    pm: "Saint Pierre and Miquelon",
-    vc: "Saint Vincent and the Grenadines",
-    ws: "Samoa",
-    sm: "San Marino",
-    st: "Sao Tome and Principe",
-    sa: "Saudi Arabia",
-    sn: "Senegal",
-    rs: "Serbia",
-    sc: "Seychelles",
-    sl: "Sierra Leone",
-    sg: "Singapore",
-    sx: "Sint Maarten (Dutch)",
-    sk: "Slovakia",
-    si: "Slovenia",
-    sb: "Solomon Islands",
-    so: "Somalia",
-    za: "South Africa",
-    gs: "South Georgia and the South Sandwich Islands",
-    ss: "South Sudan",
-    es: "Spain",
-    lk: "Sri Lanka",
-    sd: "Sudan",
-    sr: "Suriname",
-    sj: "Svalbard and Jan Mayen",
-    sz: "Swaziland",
-    se: "Sweden",
-    ch: "Switzerland",
-    sy: "Syrian Arab Republic",
-    tw: "Taiwan",
-    tj: "Tajikistan",
-    tz: "Tanzania",
-    th: "Thailand",
-    tl: "Timor-Leste",
-    tg: "Togo",
-    tk: "Tokelau",
-    to: "Tonga",
-    tt: "Trinidad and Tobago",
-    tn: "Tunisia",
-    tr: "Turkey",
-    tm: "Turkmenistan",
-    tc: "Turks and Caicos Islands",
-    tv: "Tuvalu",
-    ug: "Uganda",
-    ua: "Ukraine",
-    ae: "United Arab Emirates",
-    gb: "United Kingdom of Great Britain and Northern Ireland",
-    us: "United States of America",
-    um: "United States Minor Outlying Islands",
-    uy: "Uruguay",
-    uz: "Uzbekistan",
-    vu: "Vanuatu",
-    ve: "Venezuela",
-    vn: "Viet Nam",
-    vg: "Virgin Islands (British)",
-    vi: "Virgin Islands (U.S.)",
-    wf: "Wallis and Futuna",
-    eh: "Western Sahara",
-    ye: "Yemen",
-    zm: "Zambia",
-    zw: "Zimbabwe"
+  Control.prototype.change = function() {
+    Control.__super__.change.apply(this, arguments);
+    return this.mediator.trigger(ControlEvents.Change, this.input.name, this.input.ref.get(this.input.name));
+  };
+
+  Control.prototype.changed = function(value) {
+    this.mediator.trigger(ControlEvents.ChangeSuccess, this.input.name, value);
+    return El$1.scheduleUpdate();
+  };
+
+  Control.prototype.value = function() {
+    return this.input.ref(this.input.name);
+  };
+
+  return Control;
+
+})(El$1.Input);
+
+// node_modules/el-controls/src/utils/placeholder.coffee
+var exports$1;
+var hidePlaceholderOnFocus;
+var unfocusOnAnElement;
+
+hidePlaceholderOnFocus = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === target.getAttribute('placeholder')) {
+    return target.value = '';
   }
 };
 
-// src/data/states.coffee
-var states = {
-  data: {
-    ak: 'Alaska',
-    al: 'Alabama',
-    ar: 'Arkansas',
-    az: 'Arizona',
-    ca: 'California',
-    co: 'Colorado',
-    ct: 'Connecticut',
-    dc: 'District of Columbia',
-    de: 'Delaware',
-    fl: 'Florida',
-    ga: 'Georgia',
-    hi: 'Hawaii',
-    ia: 'Iowa',
-    id: 'Idaho',
-    il: 'Illinois',
-    "in": 'Indiana',
-    ks: 'Kansas',
-    ky: 'Kentucky',
-    la: 'Louisiana',
-    ma: 'Massachusetts',
-    md: 'Maryland',
-    me: 'Maine',
-    mi: 'Michigan',
-    mn: 'Minnesota',
-    mo: 'Missouri',
-    ms: 'Mississippi',
-    mt: 'Montana',
-    nc: 'North Carolina',
-    nd: 'North Dakota',
-    ne: 'Nebraska',
-    nh: 'New Hampshire',
-    nj: 'New Jersey',
-    nm: 'New Mexico',
-    nv: 'Nevada',
-    ny: 'New York',
-    oh: 'Ohio',
-    ok: 'Oklahoma',
-    or: 'Oregon',
-    pa: 'Pennsylvania',
-    ri: 'Rhode Island',
-    sc: 'South Carolina',
-    sd: 'South Dakota',
-    tn: 'Tennessee',
-    tx: 'Texas',
-    ut: 'Utah',
-    va: 'Virginia',
-    vt: 'Vermont',
-    wa: 'Washington',
-    wi: 'Wisconsin',
-    wv: 'West Virginia',
-    wy: 'Wyoming',
-    aa: 'U.S. Armed Forces – Americas',
-    ae: 'U.S. Armed Forces – Europe',
-    ap: 'U.S. Armed Forces – Pacific'
+unfocusOnAnElement = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === '') {
+    return target.value = target.getAttribute('placeholder');
   }
+};
+
+exports$1 = function() {};
+
+if (document.createElement("input").placeholder == null) {
+  exports$1 = function(input) {
+    var ref;
+    input = (ref = input[0]) != null ? ref : input;
+    if (input._placeholdered != null) {
+      return;
+    }
+    Object.defineProperty(input, '_placeholdered', {
+      value: true,
+      writable: true
+    });
+    if (!input.value) {
+      input.value = input.getAttribute('placeholder');
+    }
+    if (input.addEventListener) {
+      input.addEventListener('click', hidePlaceholderOnFocus, false);
+      return input.addEventListener('blur', unfocusOnAnElement, false);
+    } else if (input.attachEvent) {
+      input.attachEvent('onclick', hidePlaceholderOnFocus);
+      return input.attachEvent('onblur', unfocusOnAnElement);
+    }
+  };
+}
+
+var placeholder = exports$1;
+
+// node_modules/el-controls/templates/controls/text.pug
+var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/text.coffee
+var Text;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
+
+var Text$1 = Text = (function(superClass) {
+  extend$4(Text, superClass);
+
+  function Text() {
+    return Text.__super__.constructor.apply(this, arguments);
+  }
+
+  Text.prototype.tag = 'text';
+
+  Text.prototype.html = html;
+
+  Text.prototype.type = 'text';
+
+  Text.prototype.formElement = 'input';
+
+  Text.prototype.autocomplete = 'on';
+
+  Text.prototype.autofocus = false;
+
+  Text.prototype.disabled = false;
+
+  Text.prototype.maxlength = null;
+
+  Text.prototype.readonly = false;
+
+  Text.prototype.init = function() {
+    Text.__super__.init.apply(this, arguments);
+    return this.on('mounted', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.getElementsByTagName(_this.formElement)[0];
+        if (_this.type !== 'password') {
+          return placeholder(el);
+        }
+      };
+    })(this));
+  };
+
+  return Text;
+
+})(Control$1);
+
+Text.register();
+
+// src/utils/keys.coffee
+var keys = {
+  ignore: [8, 9, 13, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40],
+  numeric: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
 };
 
 // src/utils/card.coffee
@@ -11456,454 +9958,379 @@ var cardFromNumber = function(num) {
   }
 };
 
-var cardType = function(num) {
-  var ref;
-  if (!num) {
-    return null;
-  }
-  return ((ref = cardFromNumber(num)) != null ? ref.type : void 0) || null;
-};
+
 
 var restrictNumeric = function(e) {
-  var input;
+  var input, key;
   if (e.metaKey || e.ctrlKey) {
     return true;
   }
-  if (e.which === 32) {
+  key = e.keyCode;
+  if (key === 32) {
     return e.preventDefault();
   }
-  if (e.which === 0) {
+  if (key === 0) {
     return true;
   }
-  if (e.which < 33) {
+  if (key < 33) {
     return true;
   }
-  input = String.fromCharCode(e.which);
+  input = String.fromCharCode(key);
   if (!/[\d\s]/.test(input)) {
     return e.preventDefault();
   }
 };
 
-// src/$.coffee
-var $$1$1;
-
-$$1$1 = zepto;
-
-if (window.$ == null) {
-  ['width', 'height'].forEach(function(dimension) {
-    var Dimension;
-    Dimension = dimension.replace(/./, function(m) {
-      return m[0].toUpperCase();
-    });
-    return $$1$1.fn['outer' + Dimension] = function(margin) {
-      var elem, sides, size;
-      elem = this;
-      if (elem) {
-        size = elem[dimension]();
-        sides = {
-          width: ['left', 'right'],
-          height: ['top', 'bottom']
-        };
-        sides[dimension].forEach(function(side) {
-          if (margin) {
-            return size += parseInt(elem.css('margin-' + side), 10);
-          }
-        });
-        return size;
-      } else {
-        return null;
-      }
-    };
-  });
-  window.$ = $$1$1;
-} else {
-  $$1$1 = window.$;
-}
-
-var $$2 = $$1$1;
-
-// src/events.coffee
-var Events;
-
-var Events$1 = Events = {
-  Change: 'change',
-  ChangeSuccess: 'change-success',
-  ChangeFailed: 'change-failed'
-};
-
-// src/controls/control.coffee
-var Control;
-var scrolling;
+// src/controls/card/card-cvc.coffee
+var CardCVC;
 var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$2 = {}.hasOwnProperty;
+var indexOf$2 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-scrolling = false;
+CardCVC = (function(superClass) {
+  extend$3(CardCVC, superClass);
 
-var Control$1 = Control = (function(superClass) {
-  extend$3(Control, superClass);
-
-  function Control() {
-    return Control.__super__.constructor.apply(this, arguments);
+  function CardCVC() {
+    return CardCVC.__super__.constructor.apply(this, arguments);
   }
 
-  Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
+  CardCVC.prototype.tag = 'card-cvc';
 
-  Control.prototype.beforeInit = function() {
-    return this.html += this.errorHtml;
-  };
+  CardCVC.prototype.bind = 'payment.account.cvc';
 
-  Control.prototype.init = function() {
-    return Control.__super__.init.apply(this, arguments);
-  };
-
-  Control.prototype.getValue = function(event) {
-    var ref;
-    return (ref = $$2(event.target).val()) != null ? ref.trim() : void 0;
-  };
-
-  Control.prototype.error = function(err) {
-    if (err instanceof DOMException) {
-      console.log('WARNING: Error in riot dom manipulation ignored:', err);
-      return;
-    }
-    Control.__super__.error.apply(this, arguments);
-    if (!scrolling && $$2(this.root).offset().top <= $$2(window).scrollTop()) {
-      scrolling = true;
-      $$2('html, body').animate({
-        scrollTop: $$2(this.root).offset().top - $$2(window).height() / 2
-      }, {
-        complete: function() {
-          return scrolling = false;
-        },
-        duration: 500
-      });
-    }
-    return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
-  };
-
-  Control.prototype.change = function() {
-    Control.__super__.change.apply(this, arguments);
-    return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
-  };
-
-  Control.prototype.changed = function(value) {
-    this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
-    return El$1.scheduleUpdate();
-  };
-
-  Control.prototype.value = function() {
-    return this.input.ref(this.input.name);
-  };
-
-  return Control;
-
-})(El$1.Input);
-
-// src/utils/placeholder.coffee
-var exports$1;
-var hidePlaceholderOnFocus;
-var unfocusOnAnElement;
-
-hidePlaceholderOnFocus = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === target.getAttribute('placeholder')) {
-    return target.value = '';
-  }
-};
-
-unfocusOnAnElement = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === '') {
-    return target.value = target.getAttribute('placeholder');
-  }
-};
-
-exports$1 = function() {};
-
-if (document.createElement("input").placeholder == null) {
-  exports$1 = function(input) {
-    var ref;
-    input = (ref = input[0]) != null ? ref : input;
-    if (input._placeholdered != null) {
-      return;
-    }
-    Object.defineProperty(input, '_placeholdered', {
-      value: true,
-      writable: true
-    });
-    if (!input.value) {
-      input.value = input.getAttribute('placeholder');
-    }
-    if (input.addEventListener) {
-      input.addEventListener('click', hidePlaceholderOnFocus, false);
-      return input.addEventListener('blur', unfocusOnAnElement, false);
-    } else if (input.attachEvent) {
-      input.attachEvent('onclick', hidePlaceholderOnFocus);
-      return input.attachEvent('onblur', unfocusOnAnElement);
-    }
-  };
-}
-
-var placeholder = exports$1;
-
-// templates/controls/text.pug
-var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autoComplete }\">\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
-
-// src/controls/text.coffee
-var Text;
-var extend$1$2 = function(child, parent) { for (var key in parent) { if (hasProp$1$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$1$2 = {}.hasOwnProperty;
-
-var Text$1 = Text = (function(superClass) {
-  extend$1$2(Text, superClass);
-
-  function Text() {
-    return Text.__super__.constructor.apply(this, arguments);
-  }
-
-  Text.prototype.tag = 'text';
-
-  Text.prototype.html = html;
-
-  Text.prototype.type = 'text';
-
-  Text.prototype.formElement = 'input';
-
-  Text.prototype.autoComplete = 'on';
-
-  Text.prototype.init = function() {
-    Text.__super__.init.apply(this, arguments);
-    return this.on('updated', (function(_this) {
+  CardCVC.prototype.init = function() {
+    CardCVC.__super__.init.apply(this, arguments);
+    this.on('mount', (function(_this) {
       return function() {
         var el;
-        el = _this.root.getElementsByTagName(_this.formElement)[0];
-        if (_this.type !== 'password') {
-          return placeholder(el);
-        }
+        el = _this.root.querySelector('input');
+        _this._limit4 = function(e) {
+          var key, value;
+          key = e.keyCode;
+          if (indexOf$2.call(keys.numeric, key) < 0) {
+            return true;
+          }
+          value = el.value + String.fromCharCode(key);
+          if (value.length > 4) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        };
+        el.addEventListener('keypress', restrictNumeric);
+        return el.addEventListener('keypress', _this._limit4);
+      };
+    })(this));
+    return this.on('unmount', (function(_this) {
+      return function() {
+        el.removeEventListener('keypress', restrictNumeric);
+        return el.removeEventListener('keypress', _this._limit4);
       };
     })(this));
   };
 
-  return Text;
-
-})(Control$1);
-
-Text.register();
-
-// templates/controls/textarea.pug
-var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
-
-// src/controls/textbox.coffee
-var TextBox;
-var extend$2$1 = function(child, parent) { for (var key in parent) { if (hasProp$2$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$2$1 = {}.hasOwnProperty;
-
-TextBox = (function(superClass) {
-  extend$2$1(TextBox, superClass);
-
-  function TextBox() {
-    return TextBox.__super__.constructor.apply(this, arguments);
-  }
-
-  TextBox.prototype.tag = 'textbox';
-
-  TextBox.prototype.html = html$1;
-
-  TextBox.prototype.formElement = 'textarea';
-
-  return TextBox;
+  return CardCVC;
 
 })(Text$1);
 
-TextBox.register();
+CardCVC.register();
 
-var TextBox$1 = TextBox;
+var CardCVC$1 = CardCVC;
 
-// templates/controls/checkbox.pug
-var html$2 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n<yield></yield>";
+// src/controls/card/card-expiry.coffee
+var CardExpiry;
+var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5 = {}.hasOwnProperty;
+var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-// src/controls/checkbox.coffee
-var Checkbox;
-var extend$3$1 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
+CardExpiry = (function(superClass) {
+  extend$6(CardExpiry, superClass);
 
-var Checkbox$1 = Checkbox = (function(superClass) {
-  extend$3$1(Checkbox, superClass);
-
-  function Checkbox() {
-    return Checkbox.__super__.constructor.apply(this, arguments);
+  function CardExpiry() {
+    return CardExpiry.__super__.constructor.apply(this, arguments);
   }
 
-  Checkbox.prototype.tag = 'checkbox';
+  CardExpiry.prototype.tag = 'card-expiry';
 
-  Checkbox.prototype.html = html$2;
+  CardExpiry.prototype.bind = 'payment.account.expiry';
 
-  Checkbox.prototype.getValue = function(event) {
-    return event.target.checked;
+  CardExpiry.prototype.init = function() {
+    CardExpiry.__super__.init.apply(this, arguments);
+    this.on('mount', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.querySelector('input');
+        _this._limit7 = function(e) {
+          var key, value;
+          key = e.keyCode;
+          if (indexOf$3.call(keys.numeric, key) < 0) {
+            return true;
+          }
+          value = el.value + String.fromCharCode(key);
+          if (value.length > 7) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          if (/^\d$/.test(value) && (value !== '0' && value !== '1')) {
+            el.value = '0' + value + ' / ';
+            e.preventDefault();
+            return e.stopPropagation();
+          } else if (/^\d\d$/.test(value)) {
+            el.value = value + ' / ';
+            e.preventDefault();
+            return e.stopPropagation();
+          }
+        };
+        el.addEventListener('keypress', restrictNumeric);
+        return el.addEventListener('keypress', _this._limit7);
+      };
+    })(this));
+    return this.on('unmount', (function(_this) {
+      return function() {
+        el.removeEventListener('keypress', restrictNumeric);
+        return el.removeEventListener('keypress', _this._limit7);
+      };
+    })(this));
   };
 
-  return Checkbox;
+  return CardExpiry;
 
-})(Control$1);
+})(Text$1);
 
-Checkbox.register();
+CardExpiry.register();
 
-// templates/controls/select.pug
-var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder small\">{ placeholder }</div>\n<yield></yield>";
+var CardExpiry$1 = CardExpiry;
 
-// src/controls/select.coffee
+// src/controls/card/card-name.coffee
+var CardName;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
+
+CardName = (function(superClass) {
+  extend$7(CardName, superClass);
+
+  function CardName() {
+    return CardName.__super__.constructor.apply(this, arguments);
+  }
+
+  CardName.prototype.tag = 'card-name';
+
+  CardName.prototype.bind = 'payment.account.name';
+
+  return CardName;
+
+})(Text$1);
+
+CardName.register();
+
+var CardName$1 = CardName;
+
+// src/controls/card/card-number.coffee
+var CardNumber;
+var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
+var indexOf$4 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+CardNumber = (function(superClass) {
+  extend$8(CardNumber, superClass);
+
+  function CardNumber() {
+    return CardNumber.__super__.constructor.apply(this, arguments);
+  }
+
+  CardNumber.prototype.tag = 'card-number';
+
+  CardNumber.prototype.bind = 'payment.account.number';
+
+  CardNumber.prototype.cardType = '';
+
+  CardNumber.prototype.init = function() {
+    CardNumber.__super__.init.apply(this, arguments);
+    this.on('mount', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.querySelector('input');
+        _this._identifyCard = function(e) {
+          var card, i, j, k, key, length, newValue, ref, ref1, upperLength, value;
+          key = e.keyCode;
+          if (indexOf$4.call(keys.numeric, key) < 0) {
+            return true;
+          }
+          if (_this.cardType) {
+            _this.root.classList.remove(_this.cardType);
+          }
+          _this.root.classList.remove('identified');
+          _this.root.classList.remove('unknown');
+          value = el.value + String.fromCharCode(key);
+          value = value.replace(/\D/g, '');
+          length = value.length;
+          upperLength = 16;
+          card = cardFromNumber(value);
+          if (card) {
+            upperLength = card.length[card.length.length - 1];
+            _this.cardType = card.type;
+            if (_this.cardType) {
+              _this.root.classList.add(_this.cardType);
+              _this.root.classList.add('identified');
+            } else {
+              _this.root.classList.add('unknown');
+            }
+          }
+          if (length > upperLength) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          newValue = value[0];
+          if (length > 1) {
+            if (card && card.type === 'amex') {
+              for (i = j = 1, ref = length - 1; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+                if (i === 3 || i === 9) {
+                  newValue += value[i] + ' ';
+                } else {
+                  newValue += value[i];
+                }
+              }
+            } else {
+              for (i = k = 1, ref1 = length - 1; 1 <= ref1 ? k <= ref1 : k >= ref1; i = 1 <= ref1 ? ++k : --k) {
+                if ((i + 1) % 4 === 0 && i !== length - 1) {
+                  newValue += value[i] + ' ';
+                } else {
+                  newValue += value[i];
+                }
+              }
+            }
+          }
+          el.value = newValue;
+          return e.preventDefault();
+        };
+        el.addEventListener('keypress', restrictNumeric);
+        return el.addEventListener('keypress', _this._identifyCard);
+      };
+    })(this));
+    return this.on('unmount', (function(_this) {
+      return function() {
+        el.removeEventListener('keypress', restrictNumeric);
+        return el.removeEventListener('keypress', _this._identifyCard);
+      };
+    })(this));
+  };
+
+  return CardNumber;
+
+})(Text$1);
+
+CardNumber.register();
+
+var CardNumber$1 = CardNumber;
+
+// node_modules/el-controls/templates/controls/input-normal-placeholder.pug
+var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// src/controls/checkout/promocode.coffee
+var PromoCode;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
+
+var PromoCode$1 = PromoCode = (function(superClass) {
+  extend$9(PromoCode, superClass);
+
+  function PromoCode() {
+    return PromoCode.__super__.constructor.apply(this, arguments);
+  }
+
+  PromoCode.prototype.tag = 'promocode';
+
+  PromoCode.prototype.html = html$1;
+
+  PromoCode.prototype.bind = 'order.promoCode';
+
+  return PromoCode;
+
+})(Text$1);
+
+PromoCode.register();
+
+// node_modules/el-controls/templates/controls/select.pug
+var html$2 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/select.coffee
 var Select;
-var coolDown;
-var isABrokenBrowser;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4 = {}.hasOwnProperty;
-
-isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
-
-coolDown = -1;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10 = {}.hasOwnProperty;
 
 var Select$1 = Select = (function(superClass) {
-  extend$4(Select, superClass);
+  extend$11(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
   }
 
-  Select.prototype.tag = 'select-control';
+  Select.prototype.tag = 'selection';
 
-  Select.prototype.html = html$3;
+  Select.prototype.html = html$2;
+
+  Select.prototype.instructions = 'Select an Option';
+
+  Select.prototype.autofocus = false;
+
+  Select.prototype.disabled = false;
+
+  Select.prototype.multiple = false;
+
+  Select.prototype.size = null;
+
+  Select.prototype._optionsHash = 'default';
 
   Select.prototype.selectOptions = {};
 
+  Select.prototype.hasOptions = function() {
+    this.options;
+    return this._optionsHash.length > 2;
+  };
+
   Select.prototype.options = function() {
+    var optionsHash;
+    optionsHash = JSON.stringify(this.selectOptions);
+    if (this._optionsHash !== optionsHash) {
+      this._optionsHash = optionsHash;
+    }
     return this.selectOptions;
   };
 
-  Select.prototype.readOnly = false;
-
-  Select.prototype.ignore = false;
-
-  Select.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    },
-    mount: function() {
-      return this.onUpdated();
-    }
-  };
-
-  Select.prototype.getValue = function(event) {
-    var ref;
-    return (ref = $$2(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-  };
-
-  Select.prototype.initSelect = function($select) {
-    var $input, invertedOptions, name, options, ref, select, value;
-    options = [];
-    invertedOptions = {};
-    ref = this.options();
-    for (value in ref) {
-      name = ref[value];
-      options.push({
-        text: name,
-        value: value
-      });
-      invertedOptions[name] = value;
-    }
-    selectize($select, {
-      dropdownParent: 'body'
-    }).on('change', (function(_this) {
-      return function(event) {
-        if (coolDown !== -1) {
-          return;
-        }
-        coolDown = setTimeout(function() {
-          return coolDown = -1;
-        }, 100);
-        _this.change(event);
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      };
-    })(this));
-    select = $select[0];
-    select.selectize.addOption(options);
-    select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
-    select.selectize.refreshOptions(false);
-    $input = $select.parent().find('.selectize-input input:first');
-    $input.on('change', function(event) {
-      var val;
-      val = $$2(event.target).val();
-      if (invertedOptions[val] != null) {
-        return $select[0].selectize.setValue(invertedOptions[val]);
-      }
-    });
-    if (this.readOnly) {
-      return $input.attr('readonly', true);
-    }
+  Select.prototype.getValue = function(e) {
+    var el, ref, ref1, ref2;
+    el = e.target;
+    return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
   };
 
   Select.prototype.init = function(opts) {
-    Select.__super__.init.apply(this, arguments);
-    return this.style = this.style || 'width:100%';
-  };
-
-  Select.prototype.onUpdated = function() {
-    var $control, $select, select, v;
-    if (this.input == null) {
-      return;
-    }
-    $select = $$2(this.root).find('select');
-    select = $select[0];
-    if (select != null) {
-      v = this.input.ref.get(this.input.name);
-      if (!this.initialized) {
-        return raf$1((function(_this) {
-          return function() {
-            _this.initSelect($select);
-            return _this.initialized = true;
-          };
-        })(this));
-      } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
-        select.selectize.clear(true);
-        return select.selectize.addItem(v, true);
-      }
-    } else {
-      $control = $$2(this.root).find('.selectize-control');
-      if ($control[0] == null) {
-        return raf$1((function(_this) {
-          return function() {
-            return _this.scheduleUpdate();
-          };
-        })(this));
-      }
-    }
+    return Select.__super__.init.apply(this, arguments);
   };
 
   return Select;
 
-})(Text$1);
+})(Control$1);
 
 Select.register();
 
-// src/controls/quantity-select.coffee
+// src/controls/checkout/quantity-select.coffee
 var QuantitySelect;
 var i$1;
 var j;
-var opts;
-var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5 = {}.hasOwnProperty;
+var opts$1;
+var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
 
-opts = {};
+opts$1 = {};
 
 for (i$1 = j = 1; j < 100; i$1 = ++j) {
-  opts[i$1] = i$1;
+  opts$1[i$1] = i$1;
 }
 
-var quantitySelect = QuantitySelect = (function(superClass) {
-  extend$5(QuantitySelect, superClass);
+var QuantitySelect$1 = QuantitySelect = (function(superClass) {
+  extend$10(QuantitySelect, superClass);
 
   function QuantitySelect() {
     return QuantitySelect.__super__.constructor.apply(this, arguments);
@@ -11911,10 +10338,10 @@ var quantitySelect = QuantitySelect = (function(superClass) {
 
   QuantitySelect.prototype.tag = 'quantity-select';
 
-  QuantitySelect.prototype.lookup = 'quantity';
+  QuantitySelect.prototype.bind = 'quantity';
 
   QuantitySelect.prototype.options = function() {
-    return opts;
+    return opts$1;
   };
 
   QuantitySelect.prototype.init = function() {
@@ -11946,47 +10373,74 @@ var quantitySelect = QuantitySelect = (function(superClass) {
 
 QuantitySelect.register();
 
-// src/controls/country-select.coffee
+// src/controls/checkout/shippingaddress-city.coffee
+var ShippingAddressCity;
+var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$11 = {}.hasOwnProperty;
+
+var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
+  extend$12(ShippingAddressCity, superClass);
+
+  function ShippingAddressCity() {
+    return ShippingAddressCity.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressCity.prototype.tag = 'shippingaddress-city';
+
+  ShippingAddressCity.prototype.bind = 'order.shippingAddress.city';
+
+  return ShippingAddressCity;
+
+})(Text$1);
+
+ShippingAddressCity.register();
+
+// node_modules/el-controls/src/controls/country-select.coffee
 var CountrySelect;
-var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
+var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13 = {}.hasOwnProperty;
 
 var CountrySelect$1 = CountrySelect = (function(superClass) {
-  extend$6(CountrySelect, superClass);
+  extend$14(CountrySelect, superClass);
 
   function CountrySelect() {
     return CountrySelect.__super__.constructor.apply(this, arguments);
   }
 
-  CountrySelect.prototype.tag = 'country-select';
+  CountrySelect.prototype.tag = 'country-selection';
 
   CountrySelect.prototype.options = function() {
-    return countries.data;
+    var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
+    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+    optionsHash = JSON.stringify(countries);
+    if (this._optionsHash === optionsHash) {
+      return this.selectOptions;
+    }
+    countries = countries.slice(0);
+    this._optionsHash = optionsHash;
+    this.selectOptions = options = {};
+    this.input.ref.set(this.input.name, '');
+    countries.sort(function(a, b) {
+      var nameA, nameB;
+      nameA = a.name.toUpperCase();
+      nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
+    for (i = 0, len = countries.length; i < len; i++) {
+      country = countries[i];
+      options[country.code.toUpperCase()] = country.name;
+    }
+    return options;
   };
 
   CountrySelect.prototype.init = function() {
-    CountrySelect.__super__.init.apply(this, arguments);
-    return this.on('update', (function(_this) {
-      return function() {
-        var country, k, ref, v;
-        country = _this.input.ref.get('order.shippingAddress.country');
-        if (country) {
-          country = country.toLowerCase();
-          if (country.length === 2) {
-            return _this.input.ref.set('order.shippingAddress.country', country);
-          } else {
-            ref = countries.data;
-            for (k in ref) {
-              v = ref[k];
-              if (v.toLowerCase() === country) {
-                _this.input.ref.set('order.shippingAddress.country', k);
-                return;
-              }
-            }
-          }
-        }
-      };
-    })(this));
+    return CountrySelect.__super__.init.apply(this, arguments);
   };
 
   return CountrySelect;
@@ -11995,83 +10449,196 @@ var CountrySelect$1 = CountrySelect = (function(superClass) {
 
 CountrySelect.register();
 
-// templates/controls/state-select.pug
-var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder { small: input.ref.get(countryField) == &quot;us&quot; || input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
+// src/controls/checkout/shippingaddress-country.coffee
+var ShippingAddressCountry;
+var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12 = {}.hasOwnProperty;
 
-// src/controls/state-select.coffee
-var StateSelect;
-var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
+var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
+  extend$13(ShippingAddressCountry, superClass);
 
-var Select$2 = StateSelect = (function(superClass) {
-  extend$7(StateSelect, superClass);
-
-  function StateSelect() {
-    return StateSelect.__super__.constructor.apply(this, arguments);
+  function ShippingAddressCountry() {
+    return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
   }
 
-  StateSelect.prototype.tag = 'state-select';
+  ShippingAddressCountry.prototype.tag = 'shippingaddress-country';
 
-  StateSelect.prototype.html = html$4;
+  ShippingAddressCountry.prototype.bind = 'order.shippingAddress.country';
 
-  StateSelect.prototype.options = function() {
-    return states.data;
-  };
-
-  StateSelect.prototype.countryField = 'order.shippingAddress.country';
-
-  StateSelect.prototype.getValue = function(event) {
-    var ref, ref1;
-    if (this.input.ref.get(this.countryField) === 'us') {
-      return (ref = $$2(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-    } else {
-      return (ref1 = $$2(event.target).val()) != null ? ref1.trim() : void 0;
-    }
-  };
-
-  StateSelect.prototype.init = function() {
-    StateSelect.__super__.init.apply(this, arguments);
-    return this.on('update', (function(_this) {
-      return function() {
-        var k, ref, state, v;
-        if (_this.input == null) {
-          return;
-        }
-        state = _this.input.ref.get('order.shippingAddress.state');
-        if (state) {
-          state = state.toLowerCase();
-          if (state.length === 2) {
-            return _this.input.ref.set('order.shippingAddress.state', state);
-          } else {
-            ref = states.data;
-            for (k in ref) {
-              v = ref[k];
-              if (v.toLowerCase() === state) {
-                _this.input.ref.set('order.shippingAddress.state', k);
-                return;
-              }
-            }
-          }
+  ShippingAddressCountry.prototype.init = function() {
+    ShippingAddressCountry.__super__.init.apply(this, arguments);
+    return this.input.ref.on('set', (function(_this) {
+      return function(k, v) {
+        if (k === 'countries') {
+          _this.options();
+          return _this.update();
         }
       };
     })(this));
   };
 
-  StateSelect.prototype.onUpdated = function() {
-    var value;
-    if (this.input == null) {
+  return ShippingAddressCountry;
+
+})(CountrySelect$1);
+
+ShippingAddressCountry.register();
+
+// src/controls/checkout/shippingaddress-line1.coffee
+var ShippingAddressLine1;
+var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$14 = {}.hasOwnProperty;
+
+var ShippingAddressLine1$1 = ShippingAddressLine1 = (function(superClass) {
+  extend$15(ShippingAddressLine1, superClass);
+
+  function ShippingAddressLine1() {
+    return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressLine1.prototype.tag = 'shippingaddress-line1';
+
+  ShippingAddressLine1.prototype.bind = 'order.shippingAddress.line1';
+
+  return ShippingAddressLine1;
+
+})(Text$1);
+
+ShippingAddressLine1.register();
+
+// src/controls/checkout/shippingaddress-line2.coffee
+var ShippingAddressLine2;
+var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$15 = {}.hasOwnProperty;
+
+var ShippingAddressLine2$1 = ShippingAddressLine2 = (function(superClass) {
+  extend$16(ShippingAddressLine2, superClass);
+
+  function ShippingAddressLine2() {
+    return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressLine2.prototype.tag = 'shippingaddress-line2';
+
+  ShippingAddressLine2.prototype.bind = 'order.shippingAddress.line2';
+
+  return ShippingAddressLine2;
+
+})(Text$1);
+
+ShippingAddressLine2.register();
+
+// src/controls/checkout/shippingaddress-name.coffee
+var ShippingAddressName;
+var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$16 = {}.hasOwnProperty;
+
+var ShippingAddressName$1 = ShippingAddressName = (function(superClass) {
+  extend$17(ShippingAddressName, superClass);
+
+  function ShippingAddressName() {
+    return ShippingAddressName.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressName.prototype.tag = 'shippingaddress-name';
+
+  ShippingAddressName.prototype.bind = 'order.shippingAddress.name';
+
+  return ShippingAddressName;
+
+})(Text$1);
+
+ShippingAddressName.register();
+
+// src/controls/checkout/shippingaddress-postalcode.coffee
+var ShippingAddressPostalCode;
+var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$17 = {}.hasOwnProperty;
+
+var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superClass) {
+  extend$18(ShippingAddressPostalCode, superClass);
+
+  function ShippingAddressPostalCode() {
+    return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
+  }
+
+  ShippingAddressPostalCode.prototype.tag = 'shippingaddress-postalcode';
+
+  ShippingAddressPostalCode.prototype.bind = 'order.shippingAddress.postalCode';
+
+  return ShippingAddressPostalCode;
+
+})(Text$1);
+
+ShippingAddressPostalCode.register();
+
+// node_modules/el-controls/src/controls/state-select.coffee
+var StateSelect;
+var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$19 = {}.hasOwnProperty;
+
+var StateSelect$1 = StateSelect = (function(superClass) {
+  extend$20(StateSelect, superClass);
+
+  function StateSelect() {
+    return StateSelect.__super__.constructor.apply(this, arguments);
+  }
+
+  StateSelect.prototype.tag = 'state-selection';
+
+  StateSelect.prototype.options = function() {
+    var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
+    countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+    code = this.getCountry();
+    if (!code || code.length !== 2) {
+      this._optionsHash = '';
       return;
     }
-    if (this.input.ref.get(this.countryField) === 'us') {
-      $$2(this.root).find('.selectize-control').show();
-    } else {
-      $$2(this.root).find('.selectize-control').hide();
-      value = this.input.ref.get(this.input.name);
-      if (value) {
-        this.input.ref.set(this.input.name, value);
+    code = code.toUpperCase();
+    found = false;
+    for (i = 0, len = countries.length; i < len; i++) {
+      country = countries[i];
+      if (country.code.toUpperCase() === code) {
+        found = true;
+        subdivisions = country.subdivisions;
+        optionsHash = JSON.stringify(subdivisions);
+        if (this._optionsHash === optionsHash) {
+          return this.selectOptions;
+        }
+        subdivisions = subdivisions.slice(0);
+        this._optionsHash = optionsHash;
+        this.selectOptions = options = {};
+        this.input.ref.set(this.input.name, '');
+        subdivisions.sort(function(a, b) {
+          var nameA, nameB;
+          nameA = a.name.toUpperCase();
+          nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+          subdivision = subdivisions[j];
+          options[subdivision.code.toUpperCase()] = subdivision.name;
+        }
+        break;
       }
     }
-    return StateSelect.__super__.onUpdated.apply(this, arguments);
+    if (!found) {
+      this._optionsHash = '';
+    }
+    return options;
+  };
+
+  StateSelect.prototype.getCountry = function() {
+    return '';
+  };
+
+  StateSelect.prototype.init = function() {
+    return StateSelect.__super__.init.apply(this, arguments);
   };
 
   return StateSelect;
@@ -12080,57 +10647,102 @@ var Select$2 = StateSelect = (function(superClass) {
 
 StateSelect.register();
 
-// src/controls/user-email.coffee
-var UserEmail;
-var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
+// src/controls/checkout/shippingaddress-state.coffee
+var ShippingAddressState;
+var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$18 = {}.hasOwnProperty;
 
-var userEmail = UserEmail = (function(superClass) {
-  extend$8(UserEmail, superClass);
+var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
+  extend$19(ShippingAddressState, superClass);
 
-  function UserEmail() {
-    return UserEmail.__super__.constructor.apply(this, arguments);
+  function ShippingAddressState() {
+    return ShippingAddressState.__super__.constructor.apply(this, arguments);
   }
 
-  UserEmail.prototype.tag = 'user-email';
+  ShippingAddressState.prototype.tag = 'shippingaddress-state';
 
-  UserEmail.prototype.lookup = 'user.email';
+  ShippingAddressState.prototype.bind = 'order.shippingAddress.state';
 
-  return UserEmail;
+  ShippingAddressState.prototype.getCountry = function() {
+    return this.data.get('order.shippingAddress.country');
+  };
 
-})(Text$1);
+  ShippingAddressState.prototype.init = function() {
+    ShippingAddressState.__super__.init.apply(this, arguments);
+    return this.input.ref.on('set', (function(_this) {
+      return function(k, v) {
+        if (k === 'order.shippingAddress.country') {
+          _this.options();
+          return _this.update();
+        }
+      };
+    })(this));
+  };
 
-UserEmail.register();
+  return ShippingAddressState;
 
-// src/controls/user-name.coffee
-var UserName;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9 = {}.hasOwnProperty;
+})(StateSelect$1);
 
-var userName = UserName = (function(superClass) {
-  extend$9(UserName, superClass);
+ShippingAddressState.register();
 
-  function UserName() {
-    return UserName.__super__.constructor.apply(this, arguments);
+// node_modules/el-controls/templates/controls/checkbox.pug
+var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/checkbox.coffee
+var CheckBox;
+var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$21 = {}.hasOwnProperty;
+
+var CheckBox$1 = CheckBox = (function(superClass) {
+  extend$22(CheckBox, superClass);
+
+  function CheckBox() {
+    return CheckBox.__super__.constructor.apply(this, arguments);
   }
 
-  UserName.prototype.tag = 'user-name';
+  CheckBox.prototype.tag = 'checkbox';
 
-  UserName.prototype.lookup = 'user.name';
+  CheckBox.prototype.html = html$3;
 
-  return UserName;
+  CheckBox.prototype.getValue = function(event) {
+    return event.target.checked;
+  };
 
-})(Text$1);
+  return CheckBox;
 
-UserName.register();
+})(Control$1);
 
-// src/controls/user-current-password.coffee
+CheckBox.register();
+
+// src/controls/checkout/terms.coffee
+var Terms;
+var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$20 = {}.hasOwnProperty;
+
+var Terms$1 = Terms = (function(superClass) {
+  extend$21(Terms, superClass);
+
+  function Terms() {
+    return Terms.__super__.constructor.apply(this, arguments);
+  }
+
+  Terms.prototype.tag = 'terms';
+
+  Terms.prototype.bind = 'terms';
+
+  return Terms;
+
+})(CheckBox$1);
+
+Terms.register();
+
+// src/controls/user/user-current-password.coffee
 var UserCurrentPassword;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$10 = {}.hasOwnProperty;
+var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$22 = {}.hasOwnProperty;
 
-var userCurrentPassword = UserCurrentPassword = (function(superClass) {
-  extend$10(UserCurrentPassword, superClass);
+var UserCurrentPassword$1 = UserCurrentPassword = (function(superClass) {
+  extend$23(UserCurrentPassword, superClass);
 
   function UserCurrentPassword() {
     return UserCurrentPassword.__super__.constructor.apply(this, arguments);
@@ -12138,11 +10750,11 @@ var userCurrentPassword = UserCurrentPassword = (function(superClass) {
 
   UserCurrentPassword.prototype.tag = 'user-current-password';
 
-  UserCurrentPassword.prototype.lookup = 'user.currentPassword';
+  UserCurrentPassword.prototype.bind = 'user.currentPassword';
 
   UserCurrentPassword.prototype.type = 'password';
 
-  UserCurrentPassword.prototype.autoComplete = 'off';
+  UserCurrentPassword.prototype.autocomplete = 'off';
 
   UserCurrentPassword.prototype.init = function() {
     return UserCurrentPassword.__super__.init.apply(this, arguments);
@@ -12154,13 +10766,87 @@ var userCurrentPassword = UserCurrentPassword = (function(superClass) {
 
 UserCurrentPassword.register();
 
-// src/controls/user-password.coffee
-var UserPassword;
-var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$11 = {}.hasOwnProperty;
+// src/controls/user/user-email.coffee
+var UserEmail;
+var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$23 = {}.hasOwnProperty;
 
-var userPassword = UserPassword = (function(superClass) {
-  extend$11(UserPassword, superClass);
+var UserEmail$1 = UserEmail = (function(superClass) {
+  extend$24(UserEmail, superClass);
+
+  function UserEmail() {
+    return UserEmail.__super__.constructor.apply(this, arguments);
+  }
+
+  UserEmail.prototype.tag = 'user-email';
+
+  UserEmail.prototype.bind = 'user.email';
+
+  return UserEmail;
+
+})(Text$1);
+
+UserEmail.register();
+
+// src/controls/user/user-name.coffee
+var UserName;
+var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$24 = {}.hasOwnProperty;
+
+var UserName$1 = UserName = (function(superClass) {
+  extend$25(UserName, superClass);
+
+  function UserName() {
+    return UserName.__super__.constructor.apply(this, arguments);
+  }
+
+  UserName.prototype.tag = 'user-name';
+
+  UserName.prototype.bind = 'user.name';
+
+  return UserName;
+
+})(Text$1);
+
+UserName.register();
+
+// src/controls/user/user-password-confirm.coffee
+var UserPasswordConfirm;
+var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$25 = {}.hasOwnProperty;
+
+var UserPasswordConfirm$1 = UserPasswordConfirm = (function(superClass) {
+  extend$26(UserPasswordConfirm, superClass);
+
+  function UserPasswordConfirm() {
+    return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
+  }
+
+  UserPasswordConfirm.prototype.tag = 'user-password-confirm';
+
+  UserPasswordConfirm.prototype.bind = 'user.passwordConfirm';
+
+  UserPasswordConfirm.prototype.type = 'password';
+
+  UserPasswordConfirm.prototype.autocomplete = 'off';
+
+  UserPasswordConfirm.prototype.init = function() {
+    return UserPasswordConfirm.__super__.init.apply(this, arguments);
+  };
+
+  return UserPasswordConfirm;
+
+})(Text$1);
+
+UserPasswordConfirm.register();
+
+// src/controls/user/user-password.coffee
+var UserPassword;
+var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$26 = {}.hasOwnProperty;
+
+var UserPassword$1 = UserPassword = (function(superClass) {
+  extend$27(UserPassword, superClass);
 
   function UserPassword() {
     return UserPassword.__super__.constructor.apply(this, arguments);
@@ -12178,505 +10864,13 @@ var userPassword = UserPassword = (function(superClass) {
 
 UserPassword.register();
 
-// src/controls/user-password-confirm.coffee
-var UserPasswordConfirm;
-var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12 = {}.hasOwnProperty;
-
-var userPasswordConfirm = UserPasswordConfirm = (function(superClass) {
-  extend$12(UserPasswordConfirm, superClass);
-
-  function UserPasswordConfirm() {
-    return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
-  }
-
-  UserPasswordConfirm.prototype.tag = 'user-password-confirm';
-
-  UserPasswordConfirm.prototype.lookup = 'user.passwordConfirm';
-
-  UserPasswordConfirm.prototype.type = 'password';
-
-  UserPasswordConfirm.prototype.autoComplete = 'off';
-
-  UserPasswordConfirm.prototype.init = function() {
-    return UserPasswordConfirm.__super__.init.apply(this, arguments);
-  };
-
-  return UserPasswordConfirm;
-
-})(Text$1);
-
-UserPasswordConfirm.register();
-
-// src/controls/shippingaddress-name.coffee
-var ShippingAddressName;
-var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$13 = {}.hasOwnProperty;
-
-var shippingaddressName = ShippingAddressName = (function(superClass) {
-  extend$13(ShippingAddressName, superClass);
-
-  function ShippingAddressName() {
-    return ShippingAddressName.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressName.prototype.tag = 'shippingaddress-name';
-
-  ShippingAddressName.prototype.lookup = 'order.shippingAddress.name';
-
-  return ShippingAddressName;
-
-})(Text$1);
-
-ShippingAddressName.register();
-
-// src/controls/shippingaddress-line1.coffee
-var ShippingAddressLine1;
-var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$14 = {}.hasOwnProperty;
-
-var shippingaddressLine1 = ShippingAddressLine1 = (function(superClass) {
-  extend$14(ShippingAddressLine1, superClass);
-
-  function ShippingAddressLine1() {
-    return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressLine1.prototype.tag = 'shippingaddress-line1';
-
-  ShippingAddressLine1.prototype.lookup = 'order.shippingAddress.line1';
-
-  return ShippingAddressLine1;
-
-})(Text$1);
-
-ShippingAddressLine1.register();
-
-// src/controls/shippingaddress-line2.coffee
-var ShippingAddressLine2;
-var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$15 = {}.hasOwnProperty;
-
-var shippingaddressLine2 = ShippingAddressLine2 = (function(superClass) {
-  extend$15(ShippingAddressLine2, superClass);
-
-  function ShippingAddressLine2() {
-    return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressLine2.prototype.tag = 'shippingaddress-line2';
-
-  ShippingAddressLine2.prototype.lookup = 'order.shippingAddress.line2';
-
-  return ShippingAddressLine2;
-
-})(Text$1);
-
-ShippingAddressLine2.register();
-
-// src/controls/shippingaddress-city.coffee
-var ShippingAddressCity;
-var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$16 = {}.hasOwnProperty;
-
-var shippingaddressCity = ShippingAddressCity = (function(superClass) {
-  extend$16(ShippingAddressCity, superClass);
-
-  function ShippingAddressCity() {
-    return ShippingAddressCity.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressCity.prototype.tag = 'shippingaddress-city';
-
-  ShippingAddressCity.prototype.lookup = 'order.shippingAddress.city';
-
-  return ShippingAddressCity;
-
-})(Text$1);
-
-ShippingAddressCity.register();
-
-// src/controls/shippingaddress-postalcode.coffee
-var ShippingAddressPostalCode;
-var extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$17 = {}.hasOwnProperty;
-
-var shippingaddressPostalcode = ShippingAddressPostalCode = (function(superClass) {
-  extend$17(ShippingAddressPostalCode, superClass);
-
-  function ShippingAddressPostalCode() {
-    return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressPostalCode.prototype.tag = 'shippingaddress-postalcode';
-
-  ShippingAddressPostalCode.prototype.lookup = 'order.shippingAddress.postalCode';
-
-  return ShippingAddressPostalCode;
-
-})(Text$1);
-
-ShippingAddressPostalCode.register();
-
-// src/controls/shippingaddress-state.coffee
-var ShippingAddressState;
-var extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$18 = {}.hasOwnProperty;
-
-var shippingaddressState = ShippingAddressState = (function(superClass) {
-  extend$18(ShippingAddressState, superClass);
-
-  function ShippingAddressState() {
-    return ShippingAddressState.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressState.prototype.tag = 'shippingaddress-state';
-
-  ShippingAddressState.prototype.lookup = 'order.shippingAddress.state';
-
-  return ShippingAddressState;
-
-})(Select$2);
-
-ShippingAddressState.register();
-
-// src/controls/shippingaddress-country.coffee
-var ShippingAddressCountry;
-var extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$19 = {}.hasOwnProperty;
-
-var shippingaddressCountry = ShippingAddressCountry = (function(superClass) {
-  extend$19(ShippingAddressCountry, superClass);
-
-  function ShippingAddressCountry() {
-    return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
-  }
-
-  ShippingAddressCountry.prototype.tag = 'shippingaddress-country';
-
-  ShippingAddressCountry.prototype.lookup = 'order.shippingAddress.country';
-
-  return ShippingAddressCountry;
-
-})(CountrySelect$1);
-
-ShippingAddressCountry.register();
-
-// src/controls/card-name.coffee
-var CardName;
-var extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$20 = {}.hasOwnProperty;
-
-CardName = (function(superClass) {
-  extend$20(CardName, superClass);
-
-  function CardName() {
-    return CardName.__super__.constructor.apply(this, arguments);
-  }
-
-  CardName.prototype.tag = 'card-name';
-
-  CardName.prototype.lookup = 'payment.account.name';
-
-  return CardName;
-
-})(Text$1);
-
-CardName.register();
-
-var CardName$1 = CardName;
-
-// src/utils/keys.coffee
-var keys = {
-  ignore: [8, 9, 13, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40],
-  numeric: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
-};
-
-// src/controls/card-number.coffee
-var CardNumber;
-var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$21 = {}.hasOwnProperty;
-var indexOf$2 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-CardNumber = (function(superClass) {
-  extend$21(CardNumber, superClass);
-
-  function CardNumber() {
-    return CardNumber.__super__.constructor.apply(this, arguments);
-  }
-
-  CardNumber.prototype.tag = 'card-number';
-
-  CardNumber.prototype.lookup = 'payment.account.number';
-
-  CardNumber.prototype.cardType = '';
-
-  CardNumber.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    }
-  };
-
-  CardNumber.prototype.init = function() {
-    return CardNumber.__super__.init.apply(this, arguments);
-  };
-
-  CardNumber.prototype.onUpdated = function() {
-    var $input, $root;
-    if (!this.first) {
-      $root = $$2(this.root);
-      $input = $$2($root.find('input')[0]);
-      $input.on('keypress', restrictNumeric);
-      $input.on('keypress', (function(_this) {
-        return function(e) {
-          var card, i, j, k, length, newValue, ref, ref1, ref2, upperLength, value;
-          if (ref = e.which, indexOf$2.call(keys.numeric, ref) < 0) {
-            return true;
-          }
-          $root.removeClass(_this.cardType + ' identified unknown');
-          value = $input.val() + String.fromCharCode(e.which);
-          value = value.replace(/\D/g, '');
-          length = value.length;
-          upperLength = 16;
-          card = cardFromNumber(value);
-          if (card) {
-            upperLength = card.length[card.length.length - 1];
-            _this.cardType = card.type;
-            if (_this.cardType) {
-              $root.addClass(_this.cardType + ' identified');
-            } else {
-              $root.addClass('unknown');
-            }
-          }
-          if (length > upperLength) {
-            return false;
-          }
-          newValue = value[0];
-          if (length > 1) {
-            if (card && card.type === 'amex') {
-              for (i = j = 1, ref1 = length - 1; 1 <= ref1 ? j <= ref1 : j >= ref1; i = 1 <= ref1 ? ++j : --j) {
-                if (i === 3 || i === 9) {
-                  newValue += value[i] + ' ';
-                } else {
-                  newValue += value[i];
-                }
-              }
-            } else {
-              for (i = k = 1, ref2 = length - 1; 1 <= ref2 ? k <= ref2 : k >= ref2; i = 1 <= ref2 ? ++k : --k) {
-                if ((i + 1) % 4 === 0 && i !== length - 1) {
-                  newValue += value[i] + ' ';
-                } else {
-                  newValue += value[i];
-                }
-              }
-            }
-          }
-          $input.val(newValue);
-          return e.preventDefault();
-        };
-      })(this));
-      return this.first = true;
-    }
-  };
-
-  return CardNumber;
-
-})(Text$1);
-
-CardNumber.register();
-
-var CardNumber$1 = CardNumber;
-
-// src/controls/card-expiry.coffee
-var CardExpiry;
-var extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$22 = {}.hasOwnProperty;
-var indexOf$1$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-CardExpiry = (function(superClass) {
-  extend$22(CardExpiry, superClass);
-
-  function CardExpiry() {
-    return CardExpiry.__super__.constructor.apply(this, arguments);
-  }
-
-  CardExpiry.prototype.tag = 'card-expiry';
-
-  CardExpiry.prototype.lookup = 'payment.account.expiry';
-
-  CardExpiry.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    }
-  };
-
-  CardExpiry.prototype.init = function() {
-    return CardExpiry.__super__.init.apply(this, arguments);
-  };
-
-  CardExpiry.prototype.onUpdated = function() {
-    var $input;
-    if (!this.first) {
-      $input = $$2($$2(this.root).find('input')[0]);
-      $input.on('keypress', restrictNumeric);
-      $input.on('keypress', function(e) {
-        var ref, value;
-        if (ref = e.which, indexOf$1$1.call(keys.numeric, ref) < 0) {
-          return true;
-        }
-        value = $input.val() + String.fromCharCode(e.which);
-        if (value.length > 7) {
-          return false;
-        }
-        if (/^\d$/.test(value) && (value !== '0' && value !== '1')) {
-          $input.val('0' + value + ' / ');
-          return e.preventDefault();
-        } else if (/^\d\d$/.test(value)) {
-          $input.val(value + ' / ');
-          return e.preventDefault();
-        }
-      });
-      return this.first = true;
-    }
-  };
-
-  return CardExpiry;
-
-})(Text$1);
-
-CardExpiry.register();
-
-var CardExpiry$1 = CardExpiry;
-
-// src/controls/card-cvc.coffee
-var CardCVC;
-var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$23 = {}.hasOwnProperty;
-var indexOf$2$1 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-CardCVC = (function(superClass) {
-  extend$23(CardCVC, superClass);
-
-  function CardCVC() {
-    return CardCVC.__super__.constructor.apply(this, arguments);
-  }
-
-  CardCVC.prototype.tag = 'card-cvc';
-
-  CardCVC.prototype.lookup = 'payment.account.cvc';
-
-  CardCVC.prototype.events = {
-    updated: function() {
-      return this.onUpdated();
-    }
-  };
-
-  CardCVC.prototype.init = function() {
-    return CardCVC.__super__.init.apply(this, arguments);
-  };
-
-  CardCVC.prototype.onUpdated = function() {
-    var $input;
-    if (!this.first) {
-      $input = $$2($$2(this.root).find('input')[0]);
-      $input.on('keypress', restrictNumeric);
-      $input.on('keypress', function(e) {
-        var ref, value;
-        if (ref = e.which, indexOf$2$1.call(keys.numeric, ref) < 0) {
-          return true;
-        }
-        value = $input.val() + String.fromCharCode(e.which);
-        if (value.length > 4) {
-          return false;
-        }
-      });
-      return this.first = true;
-    }
-  };
-
-  return CardCVC;
-
-})(Text$1);
-
-CardCVC.register();
-
-var CardCVC$1 = CardCVC;
-
-// src/controls/terms.coffee
-var Terms;
-var extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$24 = {}.hasOwnProperty;
-
-var terms = Terms = (function(superClass) {
-  extend$24(Terms, superClass);
-
-  function Terms() {
-    return Terms.__super__.constructor.apply(this, arguments);
-  }
-
-  Terms.prototype.tag = 'terms';
-
-  Terms.prototype.lookup = 'terms';
-
-  return Terms;
-
-})(Checkbox$1);
-
-Terms.register();
-
-// src/controls/gift-toggle.coffee
-var GiftToggle;
-var extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$25 = {}.hasOwnProperty;
-
-var giftToggle = GiftToggle = (function(superClass) {
-  extend$25(GiftToggle, superClass);
-
-  function GiftToggle() {
-    return GiftToggle.__super__.constructor.apply(this, arguments);
-  }
-
-  GiftToggle.prototype.tag = 'gift-toggle';
-
-  GiftToggle.prototype.lookup = 'order.gift';
-
-  return GiftToggle;
-
-})(Checkbox$1);
-
-GiftToggle.register();
-
-// src/controls/gift-type.coffee
-var GiftType;
-var extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$26 = {}.hasOwnProperty;
-
-GiftType = (function(superClass) {
-  extend$26(GiftType, superClass);
-
-  function GiftType() {
-    return GiftType.__super__.constructor.apply(this, arguments);
-  }
-
-  GiftType.prototype.tag = 'gift-type';
-
-  GiftType.prototype.lookup = 'order.giftType';
-
-  return GiftType;
-
-})(Select$2);
-
-GiftType.register();
-
-var GiftType$1 = GiftType;
-
-// src/controls/gift-email.coffee
+// src/controls/gift/gift-email.coffee
 var GiftEmail;
-var extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$27 = {}.hasOwnProperty;
 
 GiftEmail = (function(superClass) {
-  extend$27(GiftEmail, superClass);
+  extend$28(GiftEmail, superClass);
 
   function GiftEmail() {
     return GiftEmail.__super__.constructor.apply(this, arguments);
@@ -12684,7 +10878,7 @@ GiftEmail = (function(superClass) {
 
   GiftEmail.prototype.tag = 'gift-email';
 
-  GiftEmail.prototype.lookup = 'order.giftEmail';
+  GiftEmail.prototype.bind = 'order.giftEmail';
 
   return GiftEmail;
 
@@ -12694,13 +10888,56 @@ var GiftEmail$1 = GiftEmail;
 
 GiftEmail.register();
 
-// src/controls/gift-message.coffee
+// node_modules/el-controls/templates/controls/textarea.pug
+var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+
+// node_modules/el-controls/src/controls/textbox.coffee
+var TextBox;
+var extend$30 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$29 = {}.hasOwnProperty;
+
+TextBox = (function(superClass) {
+  extend$30(TextBox, superClass);
+
+  function TextBox() {
+    return TextBox.__super__.constructor.apply(this, arguments);
+  }
+
+  TextBox.prototype.tag = 'textbox';
+
+  TextBox.prototype.html = html$4;
+
+  TextBox.prototype.formElement = 'textarea';
+
+  TextBox.prototype.instructions = '';
+
+  TextBox.prototype.rows = null;
+
+  TextBox.prototype.cols = null;
+
+  TextBox.prototype.disabled = false;
+
+  TextBox.prototype.maxlength = null;
+
+  TextBox.prototype.readonly = false;
+
+  TextBox.prototype.wrap = null;
+
+  return TextBox;
+
+})(Text$1);
+
+TextBox.register();
+
+var TextBox$1 = TextBox;
+
+// src/controls/gift/gift-message.coffee
 var GiftMessage;
-var extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$28 = {}.hasOwnProperty;
 
-var giftMessage = GiftMessage = (function(superClass) {
-  extend$28(GiftMessage, superClass);
+var GiftMessage$1 = GiftMessage = (function(superClass) {
+  extend$29(GiftMessage, superClass);
 
   function GiftMessage() {
     return GiftMessage.__super__.constructor.apply(this, arguments);
@@ -12708,7 +10945,7 @@ var giftMessage = GiftMessage = (function(superClass) {
 
   GiftMessage.prototype.tag = 'gift-message';
 
-  GiftMessage.prototype.lookup = 'order.giftMessage';
+  GiftMessage.prototype.bind = 'order.giftMessage';
 
   return GiftMessage;
 
@@ -12716,102 +10953,68 @@ var giftMessage = GiftMessage = (function(superClass) {
 
 GiftMessage.register();
 
-// templates/controls/text-normal-placeholder.pug
-var html$5 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autoComplete }\" placeholder=\"{ placeholder }\">\n<yield></yield>";
+// src/controls/gift/gift-toggle.coffee
+var GiftToggle;
+var extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$30 = {}.hasOwnProperty;
 
-// src/controls/promocode.coffee
-var PromoCode;
-var extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$29 = {}.hasOwnProperty;
+var GiftToggle$1 = GiftToggle = (function(superClass) {
+  extend$31(GiftToggle, superClass);
 
-var promocode$1 = PromoCode = (function(superClass) {
-  extend$29(PromoCode, superClass);
-
-  function PromoCode() {
-    return PromoCode.__super__.constructor.apply(this, arguments);
+  function GiftToggle() {
+    return GiftToggle.__super__.constructor.apply(this, arguments);
   }
 
-  PromoCode.prototype.tag = 'promocode';
+  GiftToggle.prototype.tag = 'gift-toggle';
 
-  PromoCode.prototype.lookup = 'order.promoCode';
+  GiftToggle.prototype.bind = 'order.gift';
 
-  PromoCode.prototype.html = html$5;
+  return GiftToggle;
 
-  return PromoCode;
+})(CheckBox$1);
 
-})(Text$1);
+GiftToggle.register();
 
-PromoCode.register();
+// src/controls/gift/gift-type.coffee
+var GiftType;
+var extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$31.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$31 = {}.hasOwnProperty;
+
+GiftType = (function(superClass) {
+  extend$32(GiftType, superClass);
+
+  function GiftType() {
+    return GiftType.__super__.constructor.apply(this, arguments);
+  }
+
+  GiftType.prototype.tag = 'gift-type';
+
+  GiftType.prototype.bind = 'order.giftType';
+
+  return GiftType;
+
+})(Select$1);
+
+GiftType.register();
+
+var GiftType$1 = GiftType;
 
 // src/controls/index.coffee
 
-// src/index.coffee
-var data = {
-  countries: countries,
-  states: states
-};
-
-var utils = {
-  card: {
-    luhnCheck: luhnCheck,
-    cardFromNumber: cardFromNumber,
-    cartType: cardType,
-    restrictNumeric: restrictNumeric
-  }
-};
-
-
-
-
-
-var Controls = Object.freeze({
-	Events: Events$1,
-	data: data,
-	utils: utils,
-	Control: Control$1,
-	Text: Text$1,
-	TextBox: TextBox$1,
-	Checkbox: Checkbox$1,
-	Select: Select$1,
-	QuantitySelect: quantitySelect,
-	CountrySelect: CountrySelect$1,
-	StateSelect: Select$2,
-	UserEmail: userEmail,
-	UserName: userName,
-	UserCurrentPassword: userCurrentPassword,
-	UserPassword: userPassword,
-	UserPasswordConfirm: userPasswordConfirm,
-	ShippingAddressName: shippingaddressName,
-	ShippingAddressLine1: shippingaddressLine1,
-	ShippingAddressLine2: shippingaddressLine2,
-	ShippingAddressCity: shippingaddressCity,
-	ShippingAddressPostalCode: shippingaddressPostalcode,
-	ShippingAddressState: shippingaddressState,
-	ShippingAddressCountry: shippingaddressCountry,
-	CardName: CardName$1,
-	CardNumber: CardNumber$1,
-	CardExpiry: CardExpiry$1,
-	CardCVC: CardCVC$1,
-	Terms: terms,
-	GiftToggle: giftToggle,
-	GiftType: GiftType$1,
-	GiftEmail: GiftEmail$1,
-	GiftMessage: giftMessage,
-	PromoCode: promocode$1
-});
-
 // src/events.coffee
-var Events$1$1;
+var Events$1;
 
-var Events$2 = Events$1$1 = {
+var Events$2 = Events$1 = {
+  Started: 'started',
   Ready: 'ready',
-  SetData: 'set-data',
+  AsyncReady: 'async-ready',
+  GeoReady: 'geo-ready',
   TryUpdateItem: 'try-update-item',
   UpdateItem: 'update-item',
   UpdateItems: 'update-items',
-  Change: Events$1.Change,
-  ChangeSuccess: Events$1.ChangeSuccess,
-  ChangeFailed: Events$1.ChangeFailed,
+  Change: ControlEvents.Change,
+  ChangeSuccess: ControlEvents.ChangeSuccess,
+  ChangeFailed: ControlEvents.ChangeFailed,
   Checkout: 'checkout',
   ContinueShopping: 'continue-shopping',
   Submit: 'submit',
@@ -12867,9 +11070,21 @@ var requiresPostalCode = function(code) {
   return code === 'dz' || code === 'ar' || code === 'am' || code === 'au' || code === 'at' || code === 'az' || code === 'a2' || code === 'bd' || code === 'by' || code === 'be' || code === 'ba' || code === 'br' || code === 'bn' || code === 'bg' || code === 'ca' || code === 'ic' || code === 'cn' || code === 'hr' || code === 'cy' || code === 'cz' || code === 'dk' || code === 'en' || code === 'ee' || code === 'fo' || code === 'fi' || code === 'fr' || code === 'ge' || code === 'de' || code === 'gr' || code === 'gl' || code === 'gu' || code === 'gg' || code === 'ho' || code === 'hu' || code === 'in' || code === 'id' || code === 'il' || code === 'it' || code === 'jp' || code === 'je' || code === 'kz' || code === 'kr' || code === 'ko' || code === 'kg' || code === 'lv' || code === 'li' || code === 'lt' || code === 'lu' || code === 'mk' || code === 'mg' || code === 'm3' || code === 'my' || code === 'mh' || code === 'mq' || code === 'yt' || code === 'mx' || code === 'mn' || code === 'me' || code === 'nl' || code === 'nz' || code === 'nb' || code === 'no' || code === 'pk' || code === 'ph' || code === 'pl' || code === 'po' || code === 'pt' || code === 'pr' || code === 're' || code === 'ru' || code === 'sa' || code === 'sf' || code === 'cs' || code === 'sg' || code === 'sk' || code === 'si' || code === 'za' || code === 'es' || code === 'lk' || code === 'nt' || code === 'sx' || code === 'uv' || code === 'vl' || code === 'se' || code === 'ch' || code === 'tw' || code === 'tj' || code === 'th' || code === 'tu' || code === 'tn' || code === 'tr' || code === 'tm' || code === 'vi' || code === 'ua' || code === 'gb' || code === 'us' || code === 'uy' || code === 'uz' || code === 'va' || code === 'vn' || code === 'wl' || code === 'ya';
 };
 
-// src/forms/middleware.coffee
+var requiresState = function(code, countries) {
+  var country, i, len;
+  code = code.toUpperCase();
+  for (i = 0, len = countries.length; i < len; i++) {
+    country = countries[i];
+    if (country.code.toUpperCase() === code) {
+      return country.subdivisions.length > 0;
+    }
+  }
+  return false;
+};
+
+// src/containers/middleware.coffee
 var emailRe;
-var indexOf$3 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var indexOf$5 = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
@@ -12936,6 +11151,13 @@ var splitName = function(value) {
   return value;
 };
 
+var isStateRequired = function(value) {
+  if (requiresState(this.get('order.shippingAddress.country') || '', this.get('countries')) && ((value == null) || value === '')) {
+    throw new Error("Required for Selected Country");
+  }
+  return value;
+};
+
 var isPostalRequired = function(value) {
   if (requiresPostalCode(this.get('order.shippingAddress.country') || '') && ((value == null) || value === '')) {
     throw new Error("Required for Selected Country");
@@ -12967,7 +11189,7 @@ var cardNumber = function(value) {
   if (this.get('order.type') !== 'stripe') {
     return value;
   }
-  card = utils.card.cardFromNumber(value);
+  card = cardFromNumber(value);
   if (!card) {
     throw new Error('Enter a valid card number');
   }
@@ -12976,7 +11198,7 @@ var cardNumber = function(value) {
   if (!/^\d+$/.test(number)) {
     throw new Error('Enter a valid card number');
   }
-  if (!(indexOf$3.call(card.length, length) >= 0 && (card.luhn === false || utils.card.luhnCheck(number)))) {
+  if (!(indexOf$5.call(card.length, length) >= 0 && (card.luhn === false || luhnCheck(number)))) {
     throw new Error('Enter a valid card number');
   }
   return value;
@@ -13022,13 +11244,13 @@ var cvc = function(value) {
   if (this('order.type') !== 'stripe') {
     return value;
   }
-  card = utils.card.cardFromNumber(this.get('payment.account.number'));
+  card = cardFromNumber(this.get('payment.account.number'));
   cvc_ = value.trim();
   if (!/^\d+$/.test(cvc_)) {
     throw new Error('Enter a valid cvc');
   }
   if (card && card.type) {
-    if (ref = cvc_.length, indexOf$3.call(card != null ? card.cvcLength : void 0, ref) < 0) {
+    if (ref = cvc_.length, indexOf$5.call(card != null ? card.cvcLength : void 0, ref) < 0) {
       throw new Error('Enter a valid cvc');
     }
   } else {
@@ -13046,7 +11268,7 @@ var agreeToTerms = function(value) {
   throw new Error('Agree to the terms and conditions');
 };
 
-// src/forms/configs.coffee
+// src/containers/configs.coffee
 var config;
 
 var configs = config = {
@@ -13056,7 +11278,7 @@ var configs = config = {
   'order.shippingAddress.line1': [isRequired],
   'order.shippingAddress.line2': null,
   'order.shippingAddress.city': [isRequired],
-  'order.shippingAddress.state': [isRequired],
+  'order.shippingAddress.state': [isStateRequired],
   'order.shippingAddress.postalCode': [isPostalRequired],
   'order.shippingAddress.country': [isRequired],
   'order.gift': null,
@@ -13071,16 +11293,16 @@ var configs = config = {
   'terms': [agreeToTerms]
 };
 
-// templates/forms/checkout.pug
-var html$1$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
+// templates/containers/checkout.pug
+var html$5 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n      <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n      <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" placeholder=\"Country\" instructions=\"Select a Country\"></shippingaddress-country>\n      <shippingaddress-state class=\"input\" placeholder=\"State\" instructions=\"Select a State\"></shippingaddress-state>\n      <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"terms\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
 
-// src/forms/checkout.coffee
+// src/containers/checkout.coffee
 var CheckoutForm;
-var extend$5$1 = function(child, parent) { for (var key in parent) { if (hasProp$3$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3$1 = {}.hasOwnProperty;
+var extend$33 = function(child, parent) { for (var key in parent) { if (hasProp$32.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$32 = {}.hasOwnProperty;
 
 CheckoutForm = (function(superClass) {
-  extend$5$1(CheckoutForm, superClass);
+  extend$33(CheckoutForm, superClass);
 
   function CheckoutForm() {
     return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -13088,7 +11310,7 @@ CheckoutForm = (function(superClass) {
 
   CheckoutForm.prototype.tag = 'checkout';
 
-  CheckoutForm.prototype.html = html$1$1;
+  CheckoutForm.prototype.html = html$5;
 
   CheckoutForm.prototype.errorMessage = '';
 
@@ -13234,18 +11456,20 @@ CheckoutForm = (function(superClass) {
 
 })(El$1.Form);
 
+CheckoutForm.register();
+
 var Checkout = CheckoutForm;
 
-// templates/forms/checkout-card.pug
-var html$2$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+// templates/containers/checkout-card.pug
+var html$6 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
-// src/forms/checkout-card.coffee
+// src/containers/checkout-card.coffee
 var CheckoutCardForm;
-var extend$6$1 = function(child, parent) { for (var key in parent) { if (hasProp$4$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4$1 = {}.hasOwnProperty;
+var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$33 = {}.hasOwnProperty;
 
 CheckoutCardForm = (function(superClass) {
-  extend$6$1(CheckoutCardForm, superClass);
+  extend$34(CheckoutCardForm, superClass);
 
   function CheckoutCardForm() {
     return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -13253,7 +11477,7 @@ CheckoutCardForm = (function(superClass) {
 
   CheckoutCardForm.prototype.tag = 'checkout-card';
 
-  CheckoutCardForm.prototype.html = html$2$1;
+  CheckoutCardForm.prototype.html = html$6;
 
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13281,18 +11505,20 @@ CheckoutCardForm = (function(superClass) {
 
 })(El$1.Form);
 
+CheckoutCardForm.register();
+
 var CheckoutCard = CheckoutCardForm;
 
-// templates/forms/checkout-shippingaddress.pug
-var html$3$1 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+// templates/containers/checkout-shippingaddress.pug
+var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" placeholder=\"Name\"></user-name>\n        <user-email class=\"input\" placeholder=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
-// src/forms/checkout-shippingaddress.coffee
+// src/containers/checkout-shippingaddress.coffee
 var CheckoutShippingAddressForm;
-var extend$7$1 = function(child, parent) { for (var key in parent) { if (hasProp$5$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5$1 = {}.hasOwnProperty;
+var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$34 = {}.hasOwnProperty;
 
 CheckoutShippingAddressForm = (function(superClass) {
-  extend$7$1(CheckoutShippingAddressForm, superClass);
+  extend$35(CheckoutShippingAddressForm, superClass);
 
   function CheckoutShippingAddressForm() {
     return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -13300,7 +11526,7 @@ CheckoutShippingAddressForm = (function(superClass) {
 
   CheckoutShippingAddressForm.prototype.tag = 'checkout-shippingaddress';
 
-  CheckoutShippingAddressForm.prototype.html = html$3$1;
+  CheckoutShippingAddressForm.prototype.html = html$7;
 
   CheckoutShippingAddressForm.prototype.paged = false;
 
@@ -13341,18 +11567,20 @@ CheckoutShippingAddressForm = (function(superClass) {
 
 })(El$1.Form);
 
+CheckoutShippingAddressForm.register();
+
 var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
-// templates/forms/cart.pug
-var html$4$1 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+// templates/containers/cart.pug
+var html$8 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
-// src/forms/cart.coffee
+// src/containers/cart.coffee
 var CartForm;
-var extend$8$1 = function(child, parent) { for (var key in parent) { if (hasProp$6$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6$1 = {}.hasOwnProperty;
+var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$35 = {}.hasOwnProperty;
 
 CartForm = (function(superClass) {
-  extend$8$1(CartForm, superClass);
+  extend$36(CartForm, superClass);
 
   function CartForm() {
     return CartForm.__super__.constructor.apply(this, arguments);
@@ -13360,7 +11588,7 @@ CartForm = (function(superClass) {
 
   CartForm.prototype.tag = 'cart';
 
-  CartForm.prototype.html = html$4$1;
+  CartForm.prototype.html = html$8;
 
   CartForm.prototype.init = function() {
     var promoCode;
@@ -13466,18 +11694,20 @@ CartForm = (function(superClass) {
 
 })(El$1.Form);
 
+CartForm.register();
+
 var Cart$1$1 = CartForm;
 
-// templates/forms/lineitem.pug
-var html$5$1 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+// templates/containers/lineitem.pug
+var html$9 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
-// src/forms/lineitem.coffee
+// src/containers/lineitem.coffee
 var LineItemForm;
-var extend$9$1 = function(child, parent) { for (var key in parent) { if (hasProp$7$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7$1 = {}.hasOwnProperty;
+var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$36 = {}.hasOwnProperty;
 
 LineItemForm = (function(superClass) {
-  extend$9$1(LineItemForm, superClass);
+  extend$37(LineItemForm, superClass);
 
   function LineItemForm() {
     return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -13485,7 +11715,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$5$1;
+  LineItemForm.prototype.html = html$9;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -13503,18 +11733,20 @@ LineItemForm = (function(superClass) {
 
 })(El$1.Form);
 
+LineItemForm.register();
+
 var LineItem = LineItemForm;
 
-// templates/forms/lineitems.pug
-var html$6 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+// templates/containers/lineitems.pug
+var html$10 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
-// src/forms/lineitems.coffee
+// src/containers/lineitems.coffee
 var LineItems;
-var extend$10$1 = function(child, parent) { for (var key in parent) { if (hasProp$8$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8$1 = {}.hasOwnProperty;
+var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$37 = {}.hasOwnProperty;
 
 LineItems = (function(superClass) {
-  extend$10$1(LineItems, superClass);
+  extend$38(LineItems, superClass);
 
   function LineItems() {
     return LineItems.__super__.constructor.apply(this, arguments);
@@ -13522,7 +11754,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$6;
+  LineItems.prototype.html = html$10;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -13542,18 +11774,20 @@ LineItems = (function(superClass) {
 
 })(El$1.View);
 
+LineItems.register();
+
 var LineItems$1 = LineItems;
 
-// templates/forms/login.pug
-var html$7 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
+// templates/containers/login.pug
+var html$11 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
 
-// src/forms/login.coffee
+// src/containers/login.coffee
 var LoginForm;
-var extend$11$1 = function(child, parent) { for (var key in parent) { if (hasProp$9$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9$1 = {}.hasOwnProperty;
+var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$38 = {}.hasOwnProperty;
 
 LoginForm = (function(superClass) {
-  extend$11$1(LoginForm, superClass);
+  extend$39(LoginForm, superClass);
 
   function LoginForm() {
     return LoginForm.__super__.constructor.apply(this, arguments);
@@ -13561,7 +11795,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$7;
+  LoginForm.prototype.html = html$11;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13597,18 +11831,20 @@ LoginForm = (function(superClass) {
 
 })(El$1.Form);
 
+LoginForm.register();
+
 var Login = LoginForm;
 
-// templates/forms/order.pug
-var html$8 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+// templates/containers/order.pug
+var html$12 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
-// src/forms/order.coffee
+// src/containers/order.coffee
 var OrderForm;
-var extend$12$1 = function(child, parent) { for (var key in parent) { if (hasProp$10$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$10$1 = {}.hasOwnProperty;
+var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$39 = {}.hasOwnProperty;
 
 OrderForm = (function(superClass) {
-  extend$12$1(OrderForm, superClass);
+  extend$40(OrderForm, superClass);
 
   function OrderForm() {
     return OrderForm.__super__.constructor.apply(this, arguments);
@@ -13616,7 +11852,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$8;
+  OrderForm.prototype.html = html$12;
 
   OrderForm.prototype.parentData = null;
 
@@ -13651,18 +11887,20 @@ OrderForm = (function(superClass) {
 
 })(El$1.Form);
 
+OrderForm.register();
+
 var Order = OrderForm;
 
-// templates/forms/orders.pug
-var html$9 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+// templates/containers/orders.pug
+var html$13 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
-// src/forms/orders.coffee
+// src/containers/orders.coffee
 var Orders;
-var extend$13$1 = function(child, parent) { for (var key in parent) { if (hasProp$11$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$11$1 = {}.hasOwnProperty;
+var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$40 = {}.hasOwnProperty;
 
 Orders = (function(superClass) {
-  extend$13$1(Orders, superClass);
+  extend$41(Orders, superClass);
 
   function Orders() {
     return Orders.__super__.constructor.apply(this, arguments);
@@ -13670,7 +11908,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$9;
+  Orders.prototype.html = html$13;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -13680,18 +11918,20 @@ Orders = (function(superClass) {
 
 })(El$1.View);
 
+Orders.register();
+
 var Orders$1 = Orders;
 
-// templates/forms/form.pug
-var html$10 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+// templates/containers/form.pug
+var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
-// src/forms/profile.coffee
+// src/containers/profile.coffee
 var ProfileForm;
-var extend$14$1 = function(child, parent) { for (var key in parent) { if (hasProp$12$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12$1 = {}.hasOwnProperty;
+var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$41 = {}.hasOwnProperty;
 
 ProfileForm = (function(superClass) {
-  extend$14$1(ProfileForm, superClass);
+  extend$42(ProfileForm, superClass);
 
   function ProfileForm() {
     return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -13699,7 +11939,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$10;
+  ProfileForm.prototype.html = html$14;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13796,18 +12036,20 @@ ProfileForm = (function(superClass) {
 
 })(El$1.Form);
 
+ProfileForm.register();
+
 var Profile = ProfileForm;
 
-// templates/forms/register.pug
-var html$11 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
+// templates/containers/register.pug
+var html$15 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
 
-// src/forms/register.coffee
+// src/containers/register.coffee
 var RegisterForm;
-var extend$15$1 = function(child, parent) { for (var key in parent) { if (hasProp$13$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$13$1 = {}.hasOwnProperty;
+var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$42 = {}.hasOwnProperty;
 
 RegisterForm = (function(superClass) {
-  extend$15$1(RegisterForm, superClass);
+  extend$43(RegisterForm, superClass);
 
   function RegisterForm() {
     return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -13815,7 +12057,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$11;
+  RegisterForm.prototype.html = html$15;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -13886,42 +12128,44 @@ RegisterForm = (function(superClass) {
 
 })(El$1.Form);
 
+RegisterForm.register();
+
 var Register = RegisterForm;
 
-// src/forms/register-complete.coffee
-var RegisterComplete;
-var extend$16$1 = function(child, parent) { for (var key in parent) { if (hasProp$14$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$14$1 = {}.hasOwnProperty;
+// src/containers/register-complete.coffee
+var RegisterCompleteForm;
+var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$43 = {}.hasOwnProperty;
 
-RegisterComplete = (function(superClass) {
-  extend$16$1(RegisterComplete, superClass);
+RegisterCompleteForm = (function(superClass) {
+  extend$44(RegisterCompleteForm, superClass);
 
-  function RegisterComplete() {
-    return RegisterComplete.__super__.constructor.apply(this, arguments);
+  function RegisterCompleteForm() {
+    return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
   }
 
-  RegisterComplete.prototype.tag = 'register-complete';
+  RegisterCompleteForm.prototype.tag = 'register-complete';
 
-  RegisterComplete.prototype.html = html$10;
+  RegisterCompleteForm.prototype.html = html$14;
 
-  RegisterComplete.prototype.twoStageSignUp = false;
+  RegisterCompleteForm.prototype.twoStageSignUp = false;
 
-  RegisterComplete.prototype.configs = {
+  RegisterCompleteForm.prototype.configs = {
     'user.name': [isRequired, splitName],
     'user.password': [isPassword],
     'user.passwordConfirm': [isPassword, matchesPassword]
   };
 
-  RegisterComplete.prototype.errorMessage = '';
+  RegisterCompleteForm.prototype.errorMessage = '';
 
-  RegisterComplete.prototype.init = function() {
-    RegisterComplete.__super__.init.apply(this, arguments);
+  RegisterCompleteForm.prototype.init = function() {
+    RegisterCompleteForm.__super__.init.apply(this, arguments);
     if (!this.twoStageSignUp) {
       return this._submit();
     }
   };
 
-  RegisterComplete.prototype._submit = function(event) {
+  RegisterCompleteForm.prototype._submit = function(event) {
     var firstName, lastName, opts;
     opts = {
       password: this.data.get('user.password'),
@@ -13956,22 +12200,24 @@ RegisterComplete = (function(superClass) {
     })(this));
   };
 
-  return RegisterComplete;
+  return RegisterCompleteForm;
 
 })(El$1.Form);
 
-var RegisterComplete$1 = RegisterComplete;
+RegisterCompleteForm.register();
 
-// templates/forms/reset-password.pug
-var html$12 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
+var RegisterComplete = RegisterCompleteForm;
 
-// src/forms/reset-password.coffee
+// templates/containers/reset-password.pug
+var html$16 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
+
+// src/containers/reset-password.coffee
 var ResetPasswordForm;
-var extend$17$1 = function(child, parent) { for (var key in parent) { if (hasProp$15$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$15$1 = {}.hasOwnProperty;
+var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$44 = {}.hasOwnProperty;
 
 ResetPasswordForm = (function(superClass) {
-  extend$17$1(ResetPasswordForm, superClass);
+  extend$45(ResetPasswordForm, superClass);
 
   function ResetPasswordForm() {
     return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -13979,7 +12225,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$12;
+  ResetPasswordForm.prototype.html = html$16;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -14017,18 +12263,20 @@ ResetPasswordForm = (function(superClass) {
 
 })(El$1.Form);
 
+ResetPasswordForm.register();
+
 var ResetPassword = ResetPasswordForm;
 
-// templates/forms/reset-password-complete.pug
-var html$13 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
+// templates/containers/reset-password-complete.pug
+var html$17 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
 
-// src/forms/reset-password-complete.coffee
+// src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
-var extend$18$1 = function(child, parent) { for (var key in parent) { if (hasProp$16$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$16$1 = {}.hasOwnProperty;
+var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$45 = {}.hasOwnProperty;
 
 ResetPasswordCompleteForm = (function(superClass) {
-  extend$18$1(ResetPasswordCompleteForm, superClass);
+  extend$46(ResetPasswordCompleteForm, superClass);
 
   function ResetPasswordCompleteForm() {
     return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -14036,7 +12284,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$13;
+  ResetPasswordCompleteForm.prototype.html = html$17;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -14080,15 +12328,17 @@ ResetPasswordCompleteForm = (function(superClass) {
 
 })(El$1.Form);
 
+ResetPasswordCompleteForm.register();
+
 var ResetPasswordComplete = ResetPasswordCompleteForm;
 
-// src/forms/shippingaddress.coffee
+// src/containers/shippingaddress.coffee
 var ShippingAddressForm;
-var extend$19$1 = function(child, parent) { for (var key in parent) { if (hasProp$17$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$17$1 = {}.hasOwnProperty;
+var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$46 = {}.hasOwnProperty;
 
 ShippingAddressForm = (function(superClass) {
-  extend$19$1(ShippingAddressForm, superClass);
+  extend$47(ShippingAddressForm, superClass);
 
   function ShippingAddressForm() {
     return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -14096,7 +12346,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$10;
+  ShippingAddressForm.prototype.html = html$14;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -14151,12 +12401,14 @@ ShippingAddressForm = (function(superClass) {
 
 })(El$1.Form);
 
+ShippingAddressForm.register();
+
 var ShippingAddress = ShippingAddressForm;
 
-// src/forms/index.coffee
+// src/containers/index.coffee
 var Forms;
 
-var Forms$1 = Forms = {
+var Containers = Forms = {
   Checkout: Checkout,
   CheckoutCard: CheckoutCard,
   CheckoutShippingAddress: CheckoutShippingAddress,
@@ -14168,39 +12420,22 @@ var Forms$1 = Forms = {
   Orders: Orders$1,
   Profile: Profile,
   Register: Register,
-  RegisterComplete: RegisterComplete$1,
+  RegisterComplete: RegisterComplete,
   ResetPassword: ResetPassword,
   ResetPasswordComplete: ResetPasswordComplete,
-  ShippingAddress: ShippingAddress,
-  register: function() {
-    Checkout.register();
-    CheckoutCard.register();
-    CheckoutShippingAddress.register();
-    Cart$1$1.register();
-    LineItem.register();
-    LineItems$1.register();
-    Login.register();
-    Order.register();
-    Orders$1.register();
-    Profile.register();
-    Register.register();
-    RegisterComplete$1.register();
-    ResetPassword.register();
-    ResetPasswordComplete.register();
-    return ShippingAddress.register();
-  }
+  ShippingAddress: ShippingAddress
 };
 
 // templates/widgets/cart-counter.pug
-var html$14 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$18 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$20$1 = function(child, parent) { for (var key in parent) { if (hasProp$18$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$18$1 = {}.hasOwnProperty;
+var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$47 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$20$1(CartCounter, superClass);
+  extend$48(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -14208,7 +12443,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$14;
+  CartCounter.prototype.html = html$18;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -14240,21 +12475,23 @@ CartCounter = (function(superClass) {
 
 })(El$1.View);
 
+CartCounter.register();
+
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$15 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$19 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" placeholder=\"Name\"></user-name>\n                <user-email class=\"input\" placeholder=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" placeholder=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" placeholder=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" placeholder=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" placeholder=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" placeholder=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" placeholder=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" placeholder=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" placeholder=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" placeholder=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" placeholder=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" placeholder=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$21$1 = function(child, parent) { for (var key in parent) { if (hasProp$19$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$19$1 = {}.hasOwnProperty;
+var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$48 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$21$1(CheckoutModal, superClass);
+  extend$49(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -14262,7 +12499,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$15;
+  CheckoutModal.prototype.html = html$19;
 
   CheckoutModal.prototype.names = null;
 
@@ -14301,7 +12538,7 @@ CheckoutModal = (function(superClass) {
       };
     })(this));
     m$1.on(Events$2.SubmitCard, (function(_this) {
-      return function(id) {
+      return function() {
         _this.step = 1;
         El$1.scheduleUpdate();
         Shop.analytics.track('Completed Checkout Step', {
@@ -14313,7 +12550,7 @@ CheckoutModal = (function(superClass) {
       };
     })(this));
     return m$1.on(Events$2.SubmitSuccess, (function(_this) {
-      return function(id) {
+      return function() {
         _this.step = 2;
         El$1.scheduleUpdate();
         return Shop.analytics.track('Completed Checkout Step', {
@@ -14365,43 +12602,20 @@ CheckoutModal = (function(superClass) {
 
 })(El$1.View);
 
+CheckoutModal.register();
+
 var CheckoutModal$1 = CheckoutModal;
 
-// templates/widgets/nested-form.pug
-var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
-
-// src/widgets/nested-form.coffee
-var NestedForm;
-var extend$22$1 = function(child, parent) { for (var key in parent) { if (hasProp$20$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$20$1 = {}.hasOwnProperty;
-
-NestedForm = (function(superClass) {
-  extend$22$1(NestedForm, superClass);
-
-  function NestedForm() {
-    return NestedForm.__super__.constructor.apply(this, arguments);
-  }
-
-  NestedForm.prototype.tag = 'nested-form';
-
-  NestedForm.prototype.html = html$16;
-
-  return NestedForm;
-
-})(El$1.View);
-
-var NestedForm$1 = NestedForm;
-
 // templates/widgets/side-pane.pug
-var html$17 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$20 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$23$1 = function(child, parent) { for (var key in parent) { if (hasProp$21$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$21$1 = {}.hasOwnProperty;
+var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$49 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$23$1(SidePane, superClass);
+  extend$50(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -14409,7 +12623,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$17;
+  SidePane.prototype.html = html$20;
 
   SidePane.prototype.id = '';
 
@@ -14459,6 +12673,8 @@ SidePane = (function(superClass) {
 
 })(El$1.View);
 
+SidePane.register();
+
 var SidePane$1 = SidePane;
 
 // src/widgets/index.coffee
@@ -14467,14 +12683,7 @@ var Widgets;
 var Widgets$1 = Widgets = {
   CartCounter: CartCounter$1,
   CheckoutModal: CheckoutModal$1,
-  NestedForm: NestedForm$1,
-  SidePane: SidePane$1,
-  register: function() {
-    CartCounter$1.register();
-    CheckoutModal$1.register();
-    NestedForm$1.register();
-    return SidePane$1.register();
-  }
+  SidePane: SidePane$1
 };
 
 // src/utils/analytics.coffee
@@ -14660,7 +12869,7 @@ function setHookCallback (callback) {
 }
 
 // node_modules/moment/src/lib/utils/is-array.js
-function isArray$5(input) {
+function isArray$2(input) {
     return input instanceof Array || Object.prototype.toString.call(input) === '[object Array]';
 }
 
@@ -14711,7 +12920,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$24$1(a, b) {
+function extend$51(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -14818,7 +13027,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$24$1(getParsingFlags(m), flags);
+        extend$51(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -14950,7 +13159,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$24$1(function () {
+    return extend$51(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -15018,13 +13227,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$24$1({}, parentConfig), prop;
+    var res = extend$51({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                 res[prop] = {};
-                extend$24$1(res[prop], parentConfig[prop]);
-                extend$24$1(res[prop], childConfig[prop]);
+                extend$51(res[prop], parentConfig[prop]);
+                extend$51(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -15037,7 +13246,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$3(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$24$1({}, res[prop]);
+            res[prop] = extend$51({}, res[prop]);
         }
     }
     return res;
@@ -15207,12 +13416,12 @@ function makeGetSet (unit, keepTime) {
             hooks.updateOffset(this, keepTime);
             return this;
         } else {
-            return get(this, unit);
+            return get$1(this, unit);
         }
     };
 }
 
-function get (mom, unit) {
+function get$1 (mom, unit) {
     return mom.isValid() ?
         mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]() : NaN;
 }
@@ -15446,12 +13655,12 @@ var WEEK = 7;
 var WEEKDAY = 8;
 
 // node_modules/moment/src/lib/utils/index-of.js
-var indexOf$4;
+var indexOf$6;
 
 if (Array.prototype.indexOf) {
-    indexOf$4 = Array.prototype.indexOf;
+    indexOf$6 = Array.prototype.indexOf;
 } else {
-    indexOf$4 = function (o) {
+    indexOf$6 = function (o) {
         // I know
         var i;
         for (i = 0; i < this.length; ++i) {
@@ -15521,20 +13730,20 @@ var MONTHS_IN_FORMAT = /D[oD]?(\[[^\[\]]*\]|\s)+MMMM?/;
 var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
 function localeMonths (m, format) {
     if (!m) {
-        return isArray$5(this._months) ? this._months :
+        return isArray$2(this._months) ? this._months :
             this._months['standalone'];
     }
-    return isArray$5(this._months) ? this._months[m.month()] :
+    return isArray$2(this._months) ? this._months[m.month()] :
         this._months[(this._months.isFormat || MONTHS_IN_FORMAT).test(format) ? 'format' : 'standalone'][m.month()];
 }
 
 var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
 function localeMonthsShort (m, format) {
     if (!m) {
-        return isArray$5(this._monthsShort) ? this._monthsShort :
+        return isArray$2(this._monthsShort) ? this._monthsShort :
             this._monthsShort['standalone'];
     }
-    return isArray$5(this._monthsShort) ? this._monthsShort[m.month()] :
+    return isArray$2(this._monthsShort) ? this._monthsShort[m.month()] :
         this._monthsShort[MONTHS_IN_FORMAT.test(format) ? 'format' : 'standalone'][m.month()];
 }
 
@@ -15554,26 +13763,26 @@ function handleStrictParse(monthName, format, strict) {
 
     if (strict) {
         if (format === 'MMM') {
-            ii = indexOf$4.call(this._shortMonthsParse, llc);
+            ii = indexOf$6.call(this._shortMonthsParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$4.call(this._longMonthsParse, llc);
+            ii = indexOf$6.call(this._longMonthsParse, llc);
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'MMM') {
-            ii = indexOf$4.call(this._shortMonthsParse, llc);
+            ii = indexOf$6.call(this._shortMonthsParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._longMonthsParse, llc);
+            ii = indexOf$6.call(this._longMonthsParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$4.call(this._longMonthsParse, llc);
+            ii = indexOf$6.call(this._longMonthsParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._shortMonthsParse, llc);
+            ii = indexOf$6.call(this._shortMonthsParse, llc);
             return ii !== -1 ? ii : null;
         }
     }
@@ -15650,7 +13859,7 @@ function getSetMonth (value) {
         hooks.updateOffset(this, true);
         return this;
     } else {
-        return get(this, 'Month');
+        return get$1(this, 'Month');
     }
 }
 
@@ -16036,10 +14245,10 @@ function parseIsoWeekday(input, locale) {
 var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
 function localeWeekdays (m, format) {
     if (!m) {
-        return isArray$5(this._weekdays) ? this._weekdays :
+        return isArray$2(this._weekdays) ? this._weekdays :
             this._weekdays['standalone'];
     }
-    return isArray$5(this._weekdays) ? this._weekdays[m.day()] :
+    return isArray$2(this._weekdays) ? this._weekdays[m.day()] :
         this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
 }
 
@@ -16070,48 +14279,48 @@ function handleStrictParse$1(weekdayName, format, strict) {
 
     if (strict) {
         if (format === 'dddd') {
-            ii = indexOf$4.call(this._weekdaysParse, llc);
+            ii = indexOf$6.call(this._weekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else if (format === 'ddd') {
-            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$4.call(this._minWeekdaysParse, llc);
+            ii = indexOf$6.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         }
     } else {
         if (format === 'dddd') {
-            ii = indexOf$4.call(this._weekdaysParse, llc);
+            ii = indexOf$6.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._minWeekdaysParse, llc);
+            ii = indexOf$6.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else if (format === 'ddd') {
-            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._weekdaysParse, llc);
+            ii = indexOf$6.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._minWeekdaysParse, llc);
+            ii = indexOf$6.call(this._minWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         } else {
-            ii = indexOf$4.call(this._minWeekdaysParse, llc);
+            ii = indexOf$6.call(this._minWeekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._weekdaysParse, llc);
+            ii = indexOf$6.call(this._weekdaysParse, llc);
             if (ii !== -1) {
                 return ii;
             }
-            ii = indexOf$4.call(this._shortWeekdaysParse, llc);
+            ii = indexOf$6.call(this._shortWeekdaysParse, llc);
             return ii !== -1 ? ii : null;
         }
     }
@@ -16620,7 +14829,7 @@ function getLocale (key) {
         return globalLocale;
     }
 
-    if (!isArray$5(key)) {
+    if (!isArray$2(key)) {
         //short-circuit everything else
         locale = loadLocale(key);
         if (locale) {
@@ -16868,7 +15077,7 @@ hooks.createFromInputFallback = deprecate(
 
 // node_modules/moment/src/lib/utils/defaults.js
 // Pick the first defined of two or three arguments.
-function defaults$2(a, b, c) {
+function defaults$1(a, b, c) {
     if (a != null) {
         return a;
     }
@@ -16908,7 +15117,7 @@ function configFromArray (config) {
 
     //if the day of the year is set, figure out what it is
     if (config._dayOfYear != null) {
-        yearToUse = defaults$2(config._a[YEAR], currentDate[YEAR]);
+        yearToUse = defaults$1(config._a[YEAR], currentDate[YEAR]);
 
         if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
             getParsingFlags(config)._overflowDayOfYear = true;
@@ -16966,9 +15175,9 @@ function dayOfYearFromWeekInfo(config) {
         // how we interpret now (local, utc, fixed offset). So create
         // a now version of current config (take local/utc/offset flags, and
         // create now).
-        weekYear = defaults$2(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
-        week = defaults$2(w.W, 1);
-        weekday = defaults$2(w.E, 1);
+        weekYear = defaults$1(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
+        week = defaults$1(w.W, 1);
+        weekday = defaults$1(w.E, 1);
         if (weekday < 1 || weekday > 7) {
             weekdayOverflow = true;
         }
@@ -16978,10 +15187,10 @@ function dayOfYearFromWeekInfo(config) {
 
         var curWeek = weekOfYear(createLocal(), dow, doy);
 
-        weekYear = defaults$2(w.gg, config._a[YEAR], curWeek.year);
+        weekYear = defaults$1(w.gg, config._a[YEAR], curWeek.year);
 
         // Default to current week.
-        week = defaults$2(w.w, curWeek.week);
+        week = defaults$1(w.w, curWeek.week);
 
         if (w.d != null) {
             // weekday -- low day numbers are considered next week
@@ -17159,7 +15368,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$24$1(config, bestMoment || tempConfig);
+    extend$51(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -17206,7 +15415,7 @@ function prepareConfig (config) {
         return new Moment(checkOverflow(input));
     } else if (isDate(input)) {
         config._d = input;
-    } else if (isArray$5(format)) {
+    } else if (isArray$2(format)) {
         configFromStringAndArray(config);
     } else if (format) {
         configFromStringAndFormat(config);
@@ -17229,7 +15438,7 @@ function configFromInput(config) {
         config._d = new Date(input.valueOf());
     } else if (typeof input === 'string') {
         configFromString(config);
-    } else if (isArray$5(input)) {
+    } else if (isArray$2(input)) {
         config._a = map(input.slice(0), function (obj) {
             return parseInt(obj, 10);
         });
@@ -17253,7 +15462,7 @@ function createLocalOrUTC (input, format, locale, strict, isUTC) {
     }
 
     if ((isObject$3(input) && isObjectEmpty(input)) ||
-            (isArray$5(input) && input.length === 0)) {
+            (isArray$2(input) && input.length === 0)) {
         input = undefined;
     }
     // object construction must be done this way.
@@ -17305,7 +15514,7 @@ var prototypeMax = deprecate(
 // first element is an array of moment objects.
 function pickBy(fn, moments) {
     var res, i;
-    if (moments.length === 1 && isArray$5(moments[0])) {
+    if (moments.length === 1 && isArray$2(moments[0])) {
         moments = moments[0];
     }
     if (!moments.length) {
@@ -17334,7 +15543,7 @@ function max () {
 }
 
 // node_modules/moment/src/lib/moment/now.js
-var now = function () {
+var now$1 = function () {
     return Date.now ? Date.now() : +(new Date());
 };
 
@@ -17792,17 +16001,17 @@ function addSubtract (mom, duration, isAdding, updateOffset) {
         mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
     }
     if (days) {
-        set$1(mom, 'Date', get(mom, 'Date') + days * isAdding);
+        set$1(mom, 'Date', get$1(mom, 'Date') + days * isAdding);
     }
     if (months) {
-        setMonth(mom, get(mom, 'Month') + months * isAdding);
+        setMonth(mom, get$1(mom, 'Month') + months * isAdding);
     }
     if (updateOffset) {
         hooks.updateOffset(mom, days || months);
     }
 }
 
-var add      = createAdder(1, 'add');
+var add$1      = createAdder(1, 'add');
 var subtract = createAdder(-1, 'subtract');
 
 // node_modules/moment/src/lib/moment/calendar.js
@@ -18168,7 +16377,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$24$1({}, getParsingFlags(this));
+    return extend$51({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -18498,7 +16707,7 @@ function getZoneName () {
 // node_modules/moment/src/lib/moment/prototype.js
 var proto = Moment.prototype;
 
-proto.add               = add;
+proto.add               = add$1;
 proto.calendar          = calendar$1;
 proto.clone             = clone;
 proto.diff              = diff;
@@ -18654,7 +16863,7 @@ proto$1.isPM = localeIsPM;
 proto$1.meridiem = localeMeridiem;
 
 // node_modules/moment/src/lib/locale/lists.js
-function get$1 (format, index, field, setter) {
+function get$2 (format, index, field, setter) {
     var locale = getLocale();
     var utc = createUTC().set(setter, index);
     return locale[field](utc, format);
@@ -18669,13 +16878,13 @@ function listMonthsImpl (format, index, field) {
     format = format || '';
 
     if (index != null) {
-        return get$1(format, index, field, 'month');
+        return get$2(format, index, field, 'month');
     }
 
     var i;
     var out = [];
     for (i = 0; i < 12; i++) {
-        out[i] = get$1(format, i, field, 'month');
+        out[i] = get$2(format, i, field, 'month');
     }
     return out;
 }
@@ -18713,13 +16922,13 @@ function listWeekdaysImpl (localeSorted, format, index, field) {
         shift = localeSorted ? locale._week.dow : 0;
 
     if (index != null) {
-        return get$1(format, (index + shift) % 7, field, 'day');
+        return get$2(format, (index + shift) % 7, field, 'day');
     }
 
     var i;
     var out = [];
     for (i = 0; i < 7; i++) {
-        out[i] = get$1(format, (i + shift) % 7, field, 'day');
+        out[i] = get$2(format, (i + shift) % 7, field, 'day');
     }
     return out;
 }
@@ -18794,7 +17003,7 @@ function addSubtract$1 (duration, input, value, direction) {
 }
 
 // supports only 2.0-style add(1, 's') or add(duration)
-function add$1 (input, value) {
+function add$2 (input, value) {
     return addSubtract$1(this, input, value, 1);
 }
 
@@ -18931,7 +17140,7 @@ var asMonths       = makeAs('M');
 var asYears        = makeAs('y');
 
 // node_modules/moment/src/lib/duration/get.js
-function get$2 (units) {
+function get$3 (units) {
     units = normalizeUnits(units);
     return this.isValid() ? this[units + 's']() : NaN;
 }
@@ -19101,7 +17310,7 @@ var proto$2 = Duration.prototype;
 
 proto$2.isValid        = isValid$1;
 proto$2.abs            = abs;
-proto$2.add            = add$1;
+proto$2.add            = add$2;
 proto$2.subtract       = subtract$1;
 proto$2.as             = as;
 proto$2.asMilliseconds = asMilliseconds;
@@ -19114,7 +17323,7 @@ proto$2.asMonths       = asMonths;
 proto$2.asYears        = asYears;
 proto$2.valueOf        = valueOf$1;
 proto$2._bubble        = bubble;
-proto$2.get            = get$2;
+proto$2.get            = get$3;
 proto$2.milliseconds   = milliseconds;
 proto$2.seconds        = seconds;
 proto$2.minutes        = minutes;
@@ -19171,7 +17380,7 @@ setHookCallback(createLocal);
 hooks.fn                    = proto;
 hooks.min                   = min;
 hooks.max                   = max;
-hooks.now                   = now;
+hooks.now                   = now$1;
 hooks.utc                   = createUTC;
 hooks.unix                  = createUnix;
 hooks.months                = listMonths;
@@ -19196,19 +17405,688 @@ hooks.relativeTimeThreshold = getSetRelativeTimeThreshold;
 hooks.calendarFormat        = getCalendarFormat;
 hooks.prototype             = proto;
 
+
+
+
+var moment$2 = Object.freeze({
+	default: hooks
+});
+
+//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment/src/moment.js
+var require$$0 = ( moment$2 && hooks ) || moment$2;
+
+var momentTimezone = createCommonjsModule(function (module) {
+// node_modules/moment-timezone/moment-timezone.js
+//! moment-timezone.js
+//! version : 0.5.13
+//! Copyright (c) JS Foundation and other contributors
+//! license : MIT
+//! github.com/moment/moment-timezone
+
+(function (root, factory) {
+	"use strict";
+
+	/*global define*/
+	if (typeof undefined === 'function' && undefined.amd) {
+		undefined(['moment'], factory);                 // AMD
+	} else if ('object' === 'object' && module.exports) {
+		module.exports = factory(require$$0); // Node
+	} else {
+		factory(root.moment);                        // Browser
+	}
+}(commonjsGlobal, function (moment) {
+	"use strict";
+
+	// Do not load moment-timezone a second time.
+	// if (moment.tz !== undefined) {
+	// 	logError('Moment Timezone ' + moment.tz.version + ' was already loaded ' + (moment.tz.dataVersion ? 'with data from ' : 'without any data') + moment.tz.dataVersion);
+	// 	return moment;
+	// }
+
+	var VERSION = "0.5.13",
+		zones = {},
+		links = {},
+		names = {},
+		guesses = {},
+		cachedGuess,
+
+		momentVersion = moment.version.split('.'),
+		major = +momentVersion[0],
+		minor = +momentVersion[1];
+
+	// Moment.js version check
+	if (major < 2 || (major === 2 && minor < 6)) {
+		logError('Moment Timezone requires Moment.js >= 2.6.0. You are using Moment.js ' + moment.version + '. See momentjs.com');
+	}
+
+	/************************************
+		Unpacking
+	************************************/
+
+	function charCodeToInt(charCode) {
+		if (charCode > 96) {
+			return charCode - 87;
+		} else if (charCode > 64) {
+			return charCode - 29;
+		}
+		return charCode - 48;
+	}
+
+	function unpackBase60(string) {
+		var i = 0,
+			parts = string.split('.'),
+			whole = parts[0],
+			fractional = parts[1] || '',
+			multiplier = 1,
+			num,
+			out = 0,
+			sign = 1;
+
+		// handle negative numbers
+		if (string.charCodeAt(0) === 45) {
+			i = 1;
+			sign = -1;
+		}
+
+		// handle digits before the decimal
+		for (i; i < whole.length; i++) {
+			num = charCodeToInt(whole.charCodeAt(i));
+			out = 60 * out + num;
+		}
+
+		// handle digits after the decimal
+		for (i = 0; i < fractional.length; i++) {
+			multiplier = multiplier / 60;
+			num = charCodeToInt(fractional.charCodeAt(i));
+			out += num * multiplier;
+		}
+
+		return out * sign;
+	}
+
+	function arrayToInt (array) {
+		for (var i = 0; i < array.length; i++) {
+			array[i] = unpackBase60(array[i]);
+		}
+	}
+
+	function intToUntil (array, length) {
+		for (var i = 0; i < length; i++) {
+			array[i] = Math.round((array[i - 1] || 0) + (array[i] * 60000)); // minutes to milliseconds
+		}
+
+		array[length - 1] = Infinity;
+	}
+
+	function mapIndices (source, indices) {
+		var out = [], i;
+
+		for (i = 0; i < indices.length; i++) {
+			out[i] = source[indices[i]];
+		}
+
+		return out;
+	}
+
+	function unpack (string) {
+		var data = string.split('|'),
+			offsets = data[2].split(' '),
+			indices = data[3].split(''),
+			untils  = data[4].split(' ');
+
+		arrayToInt(offsets);
+		arrayToInt(indices);
+		arrayToInt(untils);
+
+		intToUntil(untils, indices.length);
+
+		return {
+			name       : data[0],
+			abbrs      : mapIndices(data[1].split(' '), indices),
+			offsets    : mapIndices(offsets, indices),
+			untils     : untils,
+			population : data[5] | 0
+		};
+	}
+
+	/************************************
+		Zone object
+	************************************/
+
+	function Zone (packedString) {
+		if (packedString) {
+			this._set(unpack(packedString));
+		}
+	}
+
+	Zone.prototype = {
+		_set : function (unpacked) {
+			this.name       = unpacked.name;
+			this.abbrs      = unpacked.abbrs;
+			this.untils     = unpacked.untils;
+			this.offsets    = unpacked.offsets;
+			this.population = unpacked.population;
+		},
+
+		_index : function (timestamp) {
+			var target = +timestamp,
+				untils = this.untils,
+				i;
+
+			for (i = 0; i < untils.length; i++) {
+				if (target < untils[i]) {
+					return i;
+				}
+			}
+		},
+
+		parse : function (timestamp) {
+			var target  = +timestamp,
+				offsets = this.offsets,
+				untils  = this.untils,
+				max     = untils.length - 1,
+				offset, offsetNext, offsetPrev, i;
+
+			for (i = 0; i < max; i++) {
+				offset     = offsets[i];
+				offsetNext = offsets[i + 1];
+				offsetPrev = offsets[i ? i - 1 : i];
+
+				if (offset < offsetNext && tz.moveAmbiguousForward) {
+					offset = offsetNext;
+				} else if (offset > offsetPrev && tz.moveInvalidForward) {
+					offset = offsetPrev;
+				}
+
+				if (target < untils[i] - (offset * 60000)) {
+					return offsets[i];
+				}
+			}
+
+			return offsets[max];
+		},
+
+		abbr : function (mom) {
+			return this.abbrs[this._index(mom)];
+		},
+
+		offset : function (mom) {
+			return this.offsets[this._index(mom)];
+		}
+	};
+
+	/************************************
+		Current Timezone
+	************************************/
+
+	function OffsetAt(at) {
+		var timeString = at.toTimeString();
+		var abbr = timeString.match(/\([a-z ]+\)/i);
+		if (abbr && abbr[0]) {
+			// 17:56:31 GMT-0600 (CST)
+			// 17:56:31 GMT-0600 (Central Standard Time)
+			abbr = abbr[0].match(/[A-Z]/g);
+			abbr = abbr ? abbr.join('') : undefined;
+		} else {
+			// 17:56:31 CST
+			// 17:56:31 GMT+0800 (台北標準時間)
+			abbr = timeString.match(/[A-Z]{3,5}/g);
+			abbr = abbr ? abbr[0] : undefined;
+		}
+
+		if (abbr === 'GMT') {
+			abbr = undefined;
+		}
+
+		this.at = +at;
+		this.abbr = abbr;
+		this.offset = at.getTimezoneOffset();
+	}
+
+	function ZoneScore(zone) {
+		this.zone = zone;
+		this.offsetScore = 0;
+		this.abbrScore = 0;
+	}
+
+	ZoneScore.prototype.scoreOffsetAt = function (offsetAt) {
+		this.offsetScore += Math.abs(this.zone.offset(offsetAt.at) - offsetAt.offset);
+		if (this.zone.abbr(offsetAt.at).replace(/[^A-Z]/g, '') !== offsetAt.abbr) {
+			this.abbrScore++;
+		}
+	};
+
+	function findChange(low, high) {
+		var mid, diff;
+
+		while ((diff = ((high.at - low.at) / 12e4 | 0) * 6e4)) {
+			mid = new OffsetAt(new Date(low.at + diff));
+			if (mid.offset === low.offset) {
+				low = mid;
+			} else {
+				high = mid;
+			}
+		}
+
+		return low;
+	}
+
+	function userOffsets() {
+		var startYear = new Date().getFullYear() - 2,
+			last = new OffsetAt(new Date(startYear, 0, 1)),
+			offsets = [last],
+			change, next, i;
+
+		for (i = 1; i < 48; i++) {
+			next = new OffsetAt(new Date(startYear, i, 1));
+			if (next.offset !== last.offset) {
+				change = findChange(last, next);
+				offsets.push(change);
+				offsets.push(new OffsetAt(new Date(change.at + 6e4)));
+			}
+			last = next;
+		}
+
+		for (i = 0; i < 4; i++) {
+			offsets.push(new OffsetAt(new Date(startYear + i, 0, 1)));
+			offsets.push(new OffsetAt(new Date(startYear + i, 6, 1)));
+		}
+
+		return offsets;
+	}
+
+	function sortZoneScores (a, b) {
+		if (a.offsetScore !== b.offsetScore) {
+			return a.offsetScore - b.offsetScore;
+		}
+		if (a.abbrScore !== b.abbrScore) {
+			return a.abbrScore - b.abbrScore;
+		}
+		return b.zone.population - a.zone.population;
+	}
+
+	function addToGuesses (name, offsets) {
+		var i, offset;
+		arrayToInt(offsets);
+		for (i = 0; i < offsets.length; i++) {
+			offset = offsets[i];
+			guesses[offset] = guesses[offset] || {};
+			guesses[offset][name] = true;
+		}
+	}
+
+	function guessesForUserOffsets (offsets) {
+		var offsetsLength = offsets.length,
+			filteredGuesses = {},
+			out = [],
+			i, j, guessesOffset;
+
+		for (i = 0; i < offsetsLength; i++) {
+			guessesOffset = guesses[offsets[i].offset] || {};
+			for (j in guessesOffset) {
+				if (guessesOffset.hasOwnProperty(j)) {
+					filteredGuesses[j] = true;
+				}
+			}
+		}
+
+		for (i in filteredGuesses) {
+			if (filteredGuesses.hasOwnProperty(i)) {
+				out.push(names[i]);
+			}
+		}
+
+		return out;
+	}
+
+	function rebuildGuess () {
+
+		// use Intl API when available and returning valid time zone
+		try {
+			var intlName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			if (intlName){
+				var name = names[normalizeName(intlName)];
+				if (name) {
+					return name;
+				}
+				logError("Moment Timezone found " + intlName + " from the Intl api, but did not have that data loaded.");
+			}
+		} catch (e) {
+			// Intl unavailable, fall back to manual guessing.
+		}
+
+		var offsets = userOffsets(),
+			offsetsLength = offsets.length,
+			guesses = guessesForUserOffsets(offsets),
+			zoneScores = [],
+			zoneScore, i, j;
+
+		for (i = 0; i < guesses.length; i++) {
+			zoneScore = new ZoneScore(getZone(guesses[i]), offsetsLength);
+			for (j = 0; j < offsetsLength; j++) {
+				zoneScore.scoreOffsetAt(offsets[j]);
+			}
+			zoneScores.push(zoneScore);
+		}
+
+		zoneScores.sort(sortZoneScores);
+
+		return zoneScores.length > 0 ? zoneScores[0].zone.name : undefined;
+	}
+
+	function guess (ignoreCache) {
+		if (!cachedGuess || ignoreCache) {
+			cachedGuess = rebuildGuess();
+		}
+		return cachedGuess;
+	}
+
+	/************************************
+		Global Methods
+	************************************/
+
+	function normalizeName (name) {
+		return (name || '').toLowerCase().replace(/\//g, '_');
+	}
+
+	function addZone (packed) {
+		var i, name, split, normalized;
+
+		if (typeof packed === "string") {
+			packed = [packed];
+		}
+
+		for (i = 0; i < packed.length; i++) {
+			split = packed[i].split('|');
+			name = split[0];
+			normalized = normalizeName(name);
+			zones[normalized] = packed[i];
+			names[normalized] = name;
+			if (split[5]) {
+				addToGuesses(normalized, split[2].split(' '));
+			}
+		}
+	}
+
+	function getZone (name, caller) {
+		name = normalizeName(name);
+
+		var zone = zones[name];
+		var link;
+
+		if (zone instanceof Zone) {
+			return zone;
+		}
+
+		if (typeof zone === 'string') {
+			zone = new Zone(zone);
+			zones[name] = zone;
+			return zone;
+		}
+
+		// Pass getZone to prevent recursion more than 1 level deep
+		if (links[name] && caller !== getZone && (link = getZone(links[name], getZone))) {
+			zone = zones[name] = new Zone();
+			zone._set(link);
+			zone.name = names[name];
+			return zone;
+		}
+
+		return null;
+	}
+
+	function getNames () {
+		var i, out = [];
+
+		for (i in names) {
+			if (names.hasOwnProperty(i) && (zones[i] || zones[links[i]]) && names[i]) {
+				out.push(names[i]);
+			}
+		}
+
+		return out.sort();
+	}
+
+	function addLink (aliases) {
+		var i, alias, normal0, normal1;
+
+		if (typeof aliases === "string") {
+			aliases = [aliases];
+		}
+
+		for (i = 0; i < aliases.length; i++) {
+			alias = aliases[i].split('|');
+
+			normal0 = normalizeName(alias[0]);
+			normal1 = normalizeName(alias[1]);
+
+			links[normal0] = normal1;
+			names[normal0] = alias[0];
+
+			links[normal1] = normal0;
+			names[normal1] = alias[1];
+		}
+	}
+
+	function loadData (data) {
+		addZone(data.zones);
+		addLink(data.links);
+		tz.dataVersion = data.version;
+	}
+
+	function zoneExists (name) {
+		if (!zoneExists.didShowError) {
+			zoneExists.didShowError = true;
+				logError("moment.tz.zoneExists('" + name + "') has been deprecated in favor of !moment.tz.zone('" + name + "')");
+		}
+		return !!getZone(name);
+	}
+
+	function needsOffset (m) {
+		return !!(m._a && (m._tzm === undefined));
+	}
+
+	function logError (message) {
+		if (typeof console !== 'undefined' && typeof console.error === 'function') {
+			console.error(message);
+		}
+	}
+
+	/************************************
+		moment.tz namespace
+	************************************/
+
+	function tz (input) {
+		var args = Array.prototype.slice.call(arguments, 0, -1),
+			name = arguments[arguments.length - 1],
+			zone = getZone(name),
+			out  = moment.utc.apply(null, args);
+
+		if (zone && !moment.isMoment(input) && needsOffset(out)) {
+			out.add(zone.parse(out), 'minutes');
+		}
+
+		out.tz(name);
+
+		return out;
+	}
+
+	tz.version      = VERSION;
+	tz.dataVersion  = '';
+	tz._zones       = zones;
+	tz._links       = links;
+	tz._names       = names;
+	tz.add          = addZone;
+	tz.link         = addLink;
+	tz.load         = loadData;
+	tz.zone         = getZone;
+	tz.zoneExists   = zoneExists; // deprecated in 0.1.0
+	tz.guess        = guess;
+	tz.names        = getNames;
+	tz.Zone         = Zone;
+	tz.unpack       = unpack;
+	tz.unpackBase60 = unpackBase60;
+	tz.needsOffset  = needsOffset;
+	tz.moveInvalidForward   = true;
+	tz.moveAmbiguousForward = false;
+
+	/************************************
+		Interface with Moment.js
+	************************************/
+
+	var fn = moment.fn;
+
+	moment.tz = tz;
+
+	moment.defaultZone = null;
+
+	moment.updateOffset = function (mom, keepTime) {
+		var zone = moment.defaultZone,
+			offset;
+
+		if (mom._z === undefined) {
+			if (zone && needsOffset(mom) && !mom._isUTC) {
+				mom._d = moment.utc(mom._a)._d;
+				mom.utc().add(zone.parse(mom), 'minutes');
+			}
+			mom._z = zone;
+		}
+		if (mom._z) {
+			offset = mom._z.offset(mom);
+			if (Math.abs(offset) < 16) {
+				offset = offset / 60;
+			}
+			if (mom.utcOffset !== undefined) {
+				mom.utcOffset(-offset, keepTime);
+			} else {
+				mom.zone(offset, keepTime);
+			}
+		}
+	};
+
+	fn.tz = function (name) {
+		if (name) {
+			this._z = getZone(name);
+			if (this._z) {
+				moment.updateOffset(this);
+			} else {
+				logError("Moment Timezone has no data for " + name + ". See http://momentjs.com/timezone/docs/#/data-loading/.");
+			}
+			return this;
+		}
+		if (this._z) { return this._z.name; }
+	};
+
+	function abbrWrap (old) {
+		return function () {
+			if (this._z) { return this._z.abbr(this); }
+			return old.call(this);
+		};
+	}
+
+	function resetZoneWrap (old) {
+		return function () {
+			this._z = null;
+			return old.apply(this, arguments);
+		};
+	}
+
+	fn.zoneName = abbrWrap(fn.zoneName);
+	fn.zoneAbbr = abbrWrap(fn.zoneAbbr);
+	fn.utc      = resetZoneWrap(fn.utc);
+
+	moment.tz.setDefault = function(name) {
+		if (major < 2 || (major === 2 && minor < 9)) {
+			logError('Moment Timezone setDefault() requires Moment.js >= 2.9.0. You are using Moment.js ' + moment.version + '.');
+		}
+		moment.defaultZone = name ? getZone(name) : null;
+		return moment;
+	};
+
+	// Cloning a moment should include the _z property.
+	var momentProperties = moment.momentProperties;
+	if (Object.prototype.toString.call(momentProperties) === '[object Array]') {
+		// moment 2.8.1+
+		momentProperties.push('_z');
+		momentProperties.push('_a');
+	} else if (momentProperties) {
+		// moment 2.7.0
+		momentProperties._z = null;
+	}
+
+	// INJECT DATA
+
+	return moment;
+}));
+});
+
+// node_modules/moment-timezone/data/packed/latest.json
+var version$2 = "2017b";
+var zones = ["Africa/Abidjan|LMT GMT|g.8 0|01|-2ldXH.Q|48e5","Africa/Accra|LMT GMT +0020|.Q 0 -k|012121212121212121212121212121212121212121212121|-26BbX.8 6tzX.8 MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE|41e5","Africa/Nairobi|LMT EAT +0230 +0245|-2r.g -30 -2u -2J|01231|-1F3Cr.g 3Dzr.g okMu MFXJ|47e5","Africa/Algiers|PMT WET WEST CET CEST|-9.l 0 -10 -10 -20|0121212121212121343431312123431213|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 DA0 Imo0 rd0 De0 9Xz0 1fb0 1ap0 16K0 2yo0 mEp0 hwL0 jxA0 11A0 dDd0 17b0 11B0 1cN0 2Dy0 1cN0 1fB0 1cL0|26e5","Africa/Lagos|LMT WAT|-d.A -10|01|-22y0d.A|17e6","Africa/Bissau|LMT -01 GMT|12.k 10 0|012|-2ldWV.E 2xonV.E|39e4","Africa/Maputo|LMT CAT|-2a.k -20|01|-2GJea.k|26e5","Africa/Cairo|EET EEST|-20 -30|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1bIO0 vb0 1ip0 11z0 1iN0 1nz0 12p0 1pz0 10N0 1pz0 16p0 1jz0 s3d0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1WL0 rd0 1Rz0 wp0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1qL0 Xd0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1ny0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 WL0 1qN0 Rb0 1wp0 On0 1zd0 Lz0 1EN0 Fb0 c10 8n0 8Nd0 gL0 e10 mn0|15e6","Africa/Casablanca|LMT WET WEST CET|u.k 0 -10 -10|0121212121212121213121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2gMnt.E 130Lt.E rb0 Dd0 dVb0 b6p0 TX0 EoB0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4mn0 SyN0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|32e5","Africa/Ceuta|WET WEST CET CEST|0 -10 -10 -20|010101010101010101010232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-25KN0 11z0 drd0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1y7o0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4VB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|85e3","Africa/El_Aaiun|LMT -01 WET WEST|Q.M 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1rDz7.c 1GVA7.c 6L0 AL0 1Nd0 XX0 1Cp0 pz0 1cBB0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|20e4","Africa/Johannesburg|SAST SAST SAST|-1u -20 -30|012121|-2GJdu 1Ajdu 1cL0 1cN0 1cL0|84e5","Africa/Khartoum|LMT CAT CAST EAT|-2a.8 -20 -30 -30|01212121212121212121212121212121213|-1yW2a.8 1zK0a.8 16L0 1iN0 17b0 1jd0 17b0 1ip0 17z0 1i10 17X0 1hB0 18n0 1hd0 19b0 1gp0 19z0 1iN0 17b0 1ip0 17z0 1i10 18n0 1hd0 18L0 1gN0 19b0 1gp0 19z0 1iN0 17z0 1i10 17X0 yGd0|51e5","Africa/Monrovia|MMT MMT GMT|H.8 I.u 0|012|-23Lzg.Q 28G01.m|11e5","Africa/Ndjamena|LMT WAT WAST|-10.c -10 -20|0121|-2le10.c 2J3c0.c Wn0|13e5","Africa/Tripoli|LMT CET CEST EET|-Q.I -10 -20 -20|012121213121212121212121213123123|-21JcQ.I 1hnBQ.I vx0 4iP0 xx0 4eN0 Bb0 7ip0 U0n0 A10 1db0 1cN0 1db0 1dd0 1db0 1eN0 1bb0 1e10 1cL0 1c10 1db0 1dd0 1db0 1cN0 1db0 1q10 fAn0 1ep0 1db0 AKq0 TA0 1o00|11e5","Africa/Tunis|PMT CET CEST|-9.l -10 -20|0121212121212121212121212121212121|-2nco9.l 18pa9.l 1qM0 DA0 3Tc0 11B0 1ze0 WM0 7z0 3d0 14L0 1cN0 1f90 1ar0 16J0 1gXB0 WM0 1rA0 11c0 nwo0 Ko0 1cM0 1cM0 1rA0 10M0 zuM0 10N0 1aN0 1qM0 WM0 1qM0 11A0 1o00|20e5","Africa/Windhoek|+0130 SAST SAST CAT WAT WAST|-1u -20 -30 -20 -10 -20|012134545454545454545454545454545454545454545454545454545454545454545454545454545454545454545|-2GJdu 1Ajdu 1cL0 1SqL0 9NA0 11D0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 11B0 1nX0 11B0|32e4","America/Adak|NST NWT NPT BST BDT AHST HST HDT|b0 a0 a0 b0 a0 a0 a0 90|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|326","America/Anchorage|AST AWT APT AHST AHDT YST AKST AKDT|a0 90 90 a0 90 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T00 8wX0 iA0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|30e4","America/Port_of_Spain|LMT AST|46.4 40|01|-2kNvR.U|43e3","America/Araguaina|LMT -03 -02|3c.M 30 20|0121212121212121212121212121212121212121212121212121|-2glwL.c HdKL.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 ny10 Lz0|14e4","America/Argentina/Buenos_Aires|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Catamarca|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Cordoba|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Jujuy|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1ze0 TX0 1ld0 WK0 1wp0 TX0 A4p0 uL0","America/Argentina/La_Rioja|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Mendoza|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232312121321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1u20 SL0 1vd0 Tb0 1wp0 TW0 ri10 Op0 7TX0 uL0","America/Argentina/Rio_Gallegos|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Salta|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0","America/Argentina/San_Juan|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rld0 m10 8lb0 uL0","America/Argentina/San_Luis|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121212321212|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 XX0 1q20 SL0 AN0 vDb0 m10 8lb0 8L0 jd0 1qN0 WL0 1qN0","America/Argentina/Tucuman|CMT -04 -03 -02|4g.M 40 30 20|0121212121212121212121212121212121212121212323232313232123232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 4N0 8BX0 uL0 1qN0 WL0","America/Argentina/Ushuaia|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rkN0 8p0 8zb0 uL0","America/Curacao|LMT -0430 AST|4z.L 4u 40|012|-2kV7o.d 28KLS.d|15e4","America/Asuncion|AMT -04 -03|3O.E 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-1x589.k 1DKM9.k 3CL0 3Dd0 10L0 1pB0 10n0 1pB0 10n0 1pB0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1lB0 14n0 1dd0 1cL0 1fd0 WL0 1rd0 1aL0 1dB0 Xz0 1qp0 Xb0 1qN0 10L0 1rB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 WN0 1qL0 11B0 1nX0 1ip0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 TX0 1tB0 19X0 1a10 1fz0 1a10 1fz0 1cN0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0|28e5","America/Atikokan|CST CDT CWT CPT EST|60 50 50 50 50|0101234|-25TQ0 1in0 Rnb0 3je0 8x30 iw0|28e2","America/Bahia|LMT -03 -02|2y.4 30 20|01212121212121212121212121212121212121212121212121212121212121|-2glxp.U HdLp.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 l5B0 Rb0|27e5","America/Bahia_Banderas|LMT MST CST PST MDT CDT|71 70 60 80 60 50|0121212131414141414141414141414141414152525252525252525252525252525252525252525252525252525252|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nW0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|84e3","America/Barbados|LMT BMT AST ADT|3W.t 3W.t 40 30|01232323232|-1Q0I1.v jsM0 1ODC1.v IL0 1ip0 17b0 1ip0 17b0 1ld0 13b0|28e4","America/Belem|LMT -03 -02|3d.U 30 20|012121212121212121212121212121|-2glwK.4 HdKK.4 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|20e5","America/Belize|LMT CST -0530 CDT|5Q.M 60 5u 50|01212121212121212121212121212121212121212121212121213131|-2kBu7.c fPA7.c Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1f0Mu qn0 lxB0 mn0|57e3","America/Blanc-Sablon|AST ADT AWT APT|40 30 30 30|010230|-25TS0 1in0 UGp0 8x50 iu0|11e2","America/Boa_Vista|LMT -04 -03|42.E 40 30|0121212121212121212121212121212121|-2glvV.k HdKV.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 smp0 WL0 1tB0 2L0|62e2","America/Bogota|BMT -05 -04|4U.g 50 40|0121|-2eb73.I 38yo3.I 2en0|90e5","America/Boise|PST PDT MST MWT MPT MDT|80 70 70 60 60 60|0101023425252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-261q0 1nX0 11B0 1nX0 8C10 JCL0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 Dd0 1Kn0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e4","America/Cambridge_Bay|-00 MST MWT MPT MDDT MDT CST CDT EST|0 70 60 60 50 60 60 50 50|0123141515151515151515151515151515151515151515678651515151515151515151515151515151515151515151515151515151515151515151515151|-21Jc0 RO90 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11A0 1nX0 2K0 WQ0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e2","America/Campo_Grande|LMT -04 -03|3C.s 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwl.w HdLl.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|77e4","America/Cancun|LMT CST EST EDT CDT|5L.4 60 50 40 50|0123232341414141414141414141414141414141412|-1UQG0 2q2o0 yLB0 1lb0 14p0 1lb0 14p0 Lz0 xB0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 Dd0|63e4","America/Caracas|CMT -0430 -04|4r.E 4u 40|01212|-2kV7w.k 28KM2.k 1IwOu kqo0|29e5","America/Cayenne|LMT -04 -03|3t.k 40 30|012|-2mrwu.E 2gWou.E|58e3","America/Panama|CMT EST|5j.A 50|01|-2uduE.o|15e5","America/Chicago|CST CDT EST CWT CPT|60 50 50 50 50|01010101010101010101010101010101010102010101010103401010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 1wp0 TX0 WN0 1qL0 1cN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 11B0 1Hz0 14p0 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|92e5","America/Chihuahua|LMT MST CST CDT MDT|74.k 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|81e4","America/Costa_Rica|SJMT CST CDT|5A.d 60 50|0121212121|-1Xd6n.L 2lu0n.L Db0 1Kp0 Db0 pRB0 15b0 1kp0 mL0|12e5","America/Creston|MST PST|70 80|010|-29DR0 43B0|53e2","America/Cuiaba|LMT -04 -03|3I.k 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwf.E HdLf.E 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 4a10 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|54e4","America/Danmarkshavn|LMT -03 -02 GMT|1e.E 30 20 0|01212121212121212121212121212121213|-2a5WJ.k 2z5fJ.k 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 DC0|8","America/Dawson|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 jrA0 fNd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|13e2","America/Dawson_Creek|PST PDT PWT PPT MST|80 70 70 70 70|0102301010101010101010101010101010101010101010101010101014|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 ML0|12e3","America/Denver|MST MDT MWT MPT|70 60 60 60|01010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 11B0 1qL0 WN0 mn0 Ord0 8x20 ix0 LCN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e5","America/Detroit|LMT CST EST EWT EPT EDT|5w.b 60 50 40 40 40|01234252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2Cgir.N peqr.N 156L0 8x40 iv0 6fd0 11z0 Jy10 SL0 dnB0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e5","America/Edmonton|LMT MST MDT MWT MPT|7x.Q 70 60 60 60|01212121212121341212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2yd4q.8 shdq.8 1in0 17d0 hz0 2dB0 1fz0 1a10 11z0 1qN0 WL0 1qN0 11z0 IGN0 8x20 ix0 3NB0 11z0 LFB0 1cL0 3Cp0 1cL0 66N0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|10e5","America/Eirunepe|LMT -05 -04|4D.s 50 40|0121212121212121212121212121212121|-2glvk.w HdLk.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0 yTd0 d5X0|31e3","America/El_Salvador|LMT CST CDT|5U.M 60 50|012121|-1XiG3.c 2Fvc3.c WL0 1qN0 WL0|11e5","America/Tijuana|LMT MST PST PDT PWT PPT|7M.4 70 80 70 70 70|012123245232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQE0 4PX0 8mM0 8lc0 SN0 1cL0 pHB0 83r0 zI0 5O10 1Rz0 cOO0 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 BUp0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|20e5","America/Fort_Nelson|PST PDT PWT PPT MST|80 70 70 70 70|01023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010104|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0|39e2","America/Fort_Wayne|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010101023010101010101010101040454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 QI10 Db0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 5Tz0 1o10 qLb0 1cL0 1cN0 1cL0 1qhd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Fortaleza|LMT -03 -02|2y 30 20|0121212121212121212121212121212121212121|-2glxq HdLq 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 5z0 2mN0 On0|34e5","America/Glace_Bay|LMT AST ADT AWT APT|3X.M 40 30 30 30|012134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsI0.c CwO0.c 1in0 UGp0 8x50 iu0 iq10 11z0 Jg10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","America/Godthab|LMT -03 -02|3q.U 30 20|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5Ux.4 2z5dx.4 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e3","America/Goose_Bay|NST NDT NST NDT NWT NPT AST ADT ADDT|3u.Q 2u.Q 3u 2u 2u 2u 40 30 20|010232323232323245232323232323232323232323232323232323232326767676767676767676767676767676767676767676768676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-25TSt.8 1in0 DXb0 2HbX.8 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 S10 g0u 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|76e2","America/Grand_Turk|KMT EST EDT AST|57.b 50 40 40|0121212121212121212121212121212121212121212121212121212121212121212121212123|-2l1uQ.N 2HHBQ.N 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e2","America/Guatemala|LMT CST CDT|62.4 60 50|0121212121|-24KhV.U 2efXV.U An0 mtd0 Nz0 ifB0 17b0 zDB0 11z0|13e5","America/Guayaquil|QMT -05 -04|5e 50 40|0121|-1yVSK 2uILK rz0|27e5","America/Guyana|LMT -0345 -03 -04|3Q.E 3J 30 40|0123|-2dvU7.k 2r6LQ.k Bxbf|80e4","America/Halifax|LMT AST ADT AWT APT|4e.o 40 30 30 30|0121212121212121212121212121212121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsHJ.A xzzJ.A 1db0 3I30 1in0 3HX0 IL0 1E10 ML0 1yN0 Pb0 1Bd0 Mn0 1Bd0 Rz0 1w10 Xb0 1w10 LX0 1w10 Xb0 1w10 Lz0 1C10 Jz0 1E10 OL0 1yN0 Un0 1qp0 Xb0 1qp0 11X0 1w10 Lz0 1HB0 LX0 1C10 FX0 1w10 Xb0 1qp0 Xb0 1BB0 LX0 1td0 Xb0 1qp0 Xb0 Rf0 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 6i10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|39e4","America/Havana|HMT CST CDT|5t.A 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Meuu.o 72zu.o ML0 sld0 An0 1Nd0 Db0 1Nd0 An0 6Ep0 An0 1Nd0 An0 JDd0 Mn0 1Ap0 On0 1fd0 11X0 1qN0 WL0 1wp0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 14n0 1ld0 14L0 1kN0 15b0 1kp0 1cL0 1cN0 1fz0 1a10 1fz0 1fB0 11z0 14p0 1nX0 11B0 1nX0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 1a10 1in0 1a10 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 17c0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 11A0 6i00 Rc0 1wo0 U00 1tA0 Rc0 1wo0 U00 1wo0 U00 1zc0 U00 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0|21e5","America/Hermosillo|LMT MST CST PST MDT|7n.Q 70 60 80 60|0121212131414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0|64e4","America/Indiana/Knox|CST CDT CWT CPT EST|60 50 50 50 50|0101023010101010101010101010101010101040101010101010101010101010101010101010101010101010141010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 3Cn0 8wp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 z8o0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Marengo|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010104545454545414545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 dyN0 11z0 6fd0 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1e6p0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Petersburg|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010104010101010101010101010141014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 njX0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 3Fb0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 19co0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Tell_City|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vevay|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010102304545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 kPB0 Awn0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1lnd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vincennes|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Winamac|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010101010454541054545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1za0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Inuvik|-00 PST PDDT MST MDT|0 80 60 70 60|0121343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-FnA0 tWU0 1fA0 wPe0 2pz0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|35e2","America/Iqaluit|-00 EWT EPT EST EDDT EDT CST CDT|0 40 40 50 30 40 60 50|01234353535353535353535353535353535353535353567353535353535353535353535353535353535353535353535353535353535353535353535353|-16K00 7nX0 iv0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|67e2","America/Jamaica|KMT EST EDT|57.b 50 40|0121212121212121212121|-2l1uQ.N 2uM1Q.N 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0|94e4","America/Juneau|PST PWT PPT PDT YDT YST AKST AKDT|80 70 70 70 80 90 90 80|01203030303030303030303030403030356767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cM0 1cM0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|33e3","America/Kentucky/Louisville|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101010102301010101010101010101010101454545454545414545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 3Fd0 Nb0 LPd0 11z0 RB0 8x30 iw0 Bb0 10N0 2bB0 8in0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 xz0 gso0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Kentucky/Monticello|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 SWp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/La_Paz|CMT BOST -04|4w.A 3w.A 40|012|-1x37r.o 13b0|19e5","America/Lima|LMT -05 -04|58.A 50 40|0121212121212121|-2tyGP.o 1bDzP.o zX0 1aN0 1cL0 1cN0 1cL0 1PrB0 zX0 1O10 zX0 6Gp0 zX0 98p0 zX0|11e6","America/Los_Angeles|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 5Wp1 1VaX 3dA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e6","America/Maceio|LMT -03 -02|2m.Q 30 20|012121212121212121212121212121212121212121|-2glxB.8 HdLB.8 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 8Q10 WL0 1tB0 5z0 2mN0 On0|93e4","America/Managua|MMT CST EST CDT|5J.c 60 50 50|0121313121213131|-1quie.M 1yAMe.M 4mn0 9Up0 Dz0 1K10 Dz0 s3F0 1KH0 DB0 9In0 k8p0 19X0 1o30 11y0|22e5","America/Manaus|LMT -04 -03|40.4 40 30|01212121212121212121212121212121|-2glvX.U HdKX.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0|19e5","America/Martinique|FFMT AST ADT|44.k 40 30|0121|-2mPTT.E 2LPbT.E 19X0|39e4","America/Matamoros|LMT CST CDT|6E 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|45e4","America/Mazatlan|LMT MST CST PST MDT|75.E 70 60 80 60|0121212131414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|44e4","America/Menominee|CST CDT CWT CPT EST|60 50 50 50 50|01010230101041010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 LCN0 1fz0 6410 9Jb0 1cM0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|85e2","America/Merida|LMT CST EST CDT|5W.s 60 50 50|0121313131313131313131313131313131313131313131313131313131313131313131313131313131313131|-1UQG0 2q2o0 2hz0 wu30 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|11e5","America/Metlakatla|PST PWT PPT PDT AKST AKDT|80 70 70 70 90 80|0120303030303030303030303030303030454545454545454545454545454545454545454545454|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1hU10 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Mexico_City|LMT MST CST CDT CWT|6A.A 70 60 50 50|012121232324232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 gEn0 TX0 3xd0 Jb0 6zB0 SL0 e5d0 17b0 1Pff0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|20e6","America/Miquelon|LMT AST -03 -02|3I.E 40 30 20|012323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2mKkf.k 2LTAf.k gQ10 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|61e2","America/Moncton|EST AST ADT AWT APT|50 40 30 30 30|012121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsH0 CwN0 1in0 zAo0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1K10 Lz0 1zB0 NX0 1u10 Wn0 S20 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14n1 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 ReX 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|64e3","America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5","America/Montevideo|MMT -0330 -03 -02 -0230|3I.I 3u 30 20 2u|012121212121212121212121213232323232324242423243232323232323232323232323232323232323232|-20UIf.g 8jzJ.g 1cLu 1dcu 1cLu 1dcu 1cLu ircu 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu WLu 1qMu WLu 1qMu 11zu 1o0u 11zu NAu 11bu 2iMu zWu Dq10 19X0 pd0 jz0 cm10 19X0 1fB0 1on0 11d0 1oL0 1nB0 1fzu 1aou 1fzu 1aou 1fzu 3nAu Jb0 3MN0 1SLu 4jzu 2PB0 Lb0 3Dd0 1pb0 ixd0 An0 1MN0 An0 1wp0 On0 1wp0 Rb0 1zd0 On0 1wp0 Rb0 s8p0 1fB0 1ip0 11z0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 11z0|17e5","America/Toronto|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101012301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 11Wu 1nzu 1fD0 WJ0 1wr0 Nb0 1Ap0 On0 1zd0 On0 1wp0 TX0 1tB0 TX0 1tB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 4kM0 8x40 iv0 1o10 11z0 1nX0 11z0 1o10 11z0 1o10 1qL0 11D0 1nX0 11B0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e5","America/Nassau|LMT EST EDT|59.u 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2kNuO.u 26XdO.u 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|24e4","America/New_York|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 11B0 1qL0 1a10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x40 iv0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e6","America/Nipigon|EST EDT EWT EPT|50 40 40 40|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 Rnb0 3je0 8x40 iv0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|16e2","America/Nome|NST NWT NPT BST BDT YST AKST AKDT|b0 a0 a0 b0 a0 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cl0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|38e2","America/Noronha|LMT -02 -01|29.E 20 10|0121212121212121212121212121212121212121|-2glxO.k HdKO.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|30e2","America/North_Dakota/Beulah|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/Center|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/New_Salem|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Ojinaga|LMT MST CST CDT MDT|6V.E 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Pangnirtung|-00 AST AWT APT ADDT ADT EDT EST CST CDT|0 40 30 30 20 30 40 50 60 50|012314151515151515151515151515151515167676767689767676767676767676767676767676767676767676767676767676767676767676767676767|-1XiM0 PnG0 8x50 iu0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1o00 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Paramaribo|LMT PMT PMT -0330 -03|3E.E 3E.Q 3E.A 3u 30|01234|-2nDUj.k Wqo0.c qanX.I 1yVXN.o|24e4","America/Phoenix|MST MDT MWT|70 60 60|01010202010|-261r0 1nX0 11B0 1nX0 SgN0 4Al1 Ap0 1db0 SWqX 1cL0|42e5","America/Port-au-Prince|PPMT EST EDT|4N 50 40|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-28RHb 2FnMb 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14q0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 i6n0 1nX0 11B0 1nX0 d430 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 3iN0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Rio_Branco|LMT -05 -04|4v.c 50 40|01212121212121212121212121212121|-2glvs.M HdLs.M 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0 d5X0|31e4","America/Porto_Velho|LMT -04 -03|4f.A 40 30|012121212121212121212121212121|-2glvI.o HdKI.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|37e4","America/Puerto_Rico|AST AWT APT|40 30 30|0120|-17lU0 7XT0 iu0|24e5","America/Punta_Arenas|SMT -05 -04 -03|4G.K 50 40 30|0102021212121212121232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 blz0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0","America/Rainy_River|CST CDT CWT CPT|60 50 50 50|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TQ0 1in0 Rnb0 3je0 8x30 iw0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|842","America/Rankin_Inlet|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313131313131313131313131313131313131313131313131313131313131313131|-vDc0 keu0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e2","America/Recife|LMT -03 -02|2j.A 30 20|0121212121212121212121212121212121212121|-2glxE.o HdLE.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|33e5","America/Regina|LMT MST MDT MWT MPT CST|6W.A 70 60 60 60 60|012121212121212121212121341212121212121212121212121215|-2AD51.o uHe1.o 1in0 s2L0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 66N0 1cL0 1cN0 19X0 1fB0 1cL0 1fB0 1cL0 1cN0 1cL0 M30 8x20 ix0 1ip0 1cL0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 3NB0 1cL0 1cN0|19e4","America/Resolute|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313431313131313131313131313131313131313131313131313131313131313131|-SnA0 GWS0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|229","America/Santarem|LMT -04 -03|3C.M 40 30|0121212121212121212121212121212|-2glwl.c HdLl.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0|21e4","America/Santiago|SMT -05 -04 -03|4G.K 50 40 30|010202121212121212321232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 9Bz0 jb0 1oN0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|62e5","America/Santo_Domingo|SDMT EST EDT -0430 AST|4E 50 40 4u 40|01213131313131414|-1ttjk 1lJMk Mn0 6sp0 Lbu 1Cou yLu 1RAu wLu 1QMu xzu 1Q0u xXu 1PAu 13jB0 e00|29e5","America/Sao_Paulo|LMT -03 -02|36.s 30 20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwR.w HdKR.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 pTd0 PX0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|20e6","America/Scoresbysund|LMT -02 -01 +00|1r.Q 20 10 0|0121323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2a5Ww.8 2z5ew.8 1a00 1cK0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|452","America/Sitka|PST PWT PPT PDT YST AKST AKDT|80 70 70 70 90 90 80|01203030303030303030303030303030345656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|90e2","America/St_Johns|NST NDT NST NDT NWT NPT NDDT|3u.Q 2u.Q 3u 2u 2u 2u 1u|01010101010101010101010101010101010102323232323232324523232323232323232323232323232323232323232323232323232323232323232323232323232323232326232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-28oit.8 14L0 1nB0 1in0 1gm0 Dz0 1JB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1fB0 19X0 1fB0 19X0 10O0 eKX.8 19X0 1iq0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Swift_Current|LMT MST MDT MWT MPT CST|7b.k 70 60 60 60 60|012134121212121212121215|-2AD4M.E uHdM.E 1in0 UGp0 8x20 ix0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 isN0 1cL0 3Cp0 1cL0 1cN0 11z0 1qN0 WL0 pMp0|16e3","America/Tegucigalpa|LMT CST CDT|5M.Q 60 50|01212121|-1WGGb.8 2ETcb.8 WL0 1qN0 WL0 GRd0 AL0|11e5","America/Thule|LMT AST ADT|4z.8 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5To.Q 31NBo.Q 1cL0 1cN0 1cL0 1fB0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|656","America/Thunder_Bay|CST EST EWT EPT EDT|60 50 40 40 40|0123141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-2q5S0 1iaN0 8x40 iv0 XNB0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Vancouver|PST PDT PWT PPT|80 70 70 70|0102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TO0 1in0 UGp0 8x10 iy0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Whitehorse|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 3NA0 vrd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Winnipeg|CST CDT CWT CPT|60 50 50 50|010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aIi0 WL0 3ND0 1in0 Jap0 Rb0 aCN0 8x30 iw0 1tB0 11z0 1ip0 11z0 1o10 11z0 1o10 11z0 1rd0 10L0 1op0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 1cL0 1cN0 11z0 6i10 WL0 6i10 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|66e4","America/Yakutat|YST YWT YPT YDT AKST AKDT|90 80 80 80 90 80|01203030303030303030303030303030304545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-17T10 8x00 iz0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cn0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|642","America/Yellowknife|-00 MST MWT MPT MDDT MDT|0 70 60 60 50 60|012314151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151|-1pdA0 hix0 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","Antarctica/Casey|-00 +08 +11|0 -80 -b0|0121212|-2q00 1DjS0 T90 40P0 KL0 blz0|10","Antarctica/Davis|-00 +07 +05|0 -70 -50|01012121|-vyo0 iXt0 alj0 1D7v0 VB0 3Wn0 KN0|70","Antarctica/DumontDUrville|-00 +10|0 -a0|0101|-U0o0 cfq0 bFm0|80","Antarctica/Macquarie|AEST AEDT -00 +11|-a0 -b0 0 -b0|0102010101010101010101010101010101010101010101010101010101010101010101010101010101010101013|-29E80 19X0 4SL0 1ayy0 Lvs0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0|1","Antarctica/Mawson|-00 +06 +05|0 -60 -50|012|-CEo0 2fyk0|60","Pacific/Auckland|NZMT NZST NZST NZDT|-bu -cu -c0 -d0|01020202020202020202020202023232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1GCVu Lz0 1tB0 11zu 1o0u 11zu 1o0u 11zu 1o0u 14nu 1lcu 14nu 1lcu 1lbu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1qLu WMu 1qLu 11Au 1n1bu IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|14e5","Antarctica/Palmer|-00 -03 -04 -02|0 30 40 20|0121212121213121212121212121212121212121212121212121212121212121212121212121212121|-cao0 nD0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 jsN0 14N0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0|40","Antarctica/Rothera|-00 -03|0 30|01|gOo0|130","Antarctica/Syowa|-00 +03|0 -30|01|-vs00|20","Antarctica/Troll|-00 +00 +02|0 0 -20|01212121212121212121212121212121212121212121212121212121212121212121|1puo0 hd0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|40","Antarctica/Vostok|-00 +06|0 -60|01|-tjA0|25","Europe/Oslo|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2awM0 Qm0 W6o0 5pf0 WM0 1fA0 1cM0 1cM0 1cM0 1cM0 wJc0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1qM0 WM0 zpc0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e4","Asia/Riyadh|LMT +03|-36.Q -30|01|-TvD6.Q|57e5","Asia/Almaty|LMT +05 +06 +07|-57.M -50 -60 -70|012323232323232323232321232323232323232323232323232|-1Pc57.M eUo7.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|15e5","Asia/Amman|LMT EET EEST|-2n.I -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1yW2n.I 1HiMn.I KL0 1oN0 11b0 1oN0 11b0 1pd0 1dz0 1cp0 11b0 1op0 11b0 fO10 1db0 1e10 1cL0 1cN0 1cL0 1cN0 1fz0 1pd0 10n0 1ld0 14n0 1hB0 15b0 1ip0 19X0 1cN0 1cL0 1cN0 17b0 1ld0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1So0 y00 1fc0 1dc0 1co0 1dc0 1cM0 1cM0 1cM0 1o00 11A0 1lc0 17c0 1cM0 1cM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 4bX0 Dd0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|25e5","Asia/Anadyr|LMT +12 +13 +14 +11|-bN.U -c0 -d0 -e0 -b0|01232121212121212121214121212121212121212121212121212121212141|-1PcbN.U eUnN.U 23CL0 1db0 2q10 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|13e3","Asia/Aqtau|LMT +04 +05 +06|-3l.4 -40 -50 -60|012323232323232323232123232312121212121212121212|-1Pc3l.4 eUnl.4 24PX0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|15e4","Asia/Aqtobe|LMT +04 +05 +06|-3M.E -40 -50 -60|0123232323232323232321232323232323232323232323232|-1Pc3M.E eUnM.E 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|27e4","Asia/Ashgabat|LMT +04 +05 +06|-3R.w -40 -50 -60|0123232323232323232323212|-1Pc3R.w eUnR.w 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0|41e4","Asia/Atyrau|LMT +03 +05 +06 +04|-3r.I -30 -50 -60 -40|01232323232323232323242323232323232324242424242|-1Pc3r.I eUor.I 24PW0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 2sp0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0","Asia/Baghdad|BMT +03 +04|-2V.A -30 -40|012121212121212121212121212121212121212121212121212121|-26BeV.A 2ACnV.A 11b0 1cp0 1dz0 1dd0 1db0 1cN0 1cp0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1de0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0|66e5","Asia/Qatar|LMT +04 +03|-3q.8 -40 -30|012|-21Jfq.8 27BXq.8|96e4","Asia/Baku|LMT +03 +04 +05|-3j.o -30 -40 -50|01232323232323232323232123232323232323232323232323232323232323232|-1Pc3j.o 1jUoj.o WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 9Je0 1o00 11z0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00|27e5","Asia/Bangkok|BMT +07|-6G.4 -70|01|-218SG.4|15e6","Asia/Barnaul|LMT +06 +07 +08|-5z -60 -70 -80|0123232323232323232323212323232321212121212121212121212121212121212|-21S5z pCnz 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 p90 LE0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Asia/Beirut|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-21aq0 1on0 1410 1db0 19B0 1in0 1ip0 WL0 1lQp0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 q6N0 En0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1op0 11b0 dA10 17b0 1iN0 17b0 1iN0 17b0 1iN0 17b0 1vB0 SL0 1mp0 13z0 1iN0 17b0 1iN0 17b0 1jd0 12n0 1a10 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0|22e5","Asia/Bishkek|LMT +05 +06 +07|-4W.o -50 -60 -70|012323232323232323232321212121212121212121212121212|-1Pc4W.o eUnW.o 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2e00 1tX0 17b0 1ip0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1cPu 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0|87e4","Asia/Brunei|LMT +0730 +08|-7D.E -7u -80|012|-1KITD.E gDc9.E|42e4","Asia/Kolkata|HMT +0630 IST|-5R.k -6u -5u|01212|-18LFR.k 1unn.k HB0 7zX0|15e6","Asia/Chita|LMT +08 +09 +10|-7x.Q -80 -90 -a0|012323232323232323232321232323232323232323232323232323232323232312|-21Q7x.Q pAnx.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3re0|33e4","Asia/Choibalsan|LMT +07 +08 +10 +09|-7C -70 -80 -a0 -90|0123434343434343434343434343434343434343434343424242|-2APHC 2UkoC cKn0 1da0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 3Db0 h1f0 1cJ0 1cP0 1cJ0|38e3","Asia/Shanghai|CST CDT|-80 -90|01010101010101010|-1c1I0 LX0 16p0 1jz0 1Myp0 Rb0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0|23e6","Asia/Colombo|MMT +0530 +06 +0630|-5j.w -5u -60 -6u|01231321|-2zOtj.w 1rFbN.w 1zzu 7Apu 23dz0 11zu n3cu|22e5","Asia/Dhaka|HMT +0630 +0530 +06 +07|-5R.k -6u -5u -60 -70|0121343|-18LFR.k 1unn.k HB0 m6n0 2kxbu 1i00|16e6","Asia/Damascus|LMT EET EEST|-2p.c -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-21Jep.c Hep.c 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1xRB0 11X0 1oN0 10L0 1pB0 11b0 1oN0 10L0 1mp0 13X0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 Nb0 1AN0 Nb0 bcp0 19X0 1gp0 19X0 3ld0 1xX0 Vd0 1Bz0 Sp0 1vX0 10p0 1dz0 1cN0 1cL0 1db0 1db0 1g10 1an0 1ap0 1db0 1fd0 1db0 1cN0 1db0 1dd0 1db0 1cp0 1dz0 1c10 1dX0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 19z0 1fB0 1qL0 11B0 1on0 Wp0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0|26e5","Asia/Dili|LMT +08 +09|-8m.k -80 -90|01212|-2le8m.k 1dnXm.k 1nfA0 Xld0|19e4","Asia/Dubai|LMT +04|-3F.c -40|01|-21JfF.c|39e5","Asia/Dushanbe|LMT +05 +06 +07|-4z.c -50 -60 -70|012323232323232323232321|-1Pc4z.c eUnz.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2hB0|76e4","Asia/Famagusta|LMT EET EEST +03|-2f.M -20 -30 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212123|-1Vc2f.M 2a3cf.M 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 15U0","Asia/Gaza|EET EEST IST IDT|-20 -30 -20 -30|010101010101010101010101010101012323232323232323232323232320101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 11z0 1o10 14o0 1lA1 SKX 1xd1 MKX 1AN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0|18e5","Asia/Hebron|EET EEST IST IDT|-20 -30 -20 -30|01010101010101010101010101010101232323232323232323232323232010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 12L0 1mN0 14o0 1lc0 Tb0 1xd1 MKX bB0 cn0 1cN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0|25e4","Asia/Ho_Chi_Minh|LMT PLMT +07 +08 +09|-76.E -76.u -70 -80 -90|0123423232|-2yC76.E bK00.a 1h7b6.u 5lz0 18o0 3Oq0 k5b0 aW00 BAM0|90e5","Asia/Hong_Kong|LMT HKT HKST JST|-7A.G -80 -90 -90|0121312121212121212121212121212121212121212121212121212121212121212121|-2CFHA.G 1sEP6.G 1cL0 ylu 93X0 1qQu 1tX0 Rd0 1In0 NB0 1cL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1kL0 14N0 1nX0 U10 1tz0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 Rd0 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 17d0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1cL0 6fd0 14n0|73e5","Asia/Hovd|LMT +06 +07 +08|-66.A -60 -70 -80|012323232323232323232323232323232323232323232323232|-2APG6.A 2Uko6.A cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|81e3","Asia/Irkutsk|IMT +07 +08 +09|-6V.5 -70 -80 -90|01232323232323232323232123232323232323232323232323232323232323232|-21zGV.5 pjXV.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Europe/Istanbul|IMT EET EEST +04 +03|-1U.U -20 -30 -40 -30|012121212121212121212121212121212121212121212121212121234343434342121212121212121212121212121212121212121212121212121212121212124|-2ogNU.U dzzU.U 11b0 8tB0 1on0 1410 1db0 19B0 1in0 3Rd0 Un0 1oN0 11b0 zSp0 CL0 mN0 1Vz0 1gN0 1pz0 5Rd0 1fz0 1yp0 ML0 1kp0 17b0 1ip0 17b0 1fB0 19X0 1jB0 18L0 1ip0 17z0 qdd0 xX0 3S10 Tz0 dA10 11z0 1o10 11z0 1qN0 11z0 1ze0 11B0 WM0 1qO0 WI0 1nX0 1rB0 10L0 11B0 1in0 17d0 1in0 2pX0 19E0 1fU0 16Q0 1iI0 16Q0 1iI0 1Vd0 pb0 3Kp0 14o0 1de0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1a00 1fA0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WO0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 Xc0 1qo0 WM0 1qM0 11A0 1o00 1200 1nA0 11A0 1tA0 U00 15w0|13e6","Asia/Jakarta|BMT +0720 +0730 +09 +08 WIB|-77.c -7k -7u -90 -80 -70|01232425|-1Q0Tk luM0 mPzO 8vWu 6kpu 4PXu xhcu|31e6","Asia/Jayapura|LMT +09 +0930 WIT|-9m.M -90 -9u -90|0123|-1uu9m.M sMMm.M L4nu|26e4","Asia/Jerusalem|JMT IST IDT IDDT|-2k.E -20 -30 -40|01212121212132121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-26Bek.E SyMk.E 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 3LB0 Em0 or0 1cn0 1dB0 16n0 10O0 1ja0 1tC0 14o0 1cM0 1a00 11A0 1Na0 An0 1MP0 AJ0 1Kp0 LC0 1oo0 Wl0 EQN0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 1hB0 1dX0 1ep0 1aL0 1eN0 17X0 1nf0 11z0 1tB0 19W0 1e10 17b0 1ep0 1gL0 18N0 1fz0 1eN0 17b0 1gq0 1gn0 19d0 1dz0 1c10 17X0 1hB0 1gn0 19d0 1dz0 1c10 17X0 1kp0 1dz0 1c10 1aL0 1eN0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0|81e4","Asia/Kabul|+04 +0430|-40 -4u|01|-10Qs0|46e5","Asia/Kamchatka|LMT +11 +12 +13|-ay.A -b0 -c0 -d0|012323232323232323232321232323232323232323232323232323232323212|-1SLKy.A ivXy.A 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|18e4","Asia/Karachi|LMT +0530 +0630 +05 PKT PKST|-4s.c -5u -6u -50 -50 -60|012134545454|-2xoss.c 1qOKW.c 7zX0 eup0 LqMu 1fy00 1cL0 dK10 11b0 1610 1jX0|24e6","Asia/Urumqi|LMT +06|-5O.k -60|01|-1GgtO.k|32e5","Asia/Kathmandu|LMT +0530 +0545|-5F.g -5u -5J|012|-21JhF.g 2EGMb.g|12e5","Asia/Khandyga|LMT +08 +09 +10 +11|-92.d -80 -90 -a0 -b0|0123232323232323232323212323232323232323232323232343434343434343432|-21Q92.d pAp2.d 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 qK0 yN0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|66e2","Asia/Krasnoyarsk|LMT +06 +07 +08|-6b.q -60 -70 -80|01232323232323232323232123232323232323232323232323232323232323232|-21Hib.q prAb.q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Asia/Kuala_Lumpur|SMT +07 +0720 +0730 +09 +08|-6T.p -70 -7k -7u -90 -80|0123435|-2Bg6T.p 17anT.p l5XE 17bO 8Fyu 1so1u|71e5","Asia/Kuching|LMT +0730 +08 +0820 +09|-7l.k -7u -80 -8k -90|0123232323232323242|-1KITl.k gDbP.k 6ynu AnE 1O0k AnE 1NAk AnE 1NAk AnE 1NAk AnE 1O0k AnE 1NAk AnE pAk 8Fz0|13e4","Asia/Macau|LMT CST CDT|-7y.k -80 -90|012121212121212121212121212121212121212121|-2le7y.k 1XO34.k 1wn0 Rd0 1wn0 R9u 1wqu U10 1tz0 TVu 1tz0 17gu 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cOu 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cL0|57e4","Asia/Magadan|LMT +10 +11 +12|-a3.c -a0 -b0 -c0|012323232323232323232321232323232323232323232323232323232323232312|-1Pca3.c eUo3.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Cq0|95e3","Asia/Makassar|LMT MMT +08 +09 WITA|-7V.A -7V.A -80 -90 -80|01234|-21JjV.A vfc0 myLV.A 8ML0|15e5","Asia/Manila|+08 +09|-80 -90|010101010|-1kJI0 AL0 cK10 65X0 mXB0 vX0 VK10 1db0|24e6","Asia/Nicosia|LMT EET EEST|-2d.s -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Vc2d.s 2a3cd.s 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|32e4","Asia/Novokuznetsk|LMT +06 +07 +08|-5M.M -60 -70 -80|012323232323232323232321232323232323232323232323232323232323212|-1PctM.M eULM.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|55e4","Asia/Novosibirsk|LMT +06 +07 +08|-5v.E -60 -70 -80|0123232323232323232323212323212121212121212121212121212121212121212|-21Qnv.E pAFv.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 ml0 Os0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 4eN0|15e5","Asia/Omsk|LMT +05 +06 +07|-4R.u -50 -60 -70|01232323232323232323232123232323232323232323232323232323232323232|-224sR.u pMLR.u 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|12e5","Asia/Oral|LMT +03 +05 +06 +04|-3p.o -30 -50 -60 -40|01232323232323232424242424242424242424242424242|-1Pc3p.o eUop.o 23CK0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 1cM0 IM0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|27e4","Asia/Pontianak|LMT PMT +0730 +09 +08 WITA WIB|-7h.k -7h.k -7u -90 -80 -80 -70|012324256|-2ua7h.k XE00 munL.k 8Rau 6kpu 4PXu xhcu Wqnu|23e4","Asia/Pyongyang|LMT KST JST KST|-8n -8u -90 -90|01231|-2um8n 97XR 1lTzu 2Onc0|29e5","Asia/Qyzylorda|LMT +04 +05 +06|-4l.Q -40 -50 -60|0123232323232323232323232323232323232323232323|-1Pc4l.Q eUol.Q 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 3ao0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|73e4","Asia/Rangoon|RMT +0630 +09|-6o.E -6u -90|0121|-21Jio.E SmnS.E 7j9u|48e5","Asia/Sakhalin|LMT +09 +11 +12 +10|-9u.M -90 -b0 -c0 -a0|01232323232323232323232423232323232424242424242424242424242424242|-2AGVu.M 1BoMu.M 1qFa0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 2pB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0|58e4","Asia/Samarkand|LMT +04 +05 +06|-4r.R -40 -50 -60|01232323232323232323232|-1Pc4r.R eUor.R 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0|36e4","Asia/Seoul|LMT KST JST KST KDT KDT|-8r.Q -8u -90 -90 -9u -a0|0123141414141414135353|-2um8r.Q 97XV.Q 1m1zu kKo0 2I0u OL0 1FB0 Rb0 1qN0 TX0 1tB0 TX0 1tB0 TX0 1tB0 TX0 2ap0 12FBu 11A0 1o00 11A0|23e6","Asia/Srednekolymsk|LMT +10 +11 +12|-ae.Q -a0 -b0 -c0|01232323232323232323232123232323232323232323232323232323232323232|-1Pcae.Q eUoe.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|35e2","Asia/Taipei|CST JST CDT|-80 -90 -90|01020202020202020202020202020202020202020|-1iw80 joM0 1yo0 Tz0 1ip0 1jX0 1cN0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 10N0 1BX0 10p0 1pz0 10p0 1pz0 10p0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1BB0 ML0 1Bd0 ML0 uq10 1db0 1cN0 1db0 97B0 AL0|74e5","Asia/Tashkent|LMT +05 +06 +07|-4B.b -50 -60 -70|012323232323232323232321|-1Pc4B.b eUnB.b 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0|23e5","Asia/Tbilisi|TBMT +03 +04 +05|-2X.b -30 -40 -50|0123232323232323232323212121232323232323232323212|-1Pc2X.b 1jUnX.b WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cK0 1cL0 1cN0 1cL0 1cN0 2pz0 1cL0 1fB0 3Nz0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 An0 Os0 WM0|11e5","Asia/Tehran|LMT TMT +0330 +04 +05 +0430|-3p.I -3p.I -3u -40 -50 -4u|01234325252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2btDp.I 1d3c0 1huLT.I TXu 1pz0 sN0 vAu 1cL0 1dB0 1en0 pNB0 UL0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 64p0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0|14e6","Asia/Thimphu|LMT +0530 +06|-5W.A -5u -60|012|-Su5W.A 1BGMs.A|79e3","Asia/Tokyo|JST JDT|-90 -a0|010101010|-QJH0 QL0 1lB0 13X0 1zB0 NX0 1zB0 NX0|38e6","Asia/Tomsk|LMT +06 +07 +08|-5D.P -60 -70 -80|0123232323232323232323212323232323232323232323212121212121212121212|-21NhD.P pxzD.P 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 co0 1bB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Qp0|10e5","Asia/Ulaanbaatar|LMT +07 +08 +09|-77.w -70 -80 -90|012323232323232323232323232323232323232323232323232|-2APH7.w 2Uko7.w cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|12e5","Asia/Ust-Nera|LMT +08 +09 +12 +11 +10|-9w.S -80 -90 -c0 -b0 -a0|012343434343434343434345434343434343434343434343434343434343434345|-21Q9w.S pApw.S 23CL0 1d90 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|65e2","Asia/Vladivostok|LMT +09 +10 +11|-8L.v -90 -a0 -b0|01232323232323232323232123232323232323232323232323232323232323232|-1SJIL.v itXL.v 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Asia/Yakutsk|LMT +08 +09 +10|-8C.W -80 -90 -a0|01232323232323232323232123232323232323232323232323232323232323232|-21Q8C.W pAoC.W 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|28e4","Asia/Yekaterinburg|LMT PMT +04 +05 +06|-42.x -3J.5 -40 -50 -60|012343434343434343434343234343434343434343434343434343434343434343|-2ag42.x 7mQh.s qBvJ.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|14e5","Asia/Yerevan|LMT +03 +04 +05|-2W -30 -40 -50|0123232323232323232323212121212323232323232323232323232323232|-1Pc2W 1jUnW WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 4RX0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|13e5","Atlantic/Azores|HMT -02 -01 +00 WET|1S.w 20 10 0 0|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121232323232323232323232323232323234323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2ldW5.s aPX5.s Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|25e4","Atlantic/Bermuda|LMT AST ADT|4j.i 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1BnRE.G 1LTbE.G 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e3","Atlantic/Canary|LMT -01 WET WEST|11.A 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UtaW.o XPAW.o 1lAK0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Atlantic/Cape_Verde|LMT -02 -01|1y.4 20 10|01212|-2xomp.U 1qOMp.U 7zX0 1djf0|50e4","Atlantic/Faroe|LMT WET WEST|r.4 0 -10|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2uSnw.U 2Wgow.U 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|49e3","Atlantic/Madeira|FMT -01 +00 +01 WET WEST|17.A 10 0 -10 0 -10|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2ldWQ.o aPWQ.o Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e4","Atlantic/Reykjavik|LMT -01 +00 GMT|1s 10 0 0|012121212121212121212121212121212121212121212121212121212121212121213|-2uWmw mfaw 1Bd0 ML0 1LB0 Cn0 1LB0 3fX0 C10 HrX0 1cO0 LB0 1EL0 LA0 1C00 Oo0 1wo0 Rc0 1wo0 Rc0 1wo0 Rc0 1zc0 Oo0 1zc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0|12e4","Atlantic/South_Georgia|-02|20|0||30","Atlantic/Stanley|SMT -04 -03 -02|3P.o 40 30 20|012121212121212323212121212121212121212121212121212121212121212121212|-2kJw8.A 12bA8.A 19X0 1fB0 19X0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 Cn0 1Cc10 WL0 1qL0 U10 1tz0 2mN0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 U10 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qN0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 U10 1tz0 U10 1tz0 U10|21e2","Australia/Sydney|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|40e5","Australia/Adelaide|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 WM0 1qM0 Rc0 1zc0 U00 1tA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|11e5","Australia/Brisbane|AEST AEDT|-a0 -b0|01010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0|20e5","Australia/Broken_Hill|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|18e3","Australia/Currie|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|746","Australia/Darwin|ACST ACDT|-9u -au|010101010|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0|12e4","Australia/Eucla|+0845 +0945|-8J -9J|0101010101010101010|-293kI xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|368","Australia/Hobart|AEST AEDT|-a0 -b0|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 VfB0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|21e4","Australia/Lord_Howe|AEST +1030 +1130 +11|-a0 -au -bu -b0|0121212121313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313|raC0 1zdu Rb0 1zd0 On0 1zd0 On0 1zd0 On0 1zd0 TXu 1qMu WLu 1tAu WLu 1tAu TXu 1tAu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu 11zu 1o0u 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 11Au 1nXu 1qMu 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu 11zu 1o0u WLu 1qMu 14nu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1fzu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu|347","Australia/Lindeman|AEST AEDT|-a0 -b0|010101010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0|10","Australia/Melbourne|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1qM0 11A0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|39e5","Australia/Perth|AWST AWDT|-80 -90|0101010101010101010|-293jX xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|18e5","CET|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","CST6CDT|CST CDT CWT CPT|60 50 50 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Easter|EMT -07 -06 -05|7h.s 70 60 50|012121212121212121212121212123232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1uSgG.w 1s4IG.w WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 2pA0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|30e2","EET|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","EST|EST|50|0|","EST5EDT|EST EDT EWT EPT|50 40 40 40|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 SgN0 8x40 iv0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Europe/Dublin|DMT IST GMT BST IST|p.l -y.D 0 -10 -10|01232323232324242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242|-2ax9y.D Rc0 1fzy.D 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 g5X0 14p0 1wn0 17d0 1io0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Etc/GMT+0|GMT|0|0|","Etc/GMT+1|-01|10|0|","Etc/GMT+10|-10|a0|0|","Etc/GMT+11|-11|b0|0|","Etc/GMT+12|-12|c0|0|","Etc/GMT+3|-03|30|0|","Etc/GMT+4|-04|40|0|","Etc/GMT+5|-05|50|0|","Etc/GMT+6|-06|60|0|","Etc/GMT+7|-07|70|0|","Etc/GMT+8|-08|80|0|","Etc/GMT+9|-09|90|0|","Etc/GMT-1|+01|-10|0|","Pacific/Port_Moresby|+10|-a0|0||25e4","Pacific/Pohnpei|+11|-b0|0||34e3","Pacific/Tarawa|+12|-c0|0||29e3","Etc/GMT-13|+13|-d0|0|","Etc/GMT-14|+14|-e0|0|","Etc/GMT-2|+02|-20|0|","Etc/GMT-3|+03|-30|0|","Etc/GMT-4|+04|-40|0|","Etc/GMT-5|+05|-50|0|","Etc/GMT-6|+06|-60|0|","Indian/Christmas|+07|-70|0||21e2","Etc/GMT-8|+08|-80|0|","Pacific/Palau|+09|-90|0||21e3","Etc/UCT|UCT|0|0|","Etc/UTC|UTC|0|0|","Europe/Amsterdam|AMT NST +0120 +0020 CEST CET|-j.w -1j.w -1k -k -20 -10|010101010101010101010101010101010101010101012323234545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545|-2aFcj.w 11b0 1iP0 11A0 1io0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1co0 1io0 1yo0 Pc0 1a00 1fA0 1Bc0 Mo0 1tc0 Uo0 1tA0 U00 1uo0 W00 1s00 VA0 1so0 Vc0 1sM0 UM0 1wo0 Rc0 1u00 Wo0 1rA0 W00 1s00 VA0 1sM0 UM0 1w00 fV0 BCX.w 1tA0 U00 1u00 Wo0 1sm0 601k WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|16e5","Europe/Andorra|WET CET CEST|0 -10 -20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-UBA0 1xIN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|79e3","Europe/Astrakhan|LMT +03 +04 +05|-3c.c -30 -40 -50|012323232323232323212121212121212121212121212121212121212121212|-1Pcrc.c eUMc.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Athens|AMT EET EEST CEST CET|-1y.Q -20 -30 -20 -10|012123434121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a61x.Q CNbx.Q mn0 kU10 9b0 3Es0 Xa0 1fb0 1dd0 k3X0 Nz0 SCp0 1vc0 SO0 1cM0 1a00 1ao0 1fc0 1a10 1fG0 1cg0 1dX0 1bX0 1cQ0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|35e5","Europe/London|GMT BST BDST|0 -10 -20|0101010101010101010101010101010101010101010101010121212121210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|10e6","Europe/Belgrade|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19RC0 3IP0 WM0 1fA0 1cM0 1cM0 1rc0 Qo0 1vmo0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Berlin|CET CEST CEMT|-10 -20 -30|01010101010101210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 kL0 Nc0 m10 WM0 1ao0 1cp0 dX0 jz0 Dd0 1io0 17c0 1fA0 1a00 1ehA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e5","Europe/Prague|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 16M0 1lc0 1tA0 17A0 11c0 1io0 17c0 1io0 17c0 1fc0 1ao0 1bNc0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|13e5","Europe/Brussels|WET CET CEST WEST|0 -10 -20 -10|0121212103030303030303030303030303030303030303030303212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ehc0 3zX0 11c0 1iO0 11A0 1o00 11A0 my0 Ic0 1qM0 Rc0 1EM0 UM0 1u00 10o0 1io0 1io0 17c0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a30 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 y00 5Wn0 WM0 1fA0 1cM0 16M0 1iM0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|21e5","Europe/Bucharest|BMT EET EEST|-1I.o -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1xApI.o 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Axc0 On0 1fA0 1a10 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|19e5","Europe/Budapest|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1ip0 17b0 1op0 1tb0 Q2m0 3Ne0 WM0 1fA0 1cM0 1cM0 1oJ0 1dc0 1030 1fA0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1iM0 1fA0 8Ha0 Rb0 1wN0 Rb0 1BB0 Lz0 1C20 LB0 SNX0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zurich|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19Lc0 11A0 1o00 11A0 1xG10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e4","Europe/Chisinau|CMT BMT EET EEST CEST CET MSK MSD|-1T -1I.o -20 -30 -20 -10 -30 -40|012323232323232323234545467676767676767676767323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-26jdT wGMa.A 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 27A0 2en0 39g0 WM0 1fA0 1cM0 V90 1t7z0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 gL0 WO0 1cM0 1cM0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11D0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|67e4","Europe/Copenhagen|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 Tz0 VuO0 60q0 WM0 1fA0 1cM0 1cM0 1cM0 S00 1HA0 Nc0 1C00 Dc0 1Nc0 Ao0 1h5A0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Gibraltar|GMT BST BDST CET CEST|0 -10 -20 -10 -20|010101010101010101010101010101010101010101010101012121212121010121010101010101010101034343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 10Jz0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|30e3","Europe/Helsinki|HMT EET EEST|-1D.N -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1WuND.N OULD.N 1dA0 1xGq0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Kaliningrad|CET CEST CET CEST MSK MSD EEST EET +03|-10 -20 -20 -30 -30 -40 -30 -20 -30|0101010101010232454545454545454546767676767676767676767676767676767676767676787|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 Am0 Lb0 1en0 op0 1pNz0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|44e4","Europe/Kiev|KMT EET MSK CEST CET MSD EEST|-22.4 -20 -30 -20 -10 -40 -30|0123434252525252525252525256161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc22.4 eUo2.4 rnz0 2Hg0 WM0 1fA0 da0 1v4m0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 Db0 3220 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|34e5","Europe/Kirov|LMT +03 +04 +05|-3i.M -30 -40 -50|01232323232323232321212121212121212121212121212121212121212121|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|48e4","Europe/Lisbon|LMT WET WEST WEMT CET CEST|A.J 0 -10 -20 -10 -20|012121212121212121212121212121212121212121212321232123212321212121212121212121212121212121212121214121212121212121212121212121212124545454212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ldXn.f aPWn.f Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 pvy0 1cM0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e5","Europe/Luxembourg|LMT CET CEST WET WEST WEST WET|-o.A -10 -20 0 -10 -20 -10|0121212134343434343434343434343434343434343434343434565651212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2DG0o.A t6mo.A TB0 1nX0 Up0 1o20 11A0 rW0 CM0 1qP0 R90 1EO0 UK0 1u20 10m0 1ip0 1in0 17e0 19W0 1fB0 1db0 1cp0 1in0 17d0 1fz0 1a10 1in0 1a10 1in0 17f0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 vA0 60L0 WM0 1fA0 1cM0 17c0 1io0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Madrid|WET WEST WEMT CET CEST|0 -10 -20 -10 -20|010101010101010101210343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-25Td0 19B0 1cL0 1dd0 b1z0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1in0 17d0 iIn0 Hd0 1cL0 bb0 1200 2s20 14n0 5aL0 Mp0 1vz0 17d0 1in0 17d0 1in0 17d0 1in0 17d0 6hX0 11B0 XHX0 1a10 1fz0 1a10 19X0 1cN0 1fz0 1a10 1fC0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e5","Europe/Malta|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1co0 17c0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1co0 1cM0 1lA0 Xc0 1qq0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1iN0 19z0 1fB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Minsk|MMT EET MSK CEST CET MSD EEST +03|-1O -20 -30 -20 -10 -40 -30 -30|01234343252525252525252525261616161616161616161616161616161616161617|-1Pc1O eUnO qNX0 3gQ0 WM0 1fA0 1cM0 Al0 1tsn0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 3Fc0 1cN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0|19e5","Europe/Monaco|PMT WET WEST WEMT CET CEST|-9.l 0 -10 -20 -10 -20|01212121212121212121212121212121212121212121212121232323232345454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 2RV0 11z0 11B0 1ze0 WM0 1fA0 1cM0 1fa0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e3","Europe/Moscow|MMT MMT MST MDST MSD MSK +05 EET EEST MSK|-2u.h -2v.j -3v.j -4v.j -40 -30 -50 -20 -30 -40|012132345464575454545454545454545458754545454545454545454545454545454545454595|-2ag2u.h 2pyW.W 1bA0 11X0 GN0 1Hb0 c4v.j ik0 3DA0 dz0 15A0 c10 2q10 iM10 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|16e6","Europe/Paris|PMT WET WEST CEST CET WEMT|-9.l 0 -10 -20 -10 -20|0121212121212121212121212121212121212121212121212123434352543434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434|-2nco8.l cNb8.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 Ik0 5M30 WM0 1fA0 1cM0 Vx0 hB0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e6","Europe/Riga|RMT LST EET MSK CEST CET MSD EEST|-1A.y -2A.y -20 -30 -20 -10 -40 -30|010102345454536363636363636363727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272|-25TzA.y 11A0 1iM0 ko0 gWm0 yDXA.y 2bX0 3fE0 WM0 1fA0 1cM0 1cM0 4m0 1sLy0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 1o00 11A0 1o00 11A0 1qM0 3oo0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|64e4","Europe/Rome|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1cM0 16M0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1C00 LA0 1zc0 Oo0 1C00 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1zc0 Oo0 1fC0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|39e5","Europe/Samara|LMT +03 +04 +05|-3k.k -30 -40 -50|0123232323232323232121232323232323232323232323232323232323212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2y10 14m0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|12e5","Europe/Saratov|LMT +03 +04 +05|-34.i -30 -40 -50|012323232323232321212121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 5810","Europe/Simferopol|SMT EET MSK CEST CET MSD EEST MSK|-2g -20 -30 -20 -10 -40 -30 -40|012343432525252525252525252161616525252616161616161616161616161616161616172|-1Pc2g eUog rEn0 2qs0 WM0 1fA0 1cM0 3V0 1u0L0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 4eL0 1cL0 1cN0 1cL0 1cN0 dX0 WL0 1cN0 1cL0 1fB0 1o30 11B0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11z0 1nW0|33e4","Europe/Sofia|EET CET CEST EEST|-20 -10 -20 -30|01212103030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030|-168L0 WM0 1fA0 1cM0 1cM0 1cN0 1mKH0 1dd0 1fb0 1ap0 1fb0 1a20 1fy0 1a30 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Stockholm|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 TB0 2yDe0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|15e5","Europe/Tallinn|TMT CET CEST EET MSK MSD EEST|-1D -10 -20 -20 -30 -40 -30|012103421212454545454545454546363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363|-26oND teD 11A0 1Ta0 4rXl KSLD 2FX0 2Jg0 WM0 1fA0 1cM0 18J0 1sTX0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o10 11A0 1qM0 5QM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e4","Europe/Tirane|LMT CET CEST|-1j.k -10 -20|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2glBj.k 14pcj.k 5LC0 WM0 4M0 1fCK0 10n0 1op0 11z0 1pd0 11z0 1qN0 WL0 1qp0 Xb0 1qp0 Xb0 1qp0 11z0 1lB0 11z0 1qN0 11z0 1iN0 16n0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Ulyanovsk|LMT +03 +04 +05 +02|-3d.A -30 -40 -50 -20|01232323232323232321214121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Uzhgorod|CET CEST MSK MSD EET EEST|-10 -20 -30 -40 -20 -30|010101023232323232323232320454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-1cqL0 6i00 WM0 1fA0 1cM0 1ml0 1Cp0 1r3W0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 1Nf0 2pw0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e4","Europe/Vienna|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 3KM0 14o0 LA00 6i00 WM0 1fA0 1cM0 1cM0 1cM0 400 2qM0 1a00 1cM0 1cM0 1io0 17c0 1gHa0 19X0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|18e5","Europe/Vilnius|WMT KMT CET EET MSK CEST MSD EEST|-1o -1z.A -10 -20 -30 -20 -40 -30|012324525254646464646464646473737373737373737352537373737373737373737373737373737373737373737373737373737373737373737373|-293do 6ILM.o 1Ooz.A zz0 Mfd0 29W0 3is0 WM0 1fA0 1cM0 LV0 1tgL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11B0 1o00 11A0 1qM0 8io0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Volgograd|LMT +03 +04 +05|-2V.E -30 -40 -50|01232323232323232121212121212121212121212121212121212121212121|-21IqV.E psLV.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Europe/Warsaw|WMT CET CEST EET EEST|-1o -10 -20 -20 -30|012121234312121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ctdo 1LXo 11d0 1iO0 11A0 1o00 11A0 1on0 11A0 6zy0 HWP0 5IM0 WM0 1fA0 1cM0 1dz0 1mL0 1en0 15B0 1aq0 1nA0 11A0 1io0 17c0 1fA0 1a00 iDX0 LA0 1cM0 1cM0 1C00 Oo0 1cM0 1cM0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1C00 LA0 uso0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zaporozhye|+0220 EET MSK CEST CET MSD EEST|-2k -20 -30 -20 -10 -40 -30|01234342525252525252525252526161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc2k eUok rdb0 2RE0 WM0 1fA0 8m0 1v9a0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cK0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|77e4","HST|HST|a0|0|","Indian/Chagos|LMT +05 +06|-4N.E -50 -60|012|-2xosN.E 3AGLN.E|30e2","Indian/Cocos|+0630|-6u|0||596","Indian/Kerguelen|-00 +05|0 -50|01|-MG00|130","Indian/Mahe|LMT +04|-3F.M -40|01|-2yO3F.M|79e3","Indian/Maldives|MMT +05|-4S -50|01|-olgS|35e4","Indian/Mauritius|LMT +04 +05|-3O -40 -50|012121|-2xorO 34unO 14L0 12kr0 11z0|15e4","Indian/Reunion|LMT +04|-3F.Q -40|01|-2mDDF.Q|84e4","Pacific/Kwajalein|+11 -12 +12|-b0 c0 -c0|012|-AX0 W9X0|14e3","MET|MET MEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","MST|MST|70|0|","MST7MDT|MST MDT MWT MPT|70 60 60 60|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Chatham|+1215 +1245 +1345|-cf -cJ -dJ|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-WqAf 1adef IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|600","PST8PDT|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Apia|LMT -1130 -11 -10 +14 +13|bq.U bu b0 a0 -e0 -d0|01232345454545454545454545454545454545454545454545454545454|-2nDMx.4 1yW03.4 2rRbu 1ff0 1a00 CI0 AQ0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|37e3","Pacific/Bougainville|+10 +09 +11|-a0 -90 -b0|0102|-16Wy0 7CN0 2MQp0|18e4","Pacific/Efate|LMT +11 +12|-bd.g -b0 -c0|0121212121212121212121|-2l9nd.g 2Szcd.g 1cL0 1oN0 10L0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 Lz0 1Nd0 An0|66e3","Pacific/Enderbury|-12 -11 +13|c0 b0 -d0|012|nIc0 B8n0|1","Pacific/Fakaofo|-11 +13|b0 -d0|01|1Gfn0|483","Pacific/Fiji|LMT +12 +13|-bT.I -c0 -d0|0121212121212121212121212121212121212121212121212121212121212121|-2bUzT.I 3m8NT.I LA0 1EM0 IM0 nJc0 LA0 1o00 Rc0 1wo0 Ao0 1Nc0 Ao0 1Q00 xz0 1SN0 uM0 1SM0 uM0 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0|88e4","Pacific/Galapagos|LMT -05 -06|5W.o 50 60|01212|-1yVS1.A 2dTz1.A gNd0 rz0|25e3","Pacific/Gambier|LMT -09|8X.M 90|01|-2jof0.c|125","Pacific/Guadalcanal|LMT +11|-aD.M -b0|01|-2joyD.M|11e4","Pacific/Guam|GST ChST|-a0 -a0|01|1fpq0|17e4","Pacific/Honolulu|HST HDT HST|au 9u a0|010102|-1thLu 8x0 lef0 8Pz0 46p0|37e4","Pacific/Kiritimati|-1040 -10 +14|aE a0 -e0|012|nIaE B8nk|51e2","Pacific/Kosrae|+11 +12|-b0 -c0|010|-AX0 1bdz0|66e2","Pacific/Majuro|+11 +12|-b0 -c0|01|-AX0|28e3","Pacific/Marquesas|LMT -0930|9i 9u|01|-2joeG|86e2","Pacific/Pago_Pago|LMT SST|bm.M b0|01|-2nDMB.c|37e2","Pacific/Nauru|LMT +1130 +09 +12|-b7.E -bu -90 -c0|01213|-1Xdn7.E PvzB.E 5RCu 1ouJu|10e3","Pacific/Niue|-1120 -1130 -11|bk bu b0|012|-KfME 17y0a|12e2","Pacific/Norfolk|+1112 +1130 +1230 +11|-bc -bu -cu -b0|01213|-Kgbc W01G On0 1COp0|25e4","Pacific/Noumea|LMT +11 +12|-b5.M -b0 -c0|01212121|-2l9n5.M 2EqM5.M xX0 1PB0 yn0 HeP0 Ao0|98e3","Pacific/Pitcairn|-0830 -08|8u 80|01|18Vku|56","Pacific/Rarotonga|-1030 -0930 -10|au 9u a0|012121212121212121212121212|lyWu IL0 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu|13e3","Pacific/Tahiti|LMT -10|9W.g a0|01|-2joe1.I|18e4","Pacific/Tongatapu|+1220 +13 +14|-ck -d0 -e0|0121212121212121212121212121212121212121212121212121|-1aB0k 2n5dk 15A0 1wo0 xz0 1Q10 xz0 zWN0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1SM0 uM0|75e3","WET|WET WEST|0 -10|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00"];
+var links = ["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abidjan|Africa/Conakry","Africa/Abidjan|Africa/Dakar","Africa/Abidjan|Africa/Freetown","Africa/Abidjan|Africa/Lome","Africa/Abidjan|Africa/Nouakchott","Africa/Abidjan|Africa/Ouagadougou","Africa/Abidjan|Africa/Sao_Tome","Africa/Abidjan|Africa/Timbuktu","Africa/Abidjan|Atlantic/St_Helena","Africa/Cairo|Egypt","Africa/Johannesburg|Africa/Maseru","Africa/Johannesburg|Africa/Mbabane","Africa/Khartoum|Africa/Juba","Africa/Lagos|Africa/Bangui","Africa/Lagos|Africa/Brazzaville","Africa/Lagos|Africa/Douala","Africa/Lagos|Africa/Kinshasa","Africa/Lagos|Africa/Libreville","Africa/Lagos|Africa/Luanda","Africa/Lagos|Africa/Malabo","Africa/Lagos|Africa/Niamey","Africa/Lagos|Africa/Porto-Novo","Africa/Maputo|Africa/Blantyre","Africa/Maputo|Africa/Bujumbura","Africa/Maputo|Africa/Gaborone","Africa/Maputo|Africa/Harare","Africa/Maputo|Africa/Kigali","Africa/Maputo|Africa/Lubumbashi","Africa/Maputo|Africa/Lusaka","Africa/Nairobi|Africa/Addis_Ababa","Africa/Nairobi|Africa/Asmara","Africa/Nairobi|Africa/Asmera","Africa/Nairobi|Africa/Dar_es_Salaam","Africa/Nairobi|Africa/Djibouti","Africa/Nairobi|Africa/Kampala","Africa/Nairobi|Africa/Mogadishu","Africa/Nairobi|Indian/Antananarivo","Africa/Nairobi|Indian/Comoro","Africa/Nairobi|Indian/Mayotte","Africa/Tripoli|Libya","America/Adak|America/Atka","America/Adak|US/Aleutian","America/Anchorage|US/Alaska","America/Argentina/Buenos_Aires|America/Buenos_Aires","America/Argentina/Catamarca|America/Argentina/ComodRivadavia","America/Argentina/Catamarca|America/Catamarca","America/Argentina/Cordoba|America/Cordoba","America/Argentina/Cordoba|America/Rosario","America/Argentina/Jujuy|America/Jujuy","America/Argentina/Mendoza|America/Mendoza","America/Atikokan|America/Coral_Harbour","America/Chicago|US/Central","America/Curacao|America/Aruba","America/Curacao|America/Kralendijk","America/Curacao|America/Lower_Princes","America/Denver|America/Shiprock","America/Denver|Navajo","America/Denver|US/Mountain","America/Detroit|US/Michigan","America/Edmonton|Canada/Mountain","America/Fort_Wayne|America/Indiana/Indianapolis","America/Fort_Wayne|America/Indianapolis","America/Fort_Wayne|US/East-Indiana","America/Halifax|Canada/Atlantic","America/Havana|Cuba","America/Indiana/Knox|America/Knox_IN","America/Indiana/Knox|US/Indiana-Starke","America/Jamaica|Jamaica","America/Kentucky/Louisville|America/Louisville","America/Los_Angeles|US/Pacific","America/Los_Angeles|US/Pacific-New","America/Manaus|Brazil/West","America/Mazatlan|Mexico/BajaSur","America/Mexico_City|Mexico/General","America/New_York|US/Eastern","America/Noronha|Brazil/DeNoronha","America/Panama|America/Cayman","America/Phoenix|US/Arizona","America/Port_of_Spain|America/Anguilla","America/Port_of_Spain|America/Antigua","America/Port_of_Spain|America/Dominica","America/Port_of_Spain|America/Grenada","America/Port_of_Spain|America/Guadeloupe","America/Port_of_Spain|America/Marigot","America/Port_of_Spain|America/Montserrat","America/Port_of_Spain|America/St_Barthelemy","America/Port_of_Spain|America/St_Kitts","America/Port_of_Spain|America/St_Lucia","America/Port_of_Spain|America/St_Thomas","America/Port_of_Spain|America/St_Vincent","America/Port_of_Spain|America/Tortola","America/Port_of_Spain|America/Virgin","America/Regina|Canada/East-Saskatchewan","America/Regina|Canada/Saskatchewan","America/Rio_Branco|America/Porto_Acre","America/Rio_Branco|Brazil/Acre","America/Santiago|Chile/Continental","America/Sao_Paulo|Brazil/East","America/St_Johns|Canada/Newfoundland","America/Tijuana|America/Ensenada","America/Tijuana|America/Santa_Isabel","America/Tijuana|Mexico/BajaNorte","America/Toronto|America/Montreal","America/Toronto|Canada/Eastern","America/Vancouver|Canada/Pacific","America/Whitehorse|Canada/Yukon","America/Winnipeg|Canada/Central","Asia/Ashgabat|Asia/Ashkhabad","Asia/Bangkok|Asia/Phnom_Penh","Asia/Bangkok|Asia/Vientiane","Asia/Dhaka|Asia/Dacca","Asia/Dubai|Asia/Muscat","Asia/Ho_Chi_Minh|Asia/Saigon","Asia/Hong_Kong|Hongkong","Asia/Jerusalem|Asia/Tel_Aviv","Asia/Jerusalem|Israel","Asia/Kathmandu|Asia/Katmandu","Asia/Kolkata|Asia/Calcutta","Asia/Kuala_Lumpur|Asia/Singapore","Asia/Kuala_Lumpur|Singapore","Asia/Macau|Asia/Macao","Asia/Makassar|Asia/Ujung_Pandang","Asia/Nicosia|Europe/Nicosia","Asia/Qatar|Asia/Bahrain","Asia/Rangoon|Asia/Yangon","Asia/Riyadh|Asia/Aden","Asia/Riyadh|Asia/Kuwait","Asia/Seoul|ROK","Asia/Shanghai|Asia/Chongqing","Asia/Shanghai|Asia/Chungking","Asia/Shanghai|Asia/Harbin","Asia/Shanghai|PRC","Asia/Taipei|ROC","Asia/Tehran|Iran","Asia/Thimphu|Asia/Thimbu","Asia/Tokyo|Japan","Asia/Ulaanbaatar|Asia/Ulan_Bator","Asia/Urumqi|Asia/Kashgar","Atlantic/Faroe|Atlantic/Faeroe","Atlantic/Reykjavik|Iceland","Atlantic/South_Georgia|Etc/GMT+2","Australia/Adelaide|Australia/South","Australia/Brisbane|Australia/Queensland","Australia/Broken_Hill|Australia/Yancowinna","Australia/Darwin|Australia/North","Australia/Hobart|Australia/Tasmania","Australia/Lord_Howe|Australia/LHI","Australia/Melbourne|Australia/Victoria","Australia/Perth|Australia/West","Australia/Sydney|Australia/ACT","Australia/Sydney|Australia/Canberra","Australia/Sydney|Australia/NSW","Etc/GMT+0|Etc/GMT","Etc/GMT+0|Etc/GMT-0","Etc/GMT+0|Etc/GMT0","Etc/GMT+0|Etc/Greenwich","Etc/GMT+0|GMT","Etc/GMT+0|GMT+0","Etc/GMT+0|GMT-0","Etc/GMT+0|GMT0","Etc/GMT+0|Greenwich","Etc/UCT|UCT","Etc/UTC|Etc/Universal","Etc/UTC|Etc/Zulu","Etc/UTC|UTC","Etc/UTC|Universal","Etc/UTC|Zulu","Europe/Belgrade|Europe/Ljubljana","Europe/Belgrade|Europe/Podgorica","Europe/Belgrade|Europe/Sarajevo","Europe/Belgrade|Europe/Skopje","Europe/Belgrade|Europe/Zagreb","Europe/Chisinau|Europe/Tiraspol","Europe/Dublin|Eire","Europe/Helsinki|Europe/Mariehamn","Europe/Istanbul|Asia/Istanbul","Europe/Istanbul|Turkey","Europe/Lisbon|Portugal","Europe/London|Europe/Belfast","Europe/London|Europe/Guernsey","Europe/London|Europe/Isle_of_Man","Europe/London|Europe/Jersey","Europe/London|GB","Europe/London|GB-Eire","Europe/Moscow|W-SU","Europe/Oslo|Arctic/Longyearbyen","Europe/Oslo|Atlantic/Jan_Mayen","Europe/Prague|Europe/Bratislava","Europe/Rome|Europe/San_Marino","Europe/Rome|Europe/Vatican","Europe/Warsaw|Poland","Europe/Zurich|Europe/Busingen","Europe/Zurich|Europe/Vaduz","Indian/Christmas|Etc/GMT-7","Pacific/Auckland|Antarctica/McMurdo","Pacific/Auckland|Antarctica/South_Pole","Pacific/Auckland|NZ","Pacific/Chatham|NZ-CHAT","Pacific/Easter|Chile/EasterIsland","Pacific/Guam|Pacific/Saipan","Pacific/Honolulu|Pacific/Johnston","Pacific/Honolulu|US/Hawaii","Pacific/Kwajalein|Kwajalein","Pacific/Pago_Pago|Pacific/Midway","Pacific/Pago_Pago|Pacific/Samoa","Pacific/Pago_Pago|US/Samoa","Pacific/Palau|Etc/GMT-9","Pacific/Pohnpei|Etc/GMT-11","Pacific/Pohnpei|Pacific/Ponape","Pacific/Port_Moresby|Etc/GMT-10","Pacific/Port_Moresby|Pacific/Chuuk","Pacific/Port_Moresby|Pacific/Truk","Pacific/Port_Moresby|Pacific/Yap","Pacific/Tarawa|Etc/GMT-12","Pacific/Tarawa|Pacific/Funafuti","Pacific/Tarawa|Pacific/Wake","Pacific/Tarawa|Pacific/Wallis"];
+var latest = {
+	version: version$2,
+	zones: zones,
+	links: links
+};
+
+var latest$1 = Object.freeze({
+	version: version$2,
+	zones: zones,
+	links: links,
+	default: latest
+});
+
+//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment-timezone/moment-timezone.js
+
+//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment-timezone/data/packed/latest.json
+var require$$1 = ( latest$1 && latest ) || latest$1;
+
+var index$4 = createCommonjsModule(function (module) {
+// node_modules/moment-timezone/index.js
+var moment = module.exports = momentTimezone;
+moment.tz.load(require$$1);
+});
+
+// src/utils/language.coffee
+var getLanguage = function() {
+  var ref, ref1, ref2, ref3, ref4;
+  return (ref = (ref1 = (ref2 = window.navigator) != null ? ref2.userLanguage : void 0) != null ? ref1 : (ref3 = window.navigator) != null ? ref3.languages[0] : void 0) != null ? ref : (ref4 = window.navigator) != null ? ref4.language : void 0;
+};
+
 // src/utils/dates.coffee
+var rfc3339 = 'YYYY-MM-DDTHH:mm:ssZ';
+
+var mmddyyyy = 'M-DD-YYYY';
+
+
+
+var ddmmyyyy = 'D-MM-YYYY';
+
 var renderDate = function(date, format) {
-  return hooks(date).format(format);
+  if (format == null) {
+    if (getLanguage() === 'en-US') {
+      format = mmddyyyy;
+    } else {
+      format = ddmmyyyy;
+    }
+  }
+  return index$4(date).format(format);
 };
 
 // src/index.coffee
+var Controls;
 var Shop$1;
 var children;
 var elementsToMount;
-var getMCIds;
-var getQueries;
-var getReferrer;
+var endpoint;
+var initCart;
+var initClient;
+var initData;
+var initMediator;
 var k;
+var key;
+var opts;
 var ref;
 var ref1;
 var ref2;
@@ -19219,25 +18097,48 @@ var tagNames;
 var v;
 var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+Controls = {
+  Control: Control$1,
+  Text: Text$1,
+  TextBox: TextBox$1,
+  Checkbox: CheckBox$1,
+  Select: Select$1,
+  QuantitySelect: QuantitySelect$1,
+  UserEmail: UserEmail$1,
+  UserName: UserName$1,
+  UserCurrentPassword: UserCurrentPassword$1,
+  UserPassword: UserPassword$1,
+  UserPasswordConfirm: UserPasswordConfirm$1,
+  ShippingAddressName: ShippingAddressName$1,
+  ShippingAddressLine1: ShippingAddressLine1$1,
+  ShippingAddressLine2: ShippingAddressLine2$1,
+  ShippingAddressCity: ShippingAddressCity$1,
+  ShippingAddressPostalCode: ShippingAddressPostalCode$1,
+  ShippingAddressState: ShippingAddressState$1,
+  ShippingAddressCountry: ShippingAddressCountry$1,
+  CardName: CardName$1,
+  CardNumber: CardNumber$1,
+  CardExpiry: CardExpiry$1,
+  CardCVC: CardCVC$1,
+  Terms: Terms$1,
+  GiftToggle: GiftToggle$1,
+  GiftType: GiftType$1,
+  GiftEmail: GiftEmail$1,
+  GiftMessage: GiftMessage$1,
+  PromoCode: PromoCode$1
+};
+
 Shop$1 = {};
 
 Shop$1.Controls = Controls;
 
 Shop$1.Events = Events$2;
 
-Shop$1.Forms = Forms$1;
+Shop$1.Containers = Containers;
 
 Shop$1.Widgets = Widgets$1;
 
 Shop$1.El = El$1;
-
-El$1.View.prototype.renderCurrency = renderUICurrencyFromJSON;
-
-El$1.View.prototype.renderDate = renderDate;
-
-El$1.View.prototype.isEmpty = function() {
-  return Shop$1.isEmpty();
-};
 
 Shop$1.use = function(templates) {
   var ref, ref1;
@@ -19251,50 +18152,9 @@ Shop$1.use = function(templates) {
 
 Shop$1.analytics = analytics$1$1;
 
-Shop$1.isEmpty = function() {
-  var items;
-  items = this.data.get('order.items');
-  return items.length === 0;
-};
-
-getQueries = function() {
-  var err, k, match, q, qs, search, v;
-  search = /([^&=]+)=?([^&]*)/g;
-  q = window.location.href.split('?')[1];
-  qs = {};
-  if (q != null) {
-    while ((match = search.exec(q))) {
-      k = match[1];
-      try {
-        k = decodeURIComponent(k);
-      } catch (error) {}
-      v = match[2];
-      try {
-        v = decodeURIComponent(v);
-      } catch (error) {
-        err = error;
-      }
-      qs[k] = v;
-    }
-  }
-  return qs;
-};
-
-getReferrer = function(qs) {
-  if (qs.referrer != null) {
-    return qs.referrer;
-  } else {
-    return index$1.get('referrer');
-  }
-};
-
-getMCIds = function(qs) {
-  return [qs['mc_eid'], qs['mc_cid']];
-};
-
 tagNames = [];
 
-ref = Shop$1.Forms;
+ref = Shop$1.Containers;
 for (k in ref) {
   v = ref[k];
   if (v.prototype.tag != null) {
@@ -19332,89 +18192,132 @@ while (true) {
   }
 }
 
-Shop$1.start = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, data$$1, i, item, items, j, k2, len, len1, meta, p, promo, ps, queries, r, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref20, ref4, ref5, ref6, ref7, ref8, ref9, referrer, settings, tag, tags, v2;
-  if (opts == null) {
-    opts = {};
-  }
-  if (opts.key == null) {
-    throw new Error('Please specify your API Key');
-  }
-  Shop$1.Forms.register();
-  Shop$1.Widgets.register();
-  referrer = '';
+initData = function(opts) {
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
   queries = getQueries();
-  if ((ref4 = opts.config) != null ? ref4.hashReferrer : void 0) {
-    r = window.location.hash.replace('#', '');
-    if (r !== '') {
-      referrer = r;
-    } else {
-      referrer = (ref5 = getReferrer(queries)) != null ? ref5 : (ref6 = opts.order) != null ? ref6.referrer : void 0;
-    }
-  } else {
-    referrer = (ref7 = getReferrer(queries)) != null ? ref7 : (ref8 = opts.order) != null ? ref8.referrer : void 0;
-  }
+  referrer = '';
+  referrer = (ref4 = getReferrer((ref5 = opts.config) != null ? ref5.hashReferrer : void 0)) != null ? ref4 : (ref6 = opts.order) != null ? ref6.referrer : void 0;
   index$1.set('referrer', referrer);
-  promo = (ref9 = queries.promo) != null ? ref9 : '';
   items = index$1.get('items');
   cartId = index$1.get('cartId');
   meta = index$1.get('order.metadata');
-  this.data = refer$1({
-    taxRates: opts.taxRates || [],
-    shippingRates: opts.shippingRates || [],
+  d = {
+    taxRates: null,
+    shippingRates: null,
+    countries: [],
     tokenId: queries.tokenid,
-    terms: (ref10 = opts.terms) != null ? ref10 : false,
+    terms: (ref7 = opts.terms) != null ? ref7 : false,
     order: {
       giftType: 'physical',
       type: 'stripe',
-      shippingRate: ((ref11 = opts.config) != null ? ref11.shippingRate : void 0) || ((ref12 = opts.order) != null ? ref12.shippingRate : void 0) || 0,
-      taxRate: ((ref13 = opts.config) != null ? ref13.taxRate : void 0) || ((ref14 = opts.order) != null ? ref14.taxRate : void 0) || 0,
-      currency: ((ref15 = opts.config) != null ? ref15.currency : void 0) || ((ref16 = opts.order) != null ? ref16.currency : void 0) || 'usd',
+      shippingRate: ((ref8 = opts.config) != null ? ref8.shippingRate : void 0) || ((ref9 = opts.order) != null ? ref9.shippingRate : void 0) || 0,
+      taxRate: ((ref10 = opts.config) != null ? ref10.taxRate : void 0) || ((ref11 = opts.order) != null ? ref11.taxRate : void 0) || 0,
+      currency: ((ref12 = opts.config) != null ? ref12.currency : void 0) || ((ref13 = opts.order) != null ? ref13.currency : void 0) || 'usd',
       referrerId: referrer,
-      shippingAddress: {
-        country: 'us'
-      },
       discount: 0,
       tax: 0,
       subtotal: 0,
       total: 0,
       items: items != null ? items : [],
       cartId: cartId != null ? cartId : null,
-      checkoutUrl: (ref17 = (ref18 = opts.config) != null ? ref18.checkoutUrl : void 0) != null ? ref17 : null,
+      checkoutUrl: (ref14 = (ref15 = opts.config) != null ? ref15.checkoutUrl : void 0) != null ? ref14 : null,
       metadata: meta != null ? meta : {}
-    }
-  });
-  data$$1 = this.data.get();
+    },
+    user: null,
+    payment: null
+  };
   for (k in opts) {
     v = opts[k];
-    if (data$$1[k] == null) {
-      data$$1[k] = opts[k];
+    if (d[k] == null) {
+      d[k] = opts[k];
     } else {
-      ref19 = data$$1[k];
-      for (k2 in ref19) {
-        v2 = ref19[k2];
+      ref16 = d[k];
+      for (k2 in ref16) {
+        v2 = ref16[k2];
         if (v2 == null) {
-          data$$1[k][k2] = (ref20 = opts[k]) != null ? ref20[k2] : void 0;
+          d[k][k2] = (ref17 = opts[k]) != null ? ref17[k2] : void 0;
         }
       }
     }
   }
-  this.data.set(data$$1);
+  data = refer$1(d);
   checkoutUser = index$1.get('checkout-user');
-  checkoutShippingAddress = index$1.get('checkout-shippingAddress');
-  checkoutPayment = index$1.get('checkout-payment');
   if (checkoutUser) {
-    this.data.set('user', checkoutUser);
+    data.set('user', checkoutUser);
     index$1.remove('checkout-user');
   }
+  checkoutShippingAddress = index$1.get('checkout-shippingAddress');
   if (checkoutShippingAddress) {
-    this.data.set('order.shippingAddress', checkoutShippingAddress);
+    data.set('order.shippingAddress', checkoutShippingAddress);
     index$1.remove('checkout-shippingAddress');
   }
+  checkoutPayment = index$1.get('checkout-payment');
   if (checkoutPayment) {
-    this.data.set('payment', checkoutPayment);
+    data.set('payment', checkoutPayment);
     index$1.remove('checkout-payment');
   }
+  state = index$1.get('default-state');
+  country = index$1.get('default-country');
+  countriesReady = false;
+  dontPrefill = false;
+  if (!state || !country) {
+    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref18 = window.navigator) != null ? ref18.geolocation : void 0 : void 0)) {
+      navigator.geolocation.getCurrentPosition((function(_this) {
+        return function(position) {
+          return gmaps.geocode({
+            address: position.coords.latitude + ", " + position.coords.longitude,
+            callback: function(results, status) {
+              var i, len, result;
+              if (data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')) {
+                dontPrefill = true;
+              }
+              if (status === 'OK') {
+                state = '';
+                country = '';
+                for (i = 0, len = results.length; i < len; i++) {
+                  result = results[i];
+                  if (indexOf.call(result.types, 'administrative_area_level_1') >= 0) {
+                    state = result.address_components[0].short_name;
+                  } else if (indexOf.call(result.types, 'country') >= 0) {
+                    country = result.address_components[0].short_name;
+                  }
+                }
+                index$1.set('default-state', state);
+                index$1.set('default-country', country);
+                if (countriesReady) {
+                  data.set('order.shippingAddress.country', country);
+                  data.set('order.shippingAddress.state', state);
+                }
+              }
+              return m$1.trigger(Events$2.GeoReady, {
+                status: 'success',
+                geolocation: position,
+                gmaps: results
+              });
+            }
+          });
+        };
+      })(this));
+    } else {
+      requestAnimationFrame(function() {
+        return m$1.trigger(Events$2.GeoReady, {
+          status: 'disabled'
+        });
+      });
+    }
+  }
+  data.on('set', function(k, v) {
+    if (k === 'countries' && !dontPrefill) {
+      countriesReady = true;
+      data.set('order.shippingAddress.country', country);
+      return data.set('order.shippingAddress.state', state);
+    }
+  });
+  return data;
+};
+
+initClient = function(opts) {
+  var settings;
   settings = {};
   if (opts.key) {
     settings.key = opts.key;
@@ -19422,62 +18325,135 @@ Shop$1.start = function(opts) {
   if (opts.endpoint) {
     settings.endpoint = opts.endpoint;
   }
-  this.client = new Api$1(settings);
-  this.cart = new Cart$1(this.client, this.data, opts.cartOptions);
-  this.cart.onCart = (function(_this) {
-    return function() {
-      var _, cart, mcCId, ref21;
-      index$1.set('cartId', _this.data.get('order.cartId'));
-      ref21 = getMCIds(queries), _ = ref21[0], mcCId = ref21[1];
-      cart = {
-        mailchimp: {
-          checkoutUrl: _this.data.get('order.checkoutUrl')
-        },
-        currency: _this.data.get('order.currency')
-      };
-      if (mcCId) {
-        cart.mailchimp.campaignId = mcCId;
-      }
-      return _this.client.account.get().then(function(res) {
-        return _this.cart._cartUpdate({
-          email: res.email,
-          userId: res.email
-        });
-      })["catch"](function() {});
-    };
-  })(this);
-  tags = El$1.mount(elementsToMount, {
-    cart: this.cart,
-    client: this.client,
-    data: this.data,
-    mediator: m$1
-  });
-  El$1.update = function() {
-    var i, len, results, tag;
-    results = [];
-    for (i = 0, len = tags.length; i < len; i++) {
-      tag = tags[i];
-      results.push(tag.update());
+  return new Api$1(settings);
+};
+
+initCart = function(client, data, cartOptions) {
+  var cart, countries, i, item, items, lastChecked, len, ref4, shippingRates, taxRates;
+  cart = new Cart$1(client, data);
+  lastChecked = index$1.get('lastChecked');
+  countries = (ref4 = index$1.get('countries')) != null ? ref4 : [];
+  taxRates = index$1.get('taxRates');
+  shippingRates = index$1.get('shippingRates');
+  data.set('countries', countries);
+  data.set('taxRates', taxRates);
+  data.set('shippingRates', shippingRates);
+  lastChecked = renderDate(new Date(), rfc3339);
+  client.library.shopjs({
+    hasCountries: !!countries && countries.length !== 0,
+    hasTaxRates: !!taxRates,
+    hasShippingRates: !!shippingRates,
+    lastChecked: renderDate(lastChecked || '2000-01-01', rfc3339)
+  }).then(function(res) {
+    var ref5, ref6, ref7, ref8, ref9;
+    countries = (ref5 = res.countries) != null ? ref5 : countries;
+    taxRates = (ref6 = res.taxRates) != null ? ref6 : taxRates;
+    shippingRates = (ref7 = res.shippingRates) != null ? ref7 : shippingRates;
+    index$1.set('countries', countries);
+    index$1.set('taxRates', taxRates);
+    index$1.set('shippingRates', shippingRates);
+    index$1.set('lastChecked', lastChecked);
+    data.set('countries', countries);
+    data.set('taxRates', taxRates);
+    data.set('shippingRates', shippingRates);
+    if (res.currency) {
+      data.set('order.currency', res.currency);
     }
-    return results;
-  };
-  this.cart.onUpdate = (function(_this) {
-    return function(item) {
-      items = _this.data.get('order.items');
-      index$1.set('items', items);
-      _this.cart._cartUpdate({
-        tax: _this.data.get('order.tax'),
-        total: _this.data.get('order.total')
-      });
-      if (item != null) {
-        m$1.trigger(Events$2.UpdateItem, item);
-      }
-      meta = _this.data.get('order.metadata');
-      index$1.set('order.metadata', meta);
-      _this.cart.invoice();
-      return El$1.scheduleUpdate();
+    cart.taxRates((ref8 = res.taxRates) != null ? ref8 : taxRates);
+    cart.shippingRates((ref9 = res.shippingRates) != null ? ref9 : shippingRates);
+    cart.invoice();
+    m$1.trigger(Events$2.AsyncReady, res);
+    return El$1.scheduleUpdate();
+  });
+  cart.onCart = function() {
+    var _, mcCId, ref5;
+    index$1.set('cartId', data.get('order.cartId'));
+    ref5 = getMCIds(), _ = ref5[0], mcCId = ref5[1];
+    cart = {
+      mailchimp: {
+        checkoutUrl: data.get('order.checkoutUrl')
+      },
+      currency: data.get('order.currency')
     };
-  })(this);
+    if (mcCId) {
+      cart.mailchimp.campaignId = mcCId;
+    }
+    return client.account.get().then(function(res) {
+      return cart._cartUpdate({
+        email: res.email,
+        userId: res.email
+      });
+    })["catch"](function() {});
+  };
+  cart.onUpdate = function(item) {
+    var items, meta;
+    items = data.get('order.items');
+    index$1.set('items', items);
+    cart._cartUpdate({
+      tax: data.get('order.tax'),
+      total: data.get('order.total')
+    });
+    if (item != null) {
+      m$1.trigger(Events$2.UpdateItem, item);
+    }
+    meta = data.get('order.metadata');
+    index$1.set('order.metadata', meta);
+    cart.invoice();
+    return El$1.scheduleUpdate();
+  };
+  items = index$1.get('items');
+  if ((items != null) && items.length > 0) {
+    for (i = 0, len = items.length; i < len; i++) {
+      item = items[i];
+      if (item.id != null) {
+        cart.load(item.id);
+      } else if (item.productId != null) {
+        cart.refresh(item.productId);
+      }
+    }
+  }
+  return cart;
+};
+
+initMediator = function(data, cart) {
+  m$1.on(Events$2.Started, function(data) {
+    cart.invoice();
+    return El$1.scheduleUpdate();
+  });
+  m$1.on(Events$2.DeleteLineItem, function(item) {
+    var id;
+    id = item.get('id');
+    if (!id) {
+      id = item.get('productId');
+    }
+    if (!id) {
+      id = item.get('productSlug');
+    }
+    return Shop$1.setItem(id, 0);
+  });
+  m$1.on('error', function(err) {
+    var ref4;
+    console.log(err);
+    return typeof window !== "undefined" && window !== null ? (ref4 = window.Raven) != null ? ref4.captureException(err) : void 0 : void 0;
+  });
+  return m$1;
+};
+
+Shop$1.start = function(opts) {
+  var i, len, p, promo, ps, queries, ref4, referrer, tag, tags;
+  if (opts == null) {
+    opts = {};
+  }
+  if (opts.key == null) {
+    throw new Error('Please specify your API Key');
+  }
+  this.data = initData(opts);
+  this.client = initClient(opts);
+  this.cart = initCart(this.client, this.data, opts.cartOptions);
+  this.m = initMediator(this.data, this.cart);
+  queries = getQueries();
+  promo = (ref4 = queries.promo) != null ? ref4 : '';
+  referrer = this.data.get('order.referrerId');
   if ((referrer != null) && referrer !== '') {
     this.client.referrer.get(referrer).then((function(_this) {
       return function(res) {
@@ -19491,6 +18467,12 @@ Shop$1.start = function(opts) {
     this.data.set('order.promoCode', promo);
     m$1.trigger(Events$2.ForceApplyPromoCode);
   }
+  tags = El$1.mount(elementsToMount, {
+    cart: this.cart,
+    client: this.client,
+    data: this.data,
+    mediator: m$1
+  });
   ps = [];
   for (i = 0, len = tags.length; i < len; i++) {
     tag = tags[i];
@@ -19511,46 +18493,12 @@ Shop$1.start = function(opts) {
       }
       return m$1.trigger(Events$2.Ready);
     });
-    return El$1.update();
+    return El$1.scheduleUpdate();
   })["catch"](function(err) {
-    var ref21;
-    return typeof window !== "undefined" && window !== null ? (ref21 = window.Raven) != null ? ref21.captureException(err) : void 0 : void 0;
+    var ref5;
+    return typeof window !== "undefined" && window !== null ? (ref5 = window.Raven) != null ? ref5.captureException(err) : void 0 : void 0;
   });
-  m$1.data = this.data;
-  m$1.on(Events$2.SetData, (function(_this) {
-    return function(data1) {
-      _this.data = data1;
-      return _this.cart.invoice();
-    };
-  })(this));
-  m$1.on(Events$2.DeleteLineItem, function(item) {
-    var id;
-    id = item.get('id');
-    if (!id) {
-      id = item.get('productId');
-    }
-    if (!id) {
-      id = item.get('productSlug');
-    }
-    return Shop$1.setItem(id, 0);
-  });
-  m$1.trigger(Events$2.SetData, this.data);
-  m$1.on('error', function(err) {
-    var ref21;
-    console.log(err);
-    return typeof window !== "undefined" && window !== null ? (ref21 = window.Raven) != null ? ref21.captureException(err) : void 0 : void 0;
-  });
-  if ((items != null) && items.length > 0) {
-    for (j = 0, len1 = items.length; j < len1; j++) {
-      item = items[j];
-      if (item.id != null) {
-        this.cart.load(item.id);
-      } else if (item.productId != null) {
-        this.cart.refresh(item.productId);
-      }
-    }
-  }
-  El$1.scheduleUpdate();
+  m$1.trigger(Events$2.Started, this.data);
   return m$1;
 };
 
@@ -19560,6 +18508,20 @@ Shop$1.initCart = function() {
 
 Shop$1.clear = function() {
   return this.cart.clear();
+};
+
+Shop$1.getMediator = function() {
+  return m$1;
+};
+
+Shop$1.getData = function() {
+  return this.data;
+};
+
+Shop$1.isEmpty = function() {
+  var items;
+  items = this.data.get('order.items');
+  return items.length === 0;
 };
 
 Shop$1.setItem = function(id, quantity, locked) {
@@ -19600,6 +18562,28 @@ Shop$1.getItem = function(id) {
     price: (ref8 = item != null ? item.price : void 0) != null ? ref8 : 0
   };
 };
+
+if ((typeof document !== "undefined" && document !== null ? document.currentScript : void 0) != null) {
+  key = document.currentScript.getAttribute('data-key');
+  endpoint = document.currentScript.getAttribute('data-endpoint');
+  if (key) {
+    opts = {
+      key: key
+    };
+    if (endpoint) {
+      opts.endpoint = endpoint;
+    }
+    requestAnimationFrame(function() {
+      return Shop$1.start(opts);
+    });
+  }
+}
+
+if (typeof window !== "undefined" && window !== null) {
+  window.Shop = Shop$1;
+  window.renderCurrency = renderUICurrencyFromJSON;
+  window.renderDate = renderDate;
+}
 
 var Shop$2 = Shop$1;
 

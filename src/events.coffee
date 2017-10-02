@@ -1,10 +1,18 @@
-import { Events as ControlEvents } from 'el-controls'
+import ControlEvents from 'el-controls/src/events'
 
 export default Events =
+  # Shop.js is Started
+  Started:
+    'started'
+  # Shop.js is ready to take commands
   Ready:
     'ready'
-  SetData:
-    'set-data'
+  # Shop.js has completed asynchronous tasks
+  AsyncReady:
+    'async-ready'
+  # Geolocation has completed
+  GeoReady:
+    'geo-ready'
 
   TryUpdateItem:
     'try-update-item'

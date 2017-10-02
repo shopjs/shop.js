@@ -30,13 +30,13 @@ class CheckoutModal extends El.View
       if !id || id == @id
         @toggle false
 
-    m.on Events.SubmitCard, (id)=>
+    m.on Events.SubmitCard, ()=>
       @step = 1
       El.scheduleUpdate()
       Shop.analytics.track 'Completed Checkout Step', step: 2
       Shop.analytics.track 'Viewed Checkout Step', step: 3
 
-    m.on Events.SubmitSuccess, (id)=>
+    m.on Events.SubmitSuccess, ()=>
       @step = 2
       El.scheduleUpdate()
       Shop.analytics.track 'Completed Checkout Step', step: 3
@@ -73,5 +73,7 @@ class CheckoutModal extends El.View
       m.trigger Events.CheckoutClosed
 
     @scheduleUpdate()
+
+CheckoutModal.register()
 
 export default CheckoutModal
