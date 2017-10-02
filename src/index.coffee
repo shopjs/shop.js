@@ -7,29 +7,104 @@ import refer        from 'referential'
 import store        from 'akasha'
 import {Api}        from 'hanzo.js'
 import {Cart}       from 'commerce.js'
+import GMaps        from 'gmaps'
 
-import * as Controls from 'el-controls'
+import {
+  getQueries,
+  getReferrer,
+  getMCIds
+} from './utils/uri'
+
+import {
+  Control
+  Text
+  TextBox
+  CheckBox
+  Select
+  QuantitySelect
+  CountrySelect
+  StateSelect
+  UserEmail
+  UserName
+  UserCurrentPassword
+  UserPassword
+  UserPasswordConfirm
+  ShippingAddressName
+  ShippingAddressLine1
+  ShippingAddressLine2
+  ShippingAddressCity
+  ShippingAddressPostalCode
+  ShippingAddressState
+  ShippingAddressCountry
+  CardName
+  CardNumber
+  CardExpiry
+  CardCVC
+  Terms
+  GiftToggle
+  GiftType
+  GiftEmail
+  GiftMessage
+  PromoCode
+} from './controls'
+
+Controls =
+  # Basic
+  Control:  Control
+  Text:     Text
+  TextBox:  TextBox
+  Checkbox: CheckBox
+  Select:   Select
+
+  # Advanced
+  QuantitySelect: QuantitySelect
+
+  # User
+  UserEmail:            UserEmail
+  UserName:             UserName
+  UserCurrentPassword:  UserCurrentPassword
+  UserPassword:         UserPassword
+  UserPasswordConfirm:  UserPasswordConfirm
+
+  # Shipping Address
+  ShippingAddressName:          ShippingAddressName
+  ShippingAddressLine1:         ShippingAddressLine1
+  ShippingAddressLine2:         ShippingAddressLine2
+  ShippingAddressCity:          ShippingAddressCity
+  ShippingAddressPostalCode:    ShippingAddressPostalCode
+  ShippingAddressState:         ShippingAddressState
+  ShippingAddressCountry:       ShippingAddressCountry
+
+  # Card
+  CardName:     CardName
+  CardNumber:   CardNumber
+  CardExpiry:   CardExpiry
+  CardCVC:      CardCVC
+
+  # Misc
+  Terms:        Terms
+  GiftToggle:   GiftToggle
+  GiftType:     GiftType
+  GiftEmail:    GiftEmail
+  GiftMessage:  GiftMessage
+  PromoCode:    PromoCode
+
 import Events        from './events'
-import Forms         from './forms'
+import Containers    from './containers'
 import Widgets       from './widgets'
 import analytics     from './utils/analytics'
 import m             from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
 import {renderUICurrencyFromJSON} from './utils/currency'
-import {renderDate} from './utils/dates'
+import {renderDate, rfc3339} from './utils/dates'
 
 Shop = {}
 Shop.Controls = Controls
 Shop.Events = Events
-Shop.Forms = Forms
+Shop.Containers = Containers
 Shop.Widgets = Widgets
 Shop.El = El
-
-El.View::renderCurrency = renderUICurrencyFromJSON
-El.View::renderDate = renderDate
-El.View::isEmpty = ->
-  Shop.isEmpty()
 
 Shop.use = (templates) ->
   Shop.Controls.Control::errorHtml = templates.Controls.Error if templates?.Controls?.Error
@@ -69,38 +144,10 @@ Shop.use = (templates) ->
 # Referral Program Object
 
 Shop.analytics = analytics
-Shop.isEmpty   = ->
-  items = @data.get 'order.items'
-  items.length == 0
 
-getQueries = ->
-  search = /([^&=]+)=?([^&]*)/g
-  q = window.location.href.split('?')[1]
-  qs = {}
-  if q?
-    while (match = search.exec(q))
-      k = match[1]
-      try
-        k = decodeURIComponent k
-      v = match[2]
-      try
-        v = decodeURIComponent v
-      catch err
-      qs[k] = v
-
-  qs
-
-getReferrer = (qs) ->
-  if qs.referrer?
-    qs.referrer
-  else
-    store.get 'referrer'
-
-getMCIds = (qs) ->
-  [qs['mc_eid'], qs['mc_cid']]
-
+# Deal with mounting procedure for only Shop.js components
 tagNames = []
-for k, v of Shop.Forms
+for k, v of Shop.Containers
   tagNames.push(v::tag.toUpperCase()) if v::tag?
 for k, v of Shop.Widgets
   tagNames.push(v::tag.toUpperCase()) if v::tag?
@@ -126,37 +173,22 @@ loop
     children.unshift searchQueue.length
     searchQueue.splice.apply searchQueue, children
 
-Shop.start = (opts = {}) ->
-  unless opts.key?
-    throw new Error 'Please specify your API Key'
-
-  Shop.Forms.register()
-  Shop.Widgets.register()
-  # self registering
-  # Shop.Controls.register()
+# initialize the data schema
+initData = (opts)->
+  queries = getQueries()
 
   referrer = ''
-
-  queries = getQueries()
-  if opts.config?.hashReferrer
-    r = window.location.hash.replace('#','')
-    if r != ''
-      referrer = r
-    else
-      referrer = getReferrer(queries) ? opts.order?.referrer
-  else
-    referrer = getReferrer(queries) ? opts.order?.referrer
-
+  referrer = getReferrer(opts.config?.hashReferrer) ? opts.order?.referrer
   store.set 'referrer', referrer
 
-  promo  = queries.promo ? ''
   items  = store.get 'items'
   cartId = store.get 'cartId'
   meta   = store.get 'order.metadata'
 
-  @data = refer
-    taxRates:       opts.taxRates || []
-    shippingRates:  opts.shippingRates || []
+  d =
+    taxRates:       null
+    shippingRates:  null
+    countries:      []
     tokenId:        queries.tokenid
     terms:          opts.terms ? false
     order:
@@ -166,8 +198,6 @@ Shop.start = (opts = {}) ->
       taxRate:      opts.config?.taxRate        || opts.order?.taxRate       || 0
       currency:     opts.config?.currency       || opts.order?.currency      || 'usd'
       referrerId:   referrer
-      shippingAddress:
-        country: 'us'
       discount:    0
       tax:         0
       subtotal:    0
@@ -176,87 +206,232 @@ Shop.start = (opts = {}) ->
       cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
       metadata:    meta                     ? {}
+    user: null
+    payment: null
 
-  data = @data.get()
   for k, v of opts
-    unless data[k]?
-      data[k] = opts[k]
+    unless d[k]?
+      d[k] = opts[k]
     else
-      for k2, v2 of data[k]
+      for k2, v2 of d[k]
         unless v2?
-          data[k][k2] = opts[k]?[k2]
+          d[k][k2] = opts[k]?[k2]
 
-  @data.set data
+  data = refer d
 
   # load multipage partial checkout data
   checkoutUser            = store.get 'checkout-user'
-  checkoutShippingAddress = store.get 'checkout-shippingAddress'
-  checkoutPayment         = store.get 'checkout-payment'
-
   if checkoutUser
-    @data.set 'user', checkoutUser
+    data.set 'user', checkoutUser
     store.remove 'checkout-user'
 
+  checkoutShippingAddress = store.get 'checkout-shippingAddress'
   if checkoutShippingAddress
-    @data.set 'order.shippingAddress', checkoutShippingAddress
+    data.set 'order.shippingAddress', checkoutShippingAddress
     store.remove 'checkout-shippingAddress'
 
+  checkoutPayment = store.get 'checkout-payment'
   if checkoutPayment
-    @data.set 'payment', checkoutPayment
+    data.set 'payment', checkoutPayment
     store.remove 'checkout-payment'
 
+  # fetch default geoloc data
+  state = store.get 'default-state' ? ''
+  country = store.get 'default-country' ? ''
+
+  countriesReady = false
+  dontPrefill = false
+
+  if !state || !country
+    # get country/state
+    # requires google maps to be in the namespace
+    if window?.google && window?.navigator?.geolocation
+      navigator.geolocation.getCurrentPosition (position)=>
+        # abort if manually selected
+
+        GMaps.geocode
+          address: "#{position.coords.latitude}, #{position.coords.longitude}"
+          callback: (results, status)=>
+            # abort if manually selected
+            if data.get('order.shippingAddress.country') || data.get('order.shippingAddress.state')
+              dontPrefill = true
+
+            if status == 'OK'
+              state = ''
+              country = ''
+
+              for result in results
+                if 'administrative_area_level_1' in result.types
+                  state = result.address_components[0].short_name
+                else if 'country' in result.types
+                  country = result.address_components[0].short_name
+
+              # cache default geoloc data
+              store.set 'default-state', state
+              store.set 'default-country', country
+
+              if countriesReady
+                data.set 'order.shippingAddress.country', country
+                data.set 'order.shippingAddress.state', state
+
+            m.trigger Events.GeoReady, {
+              status: 'success'
+              geolocation: position
+              gmaps: results
+            }
+    else
+      # makes more sense to force sequencing after all the synchronous stuff
+      requestAnimationFrame ()->
+        m.trigger Events.GeoReady, {
+          status: 'disabled'
+        }
+
+  # use default geoloc
+  data.on 'set', (k, v)->
+    if k == 'countries' && !dontPrefill
+      countriesReady = true
+      data.set 'order.shippingAddress.country', country
+      data.set 'order.shippingAddress.state', state
+
+  return data
+
+# initialize hanzo.js client
+initClient = (opts)->
   settings = {}
   settings.key      = opts.key      if opts.key
   settings.endpoint = opts.endpoint if opts.endpoint
 
-  @client = new Api settings
-  @cart   = new Cart @client, @data, opts.cartOptions
+  return new Api settings
 
-  @cart.onCart = =>
-    store.set 'cartId', @data.get 'order.cartId'
-    [_, mcCId] = getMCIds queries
+# initialize the cart from commerce.js
+initCart = (client, data, cartOptions)->
+  cart = new Cart client, data
+
+  # fetch library data
+  lastChecked   = store.get 'lastChecked'
+  countries     = store.get('countries') ? []
+  taxRates      = store.get 'taxRates'
+  shippingRates = store.get 'shippingRates'
+
+  data.set 'countries', countries
+  data.set 'taxRates', taxRates
+  data.set 'shippingRates', shippingRates
+
+  lastChecked = renderDate(new Date(), rfc3339)
+
+  client.library.shopjs(
+    hasCountries:       !!countries && countries.length != 0
+    hasTaxRates:        !!taxRates
+    hasShippingRates:   !!shippingRates
+    lastChecked:        renderDate(lastChecked || '2000-01-01', rfc3339)
+  ).then (res) ->
+    countries = res.countries ? countries
+    taxRates = res.taxRates ? taxRates
+    shippingRates = res.shippingRates ? shippingRates
+
+    store.set 'countries', countries
+    store.set 'taxRates', taxRates
+    store.set 'shippingRates', shippingRates
+    store.set 'lastChecked', lastChecked
+
+    data.set 'countries', countries
+    data.set 'taxRates', taxRates
+    data.set 'shippingRates', shippingRates
+
+    if res.currency
+      data.set 'order.currency', res.currency
+
+    cart.taxRates res.taxRates ? taxRates
+    cart.shippingRates res.shippingRates ? shippingRates
+
+    cart.invoice()
+
+    m.trigger Events.AsyncReady, res
+
+    El.scheduleUpdate()
+
+  cart.onCart = ->
+    store.set 'cartId', data.get 'order.cartId'
+    [_, mcCId] = getMCIds()
     cart =
       mailchimp:
-        checkoutUrl: @data.get 'order.checkoutUrl'
-      currency: @data.get 'order.currency'
+        checkoutUrl: data.get 'order.checkoutUrl'
+      currency: data.get 'order.currency'
 
     if mcCId
       cart.mailchimp.campaignId = mcCId
 
     # try get userId
-    @client.account.get().then (res) =>
-      @cart._cartUpdate
+    client.account.get().then (res) ->
+      cart._cartUpdate
         email:  res.email
         userId: res.email
     .catch ->
       # ignore error, does not matter
 
-  tags = El.mount elementsToMount,
-    cart:     @cart
-    client:   @client
-    data:     @data
-    mediator: m
-
-  El.update = ->
-    for tag in tags
-      tag.update()
-
-  @cart.onUpdate = (item) =>
-    items = @data.get 'order.items'
+  cart.onUpdate = (item) ->
+    items = data.get 'order.items'
     store.set 'items', items
 
-    @cart._cartUpdate
-      tax:   @data.get 'order.tax'
-      total: @data.get 'order.total'
+    cart._cartUpdate
+      tax:   data.get 'order.tax'
+      total: data.get 'order.total'
 
     if item?
       m.trigger Events.UpdateItem, item
 
-    meta = @data.get 'order.metadata'
+    meta = data.get 'order.metadata'
     store.set 'order.metadata', meta
 
-    @cart.invoice()
+    cart.invoice()
     El.scheduleUpdate()
+
+  items  = store.get 'items'
+  # Fix incompletely loaded items
+  if items? && items.length > 0
+    for item in items
+      if item.id?
+        cart.load item.id
+      else if item.productId?
+        cart.refresh item.productId
+
+  return cart
+
+initMediator = (data, cart) ->
+  # initialize mediator
+  m.on Events.Started, (data) ->
+    cart.invoice()
+    El.scheduleUpdate()
+
+  m.on Events.DeleteLineItem, (item) ->
+    id = item.get 'id'
+    if !id
+      id = item.get 'productId'
+    if !id
+      id = item.get 'productSlug'
+    Shop.setItem id, 0
+
+  m.on 'error', (err) ->
+    console.log err
+    window?.Raven?.captureException err
+
+  return m
+
+Shop.start = (opts = {}) ->
+  unless opts.key?
+    throw new Error 'Please specify your API Key'
+
+  # initialize everything
+  @data     = initData opts
+  @client   = initClient opts
+
+  @cart     = initCart @client, @data, opts.cartOptions
+  @m        = initMediator @data, @cart
+
+  # update referrer data
+  queries = getQueries()
+  promo  = queries.promo ? ''
+  referrer = @data.get 'order.referrerId'
 
   if referrer? && referrer != ''
     @client.referrer.get(referrer).then (res) =>
@@ -267,6 +442,13 @@ Shop.start = (opts = {}) ->
   else if promo != ''
     @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
+
+  # mount
+  tags = El.mount elementsToMount,
+    cart:     @cart
+    client:   @client
+    data:     @data
+    mediator: m
 
   ps = []
   for tag in tags
@@ -286,50 +468,28 @@ Shop.start = (opts = {}) ->
 
       m.trigger Events.Ready
     #try to deal with long running stuff
-    El.update()
+    El.scheduleUpdate()
   .catch (err) ->
     window?.Raven?.captureException err
 
-  # quite hacky
-  m.data = @data
-  m.on Events.SetData, (@data) =>
-    @cart.invoice()
-
-  m.on Events.DeleteLineItem, (item) ->
-    id = item.get 'id'
-    if !id
-      id = item.get 'productId'
-    if !id
-      id = item.get 'productSlug'
-    Shop.setItem id, 0
-
-  m.trigger Events.SetData, @data
-
-  m.on 'error', (err) ->
-    console.log err
-    window?.Raven?.captureException err
-
-  # Fix incompletely loaded items
-  if items? && items.length > 0
-    for item in items
-      if item.id?
-        @cart.load item.id
-      else if item.productId?
-        @cart.refresh item.productId
-
-  # Force update
-  El.scheduleUpdate()
-
+  m.trigger Events.Started, @data
   return m
-
-waits           = 0
-itemUpdateQueue = []
 
 Shop.initCart = ->
   @cart.initCart()
 
 Shop.clear = ->
   @cart.clear()
+
+Shop.getMediator = ->
+  return m
+
+Shop.getData = ->
+  return @data
+
+Shop.isEmpty   = ->
+  items = @data.get 'order.items'
+  items.length == 0
 
 # cart item is in the form of:
 #
@@ -364,5 +524,25 @@ Shop.getItem = (id) ->
     quantity:   item?.quantity ? 0
     price:      item?.price ? 0
   }
+
+# Support inline load
+if document?.currentScript?
+  key = document.currentScript.getAttribute('data-key')
+  endpoint = document.currentScript.getAttribute('data-endpoint')
+
+  if key
+    opts =
+      key: key
+
+    if endpoint
+      opts.endpoint = endpoint
+
+    requestAnimationFrame ()->
+      Shop.start opts
+
+if window?
+  window.Shop = Shop
+  window.renderCurrency = renderUICurrencyFromJSON
+  window.renderDate = renderDate
 
 export default Shop

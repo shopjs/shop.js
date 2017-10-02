@@ -411,6 +411,7 @@ shippingaddress .input input[type=password]{
   border-width:1px;
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+  padding:0 $inputHPadding;
 }
 cart .input textarea,
 checkout .input textarea,
@@ -467,6 +468,95 @@ reset-password-complete .input textarea,
 shippingaddress .input textarea{
   width:100%;
   font-size:1em;
+}
+cart .input .select-indicator,
+checkout .input .select-indicator,
+checkout-card .input .select-indicator,
+checkout-modal .input .select-indicator,
+checkout-shippingaddress .input .select-indicator,
+login .input .select-indicator,
+orders .input .select-indicator,
+profile .input .select-indicator,
+register .input .select-indicator,
+reset-password .input .select-indicator,
+reset-password-complete .input .select-indicator,
+shippingaddress .input .select-indicator{
+  display:none;
+}
+cart .input select,
+checkout .input select,
+checkout-card .input select,
+checkout-modal .input select,
+checkout-shippingaddress .input select,
+login .input select,
+orders .input select,
+profile .input select,
+register .input select,
+reset-password .input select,
+reset-password-complete .input select,
+shippingaddress .input select{
+  width:100%;
+  background:none;
+  border:0;
+  border-bottom:1px solid;
+  border-color:#000;
+  border-width:1px;
+  border-radius:0;
+  line-height:2rem;
+  font-size:1rem;
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none;
+  outline:none;
+}
+cart .input select::-ms-expand,
+checkout .input select::-ms-expand,
+checkout-card .input select::-ms-expand,
+checkout-modal .input select::-ms-expand,
+checkout-shippingaddress .input select::-ms-expand,
+login .input select::-ms-expand,
+orders .input select::-ms-expand,
+profile .input select::-ms-expand,
+register .input select::-ms-expand,
+reset-password .input select::-ms-expand,
+reset-password-complete .input select::-ms-expand,
+shippingaddress .input select::-ms-expand{
+  display:none;
+}
+cart .input select ~ .select-indicator,
+checkout .input select ~ .select-indicator,
+checkout-card .input select ~ .select-indicator,
+checkout-modal .input select ~ .select-indicator,
+checkout-shippingaddress .input select ~ .select-indicator,
+login .input select ~ .select-indicator,
+orders .input select ~ .select-indicator,
+profile .input select ~ .select-indicator,
+register .input select ~ .select-indicator,
+reset-password .input select ~ .select-indicator,
+reset-password-complete .input select ~ .select-indicator,
+shippingaddress .input select ~ .select-indicator{
+  position:absolute;
+  top:1rem;
+  right:0.1rem;
+  font-size:0.5em;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+  pointer-events:none;
+  display:block;
+}
+cart .input select:disabled ~ .select-indicator,
+checkout .input select:disabled ~ .select-indicator,
+checkout-card .input select:disabled ~ .select-indicator,
+checkout-modal .input select:disabled ~ .select-indicator,
+checkout-shippingaddress .input select:disabled ~ .select-indicator,
+login .input select:disabled ~ .select-indicator,
+orders .input select:disabled ~ .select-indicator,
+profile .input select:disabled ~ .select-indicator,
+register .input select:disabled ~ .select-indicator,
+reset-password .input select:disabled ~ .select-indicator,
+reset-password-complete .input select:disabled ~ .select-indicator,
+shippingaddress .input select:disabled ~ .select-indicator{
+  opacity:0.5;
 }
 cart .input.input.input,
 checkout .input.input.input,
