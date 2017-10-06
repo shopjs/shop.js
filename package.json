@@ -55,7 +55,7 @@
     "moment-timezone": "0.5.13"
   },
   "devDependencies": {
-    "autoprefixer": "7.1.4",
+    "autoprefixer": "7.1.5",
     "bebop": "^1.12.5",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
