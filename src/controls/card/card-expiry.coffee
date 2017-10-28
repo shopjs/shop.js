@@ -38,9 +38,9 @@ class CardExpiry extends Text
       el.addEventListener 'keypress', restrictNumeric
       el.addEventListener 'keypress', @_limit7
 
-    @on 'unmount', =>
-      el.removeEventListener 'keypress', restrictNumeric
-      el.removeEventListener 'keypress', @_limit7
+      @on 'unmount', =>
+        el.removeEventListener 'keypress', restrictNumeric
+        el.removeEventListener 'keypress', @_limit7
 
 CardExpiry.register()
 
