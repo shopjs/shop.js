@@ -4,20 +4,20 @@ form(onsubmit='{ submit }')
       h2
         | Contact
       .fields
-        user-name.input(placeholder='Name')
-        user-email.input(placeholder='Email')
+        user-name.input(label='Name')
+        user-email.input(label='Email')
     .shipping.checkout-section
       h2
         | Shipping
       .fields
-        shippingaddress-name.input(placeholder='Recipient')
-        shippingaddress-line1.input(placeholder='Address')
-        shippingaddress-line2.input(placeholder='Suite')
-        shippingaddress-city.input(placeholder='City')
+        shippingaddress-name.input(label='Recipient')
+        shippingaddress-line1.input(label='Address')
+        shippingaddress-line2.input(label='Suite')
+        shippingaddress-city.input(label='City')
       .fields
-        shippingaddress-country.input(placeholder='Country')
-        shippingaddress-state.input(placeholder='State')
-        shippingaddress-postalcode.input(placeholder='Postal Code')
+        shippingaddress-country.input(label='Country')
+        shippingaddress-state.input(label='State')
+        shippingaddress-postalcode.input(label='Postal Code')
 
     button.checkout-next(type='submit')
       | Continue &#10140;

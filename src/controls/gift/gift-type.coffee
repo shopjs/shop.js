@@ -1,5 +1,5 @@
 # import { Select } from 'el-controls'
-import Select from 'el-controls/src/controls/select'
+import Select from 'el-controls/src/controls/selection'
 
 class GiftType extends Select
   tag:  'gift-type'

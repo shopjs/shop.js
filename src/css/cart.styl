@@ -23,7 +23,7 @@ cart
       & > *
         float: left;
 
-  quantity-select-control
+  quantity-select
   .promo
   .promo-row
   .invoice-line
@@ -31,7 +31,9 @@ cart
     display: table
     position: relative
 
-  quantity-select-control
+  quantity-select
+    margin-top: 0 !important
+
     .selectize-input
       max-width: 60px
       border-bottom: 0 !important
@@ -131,9 +133,10 @@ cart
       promocode
         width: 75%
         padding: 0
+        margin: 0
 
         input
-          border-radius: 1em 0 0 1em
+          border-radius: $themeBorderRadius 0 0 $themeBorderRadius
           border: $themeInputBorderWidth solid
           border-right: 0
           padding: 0 15px
@@ -143,7 +146,7 @@ cart
       button
         position: relative
         width: 25%
-        border-radius: 0 1em 1em 0
+        border-radius: 0 $themeBorderRadius $themeBorderRadius 0
         border-width: 0
         font-size: 1em
         padding: 0
