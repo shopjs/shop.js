@@ -71,8 +71,8 @@ class CheckoutForm extends El.Form
 
       El.scheduleUpdate()
       @cart.checkout().then (pRef) =>
-        pRef.p
-          .then =>
+        return pRef.p
+          .then (order)=>
             hasErrored = false
             setTimeout =>
               if !hasErrored
@@ -83,7 +83,8 @@ class CheckoutForm extends El.Form
                 El.scheduleUpdate()
             , 200
 
-            @mediator.trigger Events.SubmitSuccess
+            @mediator.trigger Events.SubmitSuccess, order
+            return order
 
           .catch (err) =>
             window?.Raven?.captureException(err)
