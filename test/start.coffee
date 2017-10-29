@@ -70,7 +70,7 @@ describe 'Shop.js', ->
     # Other default
     data.terms.should.eq false
     expect(data.user).to.not.exist
-    expect(data.payment).to.not.exist
+    expect(data.payment).to.deep.eq {}
 
     order = data.order
     order.type.should.eq 'stripe'
