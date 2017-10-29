@@ -1,12 +1,12 @@
 import './utils/patches'
 
-import El           from 'el.js'
+import El           from 'el.js/src'
 import Promise      from 'broken'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
 import store        from 'akasha'
-import {Api}        from 'hanzo.js'
-import {Cart}       from 'commerce.js'
+import {Api}        from 'hanzo.js/src/browser'
+import {Cart}       from 'commerce.js/src'
 import GMaps        from 'gmaps'
 
 import {
@@ -152,27 +152,6 @@ for k, v of Shop.Containers
 for k, v of Shop.Widgets
   tagNames.push(v::tag.toUpperCase()) if v::tag?
 
-searchQueue     = [document.body]
-elementsToMount = []
-
-# move to El
-loop
-  if searchQueue.length == 0
-    break
-
-  root = searchQueue.shift()
-
-  if !root?
-    continue
-
-  if root.tagName? && root.tagName in tagNames
-    elementsToMount.push root
-  else if root.children?.length > 0
-    children = Array.prototype.slice.call root.children
-    children.unshift 0
-    children.unshift searchQueue.length
-    searchQueue.splice.apply searchQueue, children
-
 # initialize the data schema
 initData = (opts)->
   queries = getQueries()
@@ -193,10 +172,10 @@ initData = (opts)->
     terms:          opts.terms ? false
     order:
       giftType:     'physical'
-      type:         'stripe'
-      shippingRate: opts.config?.shippingRate   || opts.order?.shippingRate  || 0
-      taxRate:      opts.config?.taxRate        || opts.order?.taxRate       || 0
-      currency:     opts.config?.currency       || opts.order?.currency      || 'usd'
+      type:         opts.processor ? opts.order?.type ? 'stripe'
+      shippingRate: opts.config?.shippingRate   ? opts.order?.shippingRate  ? 0
+      taxRate:      opts.config?.taxRate        ? opts.order?.taxRate       ? 0
+      currency:     opts.config?.currency       ? opts.order?.currency      ? 'usd'
       referrerId:   referrer
       discount:    0
       tax:         0
@@ -207,7 +186,8 @@ initData = (opts)->
       checkoutUrl: opts.config?.checkoutUrl ? null
       metadata:    meta                     ? {}
     user: null
-    payment: null
+    payment:
+      type: opts.processor
 
   for k, v of opts
     unless d[k]?
@@ -442,6 +422,28 @@ Shop.start = (opts = {}) ->
   else if promo != ''
     @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
+
+  # create list of elements to mount
+  searchQueue     = [document.body]
+  elementsToMount = []
+
+  # move to El
+  loop
+    if searchQueue.length == 0
+      break
+
+    root = searchQueue.shift()
+
+    if !root?
+      continue
+
+    if root.tagName? && root.tagName in tagNames
+      elementsToMount.push root
+    else if root.children?.length > 0
+      children = Array.prototype.slice.call root.children
+      children.unshift 0
+      children.unshift searchQueue.length
+      searchQueue.splice.apply searchQueue, children
 
   # mount
   tags = El.mount elementsToMount,
