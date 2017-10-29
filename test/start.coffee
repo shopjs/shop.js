@@ -164,7 +164,7 @@ describe 'Shop.js', ->
             $('checkout .checkout-next').click()
           , 1500
 
-        m.one 'submit-success', ->
+        m.one 'submit-success', ()->
           resolve true
 
         # start
