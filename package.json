@@ -52,7 +52,7 @@
     "es-raf": "^3.3.1",
     "gmaps": "0.4.24",
     "hanzo.js": "2.4.1",
-    "moment-timezone": "0.5.13"
+    "moment-timezone": "0.5.14"
   },
   "devDependencies": {
     "autoprefixer": "7.1.4",
