@@ -11848,7 +11848,7 @@ CheckoutForm = (function(superClass) {
         _this.data.set('order.email', email);
         El$1$1.scheduleUpdate();
         return _this.cart.checkout().then(function(pRef) {
-          return pRef.p.then(function() {
+          return pRef.p.then(function(order) {
             var hasErrored;
             hasErrored = false;
             setTimeout(function() {
@@ -11859,7 +11859,8 @@ CheckoutForm = (function(superClass) {
                 return El$1$1.scheduleUpdate();
               }
             }, 200);
-            return _this.mediator.trigger(Events$2.SubmitSuccess);
+            _this.mediator.trigger(Events$2.SubmitSuccess, order);
+            return order;
           })["catch"](function(err) {
             var hasErrored, ref;
             if (typeof window !== "undefined" && window !== null) {
