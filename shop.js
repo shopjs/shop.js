@@ -11747,7 +11747,7 @@ var configs = config = {
   'order.giftEmail': [isEcardGiftRequired, isEmail],
   'order.giftMessage': null,
   'order.promoCode': null,
-  'payment.account.name': [isRequired],
+  'payment.account.name': [requiresStripe, isRequired],
   'payment.account.number': [requiresStripe, cardNumber],
   'payment.account.expiry': [requiresStripe, expiration],
   'payment.account.cvc': [requiresStripe, cvc],
@@ -11944,7 +11944,7 @@ CheckoutCardForm = (function(superClass) {
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
     'user.name': [isRequired, splitName],
-    'payment.account.name': [isRequired],
+    'payment.account.name': [requiresStripe, isRequired],
     'payment.account.number': [requiresStripe, cardNumber],
     'payment.account.expiry': [requiresStripe, expiration],
     'payment.account.cvc': [requiresStripe, cvc]
