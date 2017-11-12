@@ -5,19 +5,29 @@ digitsOnlyRe = new RegExp('[^\\d.-]', 'g')
 currencySigns = currencies.data
 
 isZeroDecimal = (code)->
+  code = code.toLowerCase() if code
+
   if code == 'bif' || code == 'clp' || code == 'djf' || code == 'gnf' || code == 'jpy' || code == 'kmf' || code == 'krw' || code == 'mga' || code == 'pyg' || code == 'rwf' || code == 'vnd' || code == 'vuv' || code == 'xaf' || code == 'xof' || code == 'xpf'
     return true
   return false
 
 export renderUpdatedUICurrency = (code, uiCurrency) ->
+  code = code.toLowerCase() if code
+
   currentCurrencySign = currencySigns[code]
   renderUICurrencyFromJSON Util.renderJSONCurrencyFromUI(uiCurrency)
 
 export renderUICurrencyFromJSON = (code, jsonCurrency) ->
+  code = code.toLowerCase() if code
+
   if isNaN jsonCurrency
     jsonCurrency = 0
 
-  currentCurrencySign = currencySigns[code]
+  currentCurrencySign = currencySigns[code] ? ''
+
+  # ethereum
+  if code == 'eth'
+    jsonCurrency = jsonCurrency / 1e7
 
   jsonCurrency = '' + jsonCurrency
   # jsonCurrency is not cents
@@ -31,6 +41,8 @@ export renderUICurrencyFromJSON = (code, jsonCurrency) ->
   currentCurrencySign + jsonCurrency.substr(0, jsonCurrency.length - 2) + '.' + jsonCurrency.substr(-2)
 
 export renderJSONCurrencyFromUI = (code, uiCurrency) ->
+  code = code.toLowerCase() if code
+
   currentCurrencySign = currencySigns[code]
 
   if isZeroDecimal code
