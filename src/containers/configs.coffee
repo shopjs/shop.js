@@ -31,7 +31,7 @@ export default config =
   'order.giftMessage':    null
   'order.promoCode':      null
 
-  'payment.account.name':     [ isRequired ]
+  'payment.account.name':     [ requiresStripe, isRequired ]
   'payment.account.number':   [ requiresStripe, cardNumber]
   'payment.account.expiry':   [ requiresStripe, expiration ]
   'payment.account.cvc':      [ requiresStripe, cvc ]
