@@ -12241,7 +12241,7 @@ LineItems.register();
 var LineItems$1 = LineItems;
 
 // templates/containers/login.pug
-var html$10 = "\n<yield>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Login</button>\n</yield>";
+var html$10 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
 
 // src/containers/login.coffee
 var LoginForm;
@@ -12503,7 +12503,7 @@ ProfileForm.register();
 var Profile = ProfileForm;
 
 // templates/containers/register.pug
-var html$14 = "\n<yield>\n  <user-name class=\"input\" placeholder=\"Name\"></user-name>\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Register</button>\n</yield>";
+var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
 
 // src/containers/register.coffee
 var RegisterForm;
@@ -12671,7 +12671,7 @@ RegisterCompleteForm.register();
 var RegisterComplete = RegisterCompleteForm;
 
 // templates/containers/reset-password.pug
-var html$15 = "\n<yield >\n  <user-email class=\"input\" placeholder=\"Email\"></user-email>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield >";
+var html$15 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
 
 // src/containers/reset-password.coffee
 var ResetPasswordForm;
@@ -12730,7 +12730,7 @@ ResetPasswordForm.register();
 var ResetPassword = ResetPasswordForm;
 
 // templates/containers/reset-password-complete.pug
-var html$16 = "\n<yield>\n  <user-password class=\"input\" placeholder=\"Password\"></user-password>\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  <button type=\"submit\">Reset</button>\n</yield>";
+var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
 
 // src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
@@ -13293,6 +13293,9 @@ digitsOnlyRe = new RegExp('[^\\d.-]', 'g');
 currencySigns = currencies.data;
 
 isZeroDecimal = function(code) {
+  if (code) {
+    code = code.toLowerCase();
+  }
   if (code === 'bif' || code === 'clp' || code === 'djf' || code === 'gnf' || code === 'jpy' || code === 'kmf' || code === 'krw' || code === 'mga' || code === 'pyg' || code === 'rwf' || code === 'vnd' || code === 'vuv' || code === 'xaf' || code === 'xof' || code === 'xpf') {
     return true;
   }
@@ -13302,11 +13305,17 @@ isZeroDecimal = function(code) {
 
 
 var renderUICurrencyFromJSON = function(code, jsonCurrency) {
-  var currentCurrencySign;
+  var currentCurrencySign, ref;
+  if (code) {
+    code = code.toLowerCase();
+  }
   if (isNaN(jsonCurrency)) {
     jsonCurrency = 0;
   }
-  currentCurrencySign = currencySigns[code];
+  currentCurrencySign = (ref = currencySigns[code]) != null ? ref : '';
+  if (code === 'eth') {
+    jsonCurrency = jsonCurrency / 1e7;
+  }
   jsonCurrency = '' + jsonCurrency;
   if (isZeroDecimal(code)) {
     return currentCurrencySign + jsonCurrency;
