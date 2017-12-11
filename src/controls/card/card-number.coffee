@@ -5,7 +5,7 @@ import keys from '../../utils/keys'
 import {
   cardFromNumber
   restrictNumeric
-} from '../../utils/card'
+} from 'shop.js-util/src/card'
 
 class CardNumber extends Text
   tag:      'card-number'

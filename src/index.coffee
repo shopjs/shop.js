@@ -13,7 +13,7 @@ import {
   getQueries,
   getReferrer,
   getMCIds
-} from './utils/uri'
+} from 'shop.js-util/src/uri'
 
 import {
   Control
@@ -92,12 +92,12 @@ Controls =
 import Events        from './events'
 import Containers    from './containers'
 import Widgets       from './widgets'
-import analytics     from './utils/analytics'
+import analytics     from 'shop.js-util/src/analytics'
 import m             from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
-import {renderUICurrencyFromJSON} from './utils/currency'
-import {renderDate, rfc3339} from './utils/dates'
+import {renderUICurrencyFromJSON} from 'shop.js-util/src/currency'
+import {renderDate, rfc3339} from 'shop.js-util/src/dates'
 
 Shop = {}
 Shop.Controls = Controls

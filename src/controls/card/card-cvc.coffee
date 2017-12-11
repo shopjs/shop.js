@@ -2,7 +2,7 @@
 import Text from 'el-controls/src/controls/text'
 
 import keys from '../../utils/keys'
-import { restrictNumeric } from '../../utils/card'
+import { restrictNumeric } from 'shop.js-util/src/card'
 
 class CardCVC extends Text
   tag:    'card-cvc'

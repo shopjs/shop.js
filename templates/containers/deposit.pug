@@ -1,0 +1,12 @@
+form(onsubmit='{ submit }')
+  #{ 'yield' }
+    .deposit.checkout-section(if)
+      h2(if='{ data.get("order.mode") == "deposit" }')
+        | Deposit Funds
+      h2(if='{ data.get("order.mode") == "contribution" }')
+        | Contribute
+      span
+    .deposit.checkout-section(if='{ !data.get("order.mode") }')
+      p
+        | Error: <deposit> requires order.mode to be 'deposit' or 'contribution'
+
