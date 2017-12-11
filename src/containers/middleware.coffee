@@ -1,11 +1,11 @@
 import {
   requiresPostalCode
   requiresState
-} from '../utils/country'
+} from 'shop.js-util/src/country'
 import {
   luhnCheck
   cardFromNumber
-} from '../utils/card'
+} from 'shop.js-util/src/card'
 
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
