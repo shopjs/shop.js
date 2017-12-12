@@ -10,7 +10,6 @@ import {
   splitName
 } from './middleware'
 
-
 class ProfileForm extends El.Form
   tag: 'profile'
   html: html
