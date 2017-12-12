@@ -8790,7 +8790,7 @@ return GMaps;
 }));
 });
 
-// src/utils/uri.coffee
+// node_modules/shop.js-util/src/uri.coffee
 var queries;
 
 queries = null;
@@ -9827,7 +9827,7 @@ var keys = {
   numeric: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
 };
 
-// src/utils/card.coffee
+// node_modules/shop.js-util/src/card.coffee
 var cards;
 var defaultFormat;
 
@@ -9972,6 +9972,7 @@ var restrictNumeric = function(e) {
   if (!/[\d\s]/.test(input)) {
     return e.preventDefault();
   }
+  return true;
 };
 
 // src/controls/card/card-cvc.coffee
@@ -11525,7 +11526,7 @@ for (k$2 in riot$1) {
 
 var El$1$1 = El$2;
 
-// src/utils/country.coffee
+// node_modules/shop.js-util/src/country.coffee
 var requiresPostalCode = function(code) {
   code = code.toLowerCase();
   return code === 'dz' || code === 'ar' || code === 'am' || code === 'au' || code === 'at' || code === 'az' || code === 'a2' || code === 'bd' || code === 'by' || code === 'be' || code === 'ba' || code === 'br' || code === 'bn' || code === 'bg' || code === 'ca' || code === 'ic' || code === 'cn' || code === 'hr' || code === 'cy' || code === 'cz' || code === 'dk' || code === 'en' || code === 'ee' || code === 'fo' || code === 'fi' || code === 'fr' || code === 'ge' || code === 'de' || code === 'gr' || code === 'gl' || code === 'gu' || code === 'gg' || code === 'ho' || code === 'hu' || code === 'in' || code === 'id' || code === 'il' || code === 'it' || code === 'jp' || code === 'je' || code === 'kz' || code === 'kr' || code === 'ko' || code === 'kg' || code === 'lv' || code === 'li' || code === 'lt' || code === 'lu' || code === 'mk' || code === 'mg' || code === 'm3' || code === 'my' || code === 'mh' || code === 'mq' || code === 'yt' || code === 'mx' || code === 'mn' || code === 'me' || code === 'nl' || code === 'nz' || code === 'nb' || code === 'no' || code === 'pk' || code === 'ph' || code === 'pl' || code === 'po' || code === 'pt' || code === 'pr' || code === 're' || code === 'ru' || code === 'sa' || code === 'sf' || code === 'cs' || code === 'sg' || code === 'sk' || code === 'si' || code === 'za' || code === 'es' || code === 'lk' || code === 'nt' || code === 'sx' || code === 'uv' || code === 'vl' || code === 'se' || code === 'ch' || code === 'tw' || code === 'tj' || code === 'th' || code === 'tu' || code === 'tn' || code === 'tr' || code === 'tm' || code === 'vi' || code === 'ua' || code === 'gb' || code === 'us' || code === 'uy' || code === 'uz' || code === 'va' || code === 'vn' || code === 'wl' || code === 'ya';
@@ -11920,7 +11921,7 @@ CheckoutForm = (function(superClass) {
 
 CheckoutForm.register();
 
-var Checkout = CheckoutForm;
+var CheckoutForm$1 = CheckoutForm;
 
 // templates/containers/checkout-card.pug
 var html$5 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" label=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
@@ -12160,16 +12161,47 @@ CartForm.register();
 
 var Cart$2 = CartForm;
 
-// templates/containers/lineitem.pug
-var html$8 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+// templates/containers/deposit.pug
+var html$8 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"deposit checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;deposit&quot; }\">Deposit Funds</h2>\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;contribution&quot; }\">Contribute</h2>\n      <div class=\"fields\">\n        <text class=\"input\" label=\"Deposit Amount\"></text>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n    <div class=\"deposit checkout-section\" if=\"{ !data.get(&quot;order.mode&quot;) }\">\n      <p>Error: <deposit> requires order.mode to be 'deposit' or 'contribution'</p>\n    </div>\n  </yield>\n</form>";
 
-// src/containers/lineitem.coffee
-var LineItemForm;
+// src/containers/deposit.coffee
+var DepositForm;
 var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$38 = {}.hasOwnProperty;
 
+DepositForm = (function(superClass) {
+  extend$39(DepositForm, superClass);
+
+  function DepositForm() {
+    return DepositForm.__super__.constructor.apply(this, arguments);
+  }
+
+  DepositForm.prototype.tag = 'deposit';
+
+  DepositForm.prototype.html = html$8;
+
+  DepositForm.prototype.configs = {
+    'order.subtotal': [isRequired]
+  };
+
+  return DepositForm;
+
+})(CheckoutForm$1);
+
+DepositForm.register();
+
+var Deposit = DepositForm;
+
+// templates/containers/lineitem.pug
+var html$9 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+
+// src/containers/lineitem.coffee
+var LineItemForm;
+var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$39 = {}.hasOwnProperty;
+
 LineItemForm = (function(superClass) {
-  extend$39(LineItemForm, superClass);
+  extend$40(LineItemForm, superClass);
 
   function LineItemForm() {
     return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -12177,7 +12209,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$8;
+  LineItemForm.prototype.html = html$9;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -12200,15 +12232,15 @@ LineItemForm.register();
 var LineItem = LineItemForm;
 
 // templates/containers/lineitems.pug
-var html$9 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$10 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/containers/lineitems.coffee
 var LineItems;
-var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$39 = {}.hasOwnProperty;
+var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$40 = {}.hasOwnProperty;
 
 LineItems = (function(superClass) {
-  extend$40(LineItems, superClass);
+  extend$41(LineItems, superClass);
 
   function LineItems() {
     return LineItems.__super__.constructor.apply(this, arguments);
@@ -12216,7 +12248,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$9;
+  LineItems.prototype.html = html$10;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -12241,15 +12273,15 @@ LineItems.register();
 var LineItems$1 = LineItems;
 
 // templates/containers/login.pug
-var html$10 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
+var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
 
 // src/containers/login.coffee
 var LoginForm;
-var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$40 = {}.hasOwnProperty;
+var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$41 = {}.hasOwnProperty;
 
 LoginForm = (function(superClass) {
-  extend$41(LoginForm, superClass);
+  extend$42(LoginForm, superClass);
 
   function LoginForm() {
     return LoginForm.__super__.constructor.apply(this, arguments);
@@ -12257,7 +12289,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$10;
+  LoginForm.prototype.html = html$11;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -12298,15 +12330,15 @@ LoginForm.register();
 var Login = LoginForm;
 
 // templates/containers/order.pug
-var html$11 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+var html$12 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
 // src/containers/order.coffee
 var OrderForm;
-var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$41 = {}.hasOwnProperty;
+var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$42 = {}.hasOwnProperty;
 
 OrderForm = (function(superClass) {
-  extend$42(OrderForm, superClass);
+  extend$43(OrderForm, superClass);
 
   function OrderForm() {
     return OrderForm.__super__.constructor.apply(this, arguments);
@@ -12314,7 +12346,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$11;
+  OrderForm.prototype.html = html$12;
 
   OrderForm.prototype.parentData = null;
 
@@ -12354,15 +12386,15 @@ OrderForm.register();
 var Order = OrderForm;
 
 // templates/containers/orders.pug
-var html$12 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+var html$13 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
 // src/containers/orders.coffee
 var Orders;
-var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$42 = {}.hasOwnProperty;
+var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$43 = {}.hasOwnProperty;
 
 Orders = (function(superClass) {
-  extend$43(Orders, superClass);
+  extend$44(Orders, superClass);
 
   function Orders() {
     return Orders.__super__.constructor.apply(this, arguments);
@@ -12370,7 +12402,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$12;
+  Orders.prototype.html = html$13;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -12385,15 +12417,15 @@ Orders.register();
 var Orders$1 = Orders;
 
 // templates/containers/form.pug
-var html$13 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/containers/profile.coffee
 var ProfileForm;
-var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$43 = {}.hasOwnProperty;
+var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$44 = {}.hasOwnProperty;
 
 ProfileForm = (function(superClass) {
-  extend$44(ProfileForm, superClass);
+  extend$45(ProfileForm, superClass);
 
   function ProfileForm() {
     return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -12401,7 +12433,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$13;
+  ProfileForm.prototype.html = html$14;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -12503,15 +12535,15 @@ ProfileForm.register();
 var Profile = ProfileForm;
 
 // templates/containers/register.pug
-var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
+var html$15 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
 
 // src/containers/register.coffee
 var RegisterForm;
-var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$44 = {}.hasOwnProperty;
+var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$45 = {}.hasOwnProperty;
 
 RegisterForm = (function(superClass) {
-  extend$45(RegisterForm, superClass);
+  extend$46(RegisterForm, superClass);
 
   function RegisterForm() {
     return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -12519,7 +12551,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$14;
+  RegisterForm.prototype.html = html$15;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -12596,11 +12628,11 @@ var Register = RegisterForm;
 
 // src/containers/register-complete.coffee
 var RegisterCompleteForm;
-var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$45 = {}.hasOwnProperty;
+var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$46 = {}.hasOwnProperty;
 
 RegisterCompleteForm = (function(superClass) {
-  extend$46(RegisterCompleteForm, superClass);
+  extend$47(RegisterCompleteForm, superClass);
 
   function RegisterCompleteForm() {
     return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
@@ -12608,7 +12640,7 @@ RegisterCompleteForm = (function(superClass) {
 
   RegisterCompleteForm.prototype.tag = 'register-complete';
 
-  RegisterCompleteForm.prototype.html = html$13;
+  RegisterCompleteForm.prototype.html = html$14;
 
   RegisterCompleteForm.prototype.twoStageSignUp = false;
 
@@ -12671,15 +12703,15 @@ RegisterCompleteForm.register();
 var RegisterComplete = RegisterCompleteForm;
 
 // templates/containers/reset-password.pug
-var html$15 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
+var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
 
 // src/containers/reset-password.coffee
 var ResetPasswordForm;
-var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$46 = {}.hasOwnProperty;
+var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$47 = {}.hasOwnProperty;
 
 ResetPasswordForm = (function(superClass) {
-  extend$47(ResetPasswordForm, superClass);
+  extend$48(ResetPasswordForm, superClass);
 
   function ResetPasswordForm() {
     return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -12687,7 +12719,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$15;
+  ResetPasswordForm.prototype.html = html$16;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -12730,15 +12762,15 @@ ResetPasswordForm.register();
 var ResetPassword = ResetPasswordForm;
 
 // templates/containers/reset-password-complete.pug
-var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
+var html$17 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
 
 // src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
-var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$47 = {}.hasOwnProperty;
+var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$48 = {}.hasOwnProperty;
 
 ResetPasswordCompleteForm = (function(superClass) {
-  extend$48(ResetPasswordCompleteForm, superClass);
+  extend$49(ResetPasswordCompleteForm, superClass);
 
   function ResetPasswordCompleteForm() {
     return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -12746,7 +12778,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$16;
+  ResetPasswordCompleteForm.prototype.html = html$17;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -12796,11 +12828,11 @@ var ResetPasswordComplete = ResetPasswordCompleteForm;
 
 // src/containers/shippingaddress.coffee
 var ShippingAddressForm;
-var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$48 = {}.hasOwnProperty;
+var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$49 = {}.hasOwnProperty;
 
 ShippingAddressForm = (function(superClass) {
-  extend$49(ShippingAddressForm, superClass);
+  extend$50(ShippingAddressForm, superClass);
 
   function ShippingAddressForm() {
     return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -12808,7 +12840,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$13;
+  ShippingAddressForm.prototype.html = html$14;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -12871,9 +12903,10 @@ var ShippingAddress = ShippingAddressForm;
 var Forms;
 
 var Containers = Forms = {
-  Checkout: Checkout,
+  Checkout: CheckoutForm$1,
   CheckoutCard: CheckoutCard,
   CheckoutShippingAddress: CheckoutShippingAddress,
+  Deposit: Deposit,
   Cart: Cart$2,
   LineItem: LineItem,
   LineItems: LineItems$1,
@@ -12889,15 +12922,15 @@ var Containers = Forms = {
 };
 
 // templates/widgets/cart-counter.pug
-var html$17 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$18 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$49 = {}.hasOwnProperty;
+var extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$50 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$50(CartCounter, superClass);
+  extend$51(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -12905,7 +12938,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$17;
+  CartCounter.prototype.html = html$18;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -12942,18 +12975,18 @@ CartCounter.register();
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$18 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" label=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" label=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$19 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <div class=\"fields\">\n                <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n                <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              </div>\n              <div class=\"fields\">\n                <shippingaddress-country class=\"input\" label=\"Country\"></shippingaddress-country>\n                <shippingaddress-state class=\"input\" label=\"State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n            </div>\n            <terms class=\"checkbox\">\n              <label for=\"terms\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n            </terms>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$50 = {}.hasOwnProperty;
+var extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$51 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$51(CheckoutModal, superClass);
+  extend$52(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -12961,7 +12994,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$18;
+  CheckoutModal.prototype.html = html$19;
 
   CheckoutModal.prototype.names = null;
 
@@ -13069,15 +13102,15 @@ CheckoutModal.register();
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/side-pane.pug
-var html$19 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$20 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$51 = {}.hasOwnProperty;
+var extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$52 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$52(SidePane, superClass);
+  extend$53(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -13085,7 +13118,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$19;
+  SidePane.prototype.html = html$20;
 
   SidePane.prototype.id = '';
 
@@ -13148,7 +13181,7 @@ var Widgets$1 = Widgets = {
   SidePane: SidePane$1
 };
 
-// src/utils/analytics.coffee
+// node_modules/shop.js-util/src/analytics.coffee
 var analytics$2 = {
   track: function(event, data) {
     var err;
@@ -13163,7 +13196,7 @@ var analytics$2 = {
   }
 };
 
-// src/data/currencies.coffee
+// node_modules/shop.js-util/src/data/currencies.coffee
 var currencies = {
   data: {
     'aud': '$',
@@ -13283,16 +13316,15 @@ var currencies = {
   }
 };
 
-// src/utils/currency.coffee
+// node_modules/shop.js-util/src/currency.coffee
 var currencySigns;
 var digitsOnlyRe;
-var isZeroDecimal;
 
 digitsOnlyRe = new RegExp('[^\\d.-]', 'g');
 
 currencySigns = currencies.data;
 
-isZeroDecimal = function(code) {
+var isZeroDecimal = function(code) {
   if (code) {
     code = code.toLowerCase();
   }
@@ -13313,8 +13345,9 @@ var renderUICurrencyFromJSON = function(code, jsonCurrency) {
     jsonCurrency = 0;
   }
   currentCurrencySign = (ref = currencySigns[code]) != null ? ref : '';
-  if (code === 'eth') {
-    jsonCurrency = jsonCurrency / 1e7;
+  if (code === 'eth' || code === 'btc' || code === 'xbt') {
+    jsonCurrency = jsonCurrency / 1e9;
+    return currentCurrencySign + jsonCurrency;
   }
   jsonCurrency = '' + jsonCurrency;
   if (isZeroDecimal(code)) {
@@ -13391,7 +13424,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$53(a, b) {
+function extend$54(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -13498,7 +13531,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$53(getParsingFlags(m), flags);
+        extend$54(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -13630,7 +13663,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$53(function () {
+    return extend$54(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -13698,13 +13731,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$53({}, parentConfig), prop;
+    var res = extend$54({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                 res[prop] = {};
-                extend$53(res[prop], parentConfig[prop]);
-                extend$53(res[prop], childConfig[prop]);
+                extend$54(res[prop], parentConfig[prop]);
+                extend$54(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -13717,7 +13750,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$3(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$53({}, res[prop]);
+            res[prop] = extend$54({}, res[prop]);
         }
     }
     return res;
@@ -15839,7 +15872,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$53(config, bestMoment || tempConfig);
+    extend$54(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -16848,7 +16881,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$53({}, getParsingFlags(this));
+    return extend$54({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -18519,13 +18552,13 @@ var moment = module.exports = momentTimezone;
 moment.tz.load(require$$1);
 });
 
-// src/utils/language.coffee
+// node_modules/shop.js-util/src/language.coffee
 var getLanguage = function() {
   var ref, ref1, ref2, ref3, ref4;
   return (ref = (ref1 = (ref2 = window.navigator) != null ? ref2.userLanguage : void 0) != null ? ref1 : (ref3 = window.navigator) != null ? ref3.languages[0] : void 0) != null ? ref : (ref4 = window.navigator) != null ? ref4.language : void 0;
 };
 
-// src/utils/dates.coffee
+// node_modules/shop.js-util/src/dates.coffee
 var rfc3339 = 'YYYY-MM-DDTHH:mm:ssZ';
 
 var mmddyyyy = 'M-DD-YYYY';

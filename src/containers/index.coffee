@@ -3,6 +3,7 @@ import CheckoutCard            from './checkout-card'
 import CheckoutShippingAddress from './checkout-shippingaddress'
 
 import Cart                    from './cart'
+import Deposit                 from './deposit'
 import LineItem                from './lineitem'
 import LineItems               from './lineitems'
 import Login                   from './login'
@@ -19,6 +20,7 @@ export default Forms =
   Checkout:                 Checkout
   CheckoutCard:             CheckoutCard
   CheckoutShippingAddress:  CheckoutShippingAddress
+  Deposit:                  Deposit
 
   Cart:                     Cart
   LineItem:                 LineItem
