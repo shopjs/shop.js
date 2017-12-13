@@ -56,7 +56,7 @@
     "uglify-es": "github:mishoo/UglifyJS2#harmony"
   },
   "devDependencies": {
-    "autoprefixer": "7.2.2",
+    "autoprefixer": "7.2.3",
     "bebop": "^1.12.8",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
