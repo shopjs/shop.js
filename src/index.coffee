@@ -18,6 +18,7 @@ import {
 import {
   Control
   Text
+  Currency
   TextBox
   CheckBox
   Select
