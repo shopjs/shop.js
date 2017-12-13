@@ -181,7 +181,7 @@ initData = (opts)->
       tax:         0
       subtotal:    0
       total:       0
-      mode:        opts.mode ? ''
+      mode:        opts.mode ? opts.order.mode ? ''
       items:       items                    ? []
       cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null

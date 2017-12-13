@@ -18699,7 +18699,7 @@ for (k in ref1) {
 }
 
 initData = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref3, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref3, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
   queries = getQueries();
   referrer = '';
   referrer = (ref2 = getReferrer((ref3 = opts.config) != null ? ref3.hashReferrer : void 0)) != null ? ref2 : (ref4 = opts.order) != null ? ref4.referrer : void 0;
@@ -18724,10 +18724,10 @@ initData = function(opts) {
       tax: 0,
       subtotal: 0,
       total: 0,
-      mode: (ref21 = opts.mode) != null ? ref21 : '',
+      mode: (ref21 = (ref22 = opts.mode) != null ? ref22 : opts.order.mode) != null ? ref21 : '',
       items: items != null ? items : [],
       cartId: cartId != null ? cartId : null,
-      checkoutUrl: (ref22 = (ref23 = opts.config) != null ? ref23.checkoutUrl : void 0) != null ? ref22 : null,
+      checkoutUrl: (ref23 = (ref24 = opts.config) != null ? ref24.checkoutUrl : void 0) != null ? ref23 : null,
       metadata: meta != null ? meta : {}
     },
     user: null,
@@ -18740,11 +18740,11 @@ initData = function(opts) {
     if (d[k] == null) {
       d[k] = opts[k];
     } else {
-      ref24 = d[k];
-      for (k2 in ref24) {
-        v2 = ref24[k2];
+      ref25 = d[k];
+      for (k2 in ref25) {
+        v2 = ref25[k2];
         if (v2 == null) {
-          d[k][k2] = (ref25 = opts[k]) != null ? ref25[k2] : void 0;
+          d[k][k2] = (ref26 = opts[k]) != null ? ref26[k2] : void 0;
         }
       }
     }
@@ -18770,7 +18770,7 @@ initData = function(opts) {
   countriesReady = false;
   dontPrefill = false;
   if (!state || !country) {
-    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref26 = window.navigator) != null ? ref26.geolocation : void 0 : void 0)) {
+    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref27 = window.navigator) != null ? ref27.geolocation : void 0 : void 0)) {
       navigator.geolocation.getCurrentPosition((function(_this) {
         return function(position) {
           return gmaps.geocode({
