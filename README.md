@@ -343,24 +343,24 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 ## License
 [BSD][license-url]
 
-[eljs]:             https://github.com/hanzo-io/el.js
+[eljs]:             https://github.com/hanzoai/el.js
 [getshopjs]:        https://getshopjs.com
-[hanzo]:            https://hanzo.io
+[hanzo]:            https://hanzo.ai
 [kpak]:             https://kpakcase.com
 [ludela]:           https://ludela.com
 [stonedaudio]:      https://stoned.audio
 
-[build-img]:        https://circleci.com/gh/hanzoai/shop.js.svg?style=shield&circle-token=:circle-token
-[build-url]:        https://circleci.com/gh/hanzoai/shop.js
+[build-img]:        https://img.shields.io/travis/hanzoai/shop.js.svg
+[build-url]:        https://travis-ci.org/hanzoai/shop.js
 [chat-img]:         https://badges.gitter.im/join-chat.svg
-[chat-url]:         https://gitter.im/hanzo-io/chat
-[coverage-img]:     https://coveralls.io/repos/hanzo-io/shop.js/badge.svg?branch=master&service=github
-[coverage-url]:     https://coveralls.io/github/hanzo-io/shop.js?branch=master
-[dependencies-img]: https://david-dm.org/hanzo-io/shop.js.svg
-[dependencies-url]: https://david-dm.org/hanzo-io/shop.js
+[chat-url]:         https://gitter.im/hanzoai/chat
+[coverage-img]:     https://coveralls.io/repos/hanzoai/shop.js/badge.svg?branch=master&service=github
+[coverage-url]:     https://coveralls.io/github/hanzoai/shop.js?branch=master
+[dependencies-img]: https://david-dm.org/hanzoai/shop.js.svg
+[dependencies-url]: https://david-dm.org/hanzoai/shop.js
 [downloads-img]:    https://img.shields.io/npm/dm/shop.js.svg
 [downloads-url]:    http://badge.fury.io/js/shop.js
 [license-img]:      https://img.shields.io/npm/l/shop.js.svg
-[license-url]:      https://github.com/hanzo-io/shop.js/blob/master/LICENSE
+[license-url]:      https://github.com/hanzoai/shop.js/blob/master/LICENSE
 [npm-img]:          https://img.shields.io/npm/v/shop.js.svg
 [npm-url]:          https://www.npmjs.com/package/shop.js
