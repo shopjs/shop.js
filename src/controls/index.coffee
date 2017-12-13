@@ -28,6 +28,7 @@ import GiftType     from './gift/gift-type'
 import CheckBox         from 'el-controls/src/controls/checkbox'
 import Control          from 'el-controls/src/controls/control'
 import CountrySelect    from 'el-controls/src/controls/country-select'
+import Currency         from 'el-controls/src/controls/currency'
 # import Dropdown         from 'el-controls/src/controls/dropdown'
 import Select           from 'el-controls/src/controls/selection'
 import StateSelect      from 'el-controls/src/controls/state-select'
@@ -43,6 +44,7 @@ export {
   CheckBox
   Control
   CountrySelect
+  Currency
   # Dropdown
   Select
   StateSelect
