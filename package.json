@@ -1,6 +1,6 @@
 {
   "name": "shop.js",
-  "version": "2.2.2",
+  "version": "2.2.10",
   "description": "Ecommerce UI components and framework powered by Hanzo",
   "homepage": "http://github.com/hanzoai/shop.js",
   "repository": "github:hanzoai/shop.js",
@@ -42,7 +42,7 @@
     "test": "sake test"
   },
   "dependencies": {
-    "akasha": "^0.1.9",
+    "akasha": "^0.1.10",
     "broken": "^0.1.13",
     "commerce.js": "1.1.15",
     "el-controls": "1.2.3",
@@ -52,11 +52,12 @@
     "es-raf": "^3.3.1",
     "gmaps": "0.4.24",
     "hanzo.js": "2.4.1",
-    "moment-timezone": "0.5.13"
+    "moment-timezone": "0.5.13",
+    "uglify-es": "github:mishoo/UglifyJS2#harmony"
   },
   "devDependencies": {
     "autoprefixer": "7.1.4",
-    "bebop": "^1.12.5",
+    "bebop": "^1.12.8",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
     "clean-css": "4.1.9",
@@ -66,7 +67,7 @@
     "connect": "3.6.4",
     "coveralls": "2.13.1",
     "css-mqpacker": "6.0.1",
-    "debug": "^3.0.1",
+    "debug": "^3.1.0",
     "electron": "1.7.7",
     "es5-shim": "^4.5.9",
     "istanbul": "0.4.5",
@@ -86,8 +87,8 @@
     "referential": "0.5.23",
     "rucksack-css": "1.0.2",
     "rupture": "0.6.2",
-    "sake-bundle": "^0.6.0",
-    "sake-cli": "^0.5.21",
+    "sake-bundle": "^0.6.2",
+    "sake-cli": "^0.5.23",
     "sake-outdated": "^0.1.28",
     "sake-publish": "^0.1.16",
     "sake-version": "^0.1.19",
