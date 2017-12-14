@@ -6310,7 +6310,7 @@ Cart = (function() {
         var a, i, item, j, len, options, p, p2, ref, referralProgram;
         _this.data.set('coupon', _this.data.get('order.coupon') || {});
         _this.data.set('order', order);
-        if (order.type === 'ethereum') {
+        if (order.type === 'ethereum' || order.type === 'bitcoin') {
           p = new Promise$2(function(resolve) {
             return resolve(order);
           });
