@@ -246,7 +246,7 @@ register .input .valid.valid,
 reset-password .input .valid.valid,
 reset-password-complete .input .valid.valid,
 shippingaddress .input .valid.valid{
-  border-color:#17bebb;
+  border-color:#00bcd4;
 }
 cart .input .invalid.invalid,
 checkout .input .invalid.invalid,
@@ -260,7 +260,7 @@ register .input .invalid.invalid,
 reset-password .input .invalid.invalid,
 reset-password-complete .input .invalid.invalid,
 shippingaddress .input .invalid.invalid{
-  border-color:#f22469;
+  border-color:#e91e63;
 }
 cart .input .valid ~ .label,
 checkout .input .valid ~ .label,
@@ -274,7 +274,7 @@ register .input .valid ~ .label,
 reset-password .input .valid ~ .label,
 reset-password-complete .input .valid ~ .label,
 shippingaddress .input .valid ~ .label{
-  color:#17bebb;
+  color:#00bcd4;
 }
 cart .input .invalid ~ .label,
 checkout .input .invalid ~ .label,
@@ -288,7 +288,7 @@ register .input .invalid ~ .label,
 reset-password .input .invalid ~ .label,
 reset-password-complete .input .invalid ~ .label,
 shippingaddress .input .invalid ~ .label{
-  color:#f22469;
+  color:#e91e63;
 }
 cart .input .error,
 checkout .input .error,
@@ -330,7 +330,7 @@ register .input .error,
 reset-password .input .error,
 reset-password-complete .input .error,
 shippingaddress .input .error{
-  color:#f22469;
+  color:#e91e63;
 }
 cart .input input:focus ~ .label,
 checkout .input input:focus ~ .label,
@@ -724,7 +724,7 @@ register .input .input.input .invalid,
 reset-password .input .input.input .invalid,
 reset-password-complete .input .input.input .invalid,
 shippingaddress .input .input.input .invalid{
-  border-color:#f22469;
+  border-color:#e91e63;
 }
 cart .checkbox,
 checkout .checkbox,
@@ -875,7 +875,7 @@ shippingaddress .checkbox [type="checkbox"]:checked + label:after{
   left:2px;
   font-size:18px;
   line-height:0.8;
-  color:#17bebb;
+  color:#00bcd4;
   transition:all 0.2s;
   text-indent:0;
 }
@@ -1005,7 +1005,7 @@ register .checkbox label:hover:before,
 reset-password .checkbox label:hover:before,
 reset-password-complete .checkbox label:hover:before,
 shippingaddress .checkbox label:hover:before{
-  border:1px solid #17bebb !important;
+  border:1px solid #00bcd4 !important;
 }
 cart .checkbox .error,
 checkout .checkbox .error,
@@ -1019,7 +1019,7 @@ register .checkbox .error,
 reset-password .checkbox .error,
 reset-password-complete .checkbox .error,
 shippingaddress .checkbox .error{
-  color:#f22469;
+  color:#e91e63;
 }
 cart:not(.ready) > *,
 checkout:not(.ready) > *,
@@ -1117,7 +1117,7 @@ register button,
 reset-password button,
 reset-password-complete button,
 shippingaddress button{
-  background-color:#0091ea;
+  background-color:#2196f3;
   border-color:#000;
   border-radius:2px;
   color:#fff;
@@ -1127,6 +1127,34 @@ shippingaddress button{
   height:3rem;
   padding:0 2rem;
   cursor:pointer;
+  box-shadow:0 2px 5px rgba(0,0,0,0.44);
+  transition:all 500ms ease-in-out;
+}
+cart .button:hover,
+checkout .button:hover,
+checkout-card .button:hover,
+checkout-modal .button:hover,
+checkout-shippingaddress .button:hover,
+login .button:hover,
+orders .button:hover,
+profile .button:hover,
+register .button:hover,
+reset-password .button:hover,
+reset-password-complete .button:hover,
+shippingaddress .button:hover,
+cart button:hover,
+checkout button:hover,
+checkout-card button:hover,
+checkout-modal button:hover,
+checkout-shippingaddress button:hover,
+login button:hover,
+orders button:hover,
+profile button:hover,
+register button:hover,
+reset-password button:hover,
+reset-password-complete button:hover,
+shippingaddress button:hover{
+  box-shadow:0 4px 10px rgba(0,0,0,0.22);
 }
 cart .button.submit,
 checkout .button.submit,
@@ -1176,7 +1204,7 @@ register button[type=submit],
 reset-password button[type=submit],
 reset-password-complete button[type=submit],
 shippingaddress button[type=submit]{
-  background-color:#0091ea;
+  background-color:#2196f3;
   border-color:#000;
   color:#fff;
   line-height:2rem;
@@ -1490,7 +1518,7 @@ shippingaddress button{
   line-height:1rem !important;
 }
 .selectize-dropdown.single .option.active{
-  background-color:#0091ea !important;
+  background-color:#2196f3 !important;
   color:#fff !important;
 }
 .selectize-control{
@@ -1607,7 +1635,7 @@ cart .product-price-container{
   line-height:1.25em;
 }
 cart .product-list-price{
-  color:#f22469;
+  color:#e91e63;
   font-size:0.9em;
 }
 cart .product-slug{
@@ -1655,7 +1683,7 @@ cart .promo.promo .promo-row promocode input{
   border:1px solid;
   border-right:0;
   padding:0 15px;
-  transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+  transition:all 500ms ease-in-out, color 500ms ease-in-out;
   height:32px;
 }
 cart .promo.promo .promo-row button{
@@ -1665,24 +1693,25 @@ cart .promo.promo .promo-row button{
   border-width:0;
   font-size:1em;
   padding:0;
-  transition:background-color 500ms ease-in-out;
+  transition:all 500ms ease-in-out;
   height:32px;
   background-color:#000;
   color:#fff;
+  box-shadow:none;
 }
 cart .promo.promo .promo-row.applied promocode input{
-  border-color:#17bebb;
-  color:#17bebb !important;
+  border-color:#00bcd4;
+  color:#00bcd4 !important;
 }
 cart .promo.promo .promo-row.applied button{
-  background-color:#17bebb !important;
+  background-color:#00bcd4 !important;
 }
 cart .promo.promo .promo-row.failed promocode input{
-  border-color:#f22469 !important;
-  color:#f22469 !important;
+  border-color:#e91e63 !important;
+  color:#e91e63 !important;
 }
 cart .promo.promo .promo-row.failed button{
-  background-color:#f22469 !important;
+  background-color:#e91e63 !important;
 }
 cart .promo.promo .promo-row.failed button span:first-child{
   display:none;
@@ -1856,7 +1885,7 @@ checkout-shippingaddress .stripe-logo{
 }
 .checkout-header .checkout-steps{
   list-style-type:none;
-  background-color:#0091ea;
+  background-color:#2196f3;
   display:table;
   width:100%;
 }

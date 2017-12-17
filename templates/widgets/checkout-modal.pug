@@ -84,8 +84,9 @@
                     img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
                     a.stripe-link(href='//www.stripe.com', target='_blank')
                       img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
-                card-expiry.input(name='expiry', label='MM / YY')
-                card-cvc.input(name='cvc', label='CVC')
+                .inline-fields
+                  card-expiry.input(name='expiry', label='MM / YY')
+                  card-cvc.input(name='cvc', label='CVC')
 
             button.checkout-next(type='submit')
               | Continue &#10140;
@@ -97,19 +98,19 @@
             .shipping.checkout-section
               h2
                 | Shipping
-              .fields
-                shippingaddress-name.input(label='Recipient')
+              shippingaddress-name.input(label='Recipient')
+              .inline-fields.line1-line2
                 shippingaddress-line1.input(label='Address')
                 shippingaddress-line2.input(label='Suite')
-                shippingaddress-city.input(label='City')
-              .fields
-                shippingaddress-country.input(label='Country')
-                shippingaddress-state.input(label='State')
+              shippingaddress-city.input(label='City')
+              shippingaddress-country.input(label='Country', placeholder='Select a Country')
+              .inline-fields.state-postal-code
+                shippingaddress-state.input(label='State', placeholder='Select a State')
                 shippingaddress-postalcode.input(label='Postal Code')
-            terms.checkbox
-              label(for='terms')
-                | I have read and accept the&nbsp;
-                a(href='terms', target='_blank') terms and conditions
+              terms.checkbox
+                label(for='{ getId() }')
+                  | I have read and accept the&nbsp;
+                  a(href='terms', target='_blank') terms and conditions
 
             button.checkout-next(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
               | Checkout
