@@ -5,6 +5,9 @@ cart
   background-color: $themeBGColor
 
   lineitems
+    margin-top: $themeElementPadding
+
+  lineitems
   lineitem
     width: 100%
     position: relative
@@ -13,6 +16,8 @@ cart
   lineitem
     display: table
     padding-bottom: $themeElementPadding
+    border-bottom: 1px solid $themeDividerColor
+    margin-bottom: $themeElementPadding
 
     & > div
       width: 100%
@@ -104,7 +109,7 @@ cart
     font-size: 0.8em
     position: absolute
     right: 0
-    top: 1.5em
+    top: 2em
 
   .product-currency
     display: inline
@@ -140,7 +145,7 @@ cart
           border: $themeInputBorderWidth solid
           border-right: 0
           padding: 0 15px
-          transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
+          transition: all $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
           height: 32px
 
       button
@@ -150,10 +155,11 @@ cart
         border-width: 0
         font-size: 1em
         padding: 0
-        transition: background-color $themeTransitionTime ease-in-out
+        transition: all $themeTransitionTime ease-in-out
         height: 32px
         background-color: $themeTextColor
         color: $themeTextColorInverted
+        box-shadow: none
 
       &.applied
         promocode

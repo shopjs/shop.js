@@ -31,9 +31,9 @@ class CheckoutForm extends El.Form
     @data.on 'set', (name, value) =>
       if name == 'user.name'
         if !@data.get 'payment.account.name'
-          @data.set 'payment.account.name', value
+          @data.set('payment.account.name', value) if value
         if !@data.get 'order.shippingAddress.name'
-          @data.set 'order.shippingAddress.name', value
+          @data.set('order.shippingAddress.name', value) if value
       El.scheduleUpdate()
 
     @data.on 'set', (name, value) =>

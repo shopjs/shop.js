@@ -42,7 +42,7 @@
     "test": "sake test"
   },
   "dependencies": {
-    "akasha": "^0.1.10",
+    "akasha": "0.1.10",
     "broken": "^0.1.13",
     "commerce.js": "1.1.21",
     "el-controls": "1.2.14",

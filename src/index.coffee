@@ -5,7 +5,7 @@ import Promise      from 'broken'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
 import store        from 'akasha'
-import {Api}        from 'hanzo.js/src/browser'
+import Hanzo        from 'hanzo.js/src/browser'
 import {Cart}       from 'commerce.js/src'
 import GMaps        from 'gmaps'
 
@@ -99,6 +99,8 @@ import m             from './mediator'
 # Monkey Patch common utils onto every View/Instance
 import {renderUICurrencyFromJSON} from 'shop.js-util/src/currency'
 import {renderDate, rfc3339} from 'shop.js-util/src/dates'
+
+Api = Hanzo.Api
 
 Shop = {}
 Shop.Controls = Controls
