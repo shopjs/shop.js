@@ -1064,6 +1064,96 @@ shippingaddress{
   text-align:left;
   color:#000;
 }
+cart .fields,
+checkout .fields,
+checkout-card .fields,
+checkout-modal .fields,
+checkout-shippingaddress .fields,
+login .fields,
+orders .fields,
+profile .fields,
+register .fields,
+reset-password .fields,
+reset-password-complete .fields,
+shippingaddress .fields{
+  display:box;
+  display:flexbox;
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+          flex-direction:column;
+}
+cart .inline-fields,
+checkout .inline-fields,
+checkout-card .inline-fields,
+checkout-modal .inline-fields,
+checkout-shippingaddress .inline-fields,
+login .inline-fields,
+orders .inline-fields,
+profile .inline-fields,
+register .inline-fields,
+reset-password .inline-fields,
+reset-password-complete .inline-fields,
+shippingaddress .inline-fields{
+  display:box;
+  display:flexbox;
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-orient:horizontal;
+  -webkit-box-direction:normal;
+          flex-direction:row;
+  -webkit-box-pack:justify;
+          justify-content:space-between;
+  -webkit-box-align:start;
+          align-items:flex-start;
+}
+cart .inline-fields > *,
+checkout .inline-fields > *,
+checkout-card .inline-fields > *,
+checkout-modal .inline-fields > *,
+checkout-shippingaddress .inline-fields > *,
+login .inline-fields > *,
+orders .inline-fields > *,
+profile .inline-fields > *,
+register .inline-fields > *,
+reset-password .inline-fields > *,
+reset-password-complete .inline-fields > *,
+shippingaddress .inline-fields > *{
+  display:block !important;
+  -webkit-box-flex:1;
+          flex:1;
+  margin-left:0.5em;
+  margin-right:0.5em;
+}
+cart .inline-fields > *:first-child,
+checkout .inline-fields > *:first-child,
+checkout-card .inline-fields > *:first-child,
+checkout-modal .inline-fields > *:first-child,
+checkout-shippingaddress .inline-fields > *:first-child,
+login .inline-fields > *:first-child,
+orders .inline-fields > *:first-child,
+profile .inline-fields > *:first-child,
+register .inline-fields > *:first-child,
+reset-password .inline-fields > *:first-child,
+reset-password-complete .inline-fields > *:first-child,
+shippingaddress .inline-fields > *:first-child{
+  margin-left:0;
+}
+cart .inline-fields > *:last-child,
+checkout .inline-fields > *:last-child,
+checkout-card .inline-fields > *:last-child,
+checkout-modal .inline-fields > *:last-child,
+checkout-shippingaddress .inline-fields > *:last-child,
+login .inline-fields > *:last-child,
+orders .inline-fields > *:last-child,
+profile .inline-fields > *:last-child,
+register .inline-fields > *:last-child,
+reset-password .inline-fields > *:last-child,
+reset-password-complete .inline-fields > *:last-child,
+shippingaddress .inline-fields > *:last-child{
+  margin-right:0;
+}
 cart .input,
 checkout .input,
 checkout-card .input,
@@ -1126,8 +1216,7 @@ shippingaddress button{
   padding:0;
   height:3rem;
   padding:0 2rem;
-  cursor:pointer;
-  box-shadow:0 2px 5px rgba(0,0,0,0.44);
+  box-shadow:0 2px 5px rgba(0,0,0,0.6);
   transition:all 500ms ease-in-out;
 }
 cart .button:hover,
@@ -1154,7 +1243,7 @@ register button:hover,
 reset-password button:hover,
 reset-password-complete button:hover,
 shippingaddress button:hover{
-  box-shadow:0 4px 10px rgba(0,0,0,0.22);
+  box-shadow:0 4px 10px rgba(0,0,0,0.4);
 }
 cart .button.submit,
 checkout .button.submit,
@@ -1223,6 +1312,32 @@ reset-password button,
 reset-password-complete button,
 shippingaddress button{
   outline:none;
+}
+cart .disabled,
+checkout .disabled,
+checkout-card .disabled,
+checkout-modal .disabled,
+checkout-shippingaddress .disabled,
+login .disabled,
+orders .disabled,
+profile .disabled,
+register .disabled,
+reset-password .disabled,
+reset-password-complete .disabled,
+shippingaddress .disabled,
+cart :disabled,
+checkout :disabled,
+checkout-card :disabled,
+checkout-modal :disabled,
+checkout-shippingaddress :disabled,
+login :disabled,
+orders :disabled,
+profile :disabled,
+register :disabled,
+reset-password :disabled,
+reset-password-complete :disabled,
+shippingaddress :disabled{
+  opacity:0.5;
 }
 
 .selectize-control.plugin-drag_drop.multi > .selectize-input > div.ui-sortable-placeholder{
@@ -1558,6 +1673,9 @@ cart{
   padding:1em;
   background-color:#eee;
 }
+cart lineitems{
+  margin-top:1em;
+}
 cart lineitems,
 cart lineitem{
   width:100%;
@@ -1567,6 +1685,8 @@ cart lineitem{
 cart lineitem{
   display:table;
   padding-bottom:1em;
+  border-bottom:1px solid #ddd;
+  margin-bottom:1em;
 }
 cart lineitem > div{
   width:100%;
@@ -1649,7 +1769,7 @@ cart .product-delete{
   font-size:0.8em;
   position:absolute;
   right:0;
-  top:1.5em;
+  top:2em;
 }
 cart .product-currency{
   display:inline;
@@ -1842,6 +1962,24 @@ checkout-shippingaddress .stripe-logo{
   height:22px;
   float:right;
 }
+checkout .line1-line2 :first-child,
+checkout-card .line1-line2 :first-child,
+checkout-shippingaddress .line1-line2 :first-child,
+checkout .state-postal-code :first-child,
+checkout-card .state-postal-code :first-child,
+checkout-shippingaddress .state-postal-code :first-child{
+  -webkit-box-flex:2;
+          flex:2;
+}
+checkout .line1-line2 :last-child,
+checkout-card .line1-line2 :last-child,
+checkout-shippingaddress .line1-line2 :last-child,
+checkout .state-postal-code :last-child,
+checkout-card .state-postal-code :last-child,
+checkout-shippingaddress .state-postal-code :last-child{
+  -webkit-box-flex:1;
+          flex:1;
+}
 .checkout-modal-close{
   height:2rem;
   position:absolute;
@@ -1877,6 +2015,7 @@ checkout-shippingaddress .stripe-logo{
   top:-2000px;
   margin:40px auto 0;
   transition:top 500ms ease-in-out;
+  border-radius:2px;
 }
 .checkout-header{
   display:table;
@@ -1888,6 +2027,8 @@ checkout-shippingaddress .stripe-logo{
   background-color:#2196f3;
   display:table;
   width:100%;
+  border-top-left-radius:2px;
+  border-top-right-radius:2px;
 }
 .checkout-header .checkout-steps .checkout-step{
   width:calc(99.9% * 1/3);
@@ -1989,11 +2130,6 @@ checkout-shippingaddress .stripe-logo{
 .checkout-content checkout h2,
 .checkout-content checkout-card h2{
   font-size:1.5em;
-}
-.checkout-content cart lineitems,
-.checkout-content checkout lineitems,
-.checkout-content checkout-card lineitems{
-  margin-top:1em;
 }
 .checkout-content cart .secured-text,
 .checkout-content checkout .secured-text,

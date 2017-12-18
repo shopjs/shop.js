@@ -28,8 +28,10 @@ import GiftType     from './gift/gift-type'
 import CheckBox         from 'el-controls/src/controls/checkbox'
 import Control          from 'el-controls/src/controls/control'
 import CountrySelect    from 'el-controls/src/controls/country-select'
+import Copy             from 'el-controls/src/controls/copy'
 import Currency         from 'el-controls/src/controls/currency'
 # import Dropdown         from 'el-controls/src/controls/dropdown'
+import QRCode           from 'el-controls/src/controls/qrcode'
 import Select           from 'el-controls/src/controls/selection'
 import StateSelect      from 'el-controls/src/controls/state-select'
 import Text             from 'el-controls/src/controls/text'
@@ -43,9 +45,11 @@ export {
 
   CheckBox
   Control
+  Copy
   CountrySelect
   Currency
   # Dropdown
+  QRCode
   Select
   StateSelect
   Text
