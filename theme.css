@@ -645,7 +645,7 @@ register .input select.labeled ~ .select-indicator,
 reset-password .input select.labeled ~ .select-indicator,
 reset-password-complete .input select.labeled ~ .select-indicator,
 shippingaddress .input select.labeled ~ .select-indicator{
-  top:1.5rem;
+  top:1.75rem;
 }
 cart .input select:disabled ~ .select-indicator,
 checkout .input select:disabled ~ .select-indicator,
@@ -699,6 +699,70 @@ reset-password-complete .input.outlined select,
 shippingaddress .input.outlined select{
   border:1px solid;
   border-radius:2px;
+}
+cart .input .copy-text,
+checkout .input .copy-text,
+checkout-card .input .copy-text,
+checkout-modal .input .copy-text,
+checkout-shippingaddress .input .copy-text,
+login .input .copy-text,
+orders .input .copy-text,
+profile .input .copy-text,
+register .input .copy-text,
+reset-password .input .copy-text,
+reset-password-complete .input .copy-text,
+shippingaddress .input .copy-text{
+  position:absolute;
+  right:0;
+  top:50%;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+cart .input .copy-text,
+checkout .input .copy-text,
+checkout-card .input .copy-text,
+checkout-modal .input .copy-text,
+checkout-shippingaddress .input .copy-text,
+login .input .copy-text,
+orders .input .copy-text,
+profile .input .copy-text,
+register .input .copy-text,
+reset-password .input .copy-text,
+reset-password-complete .input .copy-text,
+shippingaddress .input .copy-text{
+  position:absolute;
+  right:0;
+  top:1rem;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+cart .input .labeled ~ .copy-text,
+checkout .input .labeled ~ .copy-text,
+checkout-card .input .labeled ~ .copy-text,
+checkout-modal .input .labeled ~ .copy-text,
+checkout-shippingaddress .input .labeled ~ .copy-text,
+login .input .labeled ~ .copy-text,
+orders .input .labeled ~ .copy-text,
+profile .input .labeled ~ .copy-text,
+register .input .labeled ~ .copy-text,
+reset-password .input .labeled ~ .copy-text,
+reset-password-complete .input .labeled ~ .copy-text,
+shippingaddress .input .labeled ~ .copy-text{
+  top:1.75rem;
+}
+cart .input .right-aligned,
+checkout .input .right-aligned,
+checkout-card .input .right-aligned,
+checkout-modal .input .right-aligned,
+checkout-shippingaddress .input .right-aligned,
+login .input .right-aligned,
+orders .input .right-aligned,
+profile .input .right-aligned,
+register .input .right-aligned,
+reset-password .input .right-aligned,
+reset-password-complete .input .right-aligned,
+shippingaddress .input .right-aligned{
+  text-align:right;
 }
 cart .input.input.input .invalid,
 checkout .input.input.input .invalid,
