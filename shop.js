@@ -603,6 +603,7 @@ var isFunction$1 = isFunction = function(value) {
 // node_modules/riot/lib/browser/common/global-variables.js
 const __TAGS_CACHE = [];
 const __TAG_IMPL = {};
+const YIELD_TAG = 'yield';
 const GLOBAL_MIXIN = '__global_mixin';
 const ATTRS_PREFIX = 'riot-';
 const REF_DIRECTIVES = ['ref', 'data-ref'];
@@ -612,6 +613,7 @@ const LOOP_DIRECTIVE = 'each';
 const LOOP_NO_REORDER_DIRECTIVE = 'no-reorder';
 const SHOW_DIRECTIVE = 'show';
 const HIDE_DIRECTIVE = 'hide';
+const KEY_DIRECTIVE = 'key';
 const RIOT_EVENTS_KEY = '__riot-events__';
 const T_STRING = 'string';
 const T_OBJECT = 'object';
@@ -625,97 +627,12 @@ const RE_SPECIAL_TAGS = /^(?:t(?:body|head|foot|[rhd])|caption|col(?:group)?|opt
 const RE_SPECIAL_TAGS_NO_OPTION = /^(?:t(?:body|head|foot|[rhd])|caption|col(?:group)?)$/;
 const RE_EVENTS_PREFIX = /^on/;
 const RE_HTML_ATTRS = /([-\w]+) ?= ?(?:"([^"]*)|'([^']*)|({[^}]*}))/g;
-const CASE_SENSITIVE_ATTRIBUTES = { 'viewbox': 'viewBox' };
+const CASE_SENSITIVE_ATTRIBUTES = {
+    'viewbox': 'viewBox',
+    'preserveaspectratio': 'preserveAspectRatio'
+  };
 const RE_BOOL_ATTRS = /^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop|multiple|muted|no(?:resize|shade|validate|wrap)?|open|reversed|seamless|selected|sortable|truespeed|typemustmatch)$/;
 const IE_VERSION = (WIN && WIN.document || {}).documentMode | 0;
-
-// node_modules/riot/lib/browser/common/util/check.js
-/**
- * Check if the passed argument is a boolean attribute
- * @param   { String } value -
- * @returns { Boolean } -
- */
-function isBoolAttr(value) {
-  return RE_BOOL_ATTRS.test(value)
-}
-
-/**
- * Check if passed argument is a function
- * @param   { * } value -
- * @returns { Boolean } -
- */
-function isFunction$2(value) {
-  return typeof value === T_FUNCTION
-}
-
-/**
- * Check if passed argument is an object, exclude null
- * NOTE: use isObject(x) && !isArray(x) to excludes arrays.
- * @param   { * } value -
- * @returns { Boolean } -
- */
-function isObject(value) {
-  return value && typeof value === T_OBJECT // typeof null is 'object'
-}
-
-/**
- * Check if passed argument is undefined
- * @param   { * } value -
- * @returns { Boolean } -
- */
-function isUndefined(value) {
-  return typeof value === T_UNDEF
-}
-
-/**
- * Check if passed argument is a string
- * @param   { * } value -
- * @returns { Boolean } -
- */
-function isString(value) {
-  return typeof value === T_STRING
-}
-
-/**
- * Check if passed argument is empty. Different from falsy, because we dont consider 0 or false to be blank
- * @param { * } value -
- * @returns { Boolean } -
- */
-function isBlank(value) {
-  return isUndefined(value) || value === null || value === ''
-}
-
-/**
- * Check if passed argument is a kind of array
- * @param   { * } value -
- * @returns { Boolean } -
- */
-function isArray(value) {
-  return Array.isArray(value) || value instanceof Array
-}
-
-/**
- * Check whether object's property could be overridden
- * @param   { Object }  obj - source object
- * @param   { String }  key - object property
- * @returns { Boolean } -
- */
-function isWritable(obj, key) {
-  const descriptor = Object.getOwnPropertyDescriptor(obj, key);
-  return isUndefined(obj[key]) || descriptor && descriptor.writable
-}
-
-
-var check = Object.freeze({
-	isBoolAttr: isBoolAttr,
-	isFunction: isFunction$2,
-	isObject: isObject,
-	isUndefined: isUndefined,
-	isString: isString,
-	isBlank: isBlank,
-	isArray: isArray,
-	isWritable: isWritable
-});
 
 // node_modules/riot/lib/browser/common/util/dom.js
 /**
@@ -725,7 +642,7 @@ var check = Object.freeze({
  * @returns { Object } dom nodes found
  */
 function $$(selector, ctx) {
-  return Array.prototype.slice.call((ctx || document).querySelectorAll(selector))
+  return [].slice.call((ctx || document).querySelectorAll(selector))
 }
 
 /**
@@ -755,18 +672,18 @@ function createDOMPlaceholder() {
 }
 
 /**
- * Check if a DOM node is an svg tag
+ * Check if a DOM node is an svg tag or part of an svg
  * @param   { HTMLElement }  el - node we want to test
  * @returns {Boolean} true if it's an svg node
  */
 function isSvg(el) {
-  return !!el.ownerSVGElement
+  const owner = el.ownerSVGElement;
+  return !!owner || owner === null
 }
 
 /**
  * Create a generic DOM node
  * @param   { String } name - name of the DOM node we want to create
- * @param   { Boolean } isSvg - true if we need to use an svg node
  * @returns { Object } DOM node just created
  */
 function mkEl(name) {
@@ -777,16 +694,22 @@ function mkEl(name) {
  * Set the inner html of any DOM node SVGs included
  * @param { Object } container - DOM node where we'll inject new html
  * @param { String } html - html to inject
+ * @param { Boolean } isSvg - svg tags should be treated a bit differently
  */
 /* istanbul ignore next */
-function setInnerHTML(container, html) {
-  if (!isUndefined(container.innerHTML))
-    container.innerHTML = html;
-    // some browsers do not support innerHTML on the SVGs tags
-  else {
-    const doc = new DOMParser().parseFromString(html, 'application/xml');
-    const node = container.ownerDocument.importNode(doc.documentElement, true);
+function setInnerHTML(container, html, isSvg) {
+  // innerHTML is not supported on svg tags so we neet to treat them differently
+  if (isSvg) {
+    const node = container.ownerDocument.importNode(
+      new DOMParser()
+        .parseFromString(`<svg xmlns="${ SVG_NS }">${ html }</svg>`, 'application/xml')
+        .documentElement,
+      true
+    );
+
     container.appendChild(node);
+  } else {
+    container.innerHTML = html;
   }
 }
 
@@ -798,7 +721,7 @@ function setInnerHTML(container, html) {
 
 function toggleVisibility(dom, show) {
   dom.style.display = show ? '' : 'none';
-  dom['hidden'] = show ? false : true;
+  dom.hidden = show ? false : true;
 }
 
 /**
@@ -923,16 +846,15 @@ if (WIN) {
   styleNode = ((() => {
     // create a new style element with the correct type
     const newNode = mkEl('style');
-    setAttr(newNode, 'type', 'text/css');
-
     // replace any user node or insert the new one into the head
     const userNode = $$1('style[type=riot]');
+
+    setAttr(newNode, 'type', 'text/css');
     /* istanbul ignore next */
     if (userNode) {
       if (userNode.id) newNode.id = userNode.id;
       userNode.parentNode.replaceChild(newNode, userNode);
-    }
-    else document.getElementsByTagName('head')[0].appendChild(newNode);
+    } else document.head.appendChild(newNode);
 
     return newNode
   }))();
@@ -1632,6 +1554,104 @@ var observable$1 = function(el) {
 
 };
 
+// node_modules/riot/lib/browser/common/util/check.js
+/**
+ * Check if the passed argument is a boolean attribute
+ * @param   { String } value -
+ * @returns { Boolean } -
+ */
+function isBoolAttr(value) {
+  return RE_BOOL_ATTRS.test(value)
+}
+
+/**
+ * Check if passed argument is a function
+ * @param   { * } value -
+ * @returns { Boolean } -
+ */
+function isFunction$2(value) {
+  return typeof value === T_FUNCTION
+}
+
+/**
+ * Check if passed argument is an object, exclude null
+ * NOTE: use isObject(x) && !isArray(x) to excludes arrays.
+ * @param   { * } value -
+ * @returns { Boolean } -
+ */
+function isObject(value) {
+  return value && typeof value === T_OBJECT // typeof null is 'object'
+}
+
+/**
+ * Check if passed argument is undefined
+ * @param   { * } value -
+ * @returns { Boolean } -
+ */
+function isUndefined(value) {
+  return typeof value === T_UNDEF
+}
+
+/**
+ * Check if passed argument is a string
+ * @param   { * } value -
+ * @returns { Boolean } -
+ */
+function isString(value) {
+  return typeof value === T_STRING
+}
+
+/**
+ * Check if passed argument is empty. Different from falsy, because we dont consider 0 or false to be blank
+ * @param { * } value -
+ * @returns { Boolean } -
+ */
+function isBlank(value) {
+  return isNil(value) || value === ''
+}
+
+/**
+ * Check against the null and undefined values
+ * @param   { * }  value -
+ * @returns {Boolean} -
+ */
+function isNil(value) {
+  return isUndefined(value) || value === null
+}
+
+/**
+ * Check if passed argument is a kind of array
+ * @param   { * } value -
+ * @returns { Boolean } -
+ */
+function isArray(value) {
+  return Array.isArray(value) || value instanceof Array
+}
+
+/**
+ * Check whether object's property could be overridden
+ * @param   { Object }  obj - source object
+ * @param   { String }  key - object property
+ * @returns { Boolean } true if writable
+ */
+function isWritable(obj, key) {
+  const descriptor = getPropDescriptor(obj, key);
+  return isUndefined(obj[key]) || descriptor && descriptor.writable
+}
+
+
+var check = Object.freeze({
+	isBoolAttr: isBoolAttr,
+	isFunction: isFunction$2,
+	isObject: isObject,
+	isUndefined: isUndefined,
+	isString: isString,
+	isBlank: isBlank,
+	isNil: isNil,
+	isArray: isArray,
+	isWritable: isWritable
+});
+
 // node_modules/riot/lib/browser/common/util/misc.js
 /**
  * Specialized function for looping an array-like collection with `each={}`
@@ -1642,9 +1662,7 @@ var observable$1 = function(el) {
 function each(list, fn) {
   const len = list ? list.length : 0;
   let i = 0;
-  for (; i < len; ++i) {
-    fn(list[i], i);
-  }
+  for (; i < len; i++) fn(list[i], i);
   return list
 }
 
@@ -1696,6 +1714,20 @@ function defineProperty(el, key, value, options) {
 }
 
 /**
+ * Function returning always a unique identifier
+ * @returns { Number } - number from 0...n
+ */
+const uid = (function() {
+  let i = -1;
+  return () => ++i
+})();
+
+/**
+ * Short alias for Object.getOwnPropertyDescriptor
+ */
+const getPropDescriptor = (o, k) => Object.getOwnPropertyDescriptor(o, k);
+
+/**
  * Extend any object with other properties
  * @param   { Object } src - source object
  * @returns { Object } the resulting extended object
@@ -1707,8 +1739,11 @@ function defineProperty(el, key, value, options) {
  */
 function extend(src) {
   let obj;
+  let i = 1;
   const args = arguments;
-  for (let i = 1; i < args.length; ++i) {
+  const l = args.length;
+
+  for (; i < l; i++) {
     if (obj = args[i]) {
       for (const key in obj) {
         // check if this property of the source object could be overridden
@@ -1726,6 +1761,8 @@ var misc = Object.freeze({
 	toCamel: toCamel,
 	startsWith: startsWith,
 	defineProperty: defineProperty,
+	uid: uid,
+	getPropDescriptor: getPropDescriptor,
 	extend: extend
 });
 
@@ -1810,8 +1847,8 @@ function setEventHandler(name, handler, dom, tag) {
  * @param { String } tagName - tag implementation we want to use
  */
 function updateDataIs(expr, parent, tagName) {
-  let tag = expr.tag || expr.dom._tag,
-    ref;
+  let tag = expr.tag || expr.dom._tag;
+  let ref;
 
   const { head } = tag ? tag.__ : {};
   const isVirtual = expr.dom.tagName === 'VIRTUAL';
@@ -1843,8 +1880,8 @@ function updateDataIs(expr, parent, tagName) {
   expr.tag = tag = initChildTag(
     expr.impl, {
       root: expr.dom,
-      parent: parent,
-      tagName: tagName
+      parent,
+      tagName
     },
     expr.dom.innerHTML,
     parent
@@ -1858,7 +1895,7 @@ function updateDataIs(expr, parent, tagName) {
   if (isVirtual) makeReplaceVirtual(tag, ref || tag.root);
 
   // parent is the placeholder tag, not the dynamic tag so clean up
-  parent.__.onUnmount = function() {
+  parent.__.onUnmount = () => {
     const delName = tag.opts.dataIs;
     arrayishRemove(tag.parent.tags, delName, tag);
     arrayishRemove(tag.__.parent.tags, delName, tag);
@@ -1887,22 +1924,22 @@ function normalizeAttrName(attrName) {
 function updateExpression(expr) {
   if (this.root && getAttr(this.root,'virtualized')) return
 
-  var dom = expr.dom,
-    // remove the riot- prefix
-    attrName = normalizeAttrName(expr.attr),
-    isToggle = contains([SHOW_DIRECTIVE, HIDE_DIRECTIVE], attrName),
-    isVirtual = expr.root && expr.root.tagName === 'VIRTUAL',
-    parent = dom && (expr.parent || dom.parentNode),
-    // detect the style attributes
-    isStyleAttr = attrName === 'style',
-    isClassAttr = attrName === 'class',
-    hasValue,
-    isObj,
-    value;
+  const dom = expr.dom;
+  // remove the riot- prefix
+  const attrName = normalizeAttrName(expr.attr);
+  const isToggle = contains([SHOW_DIRECTIVE, HIDE_DIRECTIVE], attrName);
+  const isVirtual = expr.root && expr.root.tagName === 'VIRTUAL';
+  const { isAnonymous } = this.__;
+  const parent = dom && (expr.parent || dom.parentNode);
+  // detect the style attributes
+  const isStyleAttr = attrName === 'style';
+  const isClassAttr = attrName === 'class';
+
+  let value;
 
   // if it's a tag we could totally skip the rest
   if (expr._riot_id) {
-    if (expr.isMounted) {
+    if (expr.__.wasCreated) {
       expr.update();
     // if it hasn't been mounted yet, do that now.
     } else {
@@ -1913,17 +1950,20 @@ function updateExpression(expr) {
     }
     return
   }
+
   // if this expression has the update method it means it can handle the DOM changes by itself
   if (expr.update) return expr.update()
 
-  // ...it seems to be a simple expression so we try to calculat its value
-  value = tmpl(expr.expr, isToggle ? extend({}, Object.create(this.parent), this) : this);
-  hasValue = !isBlank(value);
-  isObj = isObject(value);
+  const context = isToggle && !isAnonymous ? inheritParentProps.call(this) : this;
+
+  // ...it seems to be a simple expression so we try to calculate its value
+  value = tmpl(expr.expr, context);
+
+  const hasValue = !isBlank(value);
+  const isObj = isObject(value);
 
   // convert the style/class objects to strings
   if (isObj) {
-    isObj = !isClassAttr && !isStyleAttr;
     if (isClassAttr) {
       value = tmpl(JSON.stringify(value), this);
     } else if (isStyleAttr) {
@@ -1932,9 +1972,9 @@ function updateExpression(expr) {
   }
 
   // remove original attribute
-  if (expr.attr && (!expr.isAttrRemoved || !hasValue || value === false)) {
-    remAttr(dom, expr.attr);
-    expr.isAttrRemoved = true;
+  if (expr.attr && (!expr.wasParsedOnce || !hasValue || value === false)) {
+    // remove either riot-* attributes or just the attribute name
+    remAttr(dom, getAttr(dom, expr.attr) ? expr.attr : attrName);
   }
 
   // for the boolean attributes we don't need the value
@@ -1947,10 +1987,10 @@ function updateExpression(expr) {
   expr.value = value;
   expr.wasParsedOnce = true;
 
-  // if the value is an object we can not do much more with it
-  if (isObj && !isToggle) return
+  // if the value is an object (and it's not a style or class attribute) we can not do much more with it
+  if (isObj && !isClassAttr && !isStyleAttr && !isToggle) return
   // avoid to render undefined/null values
-  if (isBlank(value)) value = '';
+  if (!hasValue) value = '';
 
   // textarea and text nodes have no attribute name
   if (!attrName) {
@@ -1986,9 +2026,7 @@ function updateExpression(expr) {
 
     if (attrName === 'value' && dom.value !== value) {
       dom.value = value;
-    }
-
-    if (hasValue && value !== false) {
+    } else if (hasValue && value !== false) {
       setAttr(dom, attrName, value);
     }
 
@@ -2028,8 +2066,7 @@ var IfExpr = {
     if (this.value && !this.current) { // insert
       this.current = this.pristine.cloneNode(true);
       this.stub.parentNode.insertBefore(this.current, this.stub);
-      this.expressions = [];
-      parseExpressions.apply(this.tag, [this.current, this.expressions, true]);
+      this.expressions = parseExpressions.apply(this.tag, [this.current, true]);
     } else if (!this.value && this.current) { // remove
       unmountAll(this.expressions);
       if (this.current._tag) {
@@ -2200,6 +2237,22 @@ function append(root, isVirtual) {
 }
 
 /**
+ * Return the value we want to use to lookup the postion of our items in the collection
+ * @param   { String }  keyAttr         - lookup string or expression
+ * @param   { * }       originalItem    - original item from the collection
+ * @param   { Object }  keyedItem       - object created by riot via { item, i in collection }
+ * @param   { Boolean } hasKeyAttrExpr  - flag to check whether the key is an expression
+ * @returns { * } value that we will use to figure out the item position via collection.indexOf
+ */
+function getItemId(keyAttr, originalItem, keyedItem, hasKeyAttrExpr) {
+  if (keyAttr) {
+    return hasKeyAttrExpr ?  tmpl(keyAttr, keyedItem) :  originalItem[keyAttr]
+  }
+
+  return originalItem
+}
+
+/**
  * Manage tags having the 'each'
  * @param   { HTMLElement } dom - DOM node we need to loop
  * @param   { Tag } parent - parent tag instance where the dom node is contained
@@ -2208,6 +2261,8 @@ function append(root, isVirtual) {
  */
 function _each(dom, parent, expr) {
   const mustReorder = typeof getAttr(dom, LOOP_NO_REORDER_DIRECTIVE) !== T_STRING || remAttr(dom, LOOP_NO_REORDER_DIRECTIVE);
+  const keyAttr = getAttr(dom, KEY_DIRECTIVE);
+  const hasKeyAttrExpr = keyAttr ? tmpl.hasExpr(keyAttr) : false;
   const tagName = getTagName(dom);
   const impl = __TAG_IMPL[tagName];
   const parentNode = dom.parentNode;
@@ -2216,6 +2271,7 @@ function _each(dom, parent, expr) {
   const ifExpr = getAttr(dom, CONDITIONAL_DIRECTIVE);
   const tags = [];
   const isLoop = true;
+  const innerHTML = dom.innerHTML;
   const isAnonymous = !__TAG_IMPL[tagName];
   const isVirtual = dom.tagName === 'VIRTUAL';
   let oldItems = [];
@@ -2223,6 +2279,7 @@ function _each(dom, parent, expr) {
 
   // remove the each property from the original tag
   remAttr(dom, LOOP_DIRECTIVE);
+  remAttr(dom, KEY_DIRECTIVE);
 
   // parse the each expression
   expr = tmpl.loopKeys(expr);
@@ -2242,6 +2299,7 @@ function _each(dom, parent, expr) {
     const frag = createFrag();
     const isObject$$1 = !isArray(items) && !isString(items);
     const root = placeholder.parentNode;
+    const tmpItems = [];
 
     // if this DOM was removed the update here is useless
     // this condition fixes also a weird async issue on IE in our unit test
@@ -2266,10 +2324,12 @@ function _each(dom, parent, expr) {
     }
 
     // loop all the new items
-    each(items, (item, i) => {
+    each(items, (_item, i) => {
+      const item = !hasKeys && expr.key ? mkitem(expr, _item, i) : _item;
+      const itemId = getItemId(keyAttr, _item, item, hasKeyAttrExpr);
       // reorder only if the items are objects
-      const doReorder = mustReorder && typeof item === T_OBJECT && !hasKeys;
-      const oldPos = oldItems.indexOf(item);
+      const doReorder = mustReorder && typeof _item === T_OBJECT && !hasKeys;
+      const oldPos = oldItems.indexOf(itemId);
       const isNew = oldPos === -1;
       const pos = !isNew && doReorder ? oldPos : i;
       // does a tag exist in this position?
@@ -2277,11 +2337,9 @@ function _each(dom, parent, expr) {
       const mustAppend = i >= oldItems.length;
       const mustCreate =  doReorder && isNew || !doReorder && !tag;
 
-      item = !hasKeys && expr.key ? mkitem(expr, item, i) : item;
-
       // new tag
       if (mustCreate) {
-        tag = new Tag$1(impl, {
+        tag = createTag(impl, {
           parent,
           isLoop,
           isAnonymous,
@@ -2289,7 +2347,7 @@ function _each(dom, parent, expr) {
           root: dom.cloneNode(isAnonymous),
           item,
           index: i,
-        }, dom.innerHTML);
+        }, innerHTML);
 
         // mount the tag
         tag.mount();
@@ -2304,7 +2362,7 @@ function _each(dom, parent, expr) {
         if (child) arrayishAdd(parent.tags, tagName, tag, true);
       } else if (pos !== i && doReorder) {
         // move
-        if (contains(items, oldItems[pos])) {
+        if (keyAttr || contains(items, oldItems[pos])) {
           move.apply(tag, [root, tags[i], isVirtual]);
           // move the old tag instance
           tags.splice(i, 0, tags.splice(pos, 1)[0]);
@@ -2326,6 +2384,8 @@ function _each(dom, parent, expr) {
       tag.__.index = i;
       tag.__.parent = parent;
 
+      tmpItems[i] = itemId;
+
       if (!mustCreate) tag.update(item);
     });
 
@@ -2333,7 +2393,7 @@ function _each(dom, parent, expr) {
     unmountRedundant(items, tags);
 
     // clone the items array
-    oldItems = items.slice();
+    oldItems = tmpItems.slice();
 
     root.insertBefore(frag, placeholder);
   };
@@ -2350,52 +2410,50 @@ function _each(dom, parent, expr) {
  * Walk the tag DOM to detect the expressions to evaluate
  * @this Tag
  * @param   { HTMLElement } root - root tag where we will start digging the expressions
- * @param   { Array } expressions - empty array where the expressions will be added
  * @param   { Boolean } mustIncludeRoot - flag to decide whether the root must be parsed as well
- * @returns { Object } an object containing the root noode and the dom tree
+ * @returns { Array } all the expressions found
  */
-function parseExpressions(root, expressions, mustIncludeRoot) {
-  const tree = {parent: {children: expressions}};
+function parseExpressions(root, mustIncludeRoot) {
+  const expressions = [];
 
-  walkNodes(root, (dom, ctx) => {
-    let type = dom.nodeType,
-      parent = ctx.parent,
-      attr,
-      expr,
-      tagImpl;
+  walkNodes(root, (dom) => {
+    const type = dom.nodeType;
+    let attr;
+    let tagImpl;
 
-    if (!mustIncludeRoot && dom === root) return {parent}
+    if (!mustIncludeRoot && dom === root) return
 
     // text node
     if (type === 3 && dom.parentNode.tagName !== 'STYLE' && tmpl.hasExpr(dom.nodeValue))
-      parent.children.push({dom, expr: dom.nodeValue});
+      expressions.push({dom, expr: dom.nodeValue});
 
-    if (type !== 1) return ctx // not an element
+    if (type !== 1) return
 
     const isVirtual = dom.tagName === 'VIRTUAL';
 
     // loop. each does it's own thing (for now)
     if (attr = getAttr(dom, LOOP_DIRECTIVE)) {
       if(isVirtual) setAttr(dom, 'loopVirtual', true); // ignore here, handled in _each
-      parent.children.push(_each(dom, this, attr));
+      expressions.push(_each(dom, this, attr));
       return false
     }
 
     // if-attrs become the new parent. Any following expressions (either on the current
     // element, or below it) become children of this expression.
     if (attr = getAttr(dom, CONDITIONAL_DIRECTIVE)) {
-      parent.children.push(Object.create(IfExpr).init(dom, this, attr));
+      expressions.push(Object.create(IfExpr).init(dom, this, attr));
       return false
     }
 
-    if (expr = getAttr(dom, IS_DIRECTIVE)) {
-      if (tmpl.hasExpr(expr)) {
-        parent.children.push({
+    if (attr = getAttr(dom, IS_DIRECTIVE)) {
+      if (tmpl.hasExpr(attr)) {
+        expressions.push({
           isRtag: true,
-          expr,
+          expr: attr,
           dom,
           attrs: [].slice.call(dom.attributes)
         });
+
         return false
       }
     }
@@ -2403,6 +2461,7 @@ function parseExpressions(root, expressions, mustIncludeRoot) {
     // if this is a tag, stop traversing here.
     // we ignore the root, since parseExpressions is called while we're mounting that root
     tagImpl = getTag(dom);
+
     if(isVirtual) {
       if(getAttr(dom, 'virtualized')) {dom.parentElement.removeChild(dom); } // tag created, remove from dom
       if(!tagImpl && !getAttr(dom, 'virtualized') && !getAttr(dom, 'loopVirtual'))  // ok to create virtual tag
@@ -2414,14 +2473,15 @@ function parseExpressions(root, expressions, mustIncludeRoot) {
         // can not remove attribute like directives
         // so flag for removal after creation to prevent maximum stack error
         setAttr(dom, 'virtualized', true);
-        const tag = new Tag$1(
+        const tag = createTag(
           {tmpl: dom.outerHTML},
           {root: dom, parent: this},
           dom.innerHTML
         );
-        parent.children.push(tag); // no return, anonymous tag, keep parsing
+
+        expressions.push(tag); // no return, anonymous tag, keep parsing
       } else {
-        parent.children.push(
+        expressions.push(
           initChildTag(
             tagImpl,
             {
@@ -2439,13 +2499,11 @@ function parseExpressions(root, expressions, mustIncludeRoot) {
     // attribute expressions
     parseAttributes.apply(this, [dom, dom.attributes, (attr, expr) => {
       if (!expr) return
-      parent.children.push(expr);
+      expressions.push(expr);
     }]);
+  });
 
-    // whatever the parent is, all child elements get the same parent.
-    // If this element had an if-attr, that's the parent for all child elements
-    return {parent}
-  }, tree);
+  return expressions
 }
 
 /**
@@ -2464,7 +2522,7 @@ function parseAttributes(dom, attrs, fn) {
     const bool = isBoolAttr(name);
     let expr;
 
-    if (contains(REF_DIRECTIVES, name)) {
+    if (contains(REF_DIRECTIVES, name) && dom.tagName.toLowerCase() !== YIELD_TAG) {
       expr =  Object.create(RefExpr).init(dom, this, name, attr.value);
     } else if (tmpl.hasExpr(attr.value)) {
       expr = {dom, expr: attr.value, attr: name, bool};
@@ -2566,7 +2624,7 @@ function mkdom(tmpl, html, isSvg$$1) {
   if (tblTags.test(tagName))
     el = specialTags(el, tmpl, tagName);
   else
-    setInnerHTML(el, tmpl);
+    setInnerHTML(el, tmpl, isSvg$$1);
 
   return el
 }
@@ -2578,7 +2636,7 @@ function mkdom(tmpl, html, isSvg$$1) {
  * @param { Object } opts - tag logic
  * @returns { Tag } new riot tag instance
  */
-function Tag$2(el, opts) {
+function Tag$1(el, opts) {
   // get the tag properties from the class constructor
   const {name, tmpl, css, attrs, onCreate} = this;
   // register a new tag and cache the class prototype
@@ -2775,7 +2833,7 @@ const version$1 = 'WIP';
 
 
 var core = Object.freeze({
-	Tag: Tag$2,
+	Tag: Tag$1,
 	tag: tag$1,
 	tag2: tag2$1,
 	mount: mount$1,
@@ -2786,9 +2844,6 @@ var core = Object.freeze({
 });
 
 // node_modules/riot/lib/browser/tag/tag.js
-// counter to give a unique id to all the Tag instances
-let uid = 0;
-
 /**
  * We need to update opts for this tag. That requires updating the expressions
  * in any attributes on the tag, and then copying the result onto opts.
@@ -2804,50 +2859,73 @@ function updateOpts(isLoop, parent, isAnonymous, opts, instAttrs) {
   // (and only this case) we don't need to do updateOpts, because the regular parse
   // will update those attrs. Plus, isAnonymous tags don't need opts anyway
   if (isLoop && isAnonymous) return
-  const ctx = !isAnonymous && isLoop ? this : parent || this;
+  const ctx = isLoop ? inheritParentProps.call(this) : parent || this;
 
   each(instAttrs, (attr) => {
-    if (attr.expr) updateAllExpressions.call(ctx, [attr.expr]);
+    if (attr.expr) updateExpression.call(ctx, attr.expr);
     // normalize the attribute names
     opts[toCamel(attr.name).replace(ATTRS_PREFIX, '')] = attr.expr ? attr.expr.value : attr.value;
   });
 }
 
+/**
+ * Manage the mount state of a tag triggering also the observable events
+ * @this Tag
+ * @param { Boolean } value - ..of the isMounted flag
+ */
+function setMountState(value) {
+  const { isAnonymous } = this.__;
+
+  defineProperty(this, 'isMounted', value);
+
+  if (!isAnonymous) {
+    if (value) this.trigger('mount');
+    else {
+      this.trigger('unmount');
+      this.off('*');
+      this.__.wasCreated = false;
+    }
+  }
+}
+
 
 /**
- * Tag class
+ * Tag creation factory function
  * @constructor
  * @param { Object } impl - it contains the tag template, and logic
  * @param { Object } conf - tag options
  * @param { String } innerHTML - html that eventually we need to inject in the tag
  */
-function Tag$1(impl = {}, conf = {}, innerHTML) {
-  var opts = extend({}, conf.opts),
-    parent = conf.parent,
-    isLoop = conf.isLoop,
-    isAnonymous = !!conf.isAnonymous,
-    skipAnonymous = settings$1.skipAnonymousTags && isAnonymous,
-    item = conf.item,
-    index = conf.index, // available only for the looped nodes
-    instAttrs = [], // All attributes on the Tag when it's first parsed
-    implAttrs = [], // expressions on this type of Tag
-    expressions = [],
-    root = conf.root,
-    tagName = conf.tagName || getTagName(root),
-    isVirtual = tagName === 'virtual',
-    isInline = !isVirtual && !impl.tmpl,
-    propsInSyncWithParent = [],
-    dom;
+function createTag(impl = {}, conf = {}, innerHTML) {
+  const tag = conf.context || {};
+  const opts = extend({}, conf.opts);
+  const parent = conf.parent;
+  const isLoop = conf.isLoop;
+  const isAnonymous = !!conf.isAnonymous;
+  const skipAnonymous = settings$1.skipAnonymousTags && isAnonymous;
+  const item = conf.item;
+  // available only for the looped nodes
+  const index = conf.index;
+  // All attributes on the Tag when it's first parsed
+  const instAttrs = [];
+  // expressions on this type of Tag
+  const implAttrs = [];
+  const expressions = [];
+  const root = conf.root;
+  const tagName = conf.tagName || getTagName(root);
+  const isVirtual = tagName === 'virtual';
+  const isInline = !isVirtual && !impl.tmpl;
+  let dom;
 
   // make this tag observable
-  if (!skipAnonymous) observable$1(this);
+  if (!skipAnonymous) observable$1(tag);
   // only call unmount if we have a valid __TAG_IMPL (has name property)
   if (impl.name && root._tag) root._tag.unmount(true);
 
   // not yet mounted
-  this.isMounted = false;
+  defineProperty(tag, 'isMounted', false);
 
-  defineProperty(this, '__', {
+  defineProperty(tag, '__', {
     isAnonymous,
     instAttrs,
     innerHTML,
@@ -2860,6 +2938,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     listeners: [],
     // these vars will be needed only for the virtual tags
     virts: [],
+    wasCreated: false,
     tail: null,
     head: null,
     parent: null,
@@ -2868,13 +2947,13 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 
   // create a unique id to this tag
   // it could be handy to use it also to improve the virtual dom rendering speed
-  defineProperty(this, '_riot_id', ++uid); // base 1 allows test !t._riot_id
-  defineProperty(this, 'root', root);
-  extend(this, { opts }, item);
+  defineProperty(tag, '_riot_id', uid()); // base 1 allows test !t._riot_id
+  defineProperty(tag, 'root', root);
+  extend(tag, { opts }, item);
   // protect the "tags" and "refs" property from being overridden
-  defineProperty(this, 'parent', parent || null);
-  defineProperty(this, 'tags', {});
-  defineProperty(this, 'refs', {});
+  defineProperty(tag, 'parent', parent || null);
+  defineProperty(tag, 'tags', {});
+  defineProperty(tag, 'refs', {});
 
   if (isInline || isLoop && isAnonymous) {
     dom = root;
@@ -2888,39 +2967,41 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
    * @param   { * }  data - data we want to use to extend the tag properties
    * @returns { Tag } the current tag instance
    */
-  defineProperty(this, 'update', function tagUpdate(data) {
-    const nextOpts = {},
-      canTrigger = this.isMounted && !skipAnonymous;
+  defineProperty(tag, 'update', function tagUpdate(data) {
+    const nextOpts = {};
+    const canTrigger = tag.isMounted && !skipAnonymous;
 
-    extend(this, data);
-    updateOpts.apply(this, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
+    // inherit properties from the parent tag
+    if (isAnonymous && parent) extend(tag, parent);
+    extend(tag, data);
+
+    updateOpts.apply(tag, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
 
     if (
       canTrigger &&
-      this.isMounted &&
-      isFunction$2(this.shouldUpdate) && !this.shouldUpdate(data, nextOpts)
+      tag.isMounted &&
+      isFunction$2(tag.shouldUpdate) && !tag.shouldUpdate(data, nextOpts)
     ) {
-      return this
+      return tag
     }
 
-    // inherit properties from the parent, but only for isAnonymous tags
-    if (isLoop && isAnonymous) inheritFrom.apply(this, [this.parent, propsInSyncWithParent]);
     extend(opts, nextOpts);
-    if (canTrigger) this.trigger('update', data);
-    updateAllExpressions.call(this, expressions);
-    if (canTrigger) this.trigger('updated');
 
-    return this
+    if (canTrigger) tag.trigger('update', data);
+    updateAllExpressions.call(tag, expressions);
+    if (canTrigger) tag.trigger('updated');
 
-  }.bind(this));
+    return tag
+  });
 
   /**
    * Add a mixin to this tag
    * @returns { Tag } the current tag instance
    */
-  defineProperty(this, 'mixin', function tagMixin() {
+  defineProperty(tag, 'mixin', function tagMixin() {
     each(arguments, (mix) => {
-      let instance, obj;
+      let instance;
+      let obj;
       let props = [];
 
       // properties blacklisted and will not be bound to the tag instance
@@ -2942,19 +3023,19 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 
       // loop the keys in the function prototype or the all object keys
       each(props, (key) => {
-        // bind methods to this
+        // bind methods to tag
         // allow mixins to override other properties/parent mixins
         if (!contains(propsBlacklist, key)) {
           // check for getters/setters
-          const descriptor = Object.getOwnPropertyDescriptor(instance, key) || Object.getOwnPropertyDescriptor(proto, key);
+          const descriptor = getPropDescriptor(instance, key) || getPropDescriptor(proto, key);
           const hasGetterSetter = descriptor && (descriptor.get || descriptor.set);
 
           // apply method only if it does not already exist on the instance
-          if (!this.hasOwnProperty(key) && hasGetterSetter) {
-            Object.defineProperty(this, key, descriptor);
+          if (!tag.hasOwnProperty(key) && hasGetterSetter) {
+            Object.defineProperty(tag, key, descriptor);
           } else {
-            this[key] = isFunction$2(instance[key]) ?
-              instance[key].bind(this) :
+            tag[key] = isFunction$2(instance[key]) ?
+              instance[key].bind(tag) :
               instance[key];
           }
         }
@@ -2962,96 +3043,90 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 
       // init method will be called automatically
       if (instance.init)
-        instance.init.bind(this)();
+        instance.init.bind(tag)(opts);
     });
-    return this
-  }.bind(this));
+
+    return tag
+  });
 
   /**
    * Mount the current tag instance
    * @returns { Tag } the current tag instance
    */
-  defineProperty(this, 'mount', function tagMount() {
-    root._tag = this; // keep a reference to the tag just created
+  defineProperty(tag, 'mount', function tagMount() {
+    root._tag = tag; // keep a reference to the tag just created
 
     // Read all the attrs on this instance. This give us the info we need for updateOpts
     parseAttributes.apply(parent, [root, root.attributes, (attr, expr) => {
-      if (!isAnonymous && RefExpr.isPrototypeOf(expr)) expr.tag = this;
+      if (!isAnonymous && RefExpr.isPrototypeOf(expr)) expr.tag = tag;
       attr.expr = expr;
       instAttrs.push(attr);
     }]);
 
     // update the root adding custom attributes coming from the compiler
-    implAttrs = [];
     walkAttrs(impl.attrs, (k, v) => { implAttrs.push({name: k, value: v}); });
-    parseAttributes.apply(this, [root, implAttrs, (attr, expr) => {
+    parseAttributes.apply(tag, [root, implAttrs, (attr, expr) => {
       if (expr) expressions.push(expr);
       else setAttr(root, attr.name, attr.value);
     }]);
 
     // initialiation
-    updateOpts.apply(this, [isLoop, parent, isAnonymous, opts, instAttrs]);
+    updateOpts.apply(tag, [isLoop, parent, isAnonymous, opts, instAttrs]);
 
     // add global mixins
     const globalMixin = mixin$1(GLOBAL_MIXIN);
 
     if (globalMixin && !skipAnonymous) {
-      for (var i in globalMixin) {
+      for (const i in globalMixin) {
         if (globalMixin.hasOwnProperty(i)) {
-          this.mixin(globalMixin[i]);
+          tag.mixin(globalMixin[i]);
         }
       }
     }
 
-    if (impl.fn) impl.fn.call(this, opts);
+    if (impl.fn) impl.fn.call(tag, opts);
 
-    if (!skipAnonymous) this.trigger('before-mount');
+    if (!skipAnonymous) tag.trigger('before-mount');
 
     // parse layout after init. fn may calculate args for nested custom tags
-    parseExpressions.apply(this, [dom, expressions, isAnonymous]);
+    each(parseExpressions.apply(tag, [dom, isAnonymous]), e => expressions.push(e));
 
-    this.update(item);
+    tag.update(item);
 
     if (!isAnonymous && !isInline) {
       while (dom.firstChild) root.appendChild(dom.firstChild);
     }
 
-    defineProperty(this, 'root', root);
+    defineProperty(tag, 'root', root);
 
-
-    if (skipAnonymous) return
-
-    // set the isMounted flag asynchronously
-    this.one('mount', () => defineProperty(this, 'isMounted', true));
-
-    // if it's not a child tag we can trigger its mount event
-    if (!this.parent) {
-      this.trigger('mount');
-    }
-    // otherwise we need to wait that the parent "mount" or "updated" event gets triggered
-    else {
-      const p = getImmediateCustomParentTag(this.parent);
+    // if we need to wait that the parent "mount" or "updated" event gets triggered
+    if (!skipAnonymous && tag.parent) {
+      const p = getImmediateCustomParentTag(tag.parent);
       p.one(!p.isMounted ? 'mount' : 'updated', () => {
-        this.trigger('mount');
+        setMountState.call(tag, true);
       });
+    } else {
+      // otherwise it's not a child tag we can trigger its mount event
+      setMountState.call(tag, true);
     }
 
-    return this
+    tag.__.wasCreated = true;
 
-  }.bind(this));
+    return tag
+
+  });
 
   /**
    * Unmount the tag instance
    * @param { Boolean } mustKeepRoot - if it's true the root node will not be removed
    * @returns { Tag } the current tag instance
    */
-  defineProperty(this, 'unmount', function tagUnmount(mustKeepRoot) {
-    const el = this.root;
+  defineProperty(tag, 'unmount', function tagUnmount(mustKeepRoot) {
+    const el = tag.root;
     const p = el.parentNode;
-    const tagIndex = __TAGS_CACHE.indexOf(this);
-    let ptag;
+    const tagIndex = __TAGS_CACHE.indexOf(tag);
 
-    if (!skipAnonymous) this.trigger('before-unmount');
+    if (!skipAnonymous) tag.trigger('before-unmount');
 
     // clear all attributes coming from the mounted tag
     walkAttrs(impl.attrs, (name) => {
@@ -3062,41 +3137,31 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     });
 
     // remove all the event listeners
-    this.__.listeners.forEach((dom) => {
+    tag.__.listeners.forEach((dom) => {
       Object.keys(dom[RIOT_EVENTS_KEY]).forEach((eventName) => {
         dom.removeEventListener(eventName, dom[RIOT_EVENTS_KEY][eventName]);
       });
     });
 
-    // remove this tag instance from the global virtualDom variable
-    if (tagIndex !== -1)
-      __TAGS_CACHE.splice(tagIndex, 1);
+    // remove tag instance from the global tags cache collection
+    if (tagIndex !== -1) __TAGS_CACHE.splice(tagIndex, 1);
 
-    if (p || isVirtual) {
-      if (parent) {
-        ptag = getImmediateCustomParentTag(parent);
+    // clean up the parent tags object
+    if (parent && !isAnonymous) {
+      const ptag = getImmediateCustomParentTag(parent);
 
-        if (isVirtual) {
-          Object.keys(this.tags).forEach(tagName => {
-            arrayishRemove(ptag.tags, tagName, this.tags[tagName]);
-          });
-        } else {
-          arrayishRemove(ptag.tags, tagName, this);
-          // remove from _parent too
-          if(parent !== ptag) {
-            arrayishRemove(parent.tags, tagName, this);
-          }
-        }
+      if (isVirtual) {
+        Object
+          .keys(tag.tags)
+          .forEach(tagName => arrayishRemove(ptag.tags, tagName, tag.tags[tagName]));
       } else {
-        // remove the tag contents
-        setInnerHTML(el, '');
+        arrayishRemove(ptag.tags, tagName, tag);
       }
-
-      if (p && !mustKeepRoot) p.removeChild(el);
     }
 
-    if (this.__.virts) {
-      each(this.__.virts, (v) => {
+    // unmount all the virtual directives
+    if (tag.__.virts) {
+      each(tag.__.virts, (v) => {
         if (v.parentNode) v.parentNode.removeChild(v);
       });
     }
@@ -3105,21 +3170,27 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     unmountAll(expressions);
     each(instAttrs, a => a.expr && a.expr.unmount && a.expr.unmount());
 
+    // clear the tag html if it's necessary
+    if (mustKeepRoot) setInnerHTML(el, '');
+    // otherwise detach the root tag from the DOM
+    else if (p) p.removeChild(el);
+
     // custom internal unmount function to avoid relying on the observable
-    if (this.__.onUnmount) this.__.onUnmount();
+    if (tag.__.onUnmount) tag.__.onUnmount();
 
-    if (!skipAnonymous) {
-      this.trigger('unmount');
-      this.off('*');
-    }
+    // weird fix for a weird edge case #2409 and #2436
+    // some users might use your software not as you've expected
+    // so I need to add these dirty hacks to mitigate unexpected issues
+    if (!tag.isMounted) setMountState.call(tag, true);
 
-    defineProperty(this, 'isMounted', false);
+    setMountState.call(tag, false);
 
-    delete this.root._tag;
+    delete tag.root._tag;
 
-    return this
+    return tag
+  });
 
-  }.bind(this));
+  return tag
 }
 
 // node_modules/riot/lib/browser/common/util/tags.js
@@ -3131,26 +3202,6 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 function getTag(dom) {
   return dom.tagName && __TAG_IMPL[getAttr(dom, IS_DIRECTIVE) ||
     getAttr(dom, IS_DIRECTIVE) || dom.tagName.toLowerCase()]
-}
-
-/**
- * Inherit properties from a target tag instance
- * @this Tag
- * @param   { Tag } target - tag where we will inherit properties
- * @param   { Array } propsInSyncWithParent - array of properties to sync with the target
- */
-function inheritFrom(target, propsInSyncWithParent) {
-  each(Object.keys(target), (k) => {
-    // some properties must be always in sync with the parent tag
-    const mustSync = contains(propsInSyncWithParent, k);
-
-    if (isUndefined(this[k]) || mustSync) {
-      // track the property to keep in sync
-      // so we can keep it updated
-      if (!mustSync) propsInSyncWithParent.push(k);
-      this[k] = target[k];
-    }
-  });
 }
 
 /**
@@ -3181,7 +3232,7 @@ function moveChildTag(tagName, newPos) {
  * @returns { Object } instance of the new child tag just created
  */
 function initChildTag(child, opts, innerHTML, parent) {
-  const tag = new Tag$1(child, opts, innerHTML);
+  const tag = createTag(child, opts, innerHTML);
   const tagName = opts.tagName || getTagName(opts.root, true);
   const ptag = getImmediateCustomParentTag(parent);
   // fix for the parent attribute in the looped elements
@@ -3221,7 +3272,7 @@ function getImmediateCustomParentTag(tag) {
  */
 function unmountAll(expressions) {
   each(expressions, expr => {
-    if (expr instanceof Tag$1) expr.unmount(true);
+    if (expr.unmount) expr.unmount(true);
     else if (expr.tagName) expr.tag.unmount(true);
     else if (expr.unmount) expr.unmount();
   });
@@ -3291,7 +3342,7 @@ function arrayishRemove(obj, key, value, ensureArray) {
     if (index !== -1) obj[key].splice(index, 1);
     if (!obj[key].length) delete obj[key];
     else if (obj[key].length === 1 && !ensureArray) obj[key] = obj[key][0];
-  } else
+  } else if (obj[key] === value)
     delete obj[key]; // otherwise just delete the key
 }
 
@@ -3306,12 +3357,13 @@ function arrayishRemove(obj, key, value, ensureArray) {
 function mountTo(root, tagName, opts, ctx) {
   const impl = __TAG_IMPL[tagName];
   const implClass = __TAG_IMPL[tagName].class;
-  const tag = ctx || (implClass ? Object.create(implClass.prototype) : {});
+  const context = ctx || (implClass ? Object.create(implClass.prototype) : {});
   // cache the inner HTML to fix #855
   const innerHTML = root._innerHTML = root._innerHTML || root.innerHTML;
-  const conf = extend({ root, opts }, { parent: opts ? opts.parent : null });
+  const conf = extend({ root, opts, context }, { parent: opts ? opts.parent : null });
+  let tag;
 
-  if (impl && root) Tag$1.apply(tag, [impl, conf, innerHTML]);
+  if (impl && root) tag = createTag(impl, conf, innerHTML);
 
   if (tag && tag.mount) {
     tag.mount(true);
@@ -3367,13 +3419,24 @@ function makeVirtual(src, target) {
 }
 
 /**
+ * Return a temporary context containing also the parent properties
+ * @this Tag
+ * @param { Tag } - temporary tag context containing all the parent properties
+ */
+function inheritParentProps() {
+  if (this.parent) return extend(Object.create(this), this.parent)
+  return this
+}
+
+/**
  * Move virtual tag and all child nodes
  * @this Tag
  * @param { Node } src  - the node that will do the inserting
  * @param { Tag } target - insert before this tag's first child
  */
 function moveVirtual(src, target) {
-  let el = this.__.head, sib;
+  let el = this.__.head;
+  let sib;
   const frag = createFrag();
 
   while (el) {
@@ -3411,7 +3474,6 @@ function selectTags(tags) {
 
 var tags = Object.freeze({
 	getTag: getTag,
-	inheritFrom: inheritFrom,
 	moveChildTag: moveChildTag,
 	initChildTag: initChildTag,
 	getImmediateCustomParentTag: getImmediateCustomParentTag,
@@ -3422,6 +3484,7 @@ var tags = Object.freeze({
 	mountTo: mountTo,
 	makeReplaceVirtual: makeReplaceVirtual,
 	makeVirtual: makeVirtual,
+	inheritParentProps: inheritParentProps,
 	moveVirtual: moveVirtual,
 	selectTags: selectTags
 });
@@ -8917,7 +8980,7 @@ var getMCIds = function() {
   return [getQueries().mc_eid, getQueries().mc_cid];
 };
 
-// ../../hanzo/el-controls/src/events.coffee
+// node_modules/el-controls/src/events.coffee
 var Events;
 
 var ControlEvents = Events = {
@@ -10465,7 +10528,7 @@ var Tween = /** @class */ (function () {
                 recompose(property, object, _valuesStart, _valuesEnd, value, elapsed);
             }
             if (Plugins[property] && Plugins[property].update) {
-                Plugins[property].update.call(this, object[property], start, end, value, elapsed);
+                Plugins[property].update.call(this, object[property], start, end, value, elapsed, property);
             }
             propCount++;
         }
@@ -10527,7 +10590,7 @@ var Tween = /** @class */ (function () {
 
 // node_modules/es6-tween/src/index.js
 
-// ../../hanzo/el-controls/src/utils/valueOrCall.coffee
+// node_modules/el-controls/src/utils/valueOrCall.coffee
 var valueOrCall = function(valueOrFunc) {
   if (typeof valueOrFunc === 'function') {
     return valueOrFunc();
@@ -10535,7 +10598,7 @@ var valueOrCall = function(valueOrFunc) {
   return valueOrFunc;
 };
 
-// ../../hanzo/el-controls/src/controls/control.coffee
+// node_modules/el-controls/src/controls/control.coffee
 var Control;
 var _controlId;
 var scrolling;
@@ -10623,7 +10686,7 @@ var Control$1 = Control = (function(superClass) {
 
 })(El$1.Input);
 
-// ../../hanzo/el-controls/src/utils/placeholder.coffee
+// node_modules/el-controls/src/utils/placeholder.coffee
 var exports$1;
 var hidePlaceholderOnFocus;
 var unfocusOnAnElement;
@@ -10672,10 +10735,10 @@ if (document.createElement("input").placeholder == null) {
 
 var placeholder = exports$1;
 
-// ../../hanzo/el-controls/templates/controls/text.pug
+// node_modules/el-controls/templates/controls/text.pug
 var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-// ../../hanzo/el-controls/src/controls/text.coffee
+// node_modules/el-controls/src/controls/text.coffee
 var Text;
 var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$4 = {}.hasOwnProperty;
@@ -11144,10 +11207,10 @@ var PromoCode$1 = PromoCode = (function(superClass) {
 
 PromoCode.register();
 
-// ../../hanzo/el-controls/templates/controls/selection.pug
+// node_modules/el-controls/templates/controls/selection.pug
 var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-// ../../hanzo/el-controls/src/controls/selection.coffee
+// node_modules/el-controls/src/controls/selection.coffee
 var Select;
 var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$11 = {}.hasOwnProperty;
@@ -11291,7 +11354,7 @@ var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
 
 ShippingAddressCity.register();
 
-// ../../hanzo/el-controls/src/controls/country-select.coffee
+// node_modules/el-controls/src/controls/country-select.coffee
 var CountrySelect;
 var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$14 = {}.hasOwnProperty;
@@ -11467,7 +11530,7 @@ var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superCla
 
 ShippingAddressPostalCode.register();
 
-// ../../hanzo/el-controls/src/controls/state-select.coffee
+// node_modules/el-controls/src/controls/state-select.coffee
 var StateSelect;
 var extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$20 = {}.hasOwnProperty;
@@ -11581,10 +11644,10 @@ var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
 
 ShippingAddressState.register();
 
-// ../../hanzo/el-controls/templates/controls/checkbox.pug
+// node_modules/el-controls/templates/controls/checkbox.pug
 var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
-// ../../hanzo/el-controls/src/controls/checkbox.coffee
+// node_modules/el-controls/src/controls/checkbox.coffee
 var CheckBox;
 var extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$22 = {}.hasOwnProperty;
@@ -11784,10 +11847,10 @@ var GiftEmail$1 = GiftEmail;
 
 GiftEmail.register();
 
-// ../../hanzo/el-controls/templates/controls/textarea.pug
+// node_modules/el-controls/templates/controls/textarea.pug
 var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-// ../../hanzo/el-controls/src/controls/textbox.coffee
+// node_modules/el-controls/src/controls/textbox.coffee
 var TextBox;
 var extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$30 = {}.hasOwnProperty;
@@ -11893,8 +11956,85 @@ GiftType.register();
 
 var GiftType$1 = GiftType;
 
-// ../../hanzo/el-controls/templates/controls/currency.pug
-var html$4 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+// node_modules/el-controls/templates/controls/copy.pug
+var html$4 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
+
+// node_modules/el-controls/src/controls/copy.coffee
+var Copy;
+var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$33 = {}.hasOwnProperty;
+
+Copy = (function(superClass) {
+  extend$34(Copy, superClass);
+
+  function Copy() {
+    return Copy.__super__.constructor.apply(this, arguments);
+  }
+
+  Copy.prototype.tag = 'copy';
+
+  Copy.prototype.html = html$4;
+
+  Copy.prototype.text = '';
+
+  Copy.prototype.copied = false;
+
+  Copy.prototype.init = function() {
+    if (!this.text) {
+      return Copy.__super__.init.apply(this, arguments);
+    }
+  };
+
+  Copy.prototype.getText = function() {
+    return valueOrCall(this.text) || this.input.ref.get(input.name);
+  };
+
+  Copy.prototype.change = function() {};
+
+  Copy.prototype._change = function() {};
+
+  Copy.prototype.getName = function() {};
+
+  Copy.prototype.copy = function(e) {
+    var err, msg, successful, text, textArea;
+    text = this.getText();
+    textArea = document.createElement("textarea");
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = 0;
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      successful = document.execCommand('copy');
+      msg = successful != null ? successful : {
+        'successful': 'unsuccessful'
+      };
+      console.log('Copying text command was ' + msg);
+    } catch (error) {
+      console.log('Oops, unable to copy');
+    }
+    document.body.removeChild(textArea);
+    this.copied = true;
+    this.scheduleUpdate();
+    return false;
+  };
+
+  return Copy;
+
+})(Text$1);
+
+Copy.register();
+
+// node_modules/el-controls/templates/controls/currency.pug
+var html$5 = "\n<yield from=\"input\">\n  <input class=\"right-aligned {invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // node_modules/shop.js-util/src/data/currencies.coffee
 var currencies = {
@@ -12086,13 +12226,13 @@ var renderJSONCurrencyFromUI = function(code, uiCurrency) {
   return parseInt(parseFloat(parts[0].replace(digitsOnlyRe, '')) * 100 + parseFloat(parts[1].replace(digitsOnlyRe, '')), 10);
 };
 
-// ../../hanzo/el-controls/src/controls/currency.coffee
+// node_modules/el-controls/src/controls/currency.coffee
 var Currency;
-var extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$33 = {}.hasOwnProperty;
+var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$34 = {}.hasOwnProperty;
 
 Currency = (function(superClass) {
-  extend$34(Currency, superClass);
+  extend$35(Currency, superClass);
 
   function Currency() {
     return Currency.__super__.constructor.apply(this, arguments);
@@ -12100,30 +12240,16 @@ Currency = (function(superClass) {
 
   Currency.prototype.tag = 'currency';
 
-  Currency.prototype.html = html$4;
+  Currency.prototype.html = html$5;
 
   Currency.prototype.currency = '';
 
   Currency.prototype.init = function() {
-    Currency.__super__.init.apply(this, arguments);
-    return this.on('mounted', (function(_this) {
-      return function() {
-        var el;
-        el = _this.root.getElementsByTagName(_this.formElement)[0];
-        if (_this.type !== 'password') {
-          return placeholder(el);
-        }
-      };
-    })(this));
+    return Currency.__super__.init.apply(this, arguments);
   };
 
   Currency.prototype.getCurrency = function(e) {
-    var currency;
-    currency = this.currency;
-    if (typeof currency === 'function') {
-      return currency();
-    }
-    return currency;
+    return valueOrCall(this.currency);
   };
 
   Currency.prototype.renderValue = function() {
@@ -12141,6 +12267,2065 @@ Currency = (function(superClass) {
 })(Text$1);
 
 Currency.register();
+
+// node_modules/el-controls/templates/controls/qrcode.pug
+var html$6 = "<img alt=\"{ getText() }\" src=\"{ getDataUri() }\">";
+
+// node_modules/qrcode-generator-es6/qrcode.js
+/**
+ *
+ *
+ * @module qrcode-generator-es6
+ */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//	http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//	http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+const PAD0 = 0xEC;
+const PAD1 = 0x11;
+	
+/**
+ * Displays a QR code. Set the code data with `addData` and, call `make` and then call `createSvgTag` or `createImgTag`.
+ *
+ * See `gallery.html` for an example.
+ *
+ * @param {integer} typeNumber The minimum QR code type number from 1 to 40.  Using 0 allows any QR code type number.
+ * @param {String} errorCorrectionLevel 'L','M','Q','H'
+ */
+class qrcode$1 {
+	constructor(typeNumber, errorCorrectionLevel) {
+		this._typeNumber = typeNumber;
+		this._errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+		this._modules = null;
+		this._moduleCount = 0;
+		this._dataCache = null;
+		this._dataList = [];
+
+		this.makeImpl = (test, maskPattern) => {
+			this._moduleCount = this._typeNumber * 4 + 17;
+			this._modules = function(moduleCount) {
+				let modules = new Array(moduleCount);
+				for (let row = 0; row < moduleCount; row += 1) {
+					modules[row] = new Array(moduleCount);
+					for (let col = 0; col < moduleCount; col += 1) {
+						modules[row][col] = null;
+					}
+				}
+				return modules;
+			}(this._moduleCount);
+
+			this.setupPositionProbePattern(0, 0);
+			this.setupPositionProbePattern(this._moduleCount - 7, 0);
+			this.setupPositionProbePattern(0, this._moduleCount - 7);
+			this.setupPositionAdjustPattern();
+			this.setupTimingPattern();
+			this.setupTypeInfo(test, maskPattern);
+
+			if (this._typeNumber >= 7) {
+				this.setupTypeNumber(test);
+			}
+
+			if (this._dataCache == null) {
+				this._dataCache = this.createData(this._typeNumber, this._errorCorrectionLevel, this._dataList);
+			}
+
+			this.mapData(this._dataCache, maskPattern);
+		};
+
+		this.setupPositionProbePattern = (row, col) => {
+
+			for (let r = -1; r <= 7; r += 1) {
+
+				if (row + r <= -1 || this._moduleCount <= row + r) continue;
+
+				for (let c = -1; c <= 7; c += 1) {
+
+					if (col + c <= -1 || this._moduleCount <= col + c) continue;
+
+					if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+							|| (0 <= c && c <= 6 && (r == 0 || r == 6) )
+							|| (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+						this._modules[row + r][col + c] = true;
+					} else {
+						this._modules[row + r][col + c] = false;
+					}
+				}
+			}
+		};
+
+		this.getBestMaskPattern = () => {
+
+			let minLostPoint = 0;
+			let pattern = 0;
+
+			for (let i = 0; i < 8; i += 1) {
+
+				this.makeImpl(true, i);
+
+				let lostPoint = QRUtil.getLostPoint(this);
+
+				if (i == 0 || minLostPoint > lostPoint) {
+					minLostPoint = lostPoint;
+					pattern = i;
+				}
+			}
+
+			return pattern;
+		};
+
+		this.setupTimingPattern = () => {
+
+			for (let r = 8; r < this._moduleCount - 8; r += 1) {
+				if (this._modules[r][6] != null) {
+					continue;
+				}
+				this._modules[r][6] = (r % 2 == 0);
+			}
+
+			for (let c = 8; c < this._moduleCount - 8; c += 1) {
+				if (this._modules[6][c] != null) {
+					continue;
+				}
+				this._modules[6][c] = (c % 2 == 0);
+			}
+		};
+
+		this.setupPositionAdjustPattern = () => {
+
+			let pos = QRUtil.getPatternPosition(this._typeNumber);
+
+			for (let i = 0; i < pos.length; i += 1) {
+
+				for (let j = 0; j < pos.length; j += 1) {
+
+					let row = pos[i];
+					let col = pos[j];
+
+					if (this._modules[row][col] != null) {
+						continue;
+					}
+
+					for (let r = -2; r <= 2; r += 1) {
+
+						for (let c = -2; c <= 2; c += 1) {
+
+							if (r == -2 || r == 2 || c == -2 || c == 2
+									|| (r == 0 && c == 0) ) {
+								this._modules[row + r][col + c] = true;
+							} else {
+								this._modules[row + r][col + c] = false;
+							}
+						}
+					}
+				}
+			}
+		};
+
+		this.setupTypeNumber = (test) => {
+
+			let bits = QRUtil.getBCHTypeNumber(this._typeNumber);
+
+			for (let i = 0; i < 18; i += 1) {
+				const mod = (!test && ( (bits >> i) & 1) == 1);
+				this._modules[Math.floor(i / 3)][i % 3 + this._moduleCount - 8 - 3] = mod;
+			}
+
+			for (let i = 0; i < 18; i += 1) {
+				const mod = (!test && ( (bits >> i) & 1) == 1);
+				this._modules[i % 3 + this._moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+			}
+		};
+
+		this.setupTypeInfo = (test, maskPattern) => {
+
+			let data = (this._errorCorrectionLevel << 3) | maskPattern;
+			let bits = QRUtil.getBCHTypeInfo(data);
+
+			// vertical
+			for (let i = 0; i < 15; i += 1) {
+
+				const mod = (!test && ( (bits >> i) & 1) == 1);
+
+				if (i < 6) {
+					this._modules[i][8] = mod;
+				} else if (i < 8) {
+					this._modules[i + 1][8] = mod;
+				} else {
+					this._modules[this._moduleCount - 15 + i][8] = mod;
+				}
+			}
+
+			// horizontal
+			for (let i = 0; i < 15; i += 1) {
+
+				const mod = (!test && ( (bits >> i) & 1) == 1);
+
+				if (i < 8) {
+					this._modules[8][this._moduleCount - i - 1] = mod;
+				} else if (i < 9) {
+					this._modules[8][15 - i - 1 + 1] = mod;
+				} else {
+					this._modules[8][15 - i - 1] = mod;
+				}
+			}
+
+			// fixed module
+			this._modules[this._moduleCount - 8][8] = (!test);
+		};
+
+		this.mapData = (data, maskPattern) => {
+
+			let inc = -1;
+			let row = this._moduleCount - 1;
+			let bitIndex = 7;
+			let byteIndex = 0;
+			let maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+			for (let col = this._moduleCount - 1; col > 0; col -= 2) {
+
+				if (col == 6) col -= 1;
+
+				while (true) {
+
+					for (let c = 0; c < 2; c += 1) {
+
+						if (this._modules[row][col - c] == null) {
+
+							let dark = false;
+
+							if (byteIndex < data.length) {
+								dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+							}
+
+							let mask = maskFunc(row, col - c);
+
+							if (mask) {
+								dark = !dark;
+							}
+
+							this._modules[row][col - c] = dark;
+							bitIndex -= 1;
+
+							if (bitIndex == -1) {
+								byteIndex += 1;
+								bitIndex = 7;
+							}
+						}
+					}
+
+					row += inc;
+
+					if (row < 0 || this._moduleCount <= row) {
+						row -= inc;
+						inc = -inc;
+						break;
+					}
+				}
+			}
+		};
+
+		this.createBytes = (buffer, rsBlocks) => {
+
+			let offset = 0;
+
+			let maxDcCount = 0;
+			let maxEcCount = 0;
+
+			let dcdata = new Array(rsBlocks.length);
+			let ecdata = new Array(rsBlocks.length);
+
+			for (let r = 0; r < rsBlocks.length; r += 1) {
+
+				let dcCount = rsBlocks[r].dataCount;
+				let ecCount = rsBlocks[r].totalCount - dcCount;
+
+				maxDcCount = Math.max(maxDcCount, dcCount);
+				maxEcCount = Math.max(maxEcCount, ecCount);
+
+				dcdata[r] = new Array(dcCount);
+
+				for (let i = 0; i < dcdata[r].length; i += 1) {
+					dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+				}
+				offset += dcCount;
+
+				let rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+				let rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+				let modPoly = rawPoly.mod(rsPoly);
+				ecdata[r] = new Array(rsPoly.getLength() - 1);
+				for (let i = 0; i < ecdata[r].length; i += 1) {
+					let modIndex = i + modPoly.getLength() - ecdata[r].length;
+					ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+				}
+			}
+
+			let totalCodeCount = 0;
+			for (let i = 0; i < rsBlocks.length; i += 1) {
+				totalCodeCount += rsBlocks[i].totalCount;
+			}
+
+			let data = new Array(totalCodeCount);
+			let index = 0;
+
+			for (let i = 0; i < maxDcCount; i += 1) {
+				for (let r = 0; r < rsBlocks.length; r += 1) {
+					if (i < dcdata[r].length) {
+						data[index] = dcdata[r][i];
+						index += 1;
+					}
+				}
+			}
+
+			for (let i = 0; i < maxEcCount; i += 1) {
+				for (let r = 0; r < rsBlocks.length; r += 1) {
+					if (i < ecdata[r].length) {
+						data[index] = ecdata[r][i];
+						index += 1;
+					}
+				}
+			}
+
+			return data;
+		};
+
+		this.createData = (typeNumber, errorCorrectionLevel, dataList) => {
+
+			let rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+			let buffer = qrBitBuffer();
+
+			for (let i = 0; i < dataList.length; i += 1) {
+				let data = dataList[i];
+				buffer.put(data.getMode(), 4);
+				buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+				data.write(buffer);
+			}
+
+			// calc num max data.
+			let totalDataCount = 0;
+			for (let i = 0; i < rsBlocks.length; i += 1) {
+				totalDataCount += rsBlocks[i].dataCount;
+			}
+
+			if (buffer.getLengthInBits() > totalDataCount * 8) {
+				throw 'code length overflow. ('
+					+ buffer.getLengthInBits()
+					+ '>'
+					+ totalDataCount * 8
+					+ ')';
+			}
+
+			// end code
+			if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+				buffer.put(0, 4);
+			}
+
+			// padding
+			while (buffer.getLengthInBits() % 8 != 0) {
+				buffer.putBit(false);
+			}
+
+			// padding
+			while (true) {
+
+				if (buffer.getLengthInBits() >= totalDataCount * 8) {
+					break;
+				}
+				buffer.put(PAD0, 8);
+
+				if (buffer.getLengthInBits() >= totalDataCount * 8) {
+					break;
+				}
+				buffer.put(PAD1, 8);
+			}
+
+			return this.createBytes(buffer, rsBlocks);
+		};
+
+	}
+
+	addData(data, mode) {
+
+		mode = mode || 'Byte';
+
+		let newData = null;
+
+		switch(mode) {
+		case 'Numeric' :
+			newData = qrNumber(data);
+			break;
+		case 'Alphanumeric' :
+			newData = qrAlphaNum(data);
+			break;
+		case 'Byte' :
+			newData = qr8BitByte(data);
+			break;
+		case 'Kanji' :
+			newData = qrKanji(data);
+			break;
+		default :
+			throw 'mode:' + mode;
+		}
+
+		this._dataList.push(newData);
+		this._dataCache = null;
+	}
+
+	/**
+	 * @returns {boolean} true if the module at `row, col` is dark.
+	 */
+	isDark(row, col) {
+		if (row < 0 || this._moduleCount <= row || col < 0 || this._moduleCount <= col) {
+			throw row + ',' + col;
+		}
+		return this._modules[row][col];
+	}
+
+	/**
+	 * @returns {integer} The module count in one dimension of the QR code.  The total number of modules is the square of this value.
+	 */
+	getModuleCount() {
+		return this._moduleCount;
+	}
+
+	/**
+	 * Call this when done adding data before getting the generated QR code image.
+	 */
+	make() {
+		if (this._typeNumber < 1) {
+			let typeNumber = 1;
+
+			for (; typeNumber < 40; typeNumber++) {
+				let rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this._errorCorrectionLevel);
+				let buffer = qrBitBuffer();
+
+				for (let i = 0; i < this._dataList.length; i++) {
+					let data = this._dataList[i];
+					buffer.put(data.getMode(), 4);
+					buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+					data.write(buffer);
+				}
+
+				let totalDataCount = 0;
+				for (let i = 0; i < rsBlocks.length; i++) {
+					totalDataCount += rsBlocks[i].dataCount;
+				}
+
+				if (buffer.getLengthInBits() <= totalDataCount * 8) {
+					break;
+				}
+			}
+
+			this._typeNumber = typeNumber;
+		}
+
+		this.makeImpl(false, this.getBestMaskPattern());
+	}
+
+	/**
+	 * @param {Object} args
+	 * @param {function} [args.drawCell] A callback with arguments `column, row, x, y` to draw a cell.  `x, y` are the coordinates to draw it at.  `c, y` are the QR code module indexes.  Returns the svg element child string for the cell.
+	 * @param {function} [args.cellColor] A callback which returns the color for the cell.  By default, a function that returns `black`.  Unused if `drawCell` is provided.
+	 * @param {integer} [args.margin] The margin to draw around the QR code, by number of cells.
+	 * @param {Object} [args.obstruction] An image to place in the center of the QR code.
+	 * @param {integer} args.obstruction.width Width of the obstruction as a percentage of QR code width.
+	 * @param {integer} args.obstruction.height Height of the obstruction as a percentage of QR code height.
+	 * @param {String} args.obstruction.path The path of the obstruction image.
+	 * @returns {String} An svg tag as a string.
+	 */
+	createSvgTag({drawCell, cellColor, cellSize, margin, obstruction}) {
+		drawCell = drawCell || ((c, r, x, y) => 
+			'<rect ' +
+				'width="' + cellSize + '" ' +
+				'height="' + cellSize + '" ' +
+				'x="' + x + '" ' +
+				'y="' + y + '" ' +
+				'fill="' + cellColor(c, r) + '" ' +
+				'shape-rendering="crispEdges" ' +
+			' />'
+		);
+		cellColor = cellColor || (() => 'black');
+		cellSize = cellSize || 2;
+		margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+		let size = this.getModuleCount() * cellSize + margin * 2;
+		let qrSvg = '';
+
+		qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+		qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+		qrSvg += ' preserveAspectRatio="xMinYMin meet">';
+		qrSvg += '<rect width="100%" height="100%" fill="white" x="0" y="0"/>';
+
+		const modCount = this.getModuleCount();
+		const totalSize = modCount * cellSize + margin * 2;
+		let obstructionCRStart, obstructionCREnd;
+		if (typeof obstruction !== 'undefined') {
+			const {width, height} = obstruction;
+			const spans = [
+				Math.ceil(width * modCount),
+				Math.ceil(height * modCount),
+			];
+			obstructionCRStart = spans.map(s => Math.floor(modCount / 2 - s / 2));
+			obstructionCREnd = spans.map(s => Math.ceil(modCount / 2 + s / 2));
+		}
+
+		for (let r = 0; r < modCount; r += 1) {
+			const mr = r * cellSize + margin;
+			for (let c = 0; c < modCount; c += 1) {
+				const mc = c * cellSize + margin;
+				if (
+						c >= obstructionCRStart[0] && c < obstructionCREnd[0] &&
+						r >= obstructionCRStart[1] && r < obstructionCREnd[1]) {
+					if (c == obstructionCRStart[0] && r == obstructionCRStart[1]) {
+						qrSvg += '<image ' +
+							'x="' + (totalSize * (1.0 - obstruction.width) * 0.5).toFixed(3)	+ '" ' + 
+							'y="' + (totalSize * (1.0 - obstruction.height) * 0.5).toFixed(3)	+ '" ' + 
+							'width="' + (totalSize * obstruction.width).toFixed(3) + '" ' +
+							'height="' + (totalSize * obstruction.height).toFixed(3) + '" ' + 
+							'preserveAspectRatio="xMidYMid meet" ' +
+							'xlink:href="' + obstruction.path + '" ' +
+						'/>';
+					}
+				} else if (this.isDark(r, c) ) {
+					qrSvg += drawCell(c, r, mc, mr);
+				}
+			}
+		}
+
+		qrSvg += '</svg>';
+
+		return qrSvg;
+	}
+
+	/**
+	 * @param {integer} cellSize The size of a module in pixels.
+	 * @param {integer} margin The margin to draw around the QR code in pixels.
+	 * @returns {String} An img tag as a string.
+	 */
+	createImgTag(cellSize, margin) {
+
+		cellSize = cellSize || 2;
+		margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+		let size = this.getModuleCount() * cellSize + margin * 2;
+		let min = margin;
+		let max = size - margin;
+
+		return createImgTag(size, size, function(x, y) {
+			if (min <= x && x < max && min <= y && y < max) {
+				let c = Math.floor( (x - min) / cellSize);
+				let r = Math.floor( (y - min) / cellSize);
+				return this.isDark(r, c)? 0 : 1;
+			} else {
+				return 1;
+			}
+		} );
+	}
+}
+
+/**
+ *
+ */
+const stringToBytesFuncs = {
+	'default' : function(s) {
+		let bytes = [];
+		for (let i = 0; i < s.length; i += 1) {
+			let c = s.charCodeAt(i);
+			bytes.push(c & 0xff);
+		}
+		return bytes;
+	},
+};
+
+/**
+ *
+ */
+const stringToBytes = stringToBytesFuncs['default'];
+
+//---------------------------------------------------------------------
+// qrcode.createStringToBytes
+//---------------------------------------------------------------------
+
+/**
+ *
+ */
+const QRMode = {
+	MODE_NUMBER: 1 << 0,
+	MODE_ALPHA_NUM: 1 << 1,
+	MODE_8BIT_BYTE: 1 << 2,
+	MODE_KANJI: 1 << 3,
+};
+
+/**
+ *
+ */
+const QRErrorCorrectionLevel = {
+	L : 1,
+	M : 0,
+	Q : 3,
+	H : 2,
+};
+
+/**
+ *
+ */
+const QRMaskPattern = {
+	PATTERN000 : 0,
+	PATTERN001 : 1,
+	PATTERN010 : 2,
+	PATTERN011 : 3,
+	PATTERN100 : 4,
+	PATTERN101 : 5,
+	PATTERN110 : 6,
+	PATTERN111 : 7,
+};
+
+//---------------------------------------------------------------------
+// QRUtil
+//---------------------------------------------------------------------
+
+const QRUtil = function() {
+
+	const PATTERN_POSITION_TABLE = [
+		[],
+		[6, 18],
+		[6, 22],
+		[6, 26],
+		[6, 30],
+		[6, 34],
+		[6, 22, 38],
+		[6, 24, 42],
+		[6, 26, 46],
+		[6, 28, 50],
+		[6, 30, 54],
+		[6, 32, 58],
+		[6, 34, 62],
+		[6, 26, 46, 66],
+		[6, 26, 48, 70],
+		[6, 26, 50, 74],
+		[6, 30, 54, 78],
+		[6, 30, 56, 82],
+		[6, 30, 58, 86],
+		[6, 34, 62, 90],
+		[6, 28, 50, 72, 94],
+		[6, 26, 50, 74, 98],
+		[6, 30, 54, 78, 102],
+		[6, 28, 54, 80, 106],
+		[6, 32, 58, 84, 110],
+		[6, 30, 58, 86, 114],
+		[6, 34, 62, 90, 118],
+		[6, 26, 50, 74, 98, 122],
+		[6, 30, 54, 78, 102, 126],
+		[6, 26, 52, 78, 104, 130],
+		[6, 30, 56, 82, 108, 134],
+		[6, 34, 60, 86, 112, 138],
+		[6, 30, 58, 86, 114, 142],
+		[6, 34, 62, 90, 118, 146],
+		[6, 30, 54, 78, 102, 126, 150],
+		[6, 24, 50, 76, 102, 128, 154],
+		[6, 28, 54, 80, 106, 132, 158],
+		[6, 32, 58, 84, 110, 136, 162],
+		[6, 26, 54, 82, 110, 138, 166],
+		[6, 30, 58, 86, 114, 142, 170],
+	];
+	const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+	const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+	const G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+	let _this = {};
+
+	let getBCHDigit = function(data) {
+		let digit = 0;
+		while (data != 0) {
+			digit += 1;
+			data >>>= 1;
+		}
+		return digit;
+	};
+
+	_this.getBCHTypeInfo = function(data) {
+		let d = data << 10;
+		while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+			d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+		}
+		return ( (data << 10) | d) ^ G15_MASK;
+	};
+
+	_this.getBCHTypeNumber = function(data) {
+		let d = data << 12;
+		while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+			d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+		}
+		return (data << 12) | d;
+	};
+
+	_this.getPatternPosition = function(typeNumber) {
+		return PATTERN_POSITION_TABLE[typeNumber - 1];
+	};
+
+	_this.getMaskFunction = function(maskPattern) {
+
+		switch (maskPattern) {
+
+		case QRMaskPattern.PATTERN000 :
+			return function(i, j) { return (i + j) % 2 == 0; };
+		case QRMaskPattern.PATTERN001 :
+			return function(i, _) { return i % 2 == 0; };
+		case QRMaskPattern.PATTERN010 :
+			return function(i, j) { return j % 3 == 0; };
+		case QRMaskPattern.PATTERN011 :
+			return function(i, j) { return (i + j) % 3 == 0; };
+		case QRMaskPattern.PATTERN100 :
+			return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+		case QRMaskPattern.PATTERN101 :
+			return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+		case QRMaskPattern.PATTERN110 :
+			return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+		case QRMaskPattern.PATTERN111 :
+			return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+		default :
+			throw 'bad maskPattern:' + maskPattern;
+		}
+	};
+
+	_this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+		let a = qrPolynomial([1], 0);
+		for (let i = 0; i < errorCorrectLength; i += 1) {
+			a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+		}
+		return a;
+	};
+
+	_this.getLengthInBits = function(mode, type) {
+
+		if (1 <= type && type < 10) {
+
+			// 1 - 9
+
+			switch(mode) {
+			case QRMode.MODE_NUMBER		: return 10;
+			case QRMode.MODE_ALPHA_NUM : return 9;
+			case QRMode.MODE_8BIT_BYTE : return 8;
+			case QRMode.MODE_KANJI		 : return 8;
+			default :
+				throw 'mode:' + mode;
+			}
+
+		} else if (type < 27) {
+
+			// 10 - 26
+
+			switch(mode) {
+			case QRMode.MODE_NUMBER		: return 12;
+			case QRMode.MODE_ALPHA_NUM : return 11;
+			case QRMode.MODE_8BIT_BYTE : return 16;
+			case QRMode.MODE_KANJI		 : return 10;
+			default :
+				throw 'mode:' + mode;
+			}
+
+		} else if (type < 41) {
+
+			// 27 - 40
+
+			switch(mode) {
+			case QRMode.MODE_NUMBER		: return 14;
+			case QRMode.MODE_ALPHA_NUM : return 13;
+			case QRMode.MODE_8BIT_BYTE : return 16;
+			case QRMode.MODE_KANJI		 : return 12;
+			default :
+				throw 'mode:' + mode;
+			}
+
+		} else {
+			throw 'type:' + type;
+		}
+	};
+
+	_this.getLostPoint = function(qrcode) {
+
+		let moduleCount = qrcode.getModuleCount();
+
+		let lostPoint = 0;
+
+		// LEVEL1
+
+		for (let row = 0; row < moduleCount; row += 1) {
+			for (let col = 0; col < moduleCount; col += 1) {
+
+				let sameCount = 0;
+				let dark = qrcode.isDark(row, col);
+
+				for (let r = -1; r <= 1; r += 1) {
+
+					if (row + r < 0 || moduleCount <= row + r) {
+						continue;
+					}
+
+					for (let c = -1; c <= 1; c += 1) {
+
+						if (col + c < 0 || moduleCount <= col + c) {
+							continue;
+						}
+
+						if (r == 0 && c == 0) {
+							continue;
+						}
+
+						if (dark == qrcode.isDark(row + r, col + c) ) {
+							sameCount += 1;
+						}
+					}
+				}
+
+				if (sameCount > 5) {
+					lostPoint += (3 + sameCount - 5);
+				}
+			}
+		}
+
+		// LEVEL2
+
+		for (let row = 0; row < moduleCount - 1; row += 1) {
+			for (let col = 0; col < moduleCount - 1; col += 1) {
+				let count = 0;
+				if (qrcode.isDark(row, col) ) count += 1;
+				if (qrcode.isDark(row + 1, col) ) count += 1;
+				if (qrcode.isDark(row, col + 1) ) count += 1;
+				if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+				if (count == 0 || count == 4) {
+					lostPoint += 3;
+				}
+			}
+		}
+
+		// LEVEL3
+
+		for (let row = 0; row < moduleCount; row += 1) {
+			for (let col = 0; col < moduleCount - 6; col += 1) {
+				if (qrcode.isDark(row, col)
+						&& !qrcode.isDark(row, col + 1)
+						&&	qrcode.isDark(row, col + 2)
+						&&	qrcode.isDark(row, col + 3)
+						&&	qrcode.isDark(row, col + 4)
+						&& !qrcode.isDark(row, col + 5)
+						&&	qrcode.isDark(row, col + 6) ) {
+					lostPoint += 40;
+				}
+			}
+		}
+
+		for (let col = 0; col < moduleCount; col += 1) {
+			for (let row = 0; row < moduleCount - 6; row += 1) {
+				if (qrcode.isDark(row, col)
+						&& !qrcode.isDark(row + 1, col)
+						&&	qrcode.isDark(row + 2, col)
+						&&	qrcode.isDark(row + 3, col)
+						&&	qrcode.isDark(row + 4, col)
+						&& !qrcode.isDark(row + 5, col)
+						&&	qrcode.isDark(row + 6, col) ) {
+					lostPoint += 40;
+				}
+			}
+		}
+
+		// LEVEL4
+
+		let darkCount = 0;
+
+		for (let col = 0; col < moduleCount; col += 1) {
+			for (let row = 0; row < moduleCount; row += 1) {
+				if (qrcode.isDark(row, col) ) {
+					darkCount += 1;
+				}
+			}
+		}
+
+		let ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+		lostPoint += ratio * 10;
+
+		return lostPoint;
+	};
+
+	return _this;
+}();
+
+//---------------------------------------------------------------------
+// QRMath
+//---------------------------------------------------------------------
+
+let QRMath = function() {
+
+	let EXP_TABLE = new Array(256);
+	let LOG_TABLE = new Array(256);
+
+	// initialize tables
+	for (let i = 0; i < 8; i += 1) {
+		EXP_TABLE[i] = 1 << i;
+	}
+	for (let i = 8; i < 256; i += 1) {
+		EXP_TABLE[i] = EXP_TABLE[i - 4]
+			^ EXP_TABLE[i - 5]
+			^ EXP_TABLE[i - 6]
+			^ EXP_TABLE[i - 8];
+	}
+	for (let i = 0; i < 255; i += 1) {
+		LOG_TABLE[EXP_TABLE[i] ] = i;
+	}
+
+	let _this = {};
+
+	_this.glog = function(n) {
+
+		if (n < 1) {
+			throw 'glog(' + n + ')';
+		}
+
+		return LOG_TABLE[n];
+	};
+
+	_this.gexp = function(n) {
+
+		while (n < 0) {
+			n += 255;
+		}
+
+		while (n >= 256) {
+			n -= 255;
+		}
+
+		return EXP_TABLE[n];
+	};
+
+	return _this;
+}();
+
+//---------------------------------------------------------------------
+// qrPolynomial
+//---------------------------------------------------------------------
+
+function qrPolynomial(num, shift) {
+
+	if (typeof num.length == 'undefined') {
+		throw num.length + '/' + shift;
+	}
+
+	let _num = function() {
+		let offset = 0;
+		while (offset < num.length && num[offset] == 0) {
+			offset += 1;
+		}
+		let _num = new Array(num.length - offset + shift);
+		for (let i = 0; i < num.length - offset; i += 1) {
+			_num[i] = num[i + offset];
+		}
+		return _num;
+	}();
+
+	let _this = {};
+
+	_this.getAt = function(index) {
+		return _num[index];
+	};
+
+	_this.getLength = function() {
+		return _num.length;
+	};
+
+	_this.multiply = function(e) {
+
+		let num = new Array(_this.getLength() + e.getLength() - 1);
+
+		for (let i = 0; i < _this.getLength(); i += 1) {
+			for (let j = 0; j < e.getLength(); j += 1) {
+				num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+			}
+		}
+
+		return qrPolynomial(num, 0);
+	};
+
+	_this.mod = function(e) {
+
+		if (_this.getLength() - e.getLength() < 0) {
+			return _this;
+		}
+
+		let ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+		let num = new Array(_this.getLength() );
+		for (let i = 0; i < _this.getLength(); i += 1) {
+			num[i] = _this.getAt(i);
+		}
+
+		for (let i = 0; i < e.getLength(); i += 1) {
+			num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+		}
+
+		// recursive call
+		return qrPolynomial(num, 0).mod(e);
+	};
+
+	return _this;
+}
+
+//---------------------------------------------------------------------
+// QRRSBlock
+//---------------------------------------------------------------------
+
+const QRRSBlock = function() {
+
+	let RS_BLOCK_TABLE = [
+
+		// L
+		// M
+		// Q
+		// H
+
+		// 1
+		[1, 26, 19],
+		[1, 26, 16],
+		[1, 26, 13],
+		[1, 26, 9],
+
+		// 2
+		[1, 44, 34],
+		[1, 44, 28],
+		[1, 44, 22],
+		[1, 44, 16],
+
+		// 3
+		[1, 70, 55],
+		[1, 70, 44],
+		[2, 35, 17],
+		[2, 35, 13],
+
+		// 4
+		[1, 100, 80],
+		[2, 50, 32],
+		[2, 50, 24],
+		[4, 25, 9],
+
+		// 5
+		[1, 134, 108],
+		[2, 67, 43],
+		[2, 33, 15, 2, 34, 16],
+		[2, 33, 11, 2, 34, 12],
+
+		// 6
+		[2, 86, 68],
+		[4, 43, 27],
+		[4, 43, 19],
+		[4, 43, 15],
+
+		// 7
+		[2, 98, 78],
+		[4, 49, 31],
+		[2, 32, 14, 4, 33, 15],
+		[4, 39, 13, 1, 40, 14],
+
+		// 8
+		[2, 121, 97],
+		[2, 60, 38, 2, 61, 39],
+		[4, 40, 18, 2, 41, 19],
+		[4, 40, 14, 2, 41, 15],
+
+		// 9
+		[2, 146, 116],
+		[3, 58, 36, 2, 59, 37],
+		[4, 36, 16, 4, 37, 17],
+		[4, 36, 12, 4, 37, 13],
+
+		// 10
+		[2, 86, 68, 2, 87, 69],
+		[4, 69, 43, 1, 70, 44],
+		[6, 43, 19, 2, 44, 20],
+		[6, 43, 15, 2, 44, 16],
+
+		// 11
+		[4, 101, 81],
+		[1, 80, 50, 4, 81, 51],
+		[4, 50, 22, 4, 51, 23],
+		[3, 36, 12, 8, 37, 13],
+
+		// 12
+		[2, 116, 92, 2, 117, 93],
+		[6, 58, 36, 2, 59, 37],
+		[4, 46, 20, 6, 47, 21],
+		[7, 42, 14, 4, 43, 15],
+
+		// 13
+		[4, 133, 107],
+		[8, 59, 37, 1, 60, 38],
+		[8, 44, 20, 4, 45, 21],
+		[12, 33, 11, 4, 34, 12],
+
+		// 14
+		[3, 145, 115, 1, 146, 116],
+		[4, 64, 40, 5, 65, 41],
+		[11, 36, 16, 5, 37, 17],
+		[11, 36, 12, 5, 37, 13],
+
+		// 15
+		[5, 109, 87, 1, 110, 88],
+		[5, 65, 41, 5, 66, 42],
+		[5, 54, 24, 7, 55, 25],
+		[11, 36, 12, 7, 37, 13],
+
+		// 16
+		[5, 122, 98, 1, 123, 99],
+		[7, 73, 45, 3, 74, 46],
+		[15, 43, 19, 2, 44, 20],
+		[3, 45, 15, 13, 46, 16],
+
+		// 17
+		[1, 135, 107, 5, 136, 108],
+		[10, 74, 46, 1, 75, 47],
+		[1, 50, 22, 15, 51, 23],
+		[2, 42, 14, 17, 43, 15],
+
+		// 18
+		[5, 150, 120, 1, 151, 121],
+		[9, 69, 43, 4, 70, 44],
+		[17, 50, 22, 1, 51, 23],
+		[2, 42, 14, 19, 43, 15],
+
+		// 19
+		[3, 141, 113, 4, 142, 114],
+		[3, 70, 44, 11, 71, 45],
+		[17, 47, 21, 4, 48, 22],
+		[9, 39, 13, 16, 40, 14],
+
+		// 20
+		[3, 135, 107, 5, 136, 108],
+		[3, 67, 41, 13, 68, 42],
+		[15, 54, 24, 5, 55, 25],
+		[15, 43, 15, 10, 44, 16],
+
+		// 21
+		[4, 144, 116, 4, 145, 117],
+		[17, 68, 42],
+		[17, 50, 22, 6, 51, 23],
+		[19, 46, 16, 6, 47, 17],
+
+		// 22
+		[2, 139, 111, 7, 140, 112],
+		[17, 74, 46],
+		[7, 54, 24, 16, 55, 25],
+		[34, 37, 13],
+
+		// 23
+		[4, 151, 121, 5, 152, 122],
+		[4, 75, 47, 14, 76, 48],
+		[11, 54, 24, 14, 55, 25],
+		[16, 45, 15, 14, 46, 16],
+
+		// 24
+		[6, 147, 117, 4, 148, 118],
+		[6, 73, 45, 14, 74, 46],
+		[11, 54, 24, 16, 55, 25],
+		[30, 46, 16, 2, 47, 17],
+
+		// 25
+		[8, 132, 106, 4, 133, 107],
+		[8, 75, 47, 13, 76, 48],
+		[7, 54, 24, 22, 55, 25],
+		[22, 45, 15, 13, 46, 16],
+
+		// 26
+		[10, 142, 114, 2, 143, 115],
+		[19, 74, 46, 4, 75, 47],
+		[28, 50, 22, 6, 51, 23],
+		[33, 46, 16, 4, 47, 17],
+
+		// 27
+		[8, 152, 122, 4, 153, 123],
+		[22, 73, 45, 3, 74, 46],
+		[8, 53, 23, 26, 54, 24],
+		[12, 45, 15, 28, 46, 16],
+
+		// 28
+		[3, 147, 117, 10, 148, 118],
+		[3, 73, 45, 23, 74, 46],
+		[4, 54, 24, 31, 55, 25],
+		[11, 45, 15, 31, 46, 16],
+
+		// 29
+		[7, 146, 116, 7, 147, 117],
+		[21, 73, 45, 7, 74, 46],
+		[1, 53, 23, 37, 54, 24],
+		[19, 45, 15, 26, 46, 16],
+
+		// 30
+		[5, 145, 115, 10, 146, 116],
+		[19, 75, 47, 10, 76, 48],
+		[15, 54, 24, 25, 55, 25],
+		[23, 45, 15, 25, 46, 16],
+
+		// 31
+		[13, 145, 115, 3, 146, 116],
+		[2, 74, 46, 29, 75, 47],
+		[42, 54, 24, 1, 55, 25],
+		[23, 45, 15, 28, 46, 16],
+
+		// 32
+		[17, 145, 115],
+		[10, 74, 46, 23, 75, 47],
+		[10, 54, 24, 35, 55, 25],
+		[19, 45, 15, 35, 46, 16],
+
+		// 33
+		[17, 145, 115, 1, 146, 116],
+		[14, 74, 46, 21, 75, 47],
+		[29, 54, 24, 19, 55, 25],
+		[11, 45, 15, 46, 46, 16],
+
+		// 34
+		[13, 145, 115, 6, 146, 116],
+		[14, 74, 46, 23, 75, 47],
+		[44, 54, 24, 7, 55, 25],
+		[59, 46, 16, 1, 47, 17],
+
+		// 35
+		[12, 151, 121, 7, 152, 122],
+		[12, 75, 47, 26, 76, 48],
+		[39, 54, 24, 14, 55, 25],
+		[22, 45, 15, 41, 46, 16],
+
+		// 36
+		[6, 151, 121, 14, 152, 122],
+		[6, 75, 47, 34, 76, 48],
+		[46, 54, 24, 10, 55, 25],
+		[2, 45, 15, 64, 46, 16],
+
+		// 37
+		[17, 152, 122, 4, 153, 123],
+		[29, 74, 46, 14, 75, 47],
+		[49, 54, 24, 10, 55, 25],
+		[24, 45, 15, 46, 46, 16],
+
+		// 38
+		[4, 152, 122, 18, 153, 123],
+		[13, 74, 46, 32, 75, 47],
+		[48, 54, 24, 14, 55, 25],
+		[42, 45, 15, 32, 46, 16],
+
+		// 39
+		[20, 147, 117, 4, 148, 118],
+		[40, 75, 47, 7, 76, 48],
+		[43, 54, 24, 22, 55, 25],
+		[10, 45, 15, 67, 46, 16],
+
+		// 40
+		[19, 148, 118, 6, 149, 119],
+		[18, 75, 47, 31, 76, 48],
+		[34, 54, 24, 34, 55, 25],
+		[20, 45, 15, 61, 46, 16],
+	];
+
+	let qrRSBlock = function(totalCount, dataCount) {
+		let _this = {};
+		_this.totalCount = totalCount;
+		_this.dataCount = dataCount;
+		return _this;
+	};
+
+	let _this = {};
+
+	let getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+		switch(errorCorrectionLevel) {
+		case QRErrorCorrectionLevel.L :
+			return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+		case QRErrorCorrectionLevel.M :
+			return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+		case QRErrorCorrectionLevel.Q :
+			return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+		case QRErrorCorrectionLevel.H :
+			return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+		default :
+			return undefined;
+		}
+	};
+
+	_this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+		let rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+		if (typeof rsBlock == 'undefined') {
+			throw 'bad rs block @ typeNumber:' + typeNumber +
+					'/errorCorrectionLevel:' + errorCorrectionLevel;
+		}
+
+		let length = rsBlock.length / 3;
+
+		let list = [];
+
+		for (let i = 0; i < length; i += 1) {
+
+			let count = rsBlock[i * 3 + 0];
+			let totalCount = rsBlock[i * 3 + 1];
+			let dataCount = rsBlock[i * 3 + 2];
+
+			for (let j = 0; j < count; j += 1) {
+				list.push(qrRSBlock(totalCount, dataCount) );
+			}
+		}
+
+		return list;
+	};
+
+	return _this;
+}();
+
+//---------------------------------------------------------------------
+// qrBitBuffer
+//---------------------------------------------------------------------
+
+let qrBitBuffer = function() {
+
+	let _buffer = [];
+	let _length = 0;
+
+	let _this = {};
+
+	_this.getBuffer = function() {
+		return _buffer;
+	};
+
+	_this.getAt = function(index) {
+		let bufIndex = Math.floor(index / 8);
+		return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+	};
+
+	_this.put = function(num, length) {
+		for (let i = 0; i < length; i += 1) {
+			_this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+		}
+	};
+
+	_this.getLengthInBits = function() {
+		return _length;
+	};
+
+	_this.putBit = function(bit) {
+
+		let bufIndex = Math.floor(_length / 8);
+		if (_buffer.length <= bufIndex) {
+			_buffer.push(0);
+		}
+
+		if (bit) {
+			_buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+		}
+
+		_length += 1;
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// qrNumber
+//---------------------------------------------------------------------
+
+let qrNumber = function(data) {
+
+	let _mode = QRMode.MODE_NUMBER;
+	let _data = data;
+
+	let _this = {};
+
+	_this.getMode = function() {
+		return _mode;
+	};
+
+	_this.getLength = function(_) {
+		return _data.length;
+	};
+
+	_this.write = function(buffer) {
+
+		let data = _data;
+
+		let i = 0;
+
+		while (i + 2 < data.length) {
+			buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+			i += 3;
+		}
+
+		if (i < data.length) {
+			if (data.length - i == 1) {
+				buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+			} else if (data.length - i == 2) {
+				buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+			}
+		}
+	};
+
+	const strToNum = function(s) {
+		let num = 0;
+		for (let i = 0; i < s.length; i += 1) {
+			num = num * 10 + chatToNum(s.charAt(i) );
+		}
+		return num;
+	};
+
+	const chatToNum = function(c) {
+		if ('0' <= c && c <= '9') {
+			return c.charCodeAt(0) - '0'.charCodeAt(0);
+		}
+		throw 'illegal char :' + c;
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// qrAlphaNum
+//---------------------------------------------------------------------
+
+const qrAlphaNum = function(data) {
+
+	let _mode = QRMode.MODE_ALPHA_NUM;
+	let _data = data;
+
+	let _this = {};
+
+	_this.getMode = function() {
+		return _mode;
+	};
+
+	_this.getLength = function(_) {
+		return _data.length;
+	};
+
+	_this.write = function(buffer) {
+
+		let s = _data;
+
+		let i = 0;
+
+		while (i + 1 < s.length) {
+			buffer.put(
+				getCode(s.charAt(i) ) * 45 +
+				getCode(s.charAt(i + 1) ), 11);
+			i += 2;
+		}
+
+		if (i < s.length) {
+			buffer.put(getCode(s.charAt(i) ), 6);
+		}
+	};
+
+	const getCode = function(c) {
+
+		if ('0' <= c && c <= '9') {
+			return c.charCodeAt(0) - '0'.charCodeAt(0);
+		} else if ('A' <= c && c <= 'Z') {
+			return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+		} else {
+			switch (c) {
+			case ' ' : return 36;
+			case '$' : return 37;
+			case '%' : return 38;
+			case '*' : return 39;
+			case '+' : return 40;
+			case '-' : return 41;
+			case '.' : return 42;
+			case '/' : return 43;
+			case ':' : return 44;
+			default :
+				throw 'illegal char :' + c;
+			}
+		}
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// qr8BitByte
+//---------------------------------------------------------------------
+
+const qr8BitByte = function(data) {
+
+	let _mode = QRMode.MODE_8BIT_BYTE;
+	let _bytes = stringToBytes(data);
+
+	let _this = {};
+
+	_this.getMode = function() {
+		return _mode;
+	};
+
+	_this.getLength = function(_) {
+		return _bytes.length;
+	};
+
+	_this.write = function(buffer) {
+		for (let i = 0; i < _bytes.length; i += 1) {
+			buffer.put(_bytes[i], 8);
+		}
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// qrKanji
+//---------------------------------------------------------------------
+
+const qrKanji = function(data) {
+
+	let _mode = QRMode.MODE_KANJI;
+
+	let stringToBytes = stringToBytesFuncs['SJIS'];
+	if (!stringToBytes) {
+		throw 'sjis not supported.';
+	}
+	!function(c, code) {
+		// self test for sjis support.
+		let test = stringToBytes(c);
+		if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+			throw 'sjis not supported.';
+		}
+	}('\u53cb', 0x9746);
+
+	let _bytes = stringToBytes(data);
+
+	let _this = {};
+
+	_this.getMode = function() {
+		return _mode;
+	};
+
+	_this.getLength = function(_) {
+		return ~~(_bytes.length / 2);
+	};
+
+	_this.write = function(buffer) {
+
+		let data = _bytes;
+
+		let i = 0;
+
+		while (i + 1 < data.length) {
+
+			let c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+			if (0x8140 <= c && c <= 0x9FFC) {
+				c -= 0x8140;
+			} else if (0xE040 <= c && c <= 0xEBBF) {
+				c -= 0xC140;
+			} else {
+				throw 'illegal char at ' + (i + 1) + '/' + c;
+			}
+
+			c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+			buffer.put(c, 13);
+
+			i += 2;
+		}
+
+		if (i < data.length) {
+			throw 'illegal char at ' + (i + 1);
+		}
+	};
+
+	return _this;
+};
+
+//=====================================================================
+// GIF Support etc.
+//
+
+//---------------------------------------------------------------------
+// byteArrayOutputStream
+//---------------------------------------------------------------------
+
+let byteArrayOutputStream = function() {
+
+	let _bytes = [];
+
+	let _this = {};
+
+	_this.writeByte = function(b) {
+		_bytes.push(b & 0xff);
+	};
+
+	_this.writeShort = function(i) {
+		_this.writeByte(i);
+		_this.writeByte(i >>> 8);
+	};
+
+	_this.writeBytes = function(b, off, len) {
+		off = off || 0;
+		len = len || b.length;
+		for (let i = 0; i < len; i += 1) {
+			_this.writeByte(b[i + off]);
+		}
+	};
+
+	_this.writeString = function(s) {
+		for (let i = 0; i < s.length; i += 1) {
+			_this.writeByte(s.charCodeAt(i) );
+		}
+	};
+
+	_this.toByteArray = function() {
+		return _bytes;
+	};
+
+	_this.toString = function() {
+		let s = '';
+		s += '[';
+		for (let i = 0; i < _bytes.length; i += 1) {
+			if (i > 0) {
+				s += ',';
+			}
+			s += _bytes[i];
+		}
+		s += ']';
+		return s;
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// base64EncodeOutputStream
+//---------------------------------------------------------------------
+
+let base64EncodeOutputStream = function() {
+
+	let _buffer = 0;
+	let _buflen = 0;
+	let _length = 0;
+	let _base64 = '';
+
+	let _this = {};
+
+	let writeEncoded = function(b) {
+		_base64 += String.fromCharCode(encode(b & 0x3f) );
+	};
+
+	const encode = function(n) {
+		if (n < 0) {
+			// error.
+		} else if (n < 26) {
+			return 0x41 + n;
+		} else if (n < 52) {
+			return 0x61 + (n - 26);
+		} else if (n < 62) {
+			return 0x30 + (n - 52);
+		} else if (n == 62) {
+			return 0x2b;
+		} else if (n == 63) {
+			return 0x2f;
+		}
+		throw 'n:' + n;
+	};
+
+	_this.writeByte = function(n) {
+
+		_buffer = (_buffer << 8) | (n & 0xff);
+		_buflen += 8;
+		_length += 1;
+
+		while (_buflen >= 6) {
+			writeEncoded(_buffer >>> (_buflen - 6) );
+			_buflen -= 6;
+		}
+	};
+
+	_this.flush = function() {
+
+		if (_buflen > 0) {
+			writeEncoded(_buffer << (6 - _buflen) );
+			_buffer = 0;
+			_buflen = 0;
+		}
+
+		if (_length % 3 != 0) {
+			// padding
+			let padlen = 3 - _length % 3;
+			for (let i = 0; i < padlen; i += 1) {
+				_base64 += '=';
+			}
+		}
+	};
+
+	_this.toString = function() {
+		return _base64;
+	};
+
+	return _this;
+};
+
+//---------------------------------------------------------------------
+// gifImage (B/W)
+//---------------------------------------------------------------------
+
+let gifImage = function(width, height) {
+
+	let _width = width;
+	let _height = height;
+	let _data = new Array(width * height);
+
+	let _this = {};
+
+	_this.setPixel = function(x, y, pixel) {
+		_data[y * _width + x] = pixel;
+	};
+
+	_this.write = function(out) {
+
+		//---------------------------------
+		// GIF Signature
+
+		out.writeString('GIF87a');
+
+		//---------------------------------
+		// Screen Descriptor
+
+		out.writeShort(_width);
+		out.writeShort(_height);
+
+		out.writeByte(0x80); // 2bit
+		out.writeByte(0);
+		out.writeByte(0);
+
+		//---------------------------------
+		// Global Color Map
+
+		// black
+		out.writeByte(0x00);
+		out.writeByte(0x00);
+		out.writeByte(0x00);
+
+		// white
+		out.writeByte(0xff);
+		out.writeByte(0xff);
+		out.writeByte(0xff);
+
+		//---------------------------------
+		// Image Descriptor
+
+		out.writeString(',');
+		out.writeShort(0);
+		out.writeShort(0);
+		out.writeShort(_width);
+		out.writeShort(_height);
+		out.writeByte(0);
+
+		//---------------------------------
+		// Local Color Map
+
+		//---------------------------------
+		// Raster Data
+
+		let lzwMinCodeSize = 2;
+		let raster = getLZWRaster(lzwMinCodeSize);
+
+		out.writeByte(lzwMinCodeSize);
+
+		let offset = 0;
+
+		while (raster.length - offset > 255) {
+			out.writeByte(255);
+			out.writeBytes(raster, offset, 255);
+			offset += 255;
+		}
+
+		out.writeByte(raster.length - offset);
+		out.writeBytes(raster, offset, raster.length - offset);
+		out.writeByte(0x00);
+
+		//---------------------------------
+		// GIF Terminator
+		out.writeString(';');
+	};
+
+	let bitOutputStream = function(out) {
+
+		let _out = out;
+		let _bitLength = 0;
+		let _bitBuffer = 0;
+
+		let _this = {};
+
+		_this.write = function(data, length) {
+
+			if ( (data >>> length) != 0) {
+				throw 'length over';
+			}
+
+			while (_bitLength + length >= 8) {
+				_out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+				length -= (8 - _bitLength);
+				data >>>= (8 - _bitLength);
+				_bitBuffer = 0;
+				_bitLength = 0;
+			}
+
+			_bitBuffer = (data << _bitLength) | _bitBuffer;
+			_bitLength = _bitLength + length;
+		};
+
+		_this.flush = function() {
+			if (_bitLength > 0) {
+				_out.writeByte(_bitBuffer);
+			}
+		};
+
+		return _this;
+	};
+
+	const getLZWRaster = function(lzwMinCodeSize) {
+
+		let clearCode = 1 << lzwMinCodeSize;
+		let endCode = (1 << lzwMinCodeSize) + 1;
+		let bitLength = lzwMinCodeSize + 1;
+
+		// Setup LZWTable
+		let table = lzwTable();
+
+		for (let i = 0; i < clearCode; i += 1) {
+			table.add(String.fromCharCode(i) );
+		}
+		table.add(String.fromCharCode(clearCode) );
+		table.add(String.fromCharCode(endCode) );
+
+		let byteOut = byteArrayOutputStream();
+		let bitOut = bitOutputStream(byteOut);
+
+		// clear code
+		bitOut.write(clearCode, bitLength);
+
+		let dataIndex = 0;
+
+		let s = String.fromCharCode(_data[dataIndex]);
+		dataIndex += 1;
+
+		while (dataIndex < _data.length) {
+
+			let c = String.fromCharCode(_data[dataIndex]);
+			dataIndex += 1;
+
+			if (table.contains(s + c) ) {
+
+				s = s + c;
+
+			} else {
+
+				bitOut.write(table.indexOf(s), bitLength);
+
+				if (table.size() < 0xfff) {
+
+					if (table.size() == (1 << bitLength) ) {
+						bitLength += 1;
+					}
+
+					table.add(s + c);
+				}
+
+				s = c;
+			}
+		}
+
+		bitOut.write(table.indexOf(s), bitLength);
+
+		// end code
+		bitOut.write(endCode, bitLength);
+
+		bitOut.flush();
+
+		return byteOut.toByteArray();
+	};
+
+	const lzwTable = function() {
+
+		let _map = {};
+		let _size = 0;
+
+		let _this = {};
+
+		_this.add = function(key) {
+			if (_this.contains(key) ) {
+				throw 'dup key:' + key;
+			}
+			_map[key] = _size;
+			_size += 1;
+		};
+
+		_this.size = function() {
+			return _size;
+		};
+
+		_this.indexOf = function(key) {
+			return _map[key];
+		};
+
+		_this.contains = function(key) {
+			return typeof _map[key] != 'undefined';
+		};
+
+		return _this;
+	};
+
+	return _this;
+};
+
+const createImgTag = function(width, height, getPixel, alt) {
+
+	let gif = gifImage(width, height);
+	for (let y = 0; y < height; y += 1) {
+		for (let x = 0; x < width; x += 1) {
+			gif.setPixel(x, y, getPixel(x, y) );
+		}
+	}
+
+	let b = byteArrayOutputStream();
+	gif.write(b);
+
+	let base64 = base64EncodeOutputStream();
+	let bytes = b.toByteArray();
+	for (let i = 0; i < bytes.length; i += 1) {
+		base64.writeByte(bytes[i]);
+	}
+	base64.flush();
+
+	let img = '';
+	img += '<img';
+	img += '\u0020src="';
+	img += 'data:image/gif;base64,';
+	img += base64;
+	img += '"';
+	img += '\u0020width="';
+	img += width;
+	img += '"';
+	img += '\u0020height="';
+	img += height;
+	img += '"';
+	if (alt) {
+		img += '\u0020alt="';
+		img += alt;
+		img += '"';
+	}
+	img += '/>';
+
+	return img;
+};
+
+// multibyte support
+stringToBytesFuncs['UTF-8'] = function(s) {
+	// http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+	function toUTF8Array(str) {
+		let utf8 = [];
+		for (let i=0; i < str.length; i++) {
+			let charcode = str.charCodeAt(i);
+			if (charcode < 0x80) utf8.push(charcode);
+			else if (charcode < 0x800) {
+				utf8.push(0xc0 | (charcode >> 6),
+						0x80 | (charcode & 0x3f));
+			}
+			else if (charcode < 0xd800 || charcode >= 0xe000) {
+				utf8.push(0xe0 | (charcode >> 12),
+						0x80 | ((charcode>>6) & 0x3f),
+						0x80 | (charcode & 0x3f));
+			}
+			// surrogate pair
+			else {
+				i++;
+				// UTF-16 encodes 0x10000-0x10FFFF by
+				// subtracting 0x10000 and splitting the
+				// 20 bits of 0x0-0xFFFFF into two halves
+				charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+					| (str.charCodeAt(i) & 0x3ff));
+				utf8.push(0xf0 | (charcode >>18),
+						0x80 | ((charcode>>12) & 0x3f),
+						0x80 | ((charcode>>6) & 0x3f),
+						0x80 | (charcode & 0x3f));
+			}
+		}
+		return utf8;
+	}
+	return toUTF8Array(s);
+};
+
+// node_modules/el-controls/src/controls/qrcode.coffee
+var QRCode;
+var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$35 = {}.hasOwnProperty;
+
+QRCode = (function(superClass) {
+  extend$36(QRCode, superClass);
+
+  function QRCode() {
+    return QRCode.__super__.constructor.apply(this, arguments);
+  }
+
+  QRCode.prototype.tag = 'qrcode';
+
+  QRCode.prototype.html = html$6;
+
+  QRCode.prototype.text = '';
+
+  QRCode.prototype.version = '0';
+
+  QRCode.prototype.errorLevel = 'M';
+
+  QRCode.prototype.mode = 'Byte';
+
+  QRCode.prototype.multibyte = 'UTF-8';
+
+  QRCode.prototype.init = function() {
+    if (!this.text) {
+      return QRCode.__super__.init.apply(this, arguments);
+    }
+  };
+
+  QRCode.prototype.getText = function() {
+    return valueOrCall(this.text) || this.input.ref.get(input.name);
+  };
+
+  QRCode.prototype.getDataUri = function() {
+    var qr;
+    qrcode$1.stringToBytes = qrcode$1.stringToBytesFuncs[this.multibyte];
+    qr = qrcode$1(this.version || 4, this.errorLevel || 'M');
+    qr.addData(this.getText(), this.mode);
+    qr.make();
+    return /<img.*?src="(.*?)"/.exec(qr.createImgTag())[1];
+  };
+
+  QRCode.prototype.change = function() {};
+
+  QRCode.prototype._change = function() {};
+
+  QRCode.prototype.getName = function() {};
+
+  return QRCode;
+
+})(Text$1);
+
+QRCode.register();
 
 // src/controls/index.coffee
 
@@ -12479,11 +14664,11 @@ var inputify$1$1 = inputify$2;
 
 // src/views/form.coffee
 var Form$2;
-var extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$35 = {}.hasOwnProperty;
+var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$37 = {}.hasOwnProperty;
 
 Form$2 = (function(superClass) {
-  extend$36(Form, superClass);
+  extend$38(Form, superClass);
 
   function Form() {
     return Form.__super__.constructor.apply(this, arguments);
@@ -12924,15 +15109,15 @@ var configs = config = {
 };
 
 // templates/containers/checkout.pug
-var html$5 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" label=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <div class=\"inline-fields\">\n          <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n        </div>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n      <div class=\"inline-fields line1-line2\">\n        <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n      </div>\n      <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n      <div class=\"inline-fields state-postal-code\">\n        <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
+var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" label=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <div class=\"inline-fields\">\n          <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n          <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n        </div>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n      <div class=\"inline-fields line1-line2\">\n        <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n      </div>\n      <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n      <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n      <div class=\"inline-fields state-postal-code\">\n        <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\">\n      <h2>Complete Checkout</h2>\n      <terms class=\"checkbox\">\n        <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"{ termsUrl }\" target=\"_blank\">terms and conditions</a></label>\n      </terms>\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n  </yield>\n</form>";
 
 // src/containers/checkout.coffee
 var CheckoutForm;
-var extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$34 = {}.hasOwnProperty;
+var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$36 = {}.hasOwnProperty;
 
 CheckoutForm = (function(superClass) {
-  extend$35(CheckoutForm, superClass);
+  extend$37(CheckoutForm, superClass);
 
   function CheckoutForm() {
     return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -12940,7 +15125,7 @@ CheckoutForm = (function(superClass) {
 
   CheckoutForm.prototype.tag = 'checkout';
 
-  CheckoutForm.prototype.html = html$5;
+  CheckoutForm.prototype.html = html$7;
 
   CheckoutForm.prototype.errorMessage = '';
 
@@ -13095,15 +15280,15 @@ CheckoutForm.register();
 var CheckoutForm$1 = CheckoutForm;
 
 // templates/containers/checkout-card.pug
-var html$6 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" label=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$8 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"payment checkout-section\">\n      <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n      <div class=\"fields\">\n        <card-name class=\"input\" label=\"Name on Card\"></card-name>\n        <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n          <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n        </card-number>\n        <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n        <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-card.coffee
 var CheckoutCardForm;
-var extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$36 = {}.hasOwnProperty;
+var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$38 = {}.hasOwnProperty;
 
 CheckoutCardForm = (function(superClass) {
-  extend$37(CheckoutCardForm, superClass);
+  extend$39(CheckoutCardForm, superClass);
 
   function CheckoutCardForm() {
     return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -13111,7 +15296,7 @@ CheckoutCardForm = (function(superClass) {
 
   CheckoutCardForm.prototype.tag = 'checkout-card';
 
-  CheckoutCardForm.prototype.html = html$6;
+  CheckoutCardForm.prototype.html = html$8;
 
   CheckoutCardForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13144,15 +15329,15 @@ CheckoutCardForm.register();
 var CheckoutCard = CheckoutCardForm;
 
 // templates/containers/checkout-shippingaddress.pug
-var html$7 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" label=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" label=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
+var html$9 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"contact checkout-section\">\n      <h2>Contact</h2>\n      <div class=\"fields\">\n        <user-name class=\"input\" label=\"Name\"></user-name>\n        <user-email class=\"input\" label=\"Email\"></user-email>\n      </div>\n    </div>\n    <div class=\"shipping checkout-section\">\n      <h2>Shipping</h2>\n      <div class=\"fields\">\n        <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n        <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n        <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n        <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n      </div>\n      <div class=\"fields\">\n        <shippingaddress-country class=\"input\" label=\"Country\"></shippingaddress-country>\n        <shippingaddress-state class=\"input\" label=\"State\"></shippingaddress-state>\n        <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n      </div>\n    </div>\n    <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</form>";
 
 // src/containers/checkout-shippingaddress.coffee
 var CheckoutShippingAddressForm;
-var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$37 = {}.hasOwnProperty;
+var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$39 = {}.hasOwnProperty;
 
 CheckoutShippingAddressForm = (function(superClass) {
-  extend$38(CheckoutShippingAddressForm, superClass);
+  extend$40(CheckoutShippingAddressForm, superClass);
 
   function CheckoutShippingAddressForm() {
     return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -13160,7 +15345,7 @@ CheckoutShippingAddressForm = (function(superClass) {
 
   CheckoutShippingAddressForm.prototype.tag = 'checkout-shippingaddress';
 
-  CheckoutShippingAddressForm.prototype.html = html$7;
+  CheckoutShippingAddressForm.prototype.html = html$9;
 
   CheckoutShippingAddressForm.prototype.paged = false;
 
@@ -13206,15 +15391,15 @@ CheckoutShippingAddressForm.register();
 var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
 // templates/containers/cart.pug
-var html$8 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+var html$10 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
 // src/containers/cart.coffee
 var CartForm;
-var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$38 = {}.hasOwnProperty;
+var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$40 = {}.hasOwnProperty;
 
 CartForm = (function(superClass) {
-  extend$39(CartForm, superClass);
+  extend$41(CartForm, superClass);
 
   function CartForm() {
     return CartForm.__super__.constructor.apply(this, arguments);
@@ -13222,7 +15407,7 @@ CartForm = (function(superClass) {
 
   CartForm.prototype.tag = 'cart';
 
-  CartForm.prototype.html = html$8;
+  CartForm.prototype.html = html$10;
 
   CartForm.prototype.init = function() {
     var promoCode;
@@ -13333,15 +15518,15 @@ CartForm.register();
 var Cart$2 = CartForm;
 
 // templates/containers/deposit.pug
-var html$9 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"deposit checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;deposit&quot; }\">Deposit Funds</h2>\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;contribution&quot; }\">Contribute</h2>\n      <div class=\"fields\">\n        <text class=\"input\" label=\"Deposit Amount\"></text>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n    <div class=\"deposit checkout-section\" if=\"{ !data.get(&quot;order.mode&quot;) }\">\n      <p>Error: <deposit> requires order.mode to be 'deposit' or 'contribution'</p>\n    </div>\n  </yield>\n</form>";
+var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"deposit checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;deposit&quot; }\">Deposit Funds</h2>\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;contribution&quot; }\">Contribute</h2>\n      <div class=\"fields\">\n        <text class=\"input\" label=\"Deposit Amount\"></text>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n    <div class=\"deposit checkout-section\" if=\"{ !data.get(&quot;order.mode&quot;) }\">\n      <p>Error: <deposit> requires order.mode to be 'deposit' or 'contribution'</p>\n    </div>\n  </yield>\n</form>";
 
 // src/containers/deposit.coffee
 var DepositForm;
-var extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$39 = {}.hasOwnProperty;
+var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$41 = {}.hasOwnProperty;
 
 DepositForm = (function(superClass) {
-  extend$40(DepositForm, superClass);
+  extend$42(DepositForm, superClass);
 
   function DepositForm() {
     return DepositForm.__super__.constructor.apply(this, arguments);
@@ -13349,7 +15534,7 @@ DepositForm = (function(superClass) {
 
   DepositForm.prototype.tag = 'deposit';
 
-  DepositForm.prototype.html = html$9;
+  DepositForm.prototype.html = html$11;
 
   DepositForm.prototype.configs = {
     'order.subtotal': [isRequired]
@@ -13364,15 +15549,15 @@ DepositForm.register();
 var Deposit = DepositForm;
 
 // templates/containers/lineitem.pug
-var html$10 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+var html$12 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
 // src/containers/lineitem.coffee
 var LineItemForm;
-var extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$40 = {}.hasOwnProperty;
+var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$42 = {}.hasOwnProperty;
 
 LineItemForm = (function(superClass) {
-  extend$41(LineItemForm, superClass);
+  extend$43(LineItemForm, superClass);
 
   function LineItemForm() {
     return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -13380,7 +15565,7 @@ LineItemForm = (function(superClass) {
 
   LineItemForm.prototype.tag = 'lineitem';
 
-  LineItemForm.prototype.html = html$10;
+  LineItemForm.prototype.html = html$12;
 
   LineItemForm.prototype.configs = {
     'quantity': null
@@ -13403,15 +15588,15 @@ LineItemForm.register();
 var LineItem = LineItemForm;
 
 // templates/containers/lineitems.pug
-var html$11 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$13 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/containers/lineitems.coffee
 var LineItems;
-var extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$41 = {}.hasOwnProperty;
+var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$43 = {}.hasOwnProperty;
 
 LineItems = (function(superClass) {
-  extend$42(LineItems, superClass);
+  extend$44(LineItems, superClass);
 
   function LineItems() {
     return LineItems.__super__.constructor.apply(this, arguments);
@@ -13419,7 +15604,7 @@ LineItems = (function(superClass) {
 
   LineItems.prototype.tag = 'lineitems';
 
-  LineItems.prototype.html = html$11;
+  LineItems.prototype.html = html$13;
 
   LineItems.prototype.init = function() {
     if (this.parentData != null) {
@@ -13444,15 +15629,15 @@ LineItems.register();
 var LineItems$1 = LineItems;
 
 // templates/containers/login.pug
-var html$12 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
+var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
 
 // src/containers/login.coffee
 var LoginForm;
-var extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$42 = {}.hasOwnProperty;
+var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$44 = {}.hasOwnProperty;
 
 LoginForm = (function(superClass) {
-  extend$43(LoginForm, superClass);
+  extend$45(LoginForm, superClass);
 
   function LoginForm() {
     return LoginForm.__super__.constructor.apply(this, arguments);
@@ -13460,7 +15645,7 @@ LoginForm = (function(superClass) {
 
   LoginForm.prototype.tag = 'login';
 
-  LoginForm.prototype.html = html$12;
+  LoginForm.prototype.html = html$14;
 
   LoginForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13501,15 +15686,15 @@ LoginForm.register();
 var Login = LoginForm;
 
 // templates/containers/order.pug
-var html$13 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+var html$15 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
 // src/containers/order.coffee
 var OrderForm;
-var extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$43 = {}.hasOwnProperty;
+var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$45 = {}.hasOwnProperty;
 
 OrderForm = (function(superClass) {
-  extend$44(OrderForm, superClass);
+  extend$46(OrderForm, superClass);
 
   function OrderForm() {
     return OrderForm.__super__.constructor.apply(this, arguments);
@@ -13517,7 +15702,7 @@ OrderForm = (function(superClass) {
 
   OrderForm.prototype.tag = 'order';
 
-  OrderForm.prototype.html = html$13;
+  OrderForm.prototype.html = html$15;
 
   OrderForm.prototype.parentData = null;
 
@@ -13557,15 +15742,15 @@ OrderForm.register();
 var Order = OrderForm;
 
 // templates/containers/orders.pug
-var html$14 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+var html$16 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
 // src/containers/orders.coffee
 var Orders;
-var extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$44 = {}.hasOwnProperty;
+var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$46 = {}.hasOwnProperty;
 
 Orders = (function(superClass) {
-  extend$45(Orders, superClass);
+  extend$47(Orders, superClass);
 
   function Orders() {
     return Orders.__super__.constructor.apply(this, arguments);
@@ -13573,7 +15758,7 @@ Orders = (function(superClass) {
 
   Orders.prototype.tag = 'orders';
 
-  Orders.prototype.html = html$14;
+  Orders.prototype.html = html$16;
 
   Orders.prototype.init = function() {
     return Orders.__super__.init.apply(this, arguments);
@@ -13588,15 +15773,15 @@ Orders.register();
 var Orders$1 = Orders;
 
 // templates/containers/form.pug
-var html$15 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+var html$17 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
 // src/containers/profile.coffee
 var ProfileForm;
-var extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$45 = {}.hasOwnProperty;
+var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$47 = {}.hasOwnProperty;
 
 ProfileForm = (function(superClass) {
-  extend$46(ProfileForm, superClass);
+  extend$48(ProfileForm, superClass);
 
   function ProfileForm() {
     return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -13604,7 +15789,7 @@ ProfileForm = (function(superClass) {
 
   ProfileForm.prototype.tag = 'profile';
 
-  ProfileForm.prototype.html = html$15;
+  ProfileForm.prototype.html = html$17;
 
   ProfileForm.prototype.configs = {
     'user.email': [isRequired, isEmail],
@@ -13706,15 +15891,15 @@ ProfileForm.register();
 var Profile = ProfileForm;
 
 // templates/containers/register.pug
-var html$16 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
+var html$18 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
 
 // src/containers/register.coffee
 var RegisterForm;
-var extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$46 = {}.hasOwnProperty;
+var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$48 = {}.hasOwnProperty;
 
 RegisterForm = (function(superClass) {
-  extend$47(RegisterForm, superClass);
+  extend$49(RegisterForm, superClass);
 
   function RegisterForm() {
     return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -13722,7 +15907,7 @@ RegisterForm = (function(superClass) {
 
   RegisterForm.prototype.tag = 'register';
 
-  RegisterForm.prototype.html = html$16;
+  RegisterForm.prototype.html = html$18;
 
   RegisterForm.prototype.immediateLogin = false;
 
@@ -13799,11 +15984,11 @@ var Register = RegisterForm;
 
 // src/containers/register-complete.coffee
 var RegisterCompleteForm;
-var extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$47 = {}.hasOwnProperty;
+var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$49 = {}.hasOwnProperty;
 
 RegisterCompleteForm = (function(superClass) {
-  extend$48(RegisterCompleteForm, superClass);
+  extend$50(RegisterCompleteForm, superClass);
 
   function RegisterCompleteForm() {
     return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
@@ -13811,7 +15996,7 @@ RegisterCompleteForm = (function(superClass) {
 
   RegisterCompleteForm.prototype.tag = 'register-complete';
 
-  RegisterCompleteForm.prototype.html = html$15;
+  RegisterCompleteForm.prototype.html = html$17;
 
   RegisterCompleteForm.prototype.twoStageSignUp = false;
 
@@ -13874,15 +16059,15 @@ RegisterCompleteForm.register();
 var RegisterComplete = RegisterCompleteForm;
 
 // templates/containers/reset-password.pug
-var html$17 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
+var html$19 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
 
 // src/containers/reset-password.coffee
 var ResetPasswordForm;
-var extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$48 = {}.hasOwnProperty;
+var extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$50 = {}.hasOwnProperty;
 
 ResetPasswordForm = (function(superClass) {
-  extend$49(ResetPasswordForm, superClass);
+  extend$51(ResetPasswordForm, superClass);
 
   function ResetPasswordForm() {
     return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -13890,7 +16075,7 @@ ResetPasswordForm = (function(superClass) {
 
   ResetPasswordForm.prototype.tag = 'reset-password';
 
-  ResetPasswordForm.prototype.html = html$17;
+  ResetPasswordForm.prototype.html = html$19;
 
   ResetPasswordForm.prototype.configs = {
     'user.email': [isRequired, isEmail]
@@ -13933,15 +16118,15 @@ ResetPasswordForm.register();
 var ResetPassword = ResetPasswordForm;
 
 // templates/containers/reset-password-complete.pug
-var html$18 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
+var html$20 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
 
 // src/containers/reset-password-complete.coffee
 var ResetPasswordCompleteForm;
-var extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$49 = {}.hasOwnProperty;
+var extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$51 = {}.hasOwnProperty;
 
 ResetPasswordCompleteForm = (function(superClass) {
-  extend$50(ResetPasswordCompleteForm, superClass);
+  extend$52(ResetPasswordCompleteForm, superClass);
 
   function ResetPasswordCompleteForm() {
     return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -13949,7 +16134,7 @@ ResetPasswordCompleteForm = (function(superClass) {
 
   ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-  ResetPasswordCompleteForm.prototype.html = html$18;
+  ResetPasswordCompleteForm.prototype.html = html$20;
 
   ResetPasswordCompleteForm.prototype.configs = {
     'user.password': [isPassword],
@@ -13999,11 +16184,11 @@ var ResetPasswordComplete = ResetPasswordCompleteForm;
 
 // src/containers/shippingaddress.coffee
 var ShippingAddressForm;
-var extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$50 = {}.hasOwnProperty;
+var extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$52 = {}.hasOwnProperty;
 
 ShippingAddressForm = (function(superClass) {
-  extend$51(ShippingAddressForm, superClass);
+  extend$53(ShippingAddressForm, superClass);
 
   function ShippingAddressForm() {
     return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -14011,7 +16196,7 @@ ShippingAddressForm = (function(superClass) {
 
   ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-  ShippingAddressForm.prototype.html = html$15;
+  ShippingAddressForm.prototype.html = html$17;
 
   ShippingAddressForm.prototype.configs = {
     'order.shippingAddress.name': [isRequired],
@@ -14093,15 +16278,15 @@ var Containers = Forms = {
 };
 
 // templates/widgets/cart-counter.pug
-var html$19 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$21 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$51 = {}.hasOwnProperty;
+var extend$54 = function(child, parent) { for (var key in parent) { if (hasProp$53.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$53 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$52(CartCounter, superClass);
+  extend$54(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -14109,7 +16294,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$19;
+  CartCounter.prototype.html = html$21;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -14146,18 +16331,18 @@ CartCounter.register();
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$20 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$22 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$52 = {}.hasOwnProperty;
+var extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$54 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$53(CheckoutModal, superClass);
+  extend$55(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -14165,7 +16350,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$20;
+  CheckoutModal.prototype.html = html$22;
 
   CheckoutModal.prototype.names = null;
 
@@ -14273,15 +16458,15 @@ CheckoutModal.register();
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/side-pane.pug
-var html$21 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$23 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$54 = function(child, parent) { for (var key in parent) { if (hasProp$53.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$53 = {}.hasOwnProperty;
+var extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$55 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$54(SidePane, superClass);
+  extend$56(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -14289,7 +16474,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$21;
+  SidePane.prototype.html = html$23;
 
   SidePane.prototype.id = '';
 
@@ -14394,12 +16579,17 @@ function isObject$3(input) {
 
 // node_modules/moment/src/lib/utils/is-object-empty.js
 function isObjectEmpty(obj) {
-    var k;
-    for (k in obj) {
-        // even if its not own property I'd still call it non-empty
-        return false;
+    if (Object.getOwnPropertyNames) {
+        return (Object.getOwnPropertyNames(obj).length === 0);
+    } else {
+        var k;
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                return false;
+            }
+        }
+        return true;
     }
-    return true;
 }
 
 // node_modules/moment/src/lib/utils/is-undefined.js
@@ -14432,7 +16622,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$55(a, b) {
+function extend$57(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -14514,6 +16704,7 @@ function isValid(m) {
             !flags.empty &&
             !flags.invalidMonth &&
             !flags.invalidWeekday &&
+            !flags.weekdayMismatch &&
             !flags.nullInput &&
             !flags.invalidFormat &&
             !flags.userInvalidated &&
@@ -14539,7 +16730,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$55(getParsingFlags(m), flags);
+        extend$57(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -14671,7 +16862,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$55(function () {
+    return extend$57(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -14739,13 +16930,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$55({}, parentConfig), prop;
+    var res = extend$57({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                 res[prop] = {};
-                extend$55(res[prop], parentConfig[prop]);
-                extend$55(res[prop], childConfig[prop]);
+                extend$57(res[prop], parentConfig[prop]);
+                extend$57(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -14758,7 +16949,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$3(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$55({}, res[prop]);
+            res[prop] = extend$57({}, res[prop]);
         }
     }
     return res;
@@ -14920,57 +17111,6 @@ function getPrioritizedUnits(unitsObj) {
     return units;
 }
 
-// node_modules/moment/src/lib/moment/get-set.js
-function makeGetSet (unit, keepTime) {
-    return function (value) {
-        if (value != null) {
-            set$1(this, unit, value);
-            hooks.updateOffset(this, keepTime);
-            return this;
-        } else {
-            return get$1(this, unit);
-        }
-    };
-}
-
-function get$1 (mom, unit) {
-    return mom.isValid() ?
-        mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]() : NaN;
-}
-
-function set$1 (mom, unit, value) {
-    if (mom.isValid()) {
-        mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
-    }
-}
-
-// MOMENTS
-
-function stringGet (units) {
-    units = normalizeUnits(units);
-    if (isFunction$3(this[units])) {
-        return this[units]();
-    }
-    return this;
-}
-
-
-function stringSet (units, value) {
-    if (typeof units === 'object') {
-        units = normalizeObjectUnits(units);
-        var prioritized = getPrioritizedUnits(units);
-        for (var i = 0; i < prioritized.length; i++) {
-            this[prioritized[i].unit](units[prioritized[i].unit]);
-        }
-    } else {
-        units = normalizeUnits(units);
-        if (isFunction$3(this[units])) {
-            return this[units](value);
-        }
-    }
-    return this;
-}
-
 // node_modules/moment/src/lib/utils/zero-fill.js
 function zeroFill(number, targetLength, forceSign) {
     var absNumber = '' + Math.abs(number),
@@ -15094,7 +17234,7 @@ var matchTimestamp = /[+-]?\d+(\.\d{1,3})?/; // 123456789 123456789.123
 
 // any word (or two) characters or numbers including two/three word month in arabic.
 // includes scottish gaelic two word and hyphenated months
-var matchWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+var matchWord = /[0-9]{0,256}['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFF07\uFF10-\uFFEF]{1,256}|[\u0600-\u06FF\/]{1,256}(\s*?[\u0600-\u06FF]{1,256}){1,2}/i;
 
 
 var regexes = {};
@@ -15166,6 +17306,134 @@ var MILLISECOND = 6;
 var WEEK = 7;
 var WEEKDAY = 8;
 
+// node_modules/moment/src/lib/units/year.js
+// FORMATTING
+
+addFormatToken('Y', 0, 0, function () {
+    var y = this.year();
+    return y <= 9999 ? '' + y : '+' + y;
+});
+
+addFormatToken(0, ['YY', 2], 0, function () {
+    return this.year() % 100;
+});
+
+addFormatToken(0, ['YYYY',   4],       0, 'year');
+addFormatToken(0, ['YYYYY',  5],       0, 'year');
+addFormatToken(0, ['YYYYYY', 6, true], 0, 'year');
+
+// ALIASES
+
+addUnitAlias('year', 'y');
+
+// PRIORITIES
+
+addUnitPriority('year', 1);
+
+// PARSING
+
+addRegexToken('Y',      matchSigned);
+addRegexToken('YY',     match1to2, match2);
+addRegexToken('YYYY',   match1to4, match4);
+addRegexToken('YYYYY',  match1to6, match6);
+addRegexToken('YYYYYY', match1to6, match6);
+
+addParseToken(['YYYYY', 'YYYYYY'], YEAR);
+addParseToken('YYYY', function (input, array) {
+    array[YEAR] = input.length === 2 ? hooks.parseTwoDigitYear(input) : toInt(input);
+});
+addParseToken('YY', function (input, array) {
+    array[YEAR] = hooks.parseTwoDigitYear(input);
+});
+addParseToken('Y', function (input, array) {
+    array[YEAR] = parseInt(input, 10);
+});
+
+// HELPERS
+
+function daysInYear(year) {
+    return isLeapYear(year) ? 366 : 365;
+}
+
+function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// HOOKS
+
+hooks.parseTwoDigitYear = function (input) {
+    return toInt(input) + (toInt(input) > 68 ? 1900 : 2000);
+};
+
+// MOMENTS
+
+var getSetYear = makeGetSet('FullYear', true);
+
+function getIsLeapYear () {
+    return isLeapYear(this.year());
+}
+
+// node_modules/moment/src/lib/moment/get-set.js
+function makeGetSet (unit, keepTime) {
+    return function (value) {
+        if (value != null) {
+            set$1(this, unit, value);
+            hooks.updateOffset(this, keepTime);
+            return this;
+        } else {
+            return get$1(this, unit);
+        }
+    };
+}
+
+function get$1 (mom, unit) {
+    return mom.isValid() ?
+        mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]() : NaN;
+}
+
+function set$1 (mom, unit, value) {
+    if (mom.isValid() && !isNaN(value)) {
+        if (unit === 'FullYear' && isLeapYear(mom.year()) && mom.month() === 1 && mom.date() === 29) {
+            mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value, mom.month(), daysInMonth(value, mom.month()));
+        }
+        else {
+            mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
+        }
+    }
+}
+
+// MOMENTS
+
+function stringGet (units) {
+    units = normalizeUnits(units);
+    if (isFunction$3(this[units])) {
+        return this[units]();
+    }
+    return this;
+}
+
+
+function stringSet (units, value) {
+    if (typeof units === 'object') {
+        units = normalizeObjectUnits(units);
+        var prioritized = getPrioritizedUnits(units);
+        for (var i = 0; i < prioritized.length; i++) {
+            this[prioritized[i].unit](units[prioritized[i].unit]);
+        }
+    } else {
+        units = normalizeUnits(units);
+        if (isFunction$3(this[units])) {
+            return this[units](value);
+        }
+    }
+    return this;
+}
+
+// node_modules/moment/src/lib/utils/mod.js
+function mod(n, x) {
+    return ((n % x) + x) % x;
+}
+
 // node_modules/moment/src/lib/utils/index-of.js
 var indexOf$6;
 
@@ -15186,7 +17454,12 @@ if (Array.prototype.indexOf) {
 
 // node_modules/moment/src/lib/units/month.js
 function daysInMonth(year, month) {
-    return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    if (isNaN(year) || isNaN(month)) {
+        return NaN;
+    }
+    var modMonth = mod(month, 12);
+    year += (month - modMonth) / 12;
+    return modMonth === 1 ? (isLeapYear(year) ? 29 : 28) : (31 - modMonth % 7 % 2);
 }
 
 // FORMATTING
@@ -15451,73 +17724,6 @@ function computeMonthsParse () {
     this._monthsShortRegex = this._monthsRegex;
     this._monthsStrictRegex = new RegExp('^(' + longPieces.join('|') + ')', 'i');
     this._monthsShortStrictRegex = new RegExp('^(' + shortPieces.join('|') + ')', 'i');
-}
-
-// node_modules/moment/src/lib/units/year.js
-// FORMATTING
-
-addFormatToken('Y', 0, 0, function () {
-    var y = this.year();
-    return y <= 9999 ? '' + y : '+' + y;
-});
-
-addFormatToken(0, ['YY', 2], 0, function () {
-    return this.year() % 100;
-});
-
-addFormatToken(0, ['YYYY',   4],       0, 'year');
-addFormatToken(0, ['YYYYY',  5],       0, 'year');
-addFormatToken(0, ['YYYYYY', 6, true], 0, 'year');
-
-// ALIASES
-
-addUnitAlias('year', 'y');
-
-// PRIORITIES
-
-addUnitPriority('year', 1);
-
-// PARSING
-
-addRegexToken('Y',      matchSigned);
-addRegexToken('YY',     match1to2, match2);
-addRegexToken('YYYY',   match1to4, match4);
-addRegexToken('YYYYY',  match1to6, match6);
-addRegexToken('YYYYYY', match1to6, match6);
-
-addParseToken(['YYYYY', 'YYYYYY'], YEAR);
-addParseToken('YYYY', function (input, array) {
-    array[YEAR] = input.length === 2 ? hooks.parseTwoDigitYear(input) : toInt(input);
-});
-addParseToken('YY', function (input, array) {
-    array[YEAR] = hooks.parseTwoDigitYear(input);
-});
-addParseToken('Y', function (input, array) {
-    array[YEAR] = parseInt(input, 10);
-});
-
-// HELPERS
-
-function daysInYear(year) {
-    return isLeapYear(year) ? 366 : 365;
-}
-
-function isLeapYear(year) {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-// HOOKS
-
-hooks.parseTwoDigitYear = function (input) {
-    return toInt(input) + (toInt(input) > 68 ? 1900 : 2000);
-};
-
-// MOMENTS
-
-var getSetYear = makeGetSet('FullYear', true);
-
-function getIsLeapYear () {
-    return isLeapYear(this.year());
 }
 
 // node_modules/moment/src/lib/create/date-from-array.js
@@ -16224,11 +18430,10 @@ function loadLocale(name) {
             module && module.exports) {
         try {
             oldLocale = globalLocale._abbr;
-            require('./locale/' + name);
-            // because defineLocale currently also sets the global locale, we
-            // want to undo that for lazy loaded locales
+            var aliasedRequire = require;
+            aliasedRequire('./locale/' + name);
             getSetGlobalLocale(oldLocale);
-        } catch (e) { }
+        } catch (e) {}
     }
     return locales[name];
 }
@@ -16304,10 +18509,11 @@ function defineLocale (name, config) {
 
 function updateLocale(name, config) {
     if (config != null) {
-        var locale, parentConfig = baseConfig;
+        var locale, tmpLocale, parentConfig = baseConfig;
         // MERGE
-        if (locales[name] != null) {
-            parentConfig = locales[name]._config;
+        tmpLocale = loadLocale(name);
+        if (tmpLocale != null) {
+            parentConfig = tmpLocale._config;
         }
         config = mergeConfigs(parentConfig, config);
         locale = new Locale(config);
@@ -16386,6 +18592,158 @@ function checkOverflow (m) {
     }
 
     return m;
+}
+
+// node_modules/moment/src/lib/utils/defaults.js
+// Pick the first defined of two or three arguments.
+function defaults$1(a, b, c) {
+    if (a != null) {
+        return a;
+    }
+    if (b != null) {
+        return b;
+    }
+    return c;
+}
+
+// node_modules/moment/src/lib/create/from-array.js
+function currentDateArray(config) {
+    // hooks is actually the exported moment object
+    var nowValue = new Date(hooks.now());
+    if (config._useUTC) {
+        return [nowValue.getUTCFullYear(), nowValue.getUTCMonth(), nowValue.getUTCDate()];
+    }
+    return [nowValue.getFullYear(), nowValue.getMonth(), nowValue.getDate()];
+}
+
+// convert an array to a date.
+// the array should mirror the parameters below
+// note: all values past the year are optional and will default to the lowest possible value.
+// [year, month, day , hour, minute, second, millisecond]
+function configFromArray (config) {
+    var i, date, input = [], currentDate, expectedWeekday, yearToUse;
+
+    if (config._d) {
+        return;
+    }
+
+    currentDate = currentDateArray(config);
+
+    //compute day of the year from weeks and weekdays
+    if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
+        dayOfYearFromWeekInfo(config);
+    }
+
+    //if the day of the year is set, figure out what it is
+    if (config._dayOfYear != null) {
+        yearToUse = defaults$1(config._a[YEAR], currentDate[YEAR]);
+
+        if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
+            getParsingFlags(config)._overflowDayOfYear = true;
+        }
+
+        date = createUTCDate(yearToUse, 0, config._dayOfYear);
+        config._a[MONTH] = date.getUTCMonth();
+        config._a[DATE] = date.getUTCDate();
+    }
+
+    // Default to current date.
+    // * if no year, month, day of month are given, default to today
+    // * if day of month is given, default month and year
+    // * if month is given, default only year
+    // * if year is given, don't default anything
+    for (i = 0; i < 3 && config._a[i] == null; ++i) {
+        config._a[i] = input[i] = currentDate[i];
+    }
+
+    // Zero out whatever was not defaulted, including time
+    for (; i < 7; i++) {
+        config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
+    }
+
+    // Check for 24:00:00.000
+    if (config._a[HOUR] === 24 &&
+            config._a[MINUTE] === 0 &&
+            config._a[SECOND] === 0 &&
+            config._a[MILLISECOND] === 0) {
+        config._nextDay = true;
+        config._a[HOUR] = 0;
+    }
+
+    config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
+    expectedWeekday = config._useUTC ? config._d.getUTCDay() : config._d.getDay();
+
+    // Apply timezone offset from input. The actual utcOffset can be changed
+    // with parseZone.
+    if (config._tzm != null) {
+        config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+    }
+
+    if (config._nextDay) {
+        config._a[HOUR] = 24;
+    }
+
+    // check for mismatching day of week
+    if (config._w && typeof config._w.d !== 'undefined' && config._w.d !== expectedWeekday) {
+        getParsingFlags(config).weekdayMismatch = true;
+    }
+}
+
+function dayOfYearFromWeekInfo(config) {
+    var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
+
+    w = config._w;
+    if (w.GG != null || w.W != null || w.E != null) {
+        dow = 1;
+        doy = 4;
+
+        // TODO: We need to take the current isoWeekYear, but that depends on
+        // how we interpret now (local, utc, fixed offset). So create
+        // a now version of current config (take local/utc/offset flags, and
+        // create now).
+        weekYear = defaults$1(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
+        week = defaults$1(w.W, 1);
+        weekday = defaults$1(w.E, 1);
+        if (weekday < 1 || weekday > 7) {
+            weekdayOverflow = true;
+        }
+    } else {
+        dow = config._locale._week.dow;
+        doy = config._locale._week.doy;
+
+        var curWeek = weekOfYear(createLocal(), dow, doy);
+
+        weekYear = defaults$1(w.gg, config._a[YEAR], curWeek.year);
+
+        // Default to current week.
+        week = defaults$1(w.w, curWeek.week);
+
+        if (w.d != null) {
+            // weekday -- low day numbers are considered next week
+            weekday = w.d;
+            if (weekday < 0 || weekday > 6) {
+                weekdayOverflow = true;
+            }
+        } else if (w.e != null) {
+            // local weekday -- counting starts from begining of week
+            weekday = w.e + dow;
+            if (w.e < 0 || w.e > 6) {
+                weekdayOverflow = true;
+            }
+        } else {
+            // default to begining of week
+            weekday = dow;
+        }
+    }
+    if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
+        getParsingFlags(config)._overflowWeeks = true;
+    } else if (weekdayOverflow != null) {
+        getParsingFlags(config)._overflowWeekday = true;
+    } else {
+        temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
+        config._a[YEAR] = temp.year;
+        config._dayOfYear = temp.dayOfYear;
+    }
 }
 
 // node_modules/moment/src/lib/create/from-string.js
@@ -16480,70 +18838,94 @@ function configFromISO(config) {
 }
 
 // RFC 2822 regex: For details see https://tools.ietf.org/html/rfc2822#section-3.3
-var basicRfcRegex = /^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s)?(\d?\d\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?:\d\d)?\d\d\s)(\d\d:\d\d)(\:\d\d)?(\s(?:UT|GMT|[ECMP][SD]T|[A-IK-Za-ik-z]|[+-]\d{4}))$/;
+var rfc2822 = /^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s)?(\d{1,2})\s(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(\d{2,4})\s(\d\d):(\d\d)(?::(\d\d))?\s(?:(UT|GMT|[ECMP][SD]T)|([Zz])|([+-]\d{4}))$/;
+
+function extractFromRFC2822Strings(yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr) {
+    var result = [
+        untruncateYear(yearStr),
+        defaultLocaleMonthsShort.indexOf(monthStr),
+        parseInt(dayStr, 10),
+        parseInt(hourStr, 10),
+        parseInt(minuteStr, 10)
+    ];
+
+    if (secondStr) {
+        result.push(parseInt(secondStr, 10));
+    }
+
+    return result;
+}
+
+function untruncateYear(yearStr) {
+    var year = parseInt(yearStr, 10);
+    if (year <= 49) {
+        return 2000 + year;
+    } else if (year <= 999) {
+        return 1900 + year;
+    }
+    return year;
+}
+
+function preprocessRFC2822(s) {
+    // Remove comments and folding whitespace and replace multiple-spaces with a single space
+    return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').trim();
+}
+
+function checkWeekday(weekdayStr, parsedInput, config) {
+    if (weekdayStr) {
+        // TODO: Replace the vanilla JS Date object with an indepentent day-of-week check.
+        var weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr),
+            weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
+        if (weekdayProvided !== weekdayActual) {
+            getParsingFlags(config).weekdayMismatch = true;
+            config._isValid = false;
+            return false;
+        }
+    }
+    return true;
+}
+
+var obsOffsets = {
+    UT: 0,
+    GMT: 0,
+    EDT: -4 * 60,
+    EST: -5 * 60,
+    CDT: -5 * 60,
+    CST: -6 * 60,
+    MDT: -6 * 60,
+    MST: -7 * 60,
+    PDT: -7 * 60,
+    PST: -8 * 60
+};
+
+function calculateOffset(obsOffset, militaryOffset, numOffset) {
+    if (obsOffset) {
+        return obsOffsets[obsOffset];
+    } else if (militaryOffset) {
+        // the only allowed military tz is Z
+        return 0;
+    } else {
+        var hm = parseInt(numOffset, 10);
+        var m = hm % 100, h = (hm - m) / 100;
+        return h * 60 + m;
+    }
+}
 
 // date and time from ref 2822 format
 function configFromRFC2822(config) {
-    var string, match, dayFormat,
-        dateFormat, timeFormat, tzFormat;
-    var timezones = {
-        ' GMT': ' +0000',
-        ' EDT': ' -0400',
-        ' EST': ' -0500',
-        ' CDT': ' -0500',
-        ' CST': ' -0600',
-        ' MDT': ' -0600',
-        ' MST': ' -0700',
-        ' PDT': ' -0700',
-        ' PST': ' -0800'
-    };
-    var military = 'YXWVUTSRQPONZABCDEFGHIKLM';
-    var timezone, timezoneIndex;
-
-    string = config._i
-        .replace(/\([^\)]*\)|[\n\t]/g, ' ') // Remove comments and folding whitespace
-        .replace(/(\s\s+)/g, ' ') // Replace multiple-spaces with a single space
-        .replace(/^\s|\s$/g, ''); // Remove leading and trailing spaces
-    match = basicRfcRegex.exec(string);
-
+    var match = rfc2822.exec(preprocessRFC2822(config._i));
     if (match) {
-        dayFormat = match[1] ? 'ddd' + ((match[1].length === 5) ? ', ' : ' ') : '';
-        dateFormat = 'D MMM ' + ((match[2].length > 10) ? 'YYYY ' : 'YY ');
-        timeFormat = 'HH:mm' + (match[4] ? ':ss' : '');
-
-        // TODO: Replace the vanilla JS Date object with an indepentent day-of-week check.
-        if (match[1]) { // day of week given
-            var momentDate = new Date(match[2]);
-            var momentDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][momentDate.getDay()];
-
-            if (match[1].substr(0,3) !== momentDay) {
-                getParsingFlags(config).weekdayMismatch = true;
-                config._isValid = false;
-                return;
-            }
+        var parsedArray = extractFromRFC2822Strings(match[4], match[3], match[2], match[5], match[6], match[7]);
+        if (!checkWeekday(match[1], parsedArray, config)) {
+            return;
         }
 
-        switch (match[5].length) {
-            case 2: // military
-                if (timezoneIndex === 0) {
-                    timezone = ' +0000';
-                } else {
-                    timezoneIndex = military.indexOf(match[5][1].toUpperCase()) - 12;
-                    timezone = ((timezoneIndex < 0) ? ' -' : ' +') +
-                        (('' + timezoneIndex).replace(/^-?/, '0')).match(/..$/)[0] + '00';
-                }
-                break;
-            case 4: // Zone
-                timezone = timezones[match[5]];
-                break;
-            default: // UT or +/-9999
-                timezone = timezones[' GMT'];
-        }
-        match[5] = timezone;
-        config._i = match.splice(1).join('');
-        tzFormat = ' ZZ';
-        config._f = dayFormat + dateFormat + timeFormat + tzFormat;
-        configFromStringAndFormat(config);
+        config._a = parsedArray;
+        config._tzm = calculateOffset(match[8], match[9], match[10]);
+
+        config._d = createUTCDate.apply(null, config._a);
+        config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+
         getParsingFlags(config).rfc2822 = true;
     } else {
         config._isValid = false;
@@ -16586,151 +18968,6 @@ hooks.createFromInputFallback = deprecate(
         config._d = new Date(config._i + (config._useUTC ? ' UTC' : ''));
     }
 );
-
-// node_modules/moment/src/lib/utils/defaults.js
-// Pick the first defined of two or three arguments.
-function defaults$1(a, b, c) {
-    if (a != null) {
-        return a;
-    }
-    if (b != null) {
-        return b;
-    }
-    return c;
-}
-
-// node_modules/moment/src/lib/create/from-array.js
-function currentDateArray(config) {
-    // hooks is actually the exported moment object
-    var nowValue = new Date(hooks.now());
-    if (config._useUTC) {
-        return [nowValue.getUTCFullYear(), nowValue.getUTCMonth(), nowValue.getUTCDate()];
-    }
-    return [nowValue.getFullYear(), nowValue.getMonth(), nowValue.getDate()];
-}
-
-// convert an array to a date.
-// the array should mirror the parameters below
-// note: all values past the year are optional and will default to the lowest possible value.
-// [year, month, day , hour, minute, second, millisecond]
-function configFromArray (config) {
-    var i, date, input = [], currentDate, yearToUse;
-
-    if (config._d) {
-        return;
-    }
-
-    currentDate = currentDateArray(config);
-
-    //compute day of the year from weeks and weekdays
-    if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
-        dayOfYearFromWeekInfo(config);
-    }
-
-    //if the day of the year is set, figure out what it is
-    if (config._dayOfYear != null) {
-        yearToUse = defaults$1(config._a[YEAR], currentDate[YEAR]);
-
-        if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
-            getParsingFlags(config)._overflowDayOfYear = true;
-        }
-
-        date = createUTCDate(yearToUse, 0, config._dayOfYear);
-        config._a[MONTH] = date.getUTCMonth();
-        config._a[DATE] = date.getUTCDate();
-    }
-
-    // Default to current date.
-    // * if no year, month, day of month are given, default to today
-    // * if day of month is given, default month and year
-    // * if month is given, default only year
-    // * if year is given, don't default anything
-    for (i = 0; i < 3 && config._a[i] == null; ++i) {
-        config._a[i] = input[i] = currentDate[i];
-    }
-
-    // Zero out whatever was not defaulted, including time
-    for (; i < 7; i++) {
-        config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
-    }
-
-    // Check for 24:00:00.000
-    if (config._a[HOUR] === 24 &&
-            config._a[MINUTE] === 0 &&
-            config._a[SECOND] === 0 &&
-            config._a[MILLISECOND] === 0) {
-        config._nextDay = true;
-        config._a[HOUR] = 0;
-    }
-
-    config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
-    // Apply timezone offset from input. The actual utcOffset can be changed
-    // with parseZone.
-    if (config._tzm != null) {
-        config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
-    }
-
-    if (config._nextDay) {
-        config._a[HOUR] = 24;
-    }
-}
-
-function dayOfYearFromWeekInfo(config) {
-    var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
-
-    w = config._w;
-    if (w.GG != null || w.W != null || w.E != null) {
-        dow = 1;
-        doy = 4;
-
-        // TODO: We need to take the current isoWeekYear, but that depends on
-        // how we interpret now (local, utc, fixed offset). So create
-        // a now version of current config (take local/utc/offset flags, and
-        // create now).
-        weekYear = defaults$1(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
-        week = defaults$1(w.W, 1);
-        weekday = defaults$1(w.E, 1);
-        if (weekday < 1 || weekday > 7) {
-            weekdayOverflow = true;
-        }
-    } else {
-        dow = config._locale._week.dow;
-        doy = config._locale._week.doy;
-
-        var curWeek = weekOfYear(createLocal(), dow, doy);
-
-        weekYear = defaults$1(w.gg, config._a[YEAR], curWeek.year);
-
-        // Default to current week.
-        week = defaults$1(w.w, curWeek.week);
-
-        if (w.d != null) {
-            // weekday -- low day numbers are considered next week
-            weekday = w.d;
-            if (weekday < 0 || weekday > 6) {
-                weekdayOverflow = true;
-            }
-        } else if (w.e != null) {
-            // local weekday -- counting starts from begining of week
-            weekday = w.e + dow;
-            if (w.e < 0 || w.e > 6) {
-                weekdayOverflow = true;
-            }
-        } else {
-            // default to begining of week
-            weekday = dow;
-        }
-    }
-    if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
-        getParsingFlags(config)._overflowWeeks = true;
-    } else if (weekdayOverflow != null) {
-        getParsingFlags(config)._overflowWeekday = true;
-    } else {
-        temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
-        config._a[YEAR] = temp.year;
-        config._dayOfYear = temp.dayOfYear;
-    }
-}
 
 // node_modules/moment/src/lib/create/from-string-and-format.js
 // constant that refers to the ISO standard
@@ -16880,7 +19117,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$55(config, bestMoment || tempConfig);
+    extend$57(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -17064,7 +19301,7 @@ var ordering = ['year', 'quarter', 'month', 'week', 'day', 'hour', 'minute', 'se
 
 function isDurationValid(m) {
     for (var key in m) {
-        if (!(ordering.indexOf(key) !== -1 && (m[key] == null || !isNaN(m[key])))) {
+        if (!(indexOf$6.call(ordering, key) !== -1 && (m[key] == null || !isNaN(m[key])))) {
             return false;
         }
     }
@@ -17116,7 +19353,7 @@ function Duration (duration) {
     // day when working around DST, we need to store them separately
     this._days = +days +
         weeks * 7;
-    // It is impossible translate months into days without knowing
+    // It is impossible to translate months into days without knowing
     // which months you are are talking about, so we have to store
     // it separately.
     this._months = +months +
@@ -17366,12 +19603,12 @@ function isUtc () {
 
 // node_modules/moment/src/lib/duration/create.js
 // ASP.NET json date format regex
-var aspNetRegex = /^(\-)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)(\.\d*)?)?$/;
+var aspNetRegex = /^(\-|\+)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)(\.\d*)?)?$/;
 
 // from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
 // somewhat more in line with 4.4.3.2 2004 spec, but allows decimal anywhere
 // and further modified to allow for strings containing both week and day
-var isoRegex = /^(-)?P(?:(-?[0-9,.]*)Y)?(?:(-?[0-9,.]*)M)?(?:(-?[0-9,.]*)W)?(?:(-?[0-9,.]*)D)?(?:T(?:(-?[0-9,.]*)H)?(?:(-?[0-9,.]*)M)?(?:(-?[0-9,.]*)S)?)?$/;
+var isoRegex = /^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/;
 
 function createDuration (input, key) {
     var duration = input,
@@ -17405,7 +19642,7 @@ function createDuration (input, key) {
             ms : toInt(absRound(match[MILLISECOND] * 1000)) * sign // the millisecond decimal point is included in the match
         };
     } else if (!!(match = isoRegex.exec(input))) {
-        sign = (match[1] === '-') ? -1 : 1;
+        sign = (match[1] === '-') ? -1 : (match[1] === '+') ? 1 : 1;
         duration = {
             y : parseIso(match[2], sign),
             M : parseIso(match[3], sign),
@@ -17509,14 +19746,14 @@ function addSubtract (mom, duration, isAdding, updateOffset) {
 
     updateOffset = updateOffset == null ? true : updateOffset;
 
-    if (milliseconds) {
-        mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
+    if (months) {
+        setMonth(mom, get$1(mom, 'Month') + months * isAdding);
     }
     if (days) {
         set$1(mom, 'Date', get$1(mom, 'Date') + days * isAdding);
     }
-    if (months) {
-        setMonth(mom, get$1(mom, 'Month') + months * isAdding);
+    if (milliseconds) {
+        mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
     }
     if (updateOffset) {
         hooks.updateOffset(mom, days || months);
@@ -17630,22 +19867,18 @@ function diff (input, units, asFloat) {
 
     units = normalizeUnits(units);
 
-    if (units === 'year' || units === 'month' || units === 'quarter') {
-        output = monthDiff(this, that);
-        if (units === 'quarter') {
-            output = output / 3;
-        } else if (units === 'year') {
-            output = output / 12;
-        }
-    } else {
-        delta = this - that;
-        output = units === 'second' ? delta / 1e3 : // 1000
-            units === 'minute' ? delta / 6e4 : // 1000 * 60
-            units === 'hour' ? delta / 36e5 : // 1000 * 60 * 60
-            units === 'day' ? (delta - zoneDelta) / 864e5 : // 1000 * 60 * 60 * 24, negate dst
-            units === 'week' ? (delta - zoneDelta) / 6048e5 : // 1000 * 60 * 60 * 24 * 7, negate dst
-            delta;
+    switch (units) {
+        case 'year': output = monthDiff(this, that) / 12; break;
+        case 'month': output = monthDiff(this, that); break;
+        case 'quarter': output = monthDiff(this, that) / 3; break;
+        case 'second': output = (this - that) / 1e3; break; // 1000
+        case 'minute': output = (this - that) / 6e4; break; // 1000 * 60
+        case 'hour': output = (this - that) / 36e5; break; // 1000 * 60 * 60
+        case 'day': output = (this - that - zoneDelta) / 864e5; break; // 1000 * 60 * 60 * 24, negate dst
+        case 'week': output = (this - that - zoneDelta) / 6048e5; break; // 1000 * 60 * 60 * 24 * 7, negate dst
+        default: output = this - that;
     }
+
     return asFloat ? output : absFloor(output);
 }
 
@@ -17678,19 +19911,24 @@ function toString$1 () {
     return this.clone().locale('en').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ');
 }
 
-function toISOString() {
+function toISOString(keepOffset) {
     if (!this.isValid()) {
         return null;
     }
-    var m = this.clone().utc();
+    var utc = keepOffset !== true;
+    var m = utc ? this.clone().utc() : this;
     if (m.year() < 0 || m.year() > 9999) {
-        return formatMoment(m, 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        return formatMoment(m, utc ? 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]' : 'YYYYYY-MM-DD[T]HH:mm:ss.SSSZ');
     }
     if (isFunction$3(Date.prototype.toISOString)) {
         // native implementation is ~50x faster, use it when we can
-        return this.toDate().toISOString();
+        if (utc) {
+            return this.toDate().toISOString();
+        } else {
+            return new Date(this._d.valueOf()).toISOString().replace('Z', formatMoment(m, 'Z'));
+        }
     }
-    return formatMoment(m, 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+    return formatMoment(m, utc ? 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]' : 'YYYY-MM-DD[T]HH:mm:ss.SSSZ');
 }
 
 /**
@@ -17889,7 +20127,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$55({}, getParsingFlags(this));
+    return extend$57({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -18056,7 +20294,7 @@ addRegexToken('Do', function (isStrict, locale) {
 
 addParseToken(['D', 'DD'], DATE);
 addParseToken('Do', function (input, array) {
-    array[DATE] = toInt(input.match(match1to2)[0], 10);
+    array[DATE] = toInt(input.match(match1to2)[0]);
 });
 
 // MOMENTS
@@ -18651,6 +20889,11 @@ var asWeeks        = makeAs('w');
 var asMonths       = makeAs('M');
 var asYears        = makeAs('y');
 
+// node_modules/moment/src/lib/duration/clone.js
+function clone$1 () {
+    return createDuration(this);
+}
+
 // node_modules/moment/src/lib/duration/get.js
 function get$3 (units) {
     units = normalizeUnits(units);
@@ -18763,6 +21006,10 @@ function humanize (withSuffix) {
 // node_modules/moment/src/lib/duration/iso-string.js
 var abs$1 = Math.abs;
 
+function sign(x) {
+    return ((x > 0) - (x < 0)) || +x;
+}
+
 function toISOString$1() {
     // for ISO strings we do not use the normal bubbling rules:
     //  * milliseconds bubble up until they become hours
@@ -18797,7 +21044,7 @@ function toISOString$1() {
     var D = days;
     var h = hours;
     var m = minutes;
-    var s = seconds;
+    var s = seconds ? seconds.toFixed(3).replace(/\.?0+$/, '') : '';
     var total = this.asSeconds();
 
     if (!total) {
@@ -18806,15 +21053,19 @@ function toISOString$1() {
         return 'P0D';
     }
 
-    return (total < 0 ? '-' : '') +
-        'P' +
-        (Y ? Y + 'Y' : '') +
-        (M ? M + 'M' : '') +
-        (D ? D + 'D' : '') +
+    var totalSign = total < 0 ? '-' : '';
+    var ymSign = sign(this._months) !== sign(total) ? '-' : '';
+    var daysSign = sign(this._days) !== sign(total) ? '-' : '';
+    var hmsSign = sign(this._milliseconds) !== sign(total) ? '-' : '';
+
+    return totalSign + 'P' +
+        (Y ? ymSign + Y + 'Y' : '') +
+        (M ? ymSign + M + 'M' : '') +
+        (D ? daysSign + D + 'D' : '') +
         ((h || m || s) ? 'T' : '') +
-        (h ? h + 'H' : '') +
-        (m ? m + 'M' : '') +
-        (s ? s + 'S' : '');
+        (h ? hmsSign + h + 'H' : '') +
+        (m ? hmsSign + m + 'M' : '') +
+        (s ? hmsSign + s + 'S' : '');
 }
 
 // node_modules/moment/src/lib/duration/prototype.js
@@ -18835,6 +21086,7 @@ proto$2.asMonths       = asMonths;
 proto$2.asYears        = asYears;
 proto$2.valueOf        = valueOf$1;
 proto$2._bubble        = bubble;
+proto$2.clone          = clone$1;
 proto$2.get            = get$3;
 proto$2.milliseconds   = milliseconds;
 proto$2.seconds        = seconds;
@@ -18880,12 +21132,12 @@ addParseToken('x', function (input, array, config) {
 
 // node_modules/moment/src/moment.js
 //! moment.js
-//! version : 2.18.1
+//! version : 2.20.0
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
 //! momentjs.com
 
-hooks.version = '2.18.1';
+hooks.version = '2.20.0';
 
 setHookCallback(createLocal);
 
@@ -18912,10 +21164,23 @@ hooks.updateLocale          = updateLocale;
 hooks.locales               = listLocales;
 hooks.weekdaysShort         = listWeekdaysShort;
 hooks.normalizeUnits        = normalizeUnits;
-hooks.relativeTimeRounding = getSetRelativeTimeRounding;
+hooks.relativeTimeRounding  = getSetRelativeTimeRounding;
 hooks.relativeTimeThreshold = getSetRelativeTimeThreshold;
 hooks.calendarFormat        = getCalendarFormat;
 hooks.prototype             = proto;
+
+// currently HTML5 input type only supports 24-hour formats
+hooks.HTML5_FMT = {
+    DATETIME_LOCAL: 'YYYY-MM-DDTHH:mm',             // <input type="datetime-local" />
+    DATETIME_LOCAL_SECONDS: 'YYYY-MM-DDTHH:mm:ss',  // <input type="datetime-local" step="1" />
+    DATETIME_LOCAL_MS: 'YYYY-MM-DDTHH:mm:ss.SSS',   // <input type="datetime-local" step="0.001" />
+    DATE: 'YYYY-MM-DD',                             // <input type="date" />
+    TIME: 'HH:mm',                                  // <input type="time" />
+    TIME_SECONDS: 'HH:mm:ss',                       // <input type="time" step="1" />
+    TIME_MS: 'HH:mm:ss.SSS',                        // <input type="time" step="0.001" />
+    WEEK: 'YYYY-[W]WW',                             // <input type="week" />
+    MONTH: 'YYYY-MM'                                // <input type="month" />
+};
 
 
 
