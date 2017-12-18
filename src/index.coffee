@@ -17,13 +17,15 @@ import {
 
 import {
   Control
+  Copy
   Text
-  Currency
   TextBox
   CheckBox
+  QRCode
   Select
   QuantitySelect
   CountrySelect
+  Currency
   StateSelect
   UserEmail
   UserName
