@@ -483,6 +483,13 @@ Shop.start = (opts = {}) ->
   m.trigger Events.Started, @data
   return m
 
+Shop.mount = ->
+  return El.mount arguments,
+    cart:     @cart
+    client:   @client
+    data:     @data
+    mediator: m
+
 Shop.initCart = ->
   @cart.initCart()
 
