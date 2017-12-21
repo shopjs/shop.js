@@ -16217,7 +16217,7 @@ var isNewPassword = function(value) {
     }
     return value;
   }
-  return middleware.isPassword(value);
+  return isPassword(value);
 };
 
 var isPassword = function(value) {
