@@ -32,6 +32,7 @@ import {
   UserCurrentPassword
   UserPassword
   UserPasswordConfirm
+  UserUsername
   ShippingAddressName
   ShippingAddressLine1
   ShippingAddressLine2

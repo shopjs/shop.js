@@ -19,6 +19,7 @@ import UserEmail            from './user/user-email'
 import UserName             from './user/user-name'
 import UserPasswordConfirm  from './user/user-password-confirm'
 import UserPassword         from './user/user-password'
+import UserUsername         from './user/user-username'
 
 import GiftEmail    from './gift/gift-email'
 import GiftMessage  from './gift/gift-message'
@@ -76,6 +77,7 @@ export {
   UserName
   UserPasswordConfirm
   UserPassword
+  UserUsername
 }
 
 

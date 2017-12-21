@@ -1,6 +1,7 @@
 import {
   isRequired
   isEmail
+  isUsername
   splitName
   isStateRequired
   isPostalRequired
@@ -13,6 +14,7 @@ import {
 } from './middleware'
 
 export default config =
+  'user.username':    [ isRequired, isUsername ]
   'user.email':       [ isRequired, isEmail ]
   'user.name':        [ isRequired, splitName ]
   # 'user.password':    null
