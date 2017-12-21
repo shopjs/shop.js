@@ -197,7 +197,7 @@ reset-password .input .input.input,
 reset-password-complete .input .input.input,
 shippingaddress .input .input.input{
   width:100%;
-  display:table;
+  display:block;
   margin-top:1em;
 }
 cart .input.input.input .labeled,
@@ -338,6 +338,7 @@ shippingaddress .input .helper{
   margin-top:0.5em;
   font-size:0.75em;
   line-height:1em;
+  width:100%;
 }
 cart .input .error,
 checkout .input .error,
@@ -551,7 +552,7 @@ reset-password-complete .input textarea,
 shippingaddress .input textarea{
   outline:none;
   height:6rem;
-  border:$inputBorderWidth solid $borderColor1;
+  border:1px solid $borderColor1;
   border-radius:2px;
 }
 cart .input input[type=text],
@@ -800,6 +801,37 @@ reset-password-complete .input .labeled ~ .copy-text,
 shippingaddress .input .labeled ~ .copy-text{
   top:1.75rem;
 }
+cart .input .currency-container,
+checkout .input .currency-container,
+checkout-card .input .currency-container,
+checkout-modal .input .currency-container,
+checkout-shippingaddress .input .currency-container,
+deposit .input .currency-container,
+login .input .currency-container,
+orders .input .currency-container,
+profile .input .currency-container,
+register .input .currency-container,
+reset-password .input .currency-container,
+reset-password-complete .input .currency-container,
+shippingaddress .input .currency-container{
+  display:-webkit-box;
+  display:flex;
+}
+cart .input .currency-amount,
+checkout .input .currency-amount,
+checkout-card .input .currency-amount,
+checkout-modal .input .currency-amount,
+checkout-shippingaddress .input .currency-amount,
+deposit .input .currency-amount,
+login .input .currency-amount,
+orders .input .currency-amount,
+profile .input .currency-amount,
+register .input .currency-amount,
+reset-password .input .currency-amount,
+reset-password-complete .input .currency-amount,
+shippingaddress .input .currency-amount{
+  padding-right:0.25em;
+}
 cart .input .right-aligned,
 checkout .input .right-aligned,
 checkout-card .input .right-aligned,
@@ -814,6 +846,77 @@ reset-password .input .right-aligned,
 reset-password-complete .input .right-aligned,
 shippingaddress .input .right-aligned{
   text-align:right;
+}
+cart .input .currency-code,
+checkout .input .currency-code,
+checkout-card .input .currency-code,
+checkout-modal .input .currency-code,
+checkout-shippingaddress .input .currency-code,
+deposit .input .currency-code,
+login .input .currency-code,
+orders .input .currency-code,
+profile .input .currency-code,
+register .input .currency-code,
+reset-password .input .currency-code,
+reset-password-complete .input .currency-code,
+shippingaddress .input .currency-code{
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-pack:end;
+          justify-content:flex-end;
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+          flex-direction:column;
+}
+cart .input .currency-code .currency-code-text,
+checkout .input .currency-code .currency-code-text,
+checkout-card .input .currency-code .currency-code-text,
+checkout-modal .input .currency-code .currency-code-text,
+checkout-shippingaddress .input .currency-code .currency-code-text,
+deposit .input .currency-code .currency-code-text,
+login .input .currency-code .currency-code-text,
+orders .input .currency-code .currency-code-text,
+profile .input .currency-code .currency-code-text,
+register .input .currency-code .currency-code-text,
+reset-password .input .currency-code .currency-code-text,
+reset-password-complete .input .currency-code .currency-code-text,
+shippingaddress .input .currency-code .currency-code-text{
+  height:2rem;
+  line-height:2rem;
+  border-bottom:1px solid;
+  border-color:#000;
+  border-width:1px;
+  transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+}
+cart .input .valid ~ .currency-code .currency-code-text,
+checkout .input .valid ~ .currency-code .currency-code-text,
+checkout-card .input .valid ~ .currency-code .currency-code-text,
+checkout-modal .input .valid ~ .currency-code .currency-code-text,
+checkout-shippingaddress .input .valid ~ .currency-code .currency-code-text,
+deposit .input .valid ~ .currency-code .currency-code-text,
+login .input .valid ~ .currency-code .currency-code-text,
+orders .input .valid ~ .currency-code .currency-code-text,
+profile .input .valid ~ .currency-code .currency-code-text,
+register .input .valid ~ .currency-code .currency-code-text,
+reset-password .input .valid ~ .currency-code .currency-code-text,
+reset-password-complete .input .valid ~ .currency-code .currency-code-text,
+shippingaddress .input .valid ~ .currency-code .currency-code-text{
+  border-color:#00bcd4;
+}
+cart .input .invalid ~ .currency-code .currency-code-text,
+checkout .input .invalid ~ .currency-code .currency-code-text,
+checkout-card .input .invalid ~ .currency-code .currency-code-text,
+checkout-modal .input .invalid ~ .currency-code .currency-code-text,
+checkout-shippingaddress .input .invalid ~ .currency-code .currency-code-text,
+deposit .input .invalid ~ .currency-code .currency-code-text,
+login .input .invalid ~ .currency-code .currency-code-text,
+orders .input .invalid ~ .currency-code .currency-code-text,
+profile .input .invalid ~ .currency-code .currency-code-text,
+register .input .invalid ~ .currency-code .currency-code-text,
+reset-password .input .invalid ~ .currency-code .currency-code-text,
+reset-password-complete .input .invalid ~ .currency-code .currency-code-text,
+shippingaddress .input .invalid ~ .currency-code .currency-code-text{
+  border-color:#e91e63;
 }
 cart .input.input.input .invalid,
 checkout .input.input.input .invalid,
