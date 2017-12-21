@@ -15536,24 +15536,33 @@ QRCode = (function(superClass) {
 
   QRCode.prototype.margin = 4;
 
+  QRCode.prototype.events = {
+    updated: function() {
+      return this.onUpdated();
+    },
+    mount: function() {
+      return this.onUpdated();
+    }
+  };
+
   QRCode.prototype.init = function() {
     if (!this.text) {
-      QRCode.__super__.init.apply(this, arguments);
+      return QRCode.__super__.init.apply(this, arguments);
     }
-    return this.on('updated', function() {
-      var canvas;
-      canvas = this.root.children[0];
-      return qrcode$1.toCanvas(canvas, this.getText(), {
-        version: this.version,
-        errorCorrectionLevel: this.errorCorrectionLevel,
-        scale: this.scale,
-        margin: this.margin
-      }, function(error) {
-        if (error) {
-          console.error(error);
-        }
-        return console.log('success!');
-      });
+  };
+
+  QRCode.prototype.onUpdated = function() {
+    var canvas;
+    canvas = this.root.children[0];
+    return qrcode$1.toCanvas(canvas, this.getText(), {
+      version: this.version,
+      errorCorrectionLevel: this.errorCorrectionLevel,
+      scale: this.scale,
+      margin: this.margin
+    }, function(error) {
+      if (error) {
+        return console.error(error);
+      }
     });
   };
 
