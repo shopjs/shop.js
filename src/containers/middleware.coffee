@@ -35,7 +35,7 @@ export isNewPassword = (value) ->
     throw new Error 'Current password required' if value
     return value
 
-  return middleware.isPassword value
+  return isPassword value
 
 export isPassword = (value) ->
   unless value
