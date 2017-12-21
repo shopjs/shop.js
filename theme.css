@@ -1306,6 +1306,10 @@ reset-password-complete,
 shippingaddress{
   text-align:left;
   color:#000;
+  width:100%;
+  display:table;
+  padding:1em;
+  background-color:#eee;
 }
 cart .fields,
 checkout .fields,
@@ -1928,12 +1932,6 @@ side-pane .side-pane-close{
   float:right;
   cursor:pointer;
 }
-cart{
-  width:100%;
-  display:table;
-  padding:1em;
-  background-color:#eee;
-}
 cart lineitems{
   margin-top:1em;
 }
@@ -2129,14 +2127,6 @@ cart .invoice-total .invoice-label{
 cart .invoice-amount{
   text-align:right;
   font-weight:bold;
-}
-checkout,
-checkout-card,
-checkout-shippingaddress{
-  width:100%;
-  display:table;
-  padding:1em;
-  background-color:#eee;
 }
 checkout button,
 checkout-card button,

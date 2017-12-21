@@ -9,6 +9,7 @@ import {
 
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+usernameRe = /^[a-zA-Z0-9_\-\.]+$/
 
 export isRequired = (value) ->
   return value if value && value != ''
@@ -21,6 +22,13 @@ export isEmail = (value) ->
   return value.toLowerCase() if emailRe.test value
 
   throw new Error 'Enter a valid email'
+
+export isUsername = (value) ->
+  return value unless value
+
+  return value.toLowerCase() if usernameRe.test value
+
+  throw new Error 'Enter a valid username (A-Z, 0-9, ., _, and -)'
 
 export isNewPassword = (value) ->
   if !@get 'user.currentPassword'
