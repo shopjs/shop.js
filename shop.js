@@ -23534,7 +23534,9 @@ Shop$1.start = function(opts) {
     cart: this.cart,
     client: this.client,
     data: this.data,
-    mediator: m$1
+    mediator: m$1,
+    renderCurrency: renderUICurrencyFromJSON,
+    renderDate: renderDate
   });
   ps = [];
   for (i = 0, len = tags.length; i < len; i++) {
@@ -23570,7 +23572,9 @@ Shop$1.mount = function() {
     cart: this.cart,
     client: this.client,
     data: this.data,
-    mediator: m$1
+    mediator: m$1,
+    renderCurrency: renderUICurrencyFromJSON,
+    renderDate: renderDate
   });
 };
 
@@ -23653,8 +23657,6 @@ if ((typeof document !== "undefined" && document !== null ? document.currentScri
 
 if (typeof window !== "undefined" && window !== null) {
   window.Shop = Shop$1;
-  window.renderCurrency = renderUICurrencyFromJSON;
-  window.renderDate = renderDate;
 }
 
 var Shop$2 = Shop$1;
