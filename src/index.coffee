@@ -459,6 +459,9 @@ Shop.start = (opts = {}) ->
     data:     @data
     mediator: m
 
+    renderCurrency: renderUICurrencyFromJSON
+    renderDate:     renderDate
+
   ps = []
   for tag in tags
     p = new Promise (resolve) ->
@@ -490,6 +493,9 @@ Shop.mount = ->
     client:   @client
     data:     @data
     mediator: m
+
+    renderCurrency: renderUICurrencyFromJSON
+    renderDate:     renderDate
 
 Shop.initCart = ->
   @cart.initCart()
@@ -558,7 +564,5 @@ if document?.currentScript?
 
 if window?
   window.Shop = Shop
-  window.renderCurrency = renderUICurrencyFromJSON
-  window.renderDate = renderDate
 
 export default Shop
