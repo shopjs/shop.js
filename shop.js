@@ -23466,7 +23466,7 @@ initData = function(opts) {
   country = index$1.get('default-country');
   countriesReady = false;
   dontPrefill = false;
-  if (data.get('autoGeo' && (!state || !country))) {
+  if (data.get('autoGeo') && (!state || !country)) {
     if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref29 = window.navigator) != null ? ref29.geolocation : void 0 : void 0)) {
       navigator.geolocation.getCurrentPosition((function(_this) {
         return function(position) {
