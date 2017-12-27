@@ -230,7 +230,7 @@ initData = (opts)->
   countriesReady = false
   dontPrefill = false
 
-  if data.get 'autoGeo' && (!state || !country)
+  if data.get('autoGeo') && (!state || !country)
     # get country/state
     # requires google maps to be in the namespace
     if window?.google && window?.navigator?.geolocation
