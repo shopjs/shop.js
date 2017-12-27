@@ -71,7 +71,7 @@ task 'test', 'Run tests', ['server'], (opts) ->
         --colors
         --reporter spec
         --timeout 10000000
-        --compilers coffee:coffee-script/register
+        --compilers coffee:coffeescript/register
         --require co-mocha
         --require postmortem/register
         #{bail}
