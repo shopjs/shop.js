@@ -176,6 +176,7 @@ initData = (opts)->
     countries:      []
     tokenId:        queries.tokenid
     terms:          opts.terms ? false
+    autoGeo:        opts.autoGeo ? false
     order:
       giftType:     'physical'
       type:         opts.processor ? opts.order?.type ? 'stripe'
@@ -207,7 +208,7 @@ initData = (opts)->
   data = refer d
 
   # load multipage partial checkout data
-  checkoutUser            = store.get 'checkout-user'
+  checkoutUser = store.get 'checkout-user'
   if checkoutUser
     data.set 'user', checkoutUser
     store.remove 'checkout-user'
@@ -229,7 +230,7 @@ initData = (opts)->
   countriesReady = false
   dontPrefill = false
 
-  if !state || !country
+  if data.get 'autoGeo' && (!state || !country)
     # get country/state
     # requires google maps to be in the namespace
     if window?.google && window?.navigator?.geolocation

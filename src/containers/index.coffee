@@ -15,6 +15,7 @@ import RegisterComplete        from './register-complete'
 import ResetPassword           from './reset-password'
 import ResetPasswordComplete   from './reset-password-complete'
 import ShippingAddress         from './shippingaddress'
+import ThankYou                from './thankyou'
 
 export default Forms =
   Checkout:                 Checkout
@@ -34,4 +35,4 @@ export default Forms =
   ResetPassword:            ResetPassword
   ResetPasswordComplete:    ResetPasswordComplete
   ShippingAddress:          ShippingAddress
-
+  ThankYou:                 ThankYou
