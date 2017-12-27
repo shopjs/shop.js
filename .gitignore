@@ -3,4 +3,5 @@ node_modules/
 phantomjsdriver.log
 npm-debug.log
 lib/
-.sake
+.sake/
+package-lock.json
