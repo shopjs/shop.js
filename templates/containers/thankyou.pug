@@ -1,0 +1,19 @@
+#{ 'yield' }
+  .thankyou-title
+    #{ 'yield' }(from='thankyou-title')
+      h2 Order { getOrderNumber() }
+  .thankyou-crypto-body(if='{ isCrypto() }')
+    #{ 'yield' }(from='thankyou-crypto-body')
+      p.thankyou-crypto-instructions
+        | Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:
+      qrcode.thankyou-qrcode(text='{ getQRCode }', margin='0')
+      copy.input.thankyou-address(text='{ getAddress }')
+      .pay-with-metamask(if='{ isMetamaskInstalled() }')
+        .pay-with-metamask-button(onclick='{ payWithMetamask }')
+      .error(if='{ errorMessage }')
+        | { errorMessage }
+  .thankyou-body
+    #{ 'yield' }(from='thankyou-body')
+      p
+        | Thank you for your purchase, you will receive an order confirmation email once your payment is processed.
+

@@ -81,9 +81,8 @@ export isEcardGiftRequired = (value) ->
   throw new Error 'Required'
 
 export requiresStripe = (value) ->
-  throw value if @get('order.type') == 'stripe' && (value && !value == '')
-
-  return new Error "Required"
+  throw new Error "Required" if @('order.type') == 'stripe' && (!value? || value == '')
+  return value
 
 export requireTerms = (value) ->
   if !value
