@@ -1,6 +1,7 @@
 import {
   isRequired
   isEmail
+  isUsername
   splitName
   isStateRequired
   isPostalRequired
@@ -13,6 +14,7 @@ import {
 } from './middleware'
 
 export default config =
+  'user.username':    [ isRequired, isUsername ]
   'user.email':       [ isRequired, isEmail ]
   'user.name':        [ isRequired, splitName ]
   # 'user.password':    null
@@ -31,7 +33,7 @@ export default config =
   'order.giftMessage':    null
   'order.promoCode':      null
 
-  'payment.account.name':     [ isRequired ]
+  'payment.account.name':     [ requiresStripe, isRequired ]
   'payment.account.number':   [ requiresStripe, cardNumber]
   'payment.account.expiry':   [ requiresStripe, expiration ]
   'payment.account.cvc':      [ requiresStripe, cvc ]

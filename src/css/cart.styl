@@ -1,8 +1,6 @@
 cart
-  width: 100%
-  display: table
-  padding: $themeElementPadding
-  background-color: $themeBGColor
+  lineitems
+    margin-top: $themeElementPadding
 
   lineitems
   lineitem
@@ -13,6 +11,8 @@ cart
   lineitem
     display: table
     padding-bottom: $themeElementPadding
+    border-bottom: 1px solid $themeDividerColor
+    margin-bottom: $themeElementPadding
 
     & > div
       width: 100%
@@ -23,7 +23,7 @@ cart
       & > *
         float: left;
 
-  quantity-select-control
+  quantity-select
   .promo
   .promo-row
   .invoice-line
@@ -31,7 +31,9 @@ cart
     display: table
     position: relative
 
-  quantity-select-control
+  quantity-select
+    margin-top: 0 !important
+
     .selectize-input
       max-width: 60px
       border-bottom: 0 !important
@@ -102,7 +104,7 @@ cart
     font-size: 0.8em
     position: absolute
     right: 0
-    top: 1.5em
+    top: 2em
 
   .product-currency
     display: inline
@@ -131,26 +133,28 @@ cart
       promocode
         width: 75%
         padding: 0
+        margin: 0
 
         input
-          border-radius: 1em 0 0 1em
+          border-radius: $themeBorderRadius 0 0 $themeBorderRadius
           border: $themeInputBorderWidth solid
           border-right: 0
           padding: 0 15px
-          transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
+          transition: all $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
           height: 32px
 
       button
         position: relative
         width: 25%
-        border-radius: 0 1em 1em 0
+        border-radius: 0 $themeBorderRadius $themeBorderRadius 0
         border-width: 0
         font-size: 1em
         padding: 0
-        transition: background-color $themeTransitionTime ease-in-out
+        transition: all $themeTransitionTime ease-in-out
         height: 32px
         background-color: $themeTextColor
         color: $themeTextColorInverted
+        box-shadow: none
 
       &.applied
         promocode

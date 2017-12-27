@@ -4,8 +4,8 @@ form(onsubmit='{ submit }')
       h2
         | Contact
       .fields
-        user-name.input(placeholder='Name')
-        user-email.input(placeholder='Email')
+        user-name.input(label='Name')
+        user-email.input(label='Email')
     .payment.checkout-section
       h2
         | Payment
@@ -14,8 +14,8 @@ form(onsubmit='{ submit }')
         span Checkout
         img.lock-icon(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg')
       .fields
-        card-name.input(placeholder='Name on Card')
-        card-number.input(name='number', placeholder='Card Number')
+        card-name.input(label='Name on Card')
+        card-number.input(name='number', label='Card Number')
           div.cards-accepted
             img.card-logo.amex-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg')
             img.card-logo.visa-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg')
@@ -24,24 +24,27 @@ form(onsubmit='{ submit }')
             img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
             a.stripe-link(href='//www.stripe.com', target='_blank')
               img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
-        card-expiry.input(name='expiry', placeholder='MM / YY')
-        card-cvc.input(name='cvc', placeholder='CVC')
+        .inline-fields
+          card-expiry.input(name='expiry', label='MM / YY')
+          card-cvc.input(name='cvc', label='CVC')
 
     .shipping.checkout-section
       h2
         | Shipping
-      shippingaddress-name.input(placeholder='Recipient')
-      shippingaddress-line1.input(placeholder='Address')
-      shippingaddress-line2.input(placeholder='Suite')
-      shippingaddress-city.input(placeholder='City')
-      shippingaddress-country.input(placeholder='Country', instructions='Select a Country')
-      shippingaddress-state.input(placeholder='State', instructions='Select a State')
-      shippingaddress-postalcode.input(placeholder='Postal Code')
+      shippingaddress-name.input(label='Recipient')
+      .inline-fields.line1-line2
+        shippingaddress-line1.input(label='Address')
+        shippingaddress-line2.input(label='Suite')
+      shippingaddress-city.input(label='City')
+      shippingaddress-country.input(label='Country', placeholder='Select a Country')
+      .inline-fields.state-postal-code
+        shippingaddress-state.input(label='State', placeholder='Select a State')
+        shippingaddress-postalcode.input(label='Postal Code')
     .complete.checkout-section
       h2
         | Complete Checkout
       terms.checkbox
-        label(for='terms')
+        label(for='{ getId() }')
           | I have read and accept the&nbsp;
           a(href='{ termsUrl }', target='_blank') terms and conditions
 

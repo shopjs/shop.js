@@ -19,6 +19,7 @@ import UserEmail            from './user/user-email'
 import UserName             from './user/user-name'
 import UserPasswordConfirm  from './user/user-password-confirm'
 import UserPassword         from './user/user-password'
+import UserUsername         from './user/user-username'
 
 import GiftEmail    from './gift/gift-email'
 import GiftMessage  from './gift/gift-message'
@@ -28,8 +29,11 @@ import GiftType     from './gift/gift-type'
 import CheckBox         from 'el-controls/src/controls/checkbox'
 import Control          from 'el-controls/src/controls/control'
 import CountrySelect    from 'el-controls/src/controls/country-select'
+import Copy             from 'el-controls/src/controls/copy'
+import Currency         from 'el-controls/src/controls/currency'
 # import Dropdown         from 'el-controls/src/controls/dropdown'
-import Select           from 'el-controls/src/controls/select'
+import QRCode           from 'el-controls/src/controls/qrcode'
+import Select           from 'el-controls/src/controls/selection'
 import StateSelect      from 'el-controls/src/controls/state-select'
 import Text             from 'el-controls/src/controls/text'
 import TextBox          from 'el-controls/src/controls/textbox'
@@ -42,8 +46,11 @@ export {
 
   CheckBox
   Control
+  Copy
   CountrySelect
+  Currency
   # Dropdown
+  QRCode
   Select
   StateSelect
   Text
@@ -70,6 +77,7 @@ export {
   UserName
   UserPasswordConfirm
   UserPassword
+  UserUsername
 }
 
 

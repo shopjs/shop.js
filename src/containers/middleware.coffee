@@ -1,14 +1,15 @@
 import {
   requiresPostalCode
   requiresState
-} from '../utils/country'
+} from 'shop.js-util/src/country'
 import {
   luhnCheck
   cardFromNumber
-} from '../utils/card'
+} from 'shop.js-util/src/card'
 
 
 emailRe = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+usernameRe = /^[a-zA-Z0-9_\-\.]+$/
 
 export isRequired = (value) ->
   return value if value && value != ''
@@ -22,12 +23,19 @@ export isEmail = (value) ->
 
   throw new Error 'Enter a valid email'
 
+export isUsername = (value) ->
+  return value unless value
+
+  return value.toLowerCase() if usernameRe.test value
+
+  throw new Error 'Enter a valid username (A-Z, 0-9, ., _, and -)'
+
 export isNewPassword = (value) ->
   if !@get 'user.currentPassword'
     throw new Error 'Current password required' if value
     return value
 
-  return middleware.isPassword value
+  return isPassword value
 
 export isPassword = (value) ->
   unless value

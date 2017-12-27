@@ -2,13 +2,18 @@
 button
   background-color: $themeButtonBGColor
   border-color: $themeButtonBorderColor
+  border-radius: $themeBorderRadius
   color: $themeButtonColor
   text-align: center
   font-size: 1em
   padding: 0
   height: $themeElementHeight * 1.5
   padding: 0 $themeElementHeight
-  cursor: pointer
+  box-shadow: 0 2px 5px $dropShadowColor
+  transition: all $themeTransitionTime ease-in-out
+
+  &:hover
+    box-shadow: 0 4px 10px $dropShadowHoverColor
 
   &.submit
   &[type=submit]
@@ -20,4 +25,3 @@ button
 
 button
   outline: none
-

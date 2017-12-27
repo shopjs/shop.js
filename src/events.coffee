@@ -134,3 +134,12 @@ export default Events =
     'create-referral-program-success'
   CreateReferralProgramFailed:
     'create-referral-program-failed'
+
+  # Metamask
+  PayWithMetamask:
+    'pay-with-metamask'
+  PayWithMetamaskSuccess:
+    'pay-with-metamask-success'
+  PayWithMetamaskFailed:
+    'pay-with-metamask-failed'
+

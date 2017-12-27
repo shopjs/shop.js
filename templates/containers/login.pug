@@ -1,9 +1,10 @@
-#{ 'yield' }
-  user-email.input(placeholder='Email')
-  user-password.input(placeholder='Password')
-  .error(if='{ errorMessage }')
-    | { errorMessage }
+form(onsubmit='{ submit }')
+  #{ 'yield' }
+    user-email.input(placeholder='Email')
+    user-password.input(placeholder='Password')
+    .error(if='{ errorMessage }')
+      | { errorMessage }
 
-  button(type='submit')
-    | Login
+    button(type='submit')
+      | Login
 
