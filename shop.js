@@ -17588,12 +17588,8 @@ ThankYouForm = (function(superClass) {
   ThankYouForm.prototype.init = function() {
     ThankYouForm.__super__.init.apply(this, arguments);
     if (this.testCrypto) {
-      this.test = true;
+      return this.test = true;
     }
-    return this.mediator.on(Events$2.SubmitSuccess, function(order) {
-      var ref, ref1, ref2;
-      return this.orderAddress = order != null ? (ref = order.wallet) != null ? (ref1 = ref.accounts) != null ? (ref2 = ref1[0]) != null ? ref2.address : void 0 : void 0 : void 0 : void 0;
-    });
   };
 
   ThankYouForm.prototype.isCrypto = function() {
@@ -17681,7 +17677,7 @@ ThankYouForm = (function(superClass) {
     if (this.test) {
       return 'address123';
     }
-    return this.orderAddress;
+    return this.data.get('order.wallet.accounts.0.address');
   };
 
   ThankYouForm.prototype.getAmount = function() {

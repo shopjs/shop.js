@@ -27,9 +27,6 @@ class ThankYouForm extends El.Form
     if @testCrypto
       @test = true
 
-    @mediator.on Events.SubmitSuccess, (order) ->
-      @orderAddress = order?.wallet?.accounts?[0]?.address
-
   isCrypto: ->
     return isCrypto @getCurrency()
 
@@ -101,7 +98,7 @@ class ThankYouForm extends El.Form
 
   getAddress: ->
     return 'address123' if @test
-    return @orderAddress
+    return @data.get 'order.wallet.accounts.0.address'
 
   getAmount: ->
     return 1000 if @test
