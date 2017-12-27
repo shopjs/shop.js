@@ -43,6 +43,8 @@ class ThankYouForm extends El.Form
     return typeof web3 != 'undefined'
 
   payWithMetamask: ->
+    return if @loading
+
     @mediator.trigger Events.PayWithMetamask
 
     @errorMessage = ''
