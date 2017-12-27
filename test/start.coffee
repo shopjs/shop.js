@@ -106,19 +106,19 @@ describe 'Shop.js', ->
 
       return new Promise (resolve, reject)->
         m.one 'checkout-open', ->
-          $userName = $('#user-name')
+          $userName = $('input[name="user.name"]')
             .val 'FirstName LastName'
-          $userEmail = $('#user-email')
+          $userEmail = $('input[name="user.email"]')
             .val 'email@email.com'
 
           # this should be automatic
           # $paymentAccountName = $('#payment.account.name')
           #   .val 'FirstName LastName'
-          $paymentAccountNumber = $('#payment-account-number')
+          $paymentAccountNumber = $('input[name="number"]')
             .val '4242 4242 4242 4242'
-          $paymentAccountExpiry = $('#payment-account-expiry')
+          $paymentAccountExpiry = $('input[name="expiry"]')
             .val '04 / 24'
-          $paymentAccountCVC = $('#payment-account-cvc')
+          $paymentAccountCVC = $('input[name="cvc"]')
             .val '424'
 
           fireEvent($userName[0], 'change')
@@ -128,28 +128,30 @@ describe 'Shop.js', ->
           fireEvent($paymentAccountExpiry[0], 'change')
           fireEvent($paymentAccountCVC[0], 'change')
 
+          Shop.El.scheduleUpdate()
+
           setTimeout ->
             $('checkout-card .checkout-next').click()
           , 1000
 
         m.one 'submit-card', ->
-          $shippingAddressCountry = $('#order-shippingAddress-country')
+          $shippingAddressCountry = $('[name="order.shippingAddress.country"]')
             .val 'US'
           fireEvent($shippingAddressCountry[0], 'change')
 
           # Address needs to be changed after country is
           setTimeout ->
-            $shippingAddressLine1 = $('#order-shippingAddress-line1')
+            $shippingAddressLine1 = $('[name="order.shippingAddress.line1"]')
               .val '405 Southwest Blvd'
-            $shippingAddressLine2 = $('#order-shippingAddress-line2')
-              .val '#200'
-            $shippingAddressCity = $('#order-shippingAddress-city')
+            $shippingAddressLine2 = $('[name="order.shippingAddress.line2"]')
+              .val '[name="200'
+            $shippingAddressCity = $('[name="order.shippingAddress.city"]')
               .val 'Kansas City'
-            $shippingAddressState = $('#order-shippingAddress-state')
+            $shippingAddressState = $('[name="order.shippingAddress.state"]')
               .val 'MO'
-            $shippingAddressPostalCode = $('#order-shippingAddress-postalCode')
+            $shippingAddressPostalCode = $('[name="order.shippingAddress.postalCode"]')
               .val '64108'
-            $terms = $('#terms')
+            $terms = $('[name="terms"]')
               .prop 'checked', true
 
             fireEvent($shippingAddressLine1[0], 'change')

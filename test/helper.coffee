@@ -65,6 +65,7 @@ before ->
         doc = node
       else
         throw new Error('Invalid node passed to fireEvent: ' + node.id)
+
       if node.dispatchEvent
         # Gecko-style approach (now the standard) takes more work
         eventClass = ''
