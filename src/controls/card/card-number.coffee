@@ -5,7 +5,7 @@ import keys from '../../utils/keys'
 import {
   cardFromNumber
   restrictNumeric
-} from '../../utils/card'
+} from 'shop.js-util/src/card'
 
 class CardNumber extends Text
   tag:      'card-number'
@@ -16,6 +16,7 @@ class CardNumber extends Text
     super
 
     @on 'mount', =>
+      # avoid weird rendering race conditions
       el = @root.querySelector('input')
 
       @_identifyCard = (e) =>
@@ -71,9 +72,9 @@ class CardNumber extends Text
       el.addEventListener 'keypress', restrictNumeric
       el.addEventListener 'keypress', @_identifyCard
 
-    @on 'unmount', =>
-      el.removeEventListener 'keypress', restrictNumeric
-      el.removeEventListener 'keypress', @_identifyCard
+      @on 'unmount', =>
+        el.removeEventListener 'keypress', restrictNumeric
+        el.removeEventListener 'keypress', @_identifyCard
 
 CardNumber.register()
 

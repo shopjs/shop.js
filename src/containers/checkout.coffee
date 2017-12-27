@@ -31,9 +31,9 @@ class CheckoutForm extends El.Form
     @data.on 'set', (name, value) =>
       if name == 'user.name'
         if !@data.get 'payment.account.name'
-          @data.set 'payment.account.name', value
+          @data.set('payment.account.name', value) if value
         if !@data.get 'order.shippingAddress.name'
-          @data.set 'order.shippingAddress.name', value
+          @data.set('order.shippingAddress.name', value) if value
       El.scheduleUpdate()
 
     @data.on 'set', (name, value) =>
@@ -71,8 +71,8 @@ class CheckoutForm extends El.Form
 
       El.scheduleUpdate()
       @cart.checkout().then (pRef) =>
-        pRef.p
-          .then =>
+        return pRef.p
+          .then (order)=>
             hasErrored = false
             setTimeout =>
               if !hasErrored
@@ -83,7 +83,8 @@ class CheckoutForm extends El.Form
                 El.scheduleUpdate()
             , 200
 
-            @mediator.trigger Events.SubmitSuccess
+            @mediator.trigger Events.SubmitSuccess, order
+            return order
 
           .catch (err) =>
             window?.Raven?.captureException(err)

@@ -6,6 +6,7 @@ import html   from '../../templates/containers/register'
 import {
   isRequired
   isEmail
+  isUsername
   isPassword
   splitName
   matchesPassword
@@ -20,6 +21,7 @@ class RegisterForm extends El.Form
   immediateLoginLatency: 400
 
   configs:
+    'user.username':        [ isRequired, isUsername ]
     'user.email':           [ isRequired, isEmail ]
     'user.name':            [ isRequired, splitName ]
     'user.password':        [ isPassword ]
@@ -41,6 +43,11 @@ class RegisterForm extends El.Form
       referrerId:      @data.get 'order.referrerId'
       metadata:
         source: @source
+
+    # only add username if its not null
+    username = @data.get 'user.username'
+    if username?
+      opts.username = username
 
     #optional captcha
     captcha = @data.get 'user.g-recaptcha-response'

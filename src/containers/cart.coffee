@@ -31,7 +31,6 @@ class CartForm extends El.Form
   configs:
     'order.promoCode': null
 
-
   promoMessage: ''
 
   isEmpty: ->

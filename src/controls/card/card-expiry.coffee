@@ -2,7 +2,7 @@
 import Text from 'el-controls/src/controls/text'
 
 import keys from '../../utils/keys'
-import { restrictNumeric } from '../../utils/card'
+import { restrictNumeric } from 'shop.js-util/src/card'
 
 class CardExpiry extends Text
   tag:  'card-expiry'
@@ -38,9 +38,9 @@ class CardExpiry extends Text
       el.addEventListener 'keypress', restrictNumeric
       el.addEventListener 'keypress', @_limit7
 
-    @on 'unmount', =>
-      el.removeEventListener 'keypress', restrictNumeric
-      el.removeEventListener 'keypress', @_limit7
+      @on 'unmount', =>
+        el.removeEventListener 'keypress', restrictNumeric
+        el.removeEventListener 'keypress', @_limit7
 
 CardExpiry.register()
 

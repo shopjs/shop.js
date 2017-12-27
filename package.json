@@ -1,6 +1,6 @@
 {
   "name": "shop.js",
-  "version": "2.2.10",
+  "version": "2.2.28",
   "description": "Ecommerce UI components and framework powered by Hanzo",
   "homepage": "http://github.com/hanzoai/shop.js",
   "repository": "github:hanzoai/shop.js",
@@ -42,7 +42,7 @@
     "test": "sake test"
   },
   "dependencies": {
-    "akasha": "^0.1.10",
+    "akasha": "0.1.10",
     "broken": "^0.1.13",
     "commerce.js": "1.1.22",
     "el-controls": "1.2.18",
@@ -53,7 +53,7 @@
     "gmaps": "0.4.24",
     "hanzo.js": "2.5.0",
     "moment-timezone": "0.5.14",
-    "uglify-es": "github:mishoo/UglifyJS2#harmony"
+    "shop.js-util": "0.0.3"
   },
   "devDependencies": {
     "autoprefixer": "7.2.3",

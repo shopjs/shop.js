@@ -2,7 +2,7 @@
 import Text from 'el-controls/src/controls/text'
 
 import keys from '../../utils/keys'
-import { restrictNumeric } from '../../utils/card'
+import { restrictNumeric } from 'shop.js-util/src/card'
 
 class CardCVC extends Text
   tag:    'card-cvc'
@@ -29,9 +29,9 @@ class CardCVC extends Text
       el.addEventListener 'keypress', restrictNumeric
       el.addEventListener 'keypress', @_limit4
 
-    @on 'unmount', =>
-      el.removeEventListener 'keypress', restrictNumeric
-      el.removeEventListener 'keypress', @_limit4
+      @on 'unmount', =>
+        el.removeEventListener 'keypress', restrictNumeric
+        el.removeEventListener 'keypress', @_limit4
 
 CardCVC.register()
 

@@ -4,8 +4,8 @@ form(onsubmit='{ submit }')
       h2
         | Contact
       .fields
-        user-name.input(placeholder='Name')
-        user-email.input(placeholder='Email')
+        user-name.input(label='Name')
+        user-email.input(label='Email')
     .payment.checkout-section
       h2
         | Payment
@@ -14,8 +14,8 @@ form(onsubmit='{ submit }')
         span Checkout
         img.lock-icon(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg')
       .fields
-        card-name.input(placeholder='Name on Card')
-        card-number.input(name='number', placeholder='Card Number')
+        card-name.input(label='Name on Card')
+        card-number.input(name='number', label='Card Number')
           div.cards-accepted
             img.card-logo.amex-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg')
             img.card-logo.visa-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg')
@@ -24,8 +24,8 @@ form(onsubmit='{ submit }')
             img.card-logo.mastercard-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg')
             a.stripe-link(href='//www.stripe.com', target='_blank')
               img.stripe-logo(src='//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png')
-        card-expiry.input(name='expiry', placeholder='MM / YY')
-        card-cvc.input(name='cvc', placeholder='CVC')
+        card-expiry.input(name='expiry', label='MM / YY')
+        card-cvc.input(name='cvc', label='CVC')
 
     button.checkout-next(type='submit')
       | Continue &#10140;

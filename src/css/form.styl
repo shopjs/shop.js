@@ -1,10 +1,37 @@
 &
   text-align: left
   color: $themeTextColor
+  width: 100%
+  display: table
+  padding: $themeElementPadding
+  background-color: $themeBGColor
 
-  // .fields
-  //   display: table
-  //   width: 100%
+
+  .fields
+    display: box
+    display: flexbox
+    display: flex
+    flex-direction: column
+
+  .inline-fields
+    display: box
+    display: flexbox
+    display: flex
+    flex-direction: row
+    justify-content: space-between
+    align-items: flex-start
+
+    & > *
+      display: block !important
+      flex: 1
+      margin-left: $themeElementPadding * .5
+      margin-right: $themeElementPadding * .5
+
+      &:first-child
+        margin-left: 0
+
+      &:last-child
+        margin-right: 0
 
 .secured-text
   +below(400px)

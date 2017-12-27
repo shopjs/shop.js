@@ -1,34 +1,38 @@
 import './utils/patches'
 
-import El           from 'el.js'
+import El           from 'el.js/src'
 import Promise      from 'broken'
 import objectAssign from 'es-object-assign'
 import refer        from 'referential'
 import store        from 'akasha'
-import {Api}        from 'hanzo.js'
-import {Cart}       from 'commerce.js'
+import Hanzo        from 'hanzo.js/src/browser'
+import {Cart}       from 'commerce.js/src'
 import GMaps        from 'gmaps'
 
 import {
   getQueries,
   getReferrer,
   getMCIds
-} from './utils/uri'
+} from 'shop.js-util/src/uri'
 
 import {
   Control
+  Copy
   Text
   TextBox
   CheckBox
+  QRCode
   Select
   QuantitySelect
   CountrySelect
+  Currency
   StateSelect
   UserEmail
   UserName
   UserCurrentPassword
   UserPassword
   UserPasswordConfirm
+  UserUsername
   ShippingAddressName
   ShippingAddressLine1
   ShippingAddressLine2
@@ -92,12 +96,14 @@ Controls =
 import Events        from './events'
 import Containers    from './containers'
 import Widgets       from './widgets'
-import analytics     from './utils/analytics'
+import analytics     from 'shop.js-util/src/analytics'
 import m             from './mediator'
 
 # Monkey Patch common utils onto every View/Instance
-import {renderUICurrencyFromJSON} from './utils/currency'
-import {renderDate, rfc3339} from './utils/dates'
+import {renderUICurrencyFromJSON} from 'shop.js-util/src/currency'
+import {renderDate, rfc3339} from 'shop.js-util/src/dates'
+
+Api = Hanzo.Api
 
 Shop = {}
 Shop.Controls = Controls
@@ -152,27 +158,6 @@ for k, v of Shop.Containers
 for k, v of Shop.Widgets
   tagNames.push(v::tag.toUpperCase()) if v::tag?
 
-searchQueue     = [document.body]
-elementsToMount = []
-
-# move to El
-loop
-  if searchQueue.length == 0
-    break
-
-  root = searchQueue.shift()
-
-  if !root?
-    continue
-
-  if root.tagName? && root.tagName in tagNames
-    elementsToMount.push root
-  else if root.children?.length > 0
-    children = Array.prototype.slice.call root.children
-    children.unshift 0
-    children.unshift searchQueue.length
-    searchQueue.splice.apply searchQueue, children
-
 # initialize the data schema
 initData = (opts)->
   queries = getQueries()
@@ -191,23 +176,26 @@ initData = (opts)->
     countries:      []
     tokenId:        queries.tokenid
     terms:          opts.terms ? false
+    autoGeo:        opts.autoGeo ? false
     order:
       giftType:     'physical'
-      type:         'stripe'
-      shippingRate: opts.config?.shippingRate   || opts.order?.shippingRate  || 0
-      taxRate:      opts.config?.taxRate        || opts.order?.taxRate       || 0
-      currency:     opts.config?.currency       || opts.order?.currency      || 'usd'
+      type:         opts.processor ? opts.order?.type ? 'stripe'
+      shippingRate: opts.config?.shippingRate   ? opts.order?.shippingRate  ? 0
+      taxRate:      opts.config?.taxRate        ? opts.order?.taxRate       ? 0
+      currency:     opts.config?.currency       ? opts.order?.currency      ? 'usd'
       referrerId:   referrer
       discount:    0
       tax:         0
       subtotal:    0
       total:       0
+      mode:        opts.mode ? opts.order?.mode ? ''
       items:       items                    ? []
       cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
       metadata:    meta                     ? {}
     user: null
-    payment: null
+    payment:
+      type: opts.processor
 
   for k, v of opts
     unless d[k]?
@@ -220,7 +208,7 @@ initData = (opts)->
   data = refer d
 
   # load multipage partial checkout data
-  checkoutUser            = store.get 'checkout-user'
+  checkoutUser = store.get 'checkout-user'
   if checkoutUser
     data.set 'user', checkoutUser
     store.remove 'checkout-user'
@@ -242,7 +230,7 @@ initData = (opts)->
   countriesReady = false
   dontPrefill = false
 
-  if !state || !country
+  if data.get 'autoGeo' && (!state || !country)
     # get country/state
     # requires google maps to be in the namespace
     if window?.google && window?.navigator?.geolocation
@@ -443,12 +431,37 @@ Shop.start = (opts = {}) ->
     @data.set 'order.promoCode', promo
     m.trigger Events.ForceApplyPromoCode
 
+  # create list of elements to mount
+  searchQueue     = [document.body]
+  elementsToMount = []
+
+  # move to El
+  loop
+    if searchQueue.length == 0
+      break
+
+    root = searchQueue.shift()
+
+    if !root?
+      continue
+
+    if root.tagName? && root.tagName in tagNames
+      elementsToMount.push root
+    else if root.children?.length > 0
+      children = Array.prototype.slice.call root.children
+      children.unshift 0
+      children.unshift searchQueue.length
+      searchQueue.splice.apply searchQueue, children
+
   # mount
   tags = El.mount elementsToMount,
     cart:     @cart
     client:   @client
     data:     @data
     mediator: m
+
+    renderCurrency: renderUICurrencyFromJSON
+    renderDate:     renderDate
 
   ps = []
   for tag in tags
@@ -474,6 +487,16 @@ Shop.start = (opts = {}) ->
 
   m.trigger Events.Started, @data
   return m
+
+Shop.mount = ->
+  return El.mount arguments,
+    cart:     @cart
+    client:   @client
+    data:     @data
+    mediator: m
+
+    renderCurrency: renderUICurrencyFromJSON
+    renderDate:     renderDate
 
 Shop.initCart = ->
   @cart.initCart()
@@ -542,7 +565,5 @@ if document?.currentScript?
 
 if window?
   window.Shop = Shop
-  window.renderCurrency = renderUICurrencyFromJSON
-  window.renderDate = renderDate
 
 export default Shop

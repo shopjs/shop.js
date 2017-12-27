@@ -1,0 +1,20 @@
+form(onsubmit='{ submit }')
+  #{ 'yield' }
+    .deposit.checkout-section(if='{ data.get("order.mode") }')
+      h2(if='{ data.get("order.mode") == "deposit" }')
+        | Deposit Funds
+      h2(if='{ data.get("order.mode") == "contribution" }')
+        | Contribute
+      .fields
+        text.input(label='Deposit Amount')
+
+    .complete.checkout-section(if='{ data.get("order.mode") }')
+      button(class='{ loading: loading || checkedOut }', disabled='{ loading || checkedOut }', type='submit')
+        span Checkout
+      .error(if='{ errorMessage }')
+        | { errorMessage }
+
+    .deposit.checkout-section(if='{ !data.get("order.mode") }')
+      p
+        | Error: <deposit> requires order.mode to be 'deposit' or 'contribution'
+

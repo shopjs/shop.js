@@ -3,11 +3,6 @@ $checkoutCardHeight = 22px
 checkout
 checkout-card
 checkout-shippingaddress
-  width: 100%
-  display: table
-  padding: $themeElementPadding
-  background-color: $themeBGColor
-
   button
   .button
     border-width: 0
@@ -44,11 +39,11 @@ checkout-shippingaddress
 
   card-number
     input
-      margin-bottom: $themeElementPadding * 0.5
 
     .cards-accepted
       display: table
       width: 100%
+      margin-top: $themeElementPadding * 0.5
 
       .card-logo
         height: $checkoutCardHeight
@@ -79,3 +74,10 @@ checkout-shippingaddress
     +below(400px)
       float: left
       margin-top: $themeElementPadding * 0.5
+
+  .line1-line2
+  .state-postal-code
+    :first-child
+      flex: 2
+    :last-child
+      flex: 1

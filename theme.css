@@ -3,6 +3,7 @@ checkout,
 checkout-card,
 checkout-modal,
 checkout-shippingaddress,
+deposit,
 login,
 orders,
 profile,
@@ -17,6 +18,7 @@ checkout *,
 checkout-card *,
 checkout-modal *,
 checkout-shippingaddress *,
+deposit *,
 login *,
 orders *,
 profile *,
@@ -31,6 +33,7 @@ checkout .input .selectize-input,
 checkout-card .input .selectize-input,
 checkout-modal .input .selectize-input,
 checkout-shippingaddress .input .selectize-input,
+deposit .input .selectize-input,
 login .input .selectize-input,
 orders .input .selectize-input,
 profile .input .selectize-input,
@@ -56,6 +59,7 @@ checkout .input .selectize-input:after,
 checkout-card .input .selectize-input:after,
 checkout-modal .input .selectize-input:after,
 checkout-shippingaddress .input .selectize-input:after,
+deposit .input .selectize-input:after,
 login .input .selectize-input:after,
 orders .input .selectize-input:after,
 profile .input .selectize-input:after,
@@ -73,6 +77,7 @@ checkout .input .selectize-input.dropdown-active:before,
 checkout-card .input .selectize-input.dropdown-active:before,
 checkout-modal .input .selectize-input.dropdown-active:before,
 checkout-shippingaddress .input .selectize-input.dropdown-active:before,
+deposit .input .selectize-input.dropdown-active:before,
 login .input .selectize-input.dropdown-active:before,
 orders .input .selectize-input.dropdown-active:before,
 profile .input .selectize-input.dropdown-active:before,
@@ -87,6 +92,7 @@ checkout .input .selectize-input.dropdown-active:after,
 checkout-card .input .selectize-input.dropdown-active:after,
 checkout-modal .input .selectize-input.dropdown-active:after,
 checkout-shippingaddress .input .selectize-input.dropdown-active:after,
+deposit .input .selectize-input.dropdown-active:after,
 login .input .selectize-input.dropdown-active:after,
 orders .input .selectize-input.dropdown-active:after,
 profile .input .selectize-input.dropdown-active:after,
@@ -101,6 +107,7 @@ checkout .input .selectize-input.full,
 checkout-card .input .selectize-input.full,
 checkout-modal .input .selectize-input.full,
 checkout-shippingaddress .input .selectize-input.full,
+deposit .input .selectize-input.full,
 login .input .selectize-input.full,
 orders .input .selectize-input.full,
 profile .input .selectize-input.full,
@@ -115,6 +122,7 @@ checkout .input .selectize-input input,
 checkout-card .input .selectize-input input,
 checkout-modal .input .selectize-input input,
 checkout-shippingaddress .input .selectize-input input,
+deposit .input .selectize-input input,
 login .input .selectize-input input,
 orders .input .selectize-input input,
 profile .input .selectize-input input,
@@ -127,13 +135,13 @@ shippingaddress .input .selectize-input input{
   margin-top:-6px !important;
   left:0;
   height:2rem !important;
-  padding:0 $inputHPadding;
 }
 cart .input .selectize-input .item,
 checkout .input .selectize-input .item,
 checkout-card .input .selectize-input .item,
 checkout-modal .input .selectize-input .item,
 checkout-shippingaddress .input .selectize-input .item,
+deposit .input .selectize-input .item,
 login .input .selectize-input .item,
 orders .input .selectize-input .item,
 profile .input .selectize-input .item,
@@ -151,6 +159,7 @@ checkout .input,
 checkout-card .input,
 checkout-modal .input,
 checkout-shippingaddress .input,
+deposit .input,
 login .input,
 orders .input,
 profile .input,
@@ -166,6 +175,7 @@ checkout .input.input.input,
 checkout-card .input.input.input,
 checkout-modal .input.input.input,
 checkout-shippingaddress .input.input.input,
+deposit .input.input.input,
 login .input.input.input,
 orders .input.input.input,
 profile .input.input.input,
@@ -178,6 +188,7 @@ checkout .input .input.input,
 checkout-card .input .input.input,
 checkout-modal .input .input.input,
 checkout-shippingaddress .input .input.input,
+deposit .input .input.input,
 login .input .input.input,
 orders .input .input.input,
 profile .input .input.input,
@@ -186,48 +197,155 @@ reset-password .input .input.input,
 reset-password-complete .input .input.input,
 shippingaddress .input .input.input{
   width:100%;
-  display:table;
-  margin-bottom:20px;
+  display:block;
+  margin-top:1em;
 }
-cart .input .placeholder,
-checkout .input .placeholder,
-checkout-card .input .placeholder,
-checkout-modal .input .placeholder,
-checkout-shippingaddress .input .placeholder,
-login .input .placeholder,
-orders .input .placeholder,
-profile .input .placeholder,
-register .input .placeholder,
-reset-password .input .placeholder,
-reset-password-complete .input .placeholder,
-shippingaddress .input .placeholder{
+cart .input.input.input .labeled,
+checkout .input.input.input .labeled,
+checkout-card .input.input.input .labeled,
+checkout-modal .input.input.input .labeled,
+checkout-shippingaddress .input.input.input .labeled,
+deposit .input.input.input .labeled,
+login .input.input.input .labeled,
+orders .input.input.input .labeled,
+profile .input.input.input .labeled,
+register .input.input.input .labeled,
+reset-password .input.input.input .labeled,
+reset-password-complete .input.input.input .labeled,
+shippingaddress .input.input.input .labeled,
+cart .input .input.input .labeled,
+checkout .input .input.input .labeled,
+checkout-card .input .input.input .labeled,
+checkout-modal .input .input.input .labeled,
+checkout-shippingaddress .input .input.input .labeled,
+deposit .input .input.input .labeled,
+login .input .input.input .labeled,
+orders .input .input.input .labeled,
+profile .input .input.input .labeled,
+register .input .input.input .labeled,
+reset-password .input .input.input .labeled,
+reset-password-complete .input .input.input .labeled,
+shippingaddress .input .input.input .labeled{
+  margin-top:0.75em;
+}
+cart .input .label,
+checkout .input .label,
+checkout-card .input .label,
+checkout-modal .input .label,
+checkout-shippingaddress .input .label,
+deposit .input .label,
+login .input .label,
+orders .input .label,
+profile .input .label,
+register .input .label,
+reset-password .input .label,
+reset-password-complete .input .label,
+shippingaddress .input .label{
   left:0;
-  top:10px;
+  top:1.25em;
   position:absolute;
   transition:all 250ms linear;
   pointer-events:none;
   line-height:1em;
   font-weight:normal;
 }
-cart .input .invalid ~ .placeholder,
-checkout .input .invalid ~ .placeholder,
-checkout-card .input .invalid ~ .placeholder,
-checkout-modal .input .invalid ~ .placeholder,
-checkout-shippingaddress .input .invalid ~ .placeholder,
-login .input .invalid ~ .placeholder,
-orders .input .invalid ~ .placeholder,
-profile .input .invalid ~ .placeholder,
-register .input .invalid ~ .placeholder,
-reset-password .input .invalid ~ .placeholder,
-reset-password-complete .input .invalid ~ .placeholder,
-shippingaddress .input .invalid ~ .placeholder{
-  color:#f22469;
+cart .input .valid.valid,
+checkout .input .valid.valid,
+checkout-card .input .valid.valid,
+checkout-modal .input .valid.valid,
+checkout-shippingaddress .input .valid.valid,
+deposit .input .valid.valid,
+login .input .valid.valid,
+orders .input .valid.valid,
+profile .input .valid.valid,
+register .input .valid.valid,
+reset-password .input .valid.valid,
+reset-password-complete .input .valid.valid,
+shippingaddress .input .valid.valid{
+  border-color:#00bcd4;
+}
+cart .input .invalid.invalid,
+checkout .input .invalid.invalid,
+checkout-card .input .invalid.invalid,
+checkout-modal .input .invalid.invalid,
+checkout-shippingaddress .input .invalid.invalid,
+deposit .input .invalid.invalid,
+login .input .invalid.invalid,
+orders .input .invalid.invalid,
+profile .input .invalid.invalid,
+register .input .invalid.invalid,
+reset-password .input .invalid.invalid,
+reset-password-complete .input .invalid.invalid,
+shippingaddress .input .invalid.invalid{
+  border-color:#e91e63;
+}
+cart .input .valid ~ .label,
+checkout .input .valid ~ .label,
+checkout-card .input .valid ~ .label,
+checkout-modal .input .valid ~ .label,
+checkout-shippingaddress .input .valid ~ .label,
+deposit .input .valid ~ .label,
+login .input .valid ~ .label,
+orders .input .valid ~ .label,
+profile .input .valid ~ .label,
+register .input .valid ~ .label,
+reset-password .input .valid ~ .label,
+reset-password-complete .input .valid ~ .label,
+shippingaddress .input .valid ~ .label{
+  color:#00bcd4;
+}
+cart .input .invalid ~ .label,
+checkout .input .invalid ~ .label,
+checkout-card .input .invalid ~ .label,
+checkout-modal .input .invalid ~ .label,
+checkout-shippingaddress .input .invalid ~ .label,
+deposit .input .invalid ~ .label,
+login .input .invalid ~ .label,
+orders .input .invalid ~ .label,
+profile .input .invalid ~ .label,
+register .input .invalid ~ .label,
+reset-password .input .invalid ~ .label,
+reset-password-complete .input .invalid ~ .label,
+shippingaddress .input .invalid ~ .label{
+  color:#e91e63;
 }
 cart .input .error,
 checkout .input .error,
 checkout-card .input .error,
 checkout-modal .input .error,
 checkout-shippingaddress .input .error,
+deposit .input .error,
+login .input .error,
+orders .input .error,
+profile .input .error,
+register .input .error,
+reset-password .input .error,
+reset-password-complete .input .error,
+shippingaddress .input .error,
+cart .input .helper,
+checkout .input .helper,
+checkout-card .input .helper,
+checkout-modal .input .helper,
+checkout-shippingaddress .input .helper,
+deposit .input .helper,
+login .input .helper,
+orders .input .helper,
+profile .input .helper,
+register .input .helper,
+reset-password .input .helper,
+reset-password-complete .input .helper,
+shippingaddress .input .helper{
+  margin-top:0.5em;
+  font-size:0.75em;
+  line-height:1em;
+  width:100%;
+}
+cart .input .error,
+checkout .input .error,
+checkout-card .input .error,
+checkout-modal .input .error,
+checkout-shippingaddress .input .error,
+deposit .input .error,
 login .input .error,
 orders .input .error,
 profile .input .error,
@@ -235,50 +353,48 @@ register .input .error,
 reset-password .input .error,
 reset-password-complete .input .error,
 shippingaddress .input .error{
-  right:0;
-  top:-6px;
-  position:absolute;
-  color:#f22469;
-  font-size:0.75em;
-  line-height:1em;
+  color:#e91e63;
 }
-cart .input input:focus ~ .placeholder,
-checkout .input input:focus ~ .placeholder,
-checkout-card .input input:focus ~ .placeholder,
-checkout-modal .input input:focus ~ .placeholder,
-checkout-shippingaddress .input input:focus ~ .placeholder,
-login .input input:focus ~ .placeholder,
-orders .input input:focus ~ .placeholder,
-profile .input input:focus ~ .placeholder,
-register .input input:focus ~ .placeholder,
-reset-password .input input:focus ~ .placeholder,
-reset-password-complete .input input:focus ~ .placeholder,
-shippingaddress .input input:focus ~ .placeholder,
-cart .input input:hover ~ .placeholder,
-checkout .input input:hover ~ .placeholder,
-checkout-card .input input:hover ~ .placeholder,
-checkout-modal .input input:hover ~ .placeholder,
-checkout-shippingaddress .input input:hover ~ .placeholder,
-login .input input:hover ~ .placeholder,
-orders .input input:hover ~ .placeholder,
-profile .input input:hover ~ .placeholder,
-register .input input:hover ~ .placeholder,
-reset-password .input input:hover ~ .placeholder,
-reset-password-complete .input input:hover ~ .placeholder,
-shippingaddress .input input:hover ~ .placeholder,
-cart .input .placeholder.small,
-checkout .input .placeholder.small,
-checkout-card .input .placeholder.small,
-checkout-modal .input .placeholder.small,
-checkout-shippingaddress .input .placeholder.small,
-login .input .placeholder.small,
-orders .input .placeholder.small,
-profile .input .placeholder.small,
-register .input .placeholder.small,
-reset-password .input .placeholder.small,
-reset-password-complete .input .placeholder.small,
-shippingaddress .input .placeholder.small{
-  top:-6px;
+cart .input input:focus ~ .label,
+checkout .input input:focus ~ .label,
+checkout-card .input input:focus ~ .label,
+checkout-modal .input input:focus ~ .label,
+checkout-shippingaddress .input input:focus ~ .label,
+deposit .input input:focus ~ .label,
+login .input input:focus ~ .label,
+orders .input input:focus ~ .label,
+profile .input input:focus ~ .label,
+register .input input:focus ~ .label,
+reset-password .input input:focus ~ .label,
+reset-password-complete .input input:focus ~ .label,
+shippingaddress .input input:focus ~ .label,
+cart .input input:hover ~ .label,
+checkout .input input:hover ~ .label,
+checkout-card .input input:hover ~ .label,
+checkout-modal .input input:hover ~ .label,
+checkout-shippingaddress .input input:hover ~ .label,
+deposit .input input:hover ~ .label,
+login .input input:hover ~ .label,
+orders .input input:hover ~ .label,
+profile .input input:hover ~ .label,
+register .input input:hover ~ .label,
+reset-password .input input:hover ~ .label,
+reset-password-complete .input input:hover ~ .label,
+shippingaddress .input input:hover ~ .label,
+cart .input .label.active,
+checkout .input .label.active,
+checkout-card .input .label.active,
+checkout-modal .input .label.active,
+checkout-shippingaddress .input .label.active,
+deposit .input .label.active,
+login .input .label.active,
+orders .input .label.active,
+profile .input .label.active,
+register .input .label.active,
+reset-password .input .label.active,
+reset-password-complete .input .label.active,
+shippingaddress .input .label.active{
+  top:0;
   font-size:0.75em;
   line-height:1em;
 }
@@ -287,6 +403,7 @@ checkout .input *:disabled,
 checkout-card .input *:disabled,
 checkout-modal .input *:disabled,
 checkout-shippingaddress .input *:disabled,
+deposit .input *:disabled,
 login .input *:disabled,
 orders .input *:disabled,
 profile .input *:disabled,
@@ -299,6 +416,7 @@ checkout .input .disabled,
 checkout-card .input .disabled,
 checkout-modal .input .disabled,
 checkout-shippingaddress .input .disabled,
+deposit .input .disabled,
 login .input .disabled,
 orders .input .disabled,
 profile .input .disabled,
@@ -313,6 +431,7 @@ checkout .input input,
 checkout-card .input input,
 checkout-modal .input input,
 checkout-shippingaddress .input input,
+deposit .input input,
 login .input input,
 orders .input input,
 profile .input input,
@@ -330,6 +449,7 @@ checkout .input input:-moz-placeholder,
 checkout-card .input input:-moz-placeholder,
 checkout-modal .input input:-moz-placeholder,
 checkout-shippingaddress .input input:-moz-placeholder,
+deposit .input input:-moz-placeholder,
 login .input input:-moz-placeholder,
 orders .input input:-moz-placeholder,
 profile .input input:-moz-placeholder,
@@ -344,6 +464,7 @@ checkout .input input::-moz-placeholder,
 checkout-card .input input::-moz-placeholder,
 checkout-modal .input input::-moz-placeholder,
 checkout-shippingaddress .input input::-moz-placeholder,
+deposit .input input::-moz-placeholder,
 login .input input::-moz-placeholder,
 orders .input input::-moz-placeholder,
 profile .input input::-moz-placeholder,
@@ -358,6 +479,7 @@ checkout .input input:-ms-input-placeholder,
 checkout-card .input input:-ms-input-placeholder,
 checkout-modal .input input:-ms-input-placeholder,
 checkout-shippingaddress .input input:-ms-input-placeholder,
+deposit .input input:-ms-input-placeholder,
 login .input input:-ms-input-placeholder,
 orders .input input:-ms-input-placeholder,
 profile .input input:-ms-input-placeholder,
@@ -372,6 +494,7 @@ checkout .input input::-webkit-input-placeholder,
 checkout-card .input input::-webkit-input-placeholder,
 checkout-modal .input input::-webkit-input-placeholder,
 checkout-shippingaddress .input input::-webkit-input-placeholder,
+deposit .input input::-webkit-input-placeholder,
 login .input input::-webkit-input-placeholder,
 orders .input input::-webkit-input-placeholder,
 profile .input input::-webkit-input-placeholder,
@@ -386,6 +509,7 @@ checkout .input input[type=text],
 checkout-card .input input[type=text],
 checkout-modal .input input[type=text],
 checkout-shippingaddress .input input[type=text],
+deposit .input input[type=text],
 login .input input[type=text],
 orders .input input[type=text],
 profile .input input[type=text],
@@ -398,6 +522,7 @@ checkout .input input[type=password],
 checkout-card .input input[type=password],
 checkout-modal .input input[type=password],
 checkout-shippingaddress .input input[type=password],
+deposit .input input[type=password],
 login .input input[type=password],
 orders .input input[type=password],
 profile .input input[type=password],
@@ -411,13 +536,13 @@ shippingaddress .input input[type=password]{
   border-width:1px;
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
-  padding:0 $inputHPadding;
 }
 cart .input textarea,
 checkout .input textarea,
 checkout-card .input textarea,
 checkout-modal .input textarea,
 checkout-shippingaddress .input textarea,
+deposit .input textarea,
 login .input textarea,
 orders .input textarea,
 profile .input textarea,
@@ -427,14 +552,15 @@ reset-password-complete .input textarea,
 shippingaddress .input textarea{
   outline:none;
   height:6rem;
-  border:$inputBorderWidth solid $borderColor1;
-  padding:0 $inputHPadding;
+  border:1px solid $borderColor1;
+  border-radius:2px;
 }
 cart .input input[type=text],
 checkout .input input[type=text],
 checkout-card .input input[type=text],
 checkout-modal .input input[type=text],
 checkout-shippingaddress .input input[type=text],
+deposit .input input[type=text],
 login .input input[type=text],
 orders .input input[type=text],
 profile .input input[type=text],
@@ -447,6 +573,7 @@ checkout .input input[type=password],
 checkout-card .input input[type=password],
 checkout-modal .input input[type=password],
 checkout-shippingaddress .input input[type=password],
+deposit .input input[type=password],
 login .input input[type=password],
 orders .input input[type=password],
 profile .input input[type=password],
@@ -459,6 +586,7 @@ checkout .input textarea,
 checkout-card .input textarea,
 checkout-modal .input textarea,
 checkout-shippingaddress .input textarea,
+deposit .input textarea,
 login .input textarea,
 orders .input textarea,
 profile .input textarea,
@@ -474,6 +602,7 @@ checkout .input .select-indicator,
 checkout-card .input .select-indicator,
 checkout-modal .input .select-indicator,
 checkout-shippingaddress .input .select-indicator,
+deposit .input .select-indicator,
 login .input .select-indicator,
 orders .input .select-indicator,
 profile .input .select-indicator,
@@ -488,6 +617,7 @@ checkout .input select,
 checkout-card .input select,
 checkout-modal .input select,
 checkout-shippingaddress .input select,
+deposit .input select,
 login .input select,
 orders .input select,
 profile .input select,
@@ -503,7 +633,7 @@ shippingaddress .input select{
   border-width:1px;
   border-radius:0;
   line-height:2rem;
-  font-size:1rem;
+  font-size:1em;
   -webkit-appearance:none;
      -moz-appearance:none;
           appearance:none;
@@ -514,6 +644,7 @@ checkout .input select::-ms-expand,
 checkout-card .input select::-ms-expand,
 checkout-modal .input select::-ms-expand,
 checkout-shippingaddress .input select::-ms-expand,
+deposit .input select::-ms-expand,
 login .input select::-ms-expand,
 orders .input select::-ms-expand,
 profile .input select::-ms-expand,
@@ -528,6 +659,7 @@ checkout .input select ~ .select-indicator,
 checkout-card .input select ~ .select-indicator,
 checkout-modal .input select ~ .select-indicator,
 checkout-shippingaddress .input select ~ .select-indicator,
+deposit .input select ~ .select-indicator,
 login .input select ~ .select-indicator,
 orders .input select ~ .select-indicator,
 profile .input select ~ .select-indicator,
@@ -537,18 +669,34 @@ reset-password-complete .input select ~ .select-indicator,
 shippingaddress .input select ~ .select-indicator{
   position:absolute;
   top:1rem;
-  right:0.1rem;
-  font-size:0.5em;
+  right:0.375em;
+  font-size:0.75em;
   -webkit-transform:translateY(-50%);
           transform:translateY(-50%);
   pointer-events:none;
   display:block;
+}
+cart .input select.labeled ~ .select-indicator,
+checkout .input select.labeled ~ .select-indicator,
+checkout-card .input select.labeled ~ .select-indicator,
+checkout-modal .input select.labeled ~ .select-indicator,
+checkout-shippingaddress .input select.labeled ~ .select-indicator,
+deposit .input select.labeled ~ .select-indicator,
+login .input select.labeled ~ .select-indicator,
+orders .input select.labeled ~ .select-indicator,
+profile .input select.labeled ~ .select-indicator,
+register .input select.labeled ~ .select-indicator,
+reset-password .input select.labeled ~ .select-indicator,
+reset-password-complete .input select.labeled ~ .select-indicator,
+shippingaddress .input select.labeled ~ .select-indicator{
+  top:1.75rem;
 }
 cart .input select:disabled ~ .select-indicator,
 checkout .input select:disabled ~ .select-indicator,
 checkout-card .input select:disabled ~ .select-indicator,
 checkout-modal .input select:disabled ~ .select-indicator,
 checkout-shippingaddress .input select:disabled ~ .select-indicator,
+deposit .input select:disabled ~ .select-indicator,
 login .input select:disabled ~ .select-indicator,
 orders .input select:disabled ~ .select-indicator,
 profile .input select:disabled ~ .select-indicator,
@@ -558,39 +706,224 @@ reset-password-complete .input select:disabled ~ .select-indicator,
 shippingaddress .input select:disabled ~ .select-indicator{
   opacity:0.5;
 }
-cart .input.input.input,
-checkout .input.input.input,
-checkout-card .input.input.input,
-checkout-modal .input.input.input,
-checkout-shippingaddress .input.input.input,
-login .input.input.input,
-orders .input.input.input,
-profile .input.input.input,
-register .input.input.input,
-reset-password .input.input.input,
-reset-password-complete .input.input.input,
-shippingaddress .input.input.input,
-cart .input .input.input,
-checkout .input .input.input,
-checkout-card .input .input.input,
-checkout-modal .input .input.input,
-checkout-shippingaddress .input .input.input,
-login .input .input.input,
-orders .input .input.input,
-profile .input .input.input,
-register .input .input.input,
-reset-password .input .input.input,
-reset-password-complete .input .input.input,
-shippingaddress .input .input.input{
-  width:100%;
-  display:table;
-  margin-bottom:20px;
+cart .input.outlined input[type=text],
+checkout .input.outlined input[type=text],
+checkout-card .input.outlined input[type=text],
+checkout-modal .input.outlined input[type=text],
+checkout-shippingaddress .input.outlined input[type=text],
+deposit .input.outlined input[type=text],
+login .input.outlined input[type=text],
+orders .input.outlined input[type=text],
+profile .input.outlined input[type=text],
+register .input.outlined input[type=text],
+reset-password .input.outlined input[type=text],
+reset-password-complete .input.outlined input[type=text],
+shippingaddress .input.outlined input[type=text],
+cart .input.outlined input[type=password],
+checkout .input.outlined input[type=password],
+checkout-card .input.outlined input[type=password],
+checkout-modal .input.outlined input[type=password],
+checkout-shippingaddress .input.outlined input[type=password],
+deposit .input.outlined input[type=password],
+login .input.outlined input[type=password],
+orders .input.outlined input[type=password],
+profile .input.outlined input[type=password],
+register .input.outlined input[type=password],
+reset-password .input.outlined input[type=password],
+reset-password-complete .input.outlined input[type=password],
+shippingaddress .input.outlined input[type=password],
+cart .input.outlined select,
+checkout .input.outlined select,
+checkout-card .input.outlined select,
+checkout-modal .input.outlined select,
+checkout-shippingaddress .input.outlined select,
+deposit .input.outlined select,
+login .input.outlined select,
+orders .input.outlined select,
+profile .input.outlined select,
+register .input.outlined select,
+reset-password .input.outlined select,
+reset-password-complete .input.outlined select,
+shippingaddress .input.outlined select{
+  border:1px solid;
+  border-radius:2px;
+}
+cart .input .copy-text,
+checkout .input .copy-text,
+checkout-card .input .copy-text,
+checkout-modal .input .copy-text,
+checkout-shippingaddress .input .copy-text,
+deposit .input .copy-text,
+login .input .copy-text,
+orders .input .copy-text,
+profile .input .copy-text,
+register .input .copy-text,
+reset-password .input .copy-text,
+reset-password-complete .input .copy-text,
+shippingaddress .input .copy-text{
+  position:absolute;
+  right:0;
+  top:50%;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+cart .input .copy-text,
+checkout .input .copy-text,
+checkout-card .input .copy-text,
+checkout-modal .input .copy-text,
+checkout-shippingaddress .input .copy-text,
+deposit .input .copy-text,
+login .input .copy-text,
+orders .input .copy-text,
+profile .input .copy-text,
+register .input .copy-text,
+reset-password .input .copy-text,
+reset-password-complete .input .copy-text,
+shippingaddress .input .copy-text{
+  position:absolute;
+  right:0;
+  top:1rem;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+cart .input .labeled ~ .copy-text,
+checkout .input .labeled ~ .copy-text,
+checkout-card .input .labeled ~ .copy-text,
+checkout-modal .input .labeled ~ .copy-text,
+checkout-shippingaddress .input .labeled ~ .copy-text,
+deposit .input .labeled ~ .copy-text,
+login .input .labeled ~ .copy-text,
+orders .input .labeled ~ .copy-text,
+profile .input .labeled ~ .copy-text,
+register .input .labeled ~ .copy-text,
+reset-password .input .labeled ~ .copy-text,
+reset-password-complete .input .labeled ~ .copy-text,
+shippingaddress .input .labeled ~ .copy-text{
+  top:1.75rem;
+}
+cart .input .currency-container,
+checkout .input .currency-container,
+checkout-card .input .currency-container,
+checkout-modal .input .currency-container,
+checkout-shippingaddress .input .currency-container,
+deposit .input .currency-container,
+login .input .currency-container,
+orders .input .currency-container,
+profile .input .currency-container,
+register .input .currency-container,
+reset-password .input .currency-container,
+reset-password-complete .input .currency-container,
+shippingaddress .input .currency-container{
+  display:-webkit-box;
+  display:flex;
+}
+cart .input .currency-amount,
+checkout .input .currency-amount,
+checkout-card .input .currency-amount,
+checkout-modal .input .currency-amount,
+checkout-shippingaddress .input .currency-amount,
+deposit .input .currency-amount,
+login .input .currency-amount,
+orders .input .currency-amount,
+profile .input .currency-amount,
+register .input .currency-amount,
+reset-password .input .currency-amount,
+reset-password-complete .input .currency-amount,
+shippingaddress .input .currency-amount{
+  padding-right:0.25em;
+}
+cart .input .right-aligned,
+checkout .input .right-aligned,
+checkout-card .input .right-aligned,
+checkout-modal .input .right-aligned,
+checkout-shippingaddress .input .right-aligned,
+deposit .input .right-aligned,
+login .input .right-aligned,
+orders .input .right-aligned,
+profile .input .right-aligned,
+register .input .right-aligned,
+reset-password .input .right-aligned,
+reset-password-complete .input .right-aligned,
+shippingaddress .input .right-aligned{
+  text-align:right;
+}
+cart .input .currency-code,
+checkout .input .currency-code,
+checkout-card .input .currency-code,
+checkout-modal .input .currency-code,
+checkout-shippingaddress .input .currency-code,
+deposit .input .currency-code,
+login .input .currency-code,
+orders .input .currency-code,
+profile .input .currency-code,
+register .input .currency-code,
+reset-password .input .currency-code,
+reset-password-complete .input .currency-code,
+shippingaddress .input .currency-code{
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-pack:end;
+          justify-content:flex-end;
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+          flex-direction:column;
+}
+cart .input .currency-code .currency-code-text,
+checkout .input .currency-code .currency-code-text,
+checkout-card .input .currency-code .currency-code-text,
+checkout-modal .input .currency-code .currency-code-text,
+checkout-shippingaddress .input .currency-code .currency-code-text,
+deposit .input .currency-code .currency-code-text,
+login .input .currency-code .currency-code-text,
+orders .input .currency-code .currency-code-text,
+profile .input .currency-code .currency-code-text,
+register .input .currency-code .currency-code-text,
+reset-password .input .currency-code .currency-code-text,
+reset-password-complete .input .currency-code .currency-code-text,
+shippingaddress .input .currency-code .currency-code-text{
+  height:2rem;
+  line-height:2rem;
+  border-bottom:1px solid;
+  border-color:#000;
+  border-width:1px;
+  transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+}
+cart .input .valid ~ .currency-code .currency-code-text,
+checkout .input .valid ~ .currency-code .currency-code-text,
+checkout-card .input .valid ~ .currency-code .currency-code-text,
+checkout-modal .input .valid ~ .currency-code .currency-code-text,
+checkout-shippingaddress .input .valid ~ .currency-code .currency-code-text,
+deposit .input .valid ~ .currency-code .currency-code-text,
+login .input .valid ~ .currency-code .currency-code-text,
+orders .input .valid ~ .currency-code .currency-code-text,
+profile .input .valid ~ .currency-code .currency-code-text,
+register .input .valid ~ .currency-code .currency-code-text,
+reset-password .input .valid ~ .currency-code .currency-code-text,
+reset-password-complete .input .valid ~ .currency-code .currency-code-text,
+shippingaddress .input .valid ~ .currency-code .currency-code-text{
+  border-color:#00bcd4;
+}
+cart .input .invalid ~ .currency-code .currency-code-text,
+checkout .input .invalid ~ .currency-code .currency-code-text,
+checkout-card .input .invalid ~ .currency-code .currency-code-text,
+checkout-modal .input .invalid ~ .currency-code .currency-code-text,
+checkout-shippingaddress .input .invalid ~ .currency-code .currency-code-text,
+deposit .input .invalid ~ .currency-code .currency-code-text,
+login .input .invalid ~ .currency-code .currency-code-text,
+orders .input .invalid ~ .currency-code .currency-code-text,
+profile .input .invalid ~ .currency-code .currency-code-text,
+register .input .invalid ~ .currency-code .currency-code-text,
+reset-password .input .invalid ~ .currency-code .currency-code-text,
+reset-password-complete .input .invalid ~ .currency-code .currency-code-text,
+shippingaddress .input .invalid ~ .currency-code .currency-code-text{
+  border-color:#e91e63;
 }
 cart .input.input.input .invalid,
 checkout .input.input.input .invalid,
 checkout-card .input.input.input .invalid,
 checkout-modal .input.input.input .invalid,
 checkout-shippingaddress .input.input.input .invalid,
+deposit .input.input.input .invalid,
 login .input.input.input .invalid,
 orders .input.input.input .invalid,
 profile .input.input.input .invalid,
@@ -603,6 +936,7 @@ checkout .input .input.input .invalid,
 checkout-card .input .input.input .invalid,
 checkout-modal .input .input.input .invalid,
 checkout-shippingaddress .input .input.input .invalid,
+deposit .input .input.input .invalid,
 login .input .input.input .invalid,
 orders .input .input.input .invalid,
 profile .input .input.input .invalid,
@@ -610,13 +944,14 @@ register .input .input.input .invalid,
 reset-password .input .input.input .invalid,
 reset-password-complete .input .input.input .invalid,
 shippingaddress .input .input.input .invalid{
-  border-color:#f22469;
+  border-color:#e91e63;
 }
 cart .checkbox,
 checkout .checkbox,
 checkout-card .checkbox,
 checkout-modal .checkbox,
 checkout-shippingaddress .checkbox,
+deposit .checkbox,
 login .checkbox,
 orders .checkbox,
 profile .checkbox,
@@ -631,6 +966,7 @@ checkout .checkbox label,
 checkout-card .checkbox label,
 checkout-modal .checkbox label,
 checkout-shippingaddress .checkbox label,
+deposit .checkbox label,
 login .checkbox label,
 orders .checkbox label,
 profile .checkbox label,
@@ -648,6 +984,7 @@ checkout .checkbox [type="checkbox"]:not(:checked),
 checkout-card .checkbox [type="checkbox"]:not(:checked),
 checkout-modal .checkbox [type="checkbox"]:not(:checked),
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked),
+deposit .checkbox [type="checkbox"]:not(:checked),
 login .checkbox [type="checkbox"]:not(:checked),
 orders .checkbox [type="checkbox"]:not(:checked),
 profile .checkbox [type="checkbox"]:not(:checked),
@@ -660,6 +997,7 @@ checkout .checkbox [type="checkbox"]:checked,
 checkout-card .checkbox [type="checkbox"]:checked,
 checkout-modal .checkbox [type="checkbox"]:checked,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked,
+deposit .checkbox [type="checkbox"]:checked,
 login .checkbox [type="checkbox"]:checked,
 orders .checkbox [type="checkbox"]:checked,
 profile .checkbox [type="checkbox"]:checked,
@@ -675,6 +1013,7 @@ checkout .checkbox [type="checkbox"]:not(:checked) + label,
 checkout-card .checkbox [type="checkbox"]:not(:checked) + label,
 checkout-modal .checkbox [type="checkbox"]:not(:checked) + label,
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked) + label,
+deposit .checkbox [type="checkbox"]:not(:checked) + label,
 login .checkbox [type="checkbox"]:not(:checked) + label,
 orders .checkbox [type="checkbox"]:not(:checked) + label,
 profile .checkbox [type="checkbox"]:not(:checked) + label,
@@ -687,6 +1026,7 @@ checkout .checkbox [type="checkbox"]:checked + label,
 checkout-card .checkbox [type="checkbox"]:checked + label,
 checkout-modal .checkbox [type="checkbox"]:checked + label,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked + label,
+deposit .checkbox [type="checkbox"]:checked + label,
 login .checkbox [type="checkbox"]:checked + label,
 orders .checkbox [type="checkbox"]:checked + label,
 profile .checkbox [type="checkbox"]:checked + label,
@@ -703,6 +1043,7 @@ checkout .checkbox [type="checkbox"]:not(:checked) + label:before,
 checkout-card .checkbox [type="checkbox"]:not(:checked) + label:before,
 checkout-modal .checkbox [type="checkbox"]:not(:checked) + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:before,
+deposit .checkbox [type="checkbox"]:not(:checked) + label:before,
 login .checkbox [type="checkbox"]:not(:checked) + label:before,
 orders .checkbox [type="checkbox"]:not(:checked) + label:before,
 profile .checkbox [type="checkbox"]:not(:checked) + label:before,
@@ -715,6 +1056,7 @@ checkout .checkbox [type="checkbox"]:checked + label:before,
 checkout-card .checkbox [type="checkbox"]:checked + label:before,
 checkout-modal .checkbox [type="checkbox"]:checked + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked + label:before,
+deposit .checkbox [type="checkbox"]:checked + label:before,
 login .checkbox [type="checkbox"]:checked + label:before,
 orders .checkbox [type="checkbox"]:checked + label:before,
 profile .checkbox [type="checkbox"]:checked + label:before,
@@ -729,12 +1071,14 @@ shippingaddress .checkbox [type="checkbox"]:checked + label:before{
   width:17px;
   height:17px;
   border:1px solid #000;
+  border-radius:2px;
 }
 cart .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-card .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-modal .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after,
+deposit .checkbox [type="checkbox"]:not(:checked) + label:after,
 login .checkbox [type="checkbox"]:not(:checked) + label:after,
 orders .checkbox [type="checkbox"]:not(:checked) + label:after,
 profile .checkbox [type="checkbox"]:not(:checked) + label:after,
@@ -747,6 +1091,7 @@ checkout .checkbox [type="checkbox"]:checked + label:after,
 checkout-card .checkbox [type="checkbox"]:checked + label:after,
 checkout-modal .checkbox [type="checkbox"]:checked + label:after,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked + label:after,
+deposit .checkbox [type="checkbox"]:checked + label:after,
 login .checkbox [type="checkbox"]:checked + label:after,
 orders .checkbox [type="checkbox"]:checked + label:after,
 profile .checkbox [type="checkbox"]:checked + label:after,
@@ -760,7 +1105,7 @@ shippingaddress .checkbox [type="checkbox"]:checked + label:after{
   left:2px;
   font-size:18px;
   line-height:0.8;
-  color:#17bebb;
+  color:#00bcd4;
   transition:all 0.2s;
   text-indent:0;
 }
@@ -769,6 +1114,7 @@ checkout .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-card .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-modal .checkbox [type="checkbox"]:not(:checked) + label:after,
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after,
+deposit .checkbox [type="checkbox"]:not(:checked) + label:after,
 login .checkbox [type="checkbox"]:not(:checked) + label:after,
 orders .checkbox [type="checkbox"]:not(:checked) + label:after,
 profile .checkbox [type="checkbox"]:not(:checked) + label:after,
@@ -785,6 +1131,7 @@ checkout .checkbox [type="checkbox"]:checked + label:after,
 checkout-card .checkbox [type="checkbox"]:checked + label:after,
 checkout-modal .checkbox [type="checkbox"]:checked + label:after,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked + label:after,
+deposit .checkbox [type="checkbox"]:checked + label:after,
 login .checkbox [type="checkbox"]:checked + label:after,
 orders .checkbox [type="checkbox"]:checked + label:after,
 profile .checkbox [type="checkbox"]:checked + label:after,
@@ -801,6 +1148,7 @@ checkout .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 checkout-card .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 checkout-modal .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
+deposit .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 login .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 orders .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 profile .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
@@ -813,6 +1161,7 @@ checkout .checkbox [type="checkbox"]:disabled:checked + label:before,
 checkout-card .checkbox [type="checkbox"]:disabled:checked + label:before,
 checkout-modal .checkbox [type="checkbox"]:disabled:checked + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:before,
+deposit .checkbox [type="checkbox"]:disabled:checked + label:before,
 login .checkbox [type="checkbox"]:disabled:checked + label:before,
 orders .checkbox [type="checkbox"]:disabled:checked + label:before,
 profile .checkbox [type="checkbox"]:disabled:checked + label:before,
@@ -829,6 +1178,7 @@ checkout .checkbox [type="checkbox"]:disabled:checked + label:after,
 checkout-card .checkbox [type="checkbox"]:disabled:checked + label:after,
 checkout-modal .checkbox [type="checkbox"]:disabled:checked + label:after,
 checkout-shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:after,
+deposit .checkbox [type="checkbox"]:disabled:checked + label:after,
 login .checkbox [type="checkbox"]:disabled:checked + label:after,
 orders .checkbox [type="checkbox"]:disabled:checked + label:after,
 profile .checkbox [type="checkbox"]:disabled:checked + label:after,
@@ -843,6 +1193,7 @@ checkout .checkbox [type="checkbox"]:disabled + label,
 checkout-card .checkbox [type="checkbox"]:disabled + label,
 checkout-modal .checkbox [type="checkbox"]:disabled + label,
 checkout-shippingaddress .checkbox [type="checkbox"]:disabled + label,
+deposit .checkbox [type="checkbox"]:disabled + label,
 login .checkbox [type="checkbox"]:disabled + label,
 orders .checkbox [type="checkbox"]:disabled + label,
 profile .checkbox [type="checkbox"]:disabled + label,
@@ -857,6 +1208,7 @@ checkout .checkbox [type="checkbox"]:checked:focus + label:before,
 checkout-card .checkbox [type="checkbox"]:checked:focus + label:before,
 checkout-modal .checkbox [type="checkbox"]:checked:focus + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:checked:focus + label:before,
+deposit .checkbox [type="checkbox"]:checked:focus + label:before,
 login .checkbox [type="checkbox"]:checked:focus + label:before,
 orders .checkbox [type="checkbox"]:checked:focus + label:before,
 profile .checkbox [type="checkbox"]:checked:focus + label:before,
@@ -869,6 +1221,7 @@ checkout .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 checkout-card .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 checkout-modal .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 checkout-shippingaddress .checkbox [type="checkbox"]:not(:checked):focus + label:before,
+deposit .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 login .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 orders .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 profile .checkbox [type="checkbox"]:not(:checked):focus + label:before,
@@ -883,6 +1236,7 @@ checkout .checkbox label:hover:before,
 checkout-card .checkbox label:hover:before,
 checkout-modal .checkbox label:hover:before,
 checkout-shippingaddress .checkbox label:hover:before,
+deposit .checkbox label:hover:before,
 login .checkbox label:hover:before,
 orders .checkbox label:hover:before,
 profile .checkbox label:hover:before,
@@ -890,13 +1244,29 @@ register .checkbox label:hover:before,
 reset-password .checkbox label:hover:before,
 reset-password-complete .checkbox label:hover:before,
 shippingaddress .checkbox label:hover:before{
-  border:1px solid #17bebb !important;
+  border:1px solid #00bcd4 !important;
+}
+cart .checkbox .error,
+checkout .checkbox .error,
+checkout-card .checkbox .error,
+checkout-modal .checkbox .error,
+checkout-shippingaddress .checkbox .error,
+deposit .checkbox .error,
+login .checkbox .error,
+orders .checkbox .error,
+profile .checkbox .error,
+register .checkbox .error,
+reset-password .checkbox .error,
+reset-password-complete .checkbox .error,
+shippingaddress .checkbox .error{
+  color:#e91e63;
 }
 cart:not(.ready) > *,
 checkout:not(.ready) > *,
 checkout-card:not(.ready) > *,
 checkout-modal:not(.ready) > *,
 checkout-shippingaddress:not(.ready) > *,
+deposit:not(.ready) > *,
 login:not(.ready) > *,
 orders:not(.ready) > *,
 profile:not(.ready) > *,
@@ -911,6 +1281,7 @@ checkout > *,
 checkout-card > *,
 checkout-modal > *,
 checkout-shippingaddress > *,
+deposit > *,
 login > *,
 orders > *,
 profile > *,
@@ -925,6 +1296,7 @@ checkout,
 checkout-card,
 checkout-modal,
 checkout-shippingaddress,
+deposit,
 login,
 orders,
 profile,
@@ -934,12 +1306,112 @@ reset-password-complete,
 shippingaddress{
   text-align:left;
   color:#000;
+  width:100%;
+  display:table;
+  padding:1em;
+  background-color:#eee;
+}
+cart .fields,
+checkout .fields,
+checkout-card .fields,
+checkout-modal .fields,
+checkout-shippingaddress .fields,
+deposit .fields,
+login .fields,
+orders .fields,
+profile .fields,
+register .fields,
+reset-password .fields,
+reset-password-complete .fields,
+shippingaddress .fields{
+  display:box;
+  display:flexbox;
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+          flex-direction:column;
+}
+cart .inline-fields,
+checkout .inline-fields,
+checkout-card .inline-fields,
+checkout-modal .inline-fields,
+checkout-shippingaddress .inline-fields,
+deposit .inline-fields,
+login .inline-fields,
+orders .inline-fields,
+profile .inline-fields,
+register .inline-fields,
+reset-password .inline-fields,
+reset-password-complete .inline-fields,
+shippingaddress .inline-fields{
+  display:box;
+  display:flexbox;
+  display:-webkit-box;
+  display:flex;
+  -webkit-box-orient:horizontal;
+  -webkit-box-direction:normal;
+          flex-direction:row;
+  -webkit-box-pack:justify;
+          justify-content:space-between;
+  -webkit-box-align:start;
+          align-items:flex-start;
+}
+cart .inline-fields > *,
+checkout .inline-fields > *,
+checkout-card .inline-fields > *,
+checkout-modal .inline-fields > *,
+checkout-shippingaddress .inline-fields > *,
+deposit .inline-fields > *,
+login .inline-fields > *,
+orders .inline-fields > *,
+profile .inline-fields > *,
+register .inline-fields > *,
+reset-password .inline-fields > *,
+reset-password-complete .inline-fields > *,
+shippingaddress .inline-fields > *{
+  display:block !important;
+  -webkit-box-flex:1;
+          flex:1;
+  margin-left:0.5em;
+  margin-right:0.5em;
+}
+cart .inline-fields > *:first-child,
+checkout .inline-fields > *:first-child,
+checkout-card .inline-fields > *:first-child,
+checkout-modal .inline-fields > *:first-child,
+checkout-shippingaddress .inline-fields > *:first-child,
+deposit .inline-fields > *:first-child,
+login .inline-fields > *:first-child,
+orders .inline-fields > *:first-child,
+profile .inline-fields > *:first-child,
+register .inline-fields > *:first-child,
+reset-password .inline-fields > *:first-child,
+reset-password-complete .inline-fields > *:first-child,
+shippingaddress .inline-fields > *:first-child{
+  margin-left:0;
+}
+cart .inline-fields > *:last-child,
+checkout .inline-fields > *:last-child,
+checkout-card .inline-fields > *:last-child,
+checkout-modal .inline-fields > *:last-child,
+checkout-shippingaddress .inline-fields > *:last-child,
+deposit .inline-fields > *:last-child,
+login .inline-fields > *:last-child,
+orders .inline-fields > *:last-child,
+profile .inline-fields > *:last-child,
+register .inline-fields > *:last-child,
+reset-password .inline-fields > *:last-child,
+reset-password-complete .inline-fields > *:last-child,
+shippingaddress .inline-fields > *:last-child{
+  margin-right:0;
 }
 cart .input,
 checkout .input,
 checkout-card .input,
 checkout-modal .input,
 checkout-shippingaddress .input,
+deposit .input,
 login .input,
 orders .input,
 profile .input,
@@ -954,6 +1426,7 @@ checkout h2,
 checkout-card h2,
 checkout-modal h2,
 checkout-shippingaddress h2,
+deposit h2,
 login h2,
 orders h2,
 profile h2,
@@ -962,7 +1435,6 @@ reset-password h2,
 reset-password-complete h2,
 shippingaddress h2{
   margin:0;
-  padding-bottom:10px;
   font-size:2em;
 }
 cart .button,
@@ -970,6 +1442,7 @@ checkout .button,
 checkout-card .button,
 checkout-modal .button,
 checkout-shippingaddress .button,
+deposit .button,
 login .button,
 orders .button,
 profile .button,
@@ -982,6 +1455,7 @@ checkout button,
 checkout-card button,
 checkout-modal button,
 checkout-shippingaddress button,
+deposit button,
 login button,
 orders button,
 profile button,
@@ -989,21 +1463,52 @@ register button,
 reset-password button,
 reset-password-complete button,
 shippingaddress button{
-  background-color:#0091ea;
+  background-color:#2196f3;
   border-color:#000;
+  border-radius:2px;
   color:#fff;
   text-align:center;
   font-size:1em;
   padding:0;
   height:3rem;
   padding:0 2rem;
-  cursor:pointer;
+  box-shadow:0 2px 5px rgba(0,0,0,0.6);
+  transition:all 500ms ease-in-out;
+}
+cart .button:hover,
+checkout .button:hover,
+checkout-card .button:hover,
+checkout-modal .button:hover,
+checkout-shippingaddress .button:hover,
+deposit .button:hover,
+login .button:hover,
+orders .button:hover,
+profile .button:hover,
+register .button:hover,
+reset-password .button:hover,
+reset-password-complete .button:hover,
+shippingaddress .button:hover,
+cart button:hover,
+checkout button:hover,
+checkout-card button:hover,
+checkout-modal button:hover,
+checkout-shippingaddress button:hover,
+deposit button:hover,
+login button:hover,
+orders button:hover,
+profile button:hover,
+register button:hover,
+reset-password button:hover,
+reset-password-complete button:hover,
+shippingaddress button:hover{
+  box-shadow:0 4px 10px rgba(0,0,0,0.4);
 }
 cart .button.submit,
 checkout .button.submit,
 checkout-card .button.submit,
 checkout-modal .button.submit,
 checkout-shippingaddress .button.submit,
+deposit .button.submit,
 login .button.submit,
 orders .button.submit,
 profile .button.submit,
@@ -1016,6 +1521,7 @@ checkout button.submit,
 checkout-card button.submit,
 checkout-modal button.submit,
 checkout-shippingaddress button.submit,
+deposit button.submit,
 login button.submit,
 orders button.submit,
 profile button.submit,
@@ -1028,6 +1534,7 @@ checkout .button[type=submit],
 checkout-card .button[type=submit],
 checkout-modal .button[type=submit],
 checkout-shippingaddress .button[type=submit],
+deposit .button[type=submit],
 login .button[type=submit],
 orders .button[type=submit],
 profile .button[type=submit],
@@ -1040,6 +1547,7 @@ checkout button[type=submit],
 checkout-card button[type=submit],
 checkout-modal button[type=submit],
 checkout-shippingaddress button[type=submit],
+deposit button[type=submit],
 login button[type=submit],
 orders button[type=submit],
 profile button[type=submit],
@@ -1047,7 +1555,7 @@ register button[type=submit],
 reset-password button[type=submit],
 reset-password-complete button[type=submit],
 shippingaddress button[type=submit]{
-  background-color:#0091ea;
+  background-color:#2196f3;
   border-color:#000;
   color:#fff;
   line-height:2rem;
@@ -1058,6 +1566,7 @@ checkout button,
 checkout-card button,
 checkout-modal button,
 checkout-shippingaddress button,
+deposit button,
 login button,
 orders button,
 profile button,
@@ -1066,6 +1575,34 @@ reset-password button,
 reset-password-complete button,
 shippingaddress button{
   outline:none;
+}
+cart .disabled,
+checkout .disabled,
+checkout-card .disabled,
+checkout-modal .disabled,
+checkout-shippingaddress .disabled,
+deposit .disabled,
+login .disabled,
+orders .disabled,
+profile .disabled,
+register .disabled,
+reset-password .disabled,
+reset-password-complete .disabled,
+shippingaddress .disabled,
+cart :disabled,
+checkout :disabled,
+checkout-card :disabled,
+checkout-modal :disabled,
+checkout-shippingaddress :disabled,
+deposit :disabled,
+login :disabled,
+orders :disabled,
+profile :disabled,
+register :disabled,
+reset-password :disabled,
+reset-password-complete :disabled,
+shippingaddress :disabled{
+  opacity:0.5;
 }
 
 .selectize-control.plugin-drag_drop.multi > .selectize-input > div.ui-sortable-placeholder{
@@ -1361,7 +1898,7 @@ shippingaddress button{
   line-height:1rem !important;
 }
 .selectize-dropdown.single .option.active{
-  background-color:#0091ea !important;
+  background-color:#2196f3 !important;
   color:#fff !important;
 }
 .selectize-control{
@@ -1390,16 +1927,13 @@ side-pane .side-pane-close{
           transform:rotate(180deg);
   display:table;
   color:#000;
-  padding-left:20px;
-  padding-bottom:10px;
+  padding-left:1em;
+  padding-bottom:0.5em;
   float:right;
   cursor:pointer;
 }
-cart{
-  width:100%;
-  display:table;
-  padding:20px;
-  background-color:#eee;
+cart lineitems{
+  margin-top:1em;
 }
 cart lineitems,
 cart lineitem{
@@ -1409,7 +1943,9 @@ cart lineitem{
 }
 cart lineitem{
   display:table;
-  padding-bottom:20px;
+  padding-bottom:1em;
+  border-bottom:1px solid #ddd;
+  margin-bottom:1em;
 }
 cart lineitem > div{
   width:100%;
@@ -1420,7 +1956,7 @@ cart lineitem > *{
 cart lineitem > * > *{
   float:left;
 }
-cart quantity-select-control,
+cart quantity-select,
 cart .promo,
 cart .promo-row,
 cart .invoice-line{
@@ -1428,7 +1964,10 @@ cart .invoice-line{
   display:table;
   position:relative;
 }
-cart quantity-select-control .selectize-input{
+cart quantity-select{
+  margin-top:0 !important;
+}
+cart quantity-select .selectize-input{
   max-width:60px;
   border-bottom:0 !important;
 }
@@ -1438,7 +1977,7 @@ cart .product-quantity-container{
   float:right !important;
   position:relative;
   top:-8px;
-  margin-left:20px;
+  margin-left:1em;
   margin-bottom:0.5em;
 }
 cart .product-quantity-container .item{
@@ -1464,7 +2003,7 @@ cart .product-image-container{
 }
 cart .product-image-container img{
   max-height:3.5em;
-  padding-right:20px;
+  padding-right:1em;
 }
 cart .product-text-container{
   width:40%;
@@ -1475,7 +2014,7 @@ cart .product-price-container{
   line-height:1.25em;
 }
 cart .product-list-price{
-  color:#f22469;
+  color:#e91e63;
   font-size:0.9em;
 }
 cart .product-slug{
@@ -1489,7 +2028,7 @@ cart .product-delete{
   font-size:0.8em;
   position:absolute;
   right:0;
-  top:1.5em;
+  top:2em;
 }
 cart .product-currency{
   display:inline;
@@ -1516,40 +2055,42 @@ cart .promo.promo .promo-row > *{
 cart .promo.promo .promo-row promocode{
   width:75%;
   padding:0;
+  margin:0;
 }
 cart .promo.promo .promo-row promocode input{
-  border-radius:1em 0 0 1em;
+  border-radius:2px 0 0 2px;
   border:1px solid;
   border-right:0;
   padding:0 15px;
-  transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+  transition:all 500ms ease-in-out, color 500ms ease-in-out;
   height:32px;
 }
 cart .promo.promo .promo-row button{
   position:relative;
   width:25%;
-  border-radius:0 1em 1em 0;
+  border-radius:0 2px 2px 0;
   border-width:0;
   font-size:1em;
   padding:0;
-  transition:background-color 500ms ease-in-out;
+  transition:all 500ms ease-in-out;
   height:32px;
   background-color:#000;
   color:#fff;
+  box-shadow:none;
 }
 cart .promo.promo .promo-row.applied promocode input{
-  border-color:#17bebb;
-  color:#17bebb !important;
+  border-color:#00bcd4;
+  color:#00bcd4 !important;
 }
 cart .promo.promo .promo-row.applied button{
-  background-color:#17bebb !important;
+  background-color:#00bcd4 !important;
 }
 cart .promo.promo .promo-row.failed promocode input{
-  border-color:#f22469 !important;
-  color:#f22469 !important;
+  border-color:#e91e63 !important;
+  color:#e91e63 !important;
 }
 cart .promo.promo .promo-row.failed button{
-  background-color:#f22469 !important;
+  background-color:#e91e63 !important;
 }
 cart .promo.promo .promo-row.failed button span:first-child{
   display:none;
@@ -1577,7 +2118,7 @@ cart .invoice-line > div:last-child{
 cart .invoice-total{
   font-weight:bold;
   font-size:1.1em;
-  padding-bottom:20px;
+  padding-bottom:1em;
 }
 cart .invoice-total .invoice-label{
   font-size:1.25em;
@@ -1586,14 +2127,6 @@ cart .invoice-total .invoice-label{
 cart .invoice-amount{
   text-align:right;
   font-weight:bold;
-}
-checkout,
-checkout-card,
-checkout-shippingaddress{
-  width:100%;
-  display:table;
-  padding:20px;
-  background-color:#eee;
 }
 checkout button,
 checkout-card button,
@@ -1606,7 +2139,7 @@ checkout-shippingaddress .button{
 checkout .checkout-section,
 checkout-card .checkout-section,
 checkout-shippingaddress .checkout-section{
-  margin-bottom:20px;
+  margin-bottom:1em;
   position:relative;
 }
 checkout .checkout-section .secured-text,
@@ -1629,15 +2162,17 @@ checkout-shippingaddress .checkout-section .secured-text .lock-icon{
 }
 checkout card-number input,
 checkout-card card-number input,
-checkout-shippingaddress card-number input{
-  margin-bottom:10px;
-}
+checkout-shippingaddress card-number input,
 checkout card-number .cards-accepted,
 checkout-card card-number .cards-accepted,
 checkout-shippingaddress card-number .cards-accepted{
   display:table;
   width:100%;
+  margin-top:0.5em;
 }
+checkout card-number input .card-logo,
+checkout-card card-number input .card-logo,
+checkout-shippingaddress card-number input .card-logo,
 checkout card-number .cards-accepted .card-logo,
 checkout-card card-number .cards-accepted .card-logo,
 checkout-shippingaddress card-number .cards-accepted .card-logo{
@@ -1678,11 +2213,29 @@ checkout-shippingaddress .stripe-logo{
   height:22px;
   float:right;
 }
+checkout .line1-line2 :first-child,
+checkout-card .line1-line2 :first-child,
+checkout-shippingaddress .line1-line2 :first-child,
+checkout .state-postal-code :first-child,
+checkout-card .state-postal-code :first-child,
+checkout-shippingaddress .state-postal-code :first-child{
+  -webkit-box-flex:2;
+          flex:2;
+}
+checkout .line1-line2 :last-child,
+checkout-card .line1-line2 :last-child,
+checkout-shippingaddress .line1-line2 :last-child,
+checkout .state-postal-code :last-child,
+checkout-card .state-postal-code :last-child,
+checkout-shippingaddress .state-postal-code :last-child{
+  -webkit-box-flex:1;
+          flex:1;
+}
 .checkout-modal-close{
   height:2rem;
   position:absolute;
-  right:20px;
-  top:15px;
+  right:1em;
+  top:0.75em;
   cursor:pointer;
 }
 .checkout-modal{
@@ -1713,6 +2266,7 @@ checkout-shippingaddress .stripe-logo{
   top:-2000px;
   margin:40px auto 0;
   transition:top 500ms ease-in-out;
+  border-radius:2px;
 }
 .checkout-header{
   display:table;
@@ -1721,13 +2275,15 @@ checkout-shippingaddress .stripe-logo{
 }
 .checkout-header .checkout-steps{
   list-style-type:none;
-  background-color:#0091ea;
+  background-color:#2196f3;
   display:table;
   width:100%;
+  border-top-left-radius:2px;
+  border-top-right-radius:2px;
 }
 .checkout-header .checkout-steps .checkout-step{
   width:calc(99.9% * 1/3);
-  padding:20px;
+  padding:1em;
   text-align:center;
   font-size:0.8em;
   font-weight:bold;
@@ -1774,8 +2330,8 @@ checkout-shippingaddress .stripe-logo{
 }
 .checkout-header .checkout-back{
   position:absolute;
-  top:10px;
-  right:20px;
+  top:0.5em;
+  right:1em;
   color:#fff;
   -webkit-transform:rotate(180deg);
           transform:rotate(180deg);
@@ -1783,19 +2339,19 @@ checkout-shippingaddress .stripe-logo{
 }
 .checkout-content{
   display:table;
-  padding:20px;
+  padding:1em;
   position:relative;
   width:100%;
 }
 .checkout-content .checkout-form,
 .checkout-content cart{
-  width:calc(99.9% * 1/2 - (20px - 20px * 1/2));
+  width:calc(99.9% * 1/2 - (1em - 1em * 1/2));
   overflow:hidden;
 }
 .checkout-content .checkout-form:nth-child(1n),
 .checkout-content cart:nth-child(1n){
   float:left;
-  margin-right:20px;
+  margin-right:1em;
   clear:none;
 }
 .checkout-content .checkout-form:last-child,
@@ -1825,11 +2381,6 @@ checkout-shippingaddress .stripe-logo{
 .checkout-content checkout h2,
 .checkout-content checkout-card h2{
   font-size:1.5em;
-}
-.checkout-content cart lineitems,
-.checkout-content checkout lineitems,
-.checkout-content checkout-card lineitems{
-  margin-top:20px;
 }
 .checkout-content cart .secured-text,
 .checkout-content checkout .secured-text,
@@ -1892,6 +2443,7 @@ checkout-shippingaddress .stripe-logo{
   checkout-card .secured-text span,
   checkout-modal .secured-text span,
   checkout-shippingaddress .secured-text span,
+  deposit .secured-text span,
   login .secured-text span,
   orders .secured-text span,
   profile .secured-text span,
@@ -1911,7 +2463,7 @@ checkout-shippingaddress .stripe-logo{
   checkout-card .stripe-logo,
   checkout-shippingaddress .stripe-logo{
     float:left;
-    margin-top:10px;
+    margin-top:0.5em;
   }
 }
 @media only screen and (max-width: 375px){
