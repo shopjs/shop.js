@@ -9,7 +9,7 @@
       qrcode.thankyou-qrcode(text='{ getQRCode }', margin='0')
       copy.input.thankyou-address(text='{ getAddress }')
       .pay-with-metamask(if='{ isMetamaskInstalled() && !checkedOut }')
-        .pay-with-metamask-button(onclick='{ payWithMetamask }')
+        .pay-with-metamask-button(class='{ disabled: loading }' onclick='{ payWithMetamask }')
       .pay-with-metamask-success(if='{ checkedOut }' )
         | Your payment was successfully submited to the blockchain.
       .error(if='{ errorMessage }')
