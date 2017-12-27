@@ -2,7 +2,7 @@ lineitem(each="{ item, v in data('order.items') }", parent-data="{ this.parent.d
   #{ 'yield' }
     .animated.fadeIn
       .product-image-container(if='{ images }')
-        img(src='{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }')
+        img(riot-src='{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }')
       .product-text-container
         span.product-description
           span.product-name { data.get('productName') }
