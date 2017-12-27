@@ -54,7 +54,7 @@ task 'test', 'Run tests', ['server'], (opts) ->
   bail     = opts.bail     ? true
   coverage = opts.coverage ? false
   grep     = opts.grep     ? ''
-  test     = opts.test     ? 'test/'
+  test     = opts.test     ? 'test/**/*.coffee'
   verbose  = opts.verbose  ? ''
 
   bail    = '--bail' if bail
@@ -71,7 +71,7 @@ task 'test', 'Run tests', ['server'], (opts) ->
         --colors
         --reporter spec
         --timeout 10000000
-        --compilers coffee:coffeescript/register
+        --require coffee-script/register
         --require co-mocha
         --require postmortem/register
         #{bail}
