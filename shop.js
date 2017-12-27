@@ -17559,7 +17559,7 @@ ShippingAddressForm.register();
 var ShippingAddress = ShippingAddressForm;
 
 // templates/containers/thankyou.pug
-var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() }\">\n        <div class=\"pay-with-metamask-button\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
+var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() &amp;&amp; !checkedOut }\">\n        <div class=\"pay-with-metamask-button\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <div class=\"pay-with-metamask-success\" if=\"{ checkedOut }\">Your payment was successfully submited to the blockchain.</div>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
 
 // src/containers/thankyou.coffee
 var ThankYouForm;
@@ -17638,20 +17638,21 @@ ThankYouForm = (function(superClass) {
         to: this.getAddress(),
         from: userAddress,
         value: web3.toWei(this.getAmount(), 'gwei')
-      }, function(err, transactionHash) {
-        this.loading = false;
-        this.checkedOut = true;
-        El$1$1.scheduleUpdate();
-        if (err) {
-          this.mediator.trigger(Events$2.PayWithMetamaskFailed, err);
-          this.errorMessage = err;
-          return;
-        }
-        return this.mediator.trigger(Events$2.PayWithMetamaskSuccess, transactionHash);
-      });
+      }, (function(_this) {
+        return function(err, transactionHash) {
+          _this.loading = false;
+          _this.checkedOut = true;
+          El$1$1.scheduleUpdate();
+          if (err) {
+            _this.mediator.trigger(Events$2.PayWithMetamaskFailed, err);
+            _this.errorMessage = err;
+            return;
+          }
+          return _this.mediator.trigger(Events$2.PayWithMetamaskSuccess, transactionHash);
+        };
+      })(this));
     } catch (error) {
       this.loading = false;
-      this.checkedOut = true;
       El$1$1.scheduleUpdate();
       if (this.test) {
         this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode'));
