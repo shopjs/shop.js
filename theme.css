@@ -10,7 +10,8 @@ profile,
 register,
 reset-password,
 reset-password-complete,
-shippingaddress{
+shippingaddress,
+thankyou{
   box-sizing:border-box;
 }
 cart *,
@@ -25,7 +26,8 @@ profile *,
 register *,
 reset-password *,
 reset-password-complete *,
-shippingaddress *{
+shippingaddress *,
+thankyou *{
   box-sizing:border-box;
 }
 cart .input .selectize-input,
@@ -40,7 +42,8 @@ profile .input .selectize-input,
 register .input .selectize-input,
 reset-password .input .selectize-input,
 reset-password-complete .input .selectize-input,
-shippingaddress .input .selectize-input{
+shippingaddress .input .selectize-input,
+thankyou .input .selectize-input{
   background-color:transparent !important;
   font-weight:bold !important;
   color:$textColor1 !important;
@@ -66,7 +69,8 @@ profile .input .selectize-input:after,
 register .input .selectize-input:after,
 reset-password .input .selectize-input:after,
 reset-password-complete .input .selectize-input:after,
-shippingaddress .input .selectize-input:after{
+shippingaddress .input .selectize-input:after,
+thankyou .input .selectize-input:after{
   border-color:#000 transparent transparent !important;
   top:12px;
   right:0 !important;
@@ -84,7 +88,8 @@ profile .input .selectize-input.dropdown-active:before,
 register .input .selectize-input.dropdown-active:before,
 reset-password .input .selectize-input.dropdown-active:before,
 reset-password-complete .input .selectize-input.dropdown-active:before,
-shippingaddress .input .selectize-input.dropdown-active:before{
+shippingaddress .input .selectize-input.dropdown-active:before,
+thankyou .input .selectize-input.dropdown-active:before{
   display:none !important;
 }
 cart .input .selectize-input.dropdown-active:after,
@@ -99,7 +104,8 @@ profile .input .selectize-input.dropdown-active:after,
 register .input .selectize-input.dropdown-active:after,
 reset-password .input .selectize-input.dropdown-active:after,
 reset-password-complete .input .selectize-input.dropdown-active:after,
-shippingaddress .input .selectize-input.dropdown-active:after{
+shippingaddress .input .selectize-input.dropdown-active:after,
+thankyou .input .selectize-input.dropdown-active:after{
   border-color:transparent transparent #000 !important;
 }
 cart .input .selectize-input.full,
@@ -114,7 +120,8 @@ profile .input .selectize-input.full,
 register .input .selectize-input.full,
 reset-password .input .selectize-input.full,
 reset-password-complete .input .selectize-input.full,
-shippingaddress .input .selectize-input.full{
+shippingaddress .input .selectize-input.full,
+thankyou .input .selectize-input.full{
   min-height:0 !important;
 }
 cart .input .selectize-input input,
@@ -129,7 +136,8 @@ profile .input .selectize-input input,
 register .input .selectize-input input,
 reset-password .input .selectize-input input,
 reset-password-complete .input .selectize-input input,
-shippingaddress .input .selectize-input input{
+shippingaddress .input .selectize-input input,
+thankyou .input .selectize-input input{
   position:absolute !important;
   width:100% !important;
   margin-top:-6px !important;
@@ -148,7 +156,8 @@ profile .input .selectize-input .item,
 register .input .selectize-input .item,
 reset-password .input .selectize-input .item,
 reset-password-complete .input .selectize-input .item,
-shippingaddress .input .selectize-input .item{
+shippingaddress .input .selectize-input .item,
+thankyou .input .selectize-input .item{
   position:absolute !important;
   font-size:1em;
   font-weight:400;
@@ -166,7 +175,8 @@ profile .input,
 register .input,
 reset-password .input,
 reset-password-complete .input,
-shippingaddress .input{
+shippingaddress .input,
+thankyou .input{
   color:#000;
   position:relative;
 }
@@ -183,6 +193,7 @@ register .input.input.input,
 reset-password .input.input.input,
 reset-password-complete .input.input.input,
 shippingaddress .input.input.input,
+thankyou .input.input.input,
 cart .input .input.input,
 checkout .input .input.input,
 checkout-card .input .input.input,
@@ -195,7 +206,8 @@ profile .input .input.input,
 register .input .input.input,
 reset-password .input .input.input,
 reset-password-complete .input .input.input,
-shippingaddress .input .input.input{
+shippingaddress .input .input.input,
+thankyou .input .input.input{
   width:100%;
   display:block;
   margin-top:1em;
@@ -213,6 +225,7 @@ register .input.input.input .labeled,
 reset-password .input.input.input .labeled,
 reset-password-complete .input.input.input .labeled,
 shippingaddress .input.input.input .labeled,
+thankyou .input.input.input .labeled,
 cart .input .input.input .labeled,
 checkout .input .input.input .labeled,
 checkout-card .input .input.input .labeled,
@@ -225,7 +238,8 @@ profile .input .input.input .labeled,
 register .input .input.input .labeled,
 reset-password .input .input.input .labeled,
 reset-password-complete .input .input.input .labeled,
-shippingaddress .input .input.input .labeled{
+shippingaddress .input .input.input .labeled,
+thankyou .input .input.input .labeled{
   margin-top:0.75em;
 }
 cart .input .label,
@@ -240,7 +254,8 @@ profile .input .label,
 register .input .label,
 reset-password .input .label,
 reset-password-complete .input .label,
-shippingaddress .input .label{
+shippingaddress .input .label,
+thankyou .input .label{
   left:0;
   top:1.25em;
   position:absolute;
@@ -261,7 +276,8 @@ profile .input .valid.valid,
 register .input .valid.valid,
 reset-password .input .valid.valid,
 reset-password-complete .input .valid.valid,
-shippingaddress .input .valid.valid{
+shippingaddress .input .valid.valid,
+thankyou .input .valid.valid{
   border-color:#00bcd4;
 }
 cart .input .invalid.invalid,
@@ -276,7 +292,8 @@ profile .input .invalid.invalid,
 register .input .invalid.invalid,
 reset-password .input .invalid.invalid,
 reset-password-complete .input .invalid.invalid,
-shippingaddress .input .invalid.invalid{
+shippingaddress .input .invalid.invalid,
+thankyou .input .invalid.invalid{
   border-color:#e91e63;
 }
 cart .input .valid ~ .label,
@@ -291,7 +308,8 @@ profile .input .valid ~ .label,
 register .input .valid ~ .label,
 reset-password .input .valid ~ .label,
 reset-password-complete .input .valid ~ .label,
-shippingaddress .input .valid ~ .label{
+shippingaddress .input .valid ~ .label,
+thankyou .input .valid ~ .label{
   color:#00bcd4;
 }
 cart .input .invalid ~ .label,
@@ -306,7 +324,8 @@ profile .input .invalid ~ .label,
 register .input .invalid ~ .label,
 reset-password .input .invalid ~ .label,
 reset-password-complete .input .invalid ~ .label,
-shippingaddress .input .invalid ~ .label{
+shippingaddress .input .invalid ~ .label,
+thankyou .input .invalid ~ .label{
   color:#e91e63;
 }
 cart .input .error,
@@ -322,6 +341,7 @@ register .input .error,
 reset-password .input .error,
 reset-password-complete .input .error,
 shippingaddress .input .error,
+thankyou .input .error,
 cart .input .helper,
 checkout .input .helper,
 checkout-card .input .helper,
@@ -334,7 +354,8 @@ profile .input .helper,
 register .input .helper,
 reset-password .input .helper,
 reset-password-complete .input .helper,
-shippingaddress .input .helper{
+shippingaddress .input .helper,
+thankyou .input .helper{
   margin-top:0.5em;
   font-size:0.75em;
   line-height:1em;
@@ -352,7 +373,8 @@ profile .input .error,
 register .input .error,
 reset-password .input .error,
 reset-password-complete .input .error,
-shippingaddress .input .error{
+shippingaddress .input .error,
+thankyou .input .error{
   color:#e91e63;
 }
 cart .input input:focus ~ .label,
@@ -368,6 +390,7 @@ register .input input:focus ~ .label,
 reset-password .input input:focus ~ .label,
 reset-password-complete .input input:focus ~ .label,
 shippingaddress .input input:focus ~ .label,
+thankyou .input input:focus ~ .label,
 cart .input input:hover ~ .label,
 checkout .input input:hover ~ .label,
 checkout-card .input input:hover ~ .label,
@@ -381,6 +404,7 @@ register .input input:hover ~ .label,
 reset-password .input input:hover ~ .label,
 reset-password-complete .input input:hover ~ .label,
 shippingaddress .input input:hover ~ .label,
+thankyou .input input:hover ~ .label,
 cart .input .label.active,
 checkout .input .label.active,
 checkout-card .input .label.active,
@@ -393,7 +417,8 @@ profile .input .label.active,
 register .input .label.active,
 reset-password .input .label.active,
 reset-password-complete .input .label.active,
-shippingaddress .input .label.active{
+shippingaddress .input .label.active,
+thankyou .input .label.active{
   top:0;
   font-size:0.75em;
   line-height:1em;
@@ -411,6 +436,7 @@ register .input *:disabled,
 reset-password .input *:disabled,
 reset-password-complete .input *:disabled,
 shippingaddress .input *:disabled,
+thankyou .input *:disabled,
 cart .input .disabled,
 checkout .input .disabled,
 checkout-card .input .disabled,
@@ -423,7 +449,8 @@ profile .input .disabled,
 register .input .disabled,
 reset-password .input .disabled,
 reset-password-complete .input .disabled,
-shippingaddress .input .disabled{
+shippingaddress .input .disabled,
+thankyou .input .disabled{
   opacity:0.5;
 }
 cart .input input,
@@ -438,7 +465,8 @@ profile .input input,
 register .input input,
 reset-password .input input,
 reset-password-complete .input input,
-shippingaddress .input input{
+shippingaddress .input input,
+thankyou .input input{
   outline:none;
   border:0;
   padding:0;
@@ -456,7 +484,8 @@ profile .input input:-moz-placeholder,
 register .input input:-moz-placeholder,
 reset-password .input input:-moz-placeholder,
 reset-password-complete .input input:-moz-placeholder,
-shippingaddress .input input:-moz-placeholder{
+shippingaddress .input input:-moz-placeholder,
+thankyou .input input:-moz-placeholder{
   color:#000;
 }
 cart .input input::-moz-placeholder,
@@ -471,7 +500,8 @@ profile .input input::-moz-placeholder,
 register .input input::-moz-placeholder,
 reset-password .input input::-moz-placeholder,
 reset-password-complete .input input::-moz-placeholder,
-shippingaddress .input input::-moz-placeholder{
+shippingaddress .input input::-moz-placeholder,
+thankyou .input input::-moz-placeholder{
   color:#000;
 }
 cart .input input:-ms-input-placeholder,
@@ -486,7 +516,8 @@ profile .input input:-ms-input-placeholder,
 register .input input:-ms-input-placeholder,
 reset-password .input input:-ms-input-placeholder,
 reset-password-complete .input input:-ms-input-placeholder,
-shippingaddress .input input:-ms-input-placeholder{
+shippingaddress .input input:-ms-input-placeholder,
+thankyou .input input:-ms-input-placeholder{
   color:#000;
 }
 cart .input input::-webkit-input-placeholder,
@@ -501,7 +532,8 @@ profile .input input::-webkit-input-placeholder,
 register .input input::-webkit-input-placeholder,
 reset-password .input input::-webkit-input-placeholder,
 reset-password-complete .input input::-webkit-input-placeholder,
-shippingaddress .input input::-webkit-input-placeholder{
+shippingaddress .input input::-webkit-input-placeholder,
+thankyou .input input::-webkit-input-placeholder{
   color:#000;
 }
 cart .input input[type=text],
@@ -517,6 +549,7 @@ register .input input[type=text],
 reset-password .input input[type=text],
 reset-password-complete .input input[type=text],
 shippingaddress .input input[type=text],
+thankyou .input input[type=text],
 cart .input input[type=password],
 checkout .input input[type=password],
 checkout-card .input input[type=password],
@@ -529,7 +562,8 @@ profile .input input[type=password],
 register .input input[type=password],
 reset-password .input input[type=password],
 reset-password-complete .input input[type=password],
-shippingaddress .input input[type=password]{
+shippingaddress .input input[type=password],
+thankyou .input input[type=password]{
   height:2rem;
   border-bottom:1px solid;
   border-color:#000;
@@ -549,7 +583,8 @@ profile .input textarea,
 register .input textarea,
 reset-password .input textarea,
 reset-password-complete .input textarea,
-shippingaddress .input textarea{
+shippingaddress .input textarea,
+thankyou .input textarea{
   outline:none;
   height:6rem;
   border:1px solid $borderColor1;
@@ -568,6 +603,7 @@ register .input input[type=text],
 reset-password .input input[type=text],
 reset-password-complete .input input[type=text],
 shippingaddress .input input[type=text],
+thankyou .input input[type=text],
 cart .input input[type=password],
 checkout .input input[type=password],
 checkout-card .input input[type=password],
@@ -581,6 +617,7 @@ register .input input[type=password],
 reset-password .input input[type=password],
 reset-password-complete .input input[type=password],
 shippingaddress .input input[type=password],
+thankyou .input input[type=password],
 cart .input textarea,
 checkout .input textarea,
 checkout-card .input textarea,
@@ -593,7 +630,8 @@ profile .input textarea,
 register .input textarea,
 reset-password .input textarea,
 reset-password-complete .input textarea,
-shippingaddress .input textarea{
+shippingaddress .input textarea,
+thankyou .input textarea{
   width:100%;
   font-size:1em;
 }
@@ -609,7 +647,8 @@ profile .input .select-indicator,
 register .input .select-indicator,
 reset-password .input .select-indicator,
 reset-password-complete .input .select-indicator,
-shippingaddress .input .select-indicator{
+shippingaddress .input .select-indicator,
+thankyou .input .select-indicator{
   display:none;
 }
 cart .input select,
@@ -624,7 +663,8 @@ profile .input select,
 register .input select,
 reset-password .input select,
 reset-password-complete .input select,
-shippingaddress .input select{
+shippingaddress .input select,
+thankyou .input select{
   width:100%;
   background:none;
   border:0;
@@ -651,7 +691,8 @@ profile .input select::-ms-expand,
 register .input select::-ms-expand,
 reset-password .input select::-ms-expand,
 reset-password-complete .input select::-ms-expand,
-shippingaddress .input select::-ms-expand{
+shippingaddress .input select::-ms-expand,
+thankyou .input select::-ms-expand{
   display:none;
 }
 cart .input select ~ .select-indicator,
@@ -666,7 +707,8 @@ profile .input select ~ .select-indicator,
 register .input select ~ .select-indicator,
 reset-password .input select ~ .select-indicator,
 reset-password-complete .input select ~ .select-indicator,
-shippingaddress .input select ~ .select-indicator{
+shippingaddress .input select ~ .select-indicator,
+thankyou .input select ~ .select-indicator{
   position:absolute;
   top:1rem;
   right:0.375em;
@@ -688,7 +730,8 @@ profile .input select.labeled ~ .select-indicator,
 register .input select.labeled ~ .select-indicator,
 reset-password .input select.labeled ~ .select-indicator,
 reset-password-complete .input select.labeled ~ .select-indicator,
-shippingaddress .input select.labeled ~ .select-indicator{
+shippingaddress .input select.labeled ~ .select-indicator,
+thankyou .input select.labeled ~ .select-indicator{
   top:1.75rem;
 }
 cart .input select:disabled ~ .select-indicator,
@@ -703,7 +746,8 @@ profile .input select:disabled ~ .select-indicator,
 register .input select:disabled ~ .select-indicator,
 reset-password .input select:disabled ~ .select-indicator,
 reset-password-complete .input select:disabled ~ .select-indicator,
-shippingaddress .input select:disabled ~ .select-indicator{
+shippingaddress .input select:disabled ~ .select-indicator,
+thankyou .input select:disabled ~ .select-indicator{
   opacity:0.5;
 }
 cart .input.outlined input[type=text],
@@ -719,6 +763,7 @@ register .input.outlined input[type=text],
 reset-password .input.outlined input[type=text],
 reset-password-complete .input.outlined input[type=text],
 shippingaddress .input.outlined input[type=text],
+thankyou .input.outlined input[type=text],
 cart .input.outlined input[type=password],
 checkout .input.outlined input[type=password],
 checkout-card .input.outlined input[type=password],
@@ -732,6 +777,7 @@ register .input.outlined input[type=password],
 reset-password .input.outlined input[type=password],
 reset-password-complete .input.outlined input[type=password],
 shippingaddress .input.outlined input[type=password],
+thankyou .input.outlined input[type=password],
 cart .input.outlined select,
 checkout .input.outlined select,
 checkout-card .input.outlined select,
@@ -744,7 +790,8 @@ profile .input.outlined select,
 register .input.outlined select,
 reset-password .input.outlined select,
 reset-password-complete .input.outlined select,
-shippingaddress .input.outlined select{
+shippingaddress .input.outlined select,
+thankyou .input.outlined select{
   border:1px solid;
   border-radius:2px;
 }
@@ -760,7 +807,8 @@ profile .input .copy-text,
 register .input .copy-text,
 reset-password .input .copy-text,
 reset-password-complete .input .copy-text,
-shippingaddress .input .copy-text{
+shippingaddress .input .copy-text,
+thankyou .input .copy-text{
   position:absolute;
   right:0;
   top:50%;
@@ -779,7 +827,8 @@ profile .input .copy-text,
 register .input .copy-text,
 reset-password .input .copy-text,
 reset-password-complete .input .copy-text,
-shippingaddress .input .copy-text{
+shippingaddress .input .copy-text,
+thankyou .input .copy-text{
   position:absolute;
   right:0;
   top:1rem;
@@ -798,7 +847,8 @@ profile .input .labeled ~ .copy-text,
 register .input .labeled ~ .copy-text,
 reset-password .input .labeled ~ .copy-text,
 reset-password-complete .input .labeled ~ .copy-text,
-shippingaddress .input .labeled ~ .copy-text{
+shippingaddress .input .labeled ~ .copy-text,
+thankyou .input .labeled ~ .copy-text{
   top:1.75rem;
 }
 cart .input .currency-container,
@@ -813,7 +863,8 @@ profile .input .currency-container,
 register .input .currency-container,
 reset-password .input .currency-container,
 reset-password-complete .input .currency-container,
-shippingaddress .input .currency-container{
+shippingaddress .input .currency-container,
+thankyou .input .currency-container{
   display:-webkit-box;
   display:flex;
 }
@@ -829,7 +880,8 @@ profile .input .currency-amount,
 register .input .currency-amount,
 reset-password .input .currency-amount,
 reset-password-complete .input .currency-amount,
-shippingaddress .input .currency-amount{
+shippingaddress .input .currency-amount,
+thankyou .input .currency-amount{
   padding-right:0.25em;
 }
 cart .input .right-aligned,
@@ -844,7 +896,8 @@ profile .input .right-aligned,
 register .input .right-aligned,
 reset-password .input .right-aligned,
 reset-password-complete .input .right-aligned,
-shippingaddress .input .right-aligned{
+shippingaddress .input .right-aligned,
+thankyou .input .right-aligned{
   text-align:right;
 }
 cart .input .currency-code,
@@ -859,7 +912,8 @@ profile .input .currency-code,
 register .input .currency-code,
 reset-password .input .currency-code,
 reset-password-complete .input .currency-code,
-shippingaddress .input .currency-code{
+shippingaddress .input .currency-code,
+thankyou .input .currency-code{
   display:-webkit-box;
   display:flex;
   -webkit-box-pack:end;
@@ -880,7 +934,8 @@ profile .input .currency-code .currency-code-text,
 register .input .currency-code .currency-code-text,
 reset-password .input .currency-code .currency-code-text,
 reset-password-complete .input .currency-code .currency-code-text,
-shippingaddress .input .currency-code .currency-code-text{
+shippingaddress .input .currency-code .currency-code-text,
+thankyou .input .currency-code .currency-code-text{
   height:2rem;
   line-height:2rem;
   border-bottom:1px solid;
@@ -900,7 +955,8 @@ profile .input .valid ~ .currency-code .currency-code-text,
 register .input .valid ~ .currency-code .currency-code-text,
 reset-password .input .valid ~ .currency-code .currency-code-text,
 reset-password-complete .input .valid ~ .currency-code .currency-code-text,
-shippingaddress .input .valid ~ .currency-code .currency-code-text{
+shippingaddress .input .valid ~ .currency-code .currency-code-text,
+thankyou .input .valid ~ .currency-code .currency-code-text{
   border-color:#00bcd4;
 }
 cart .input .invalid ~ .currency-code .currency-code-text,
@@ -915,7 +971,8 @@ profile .input .invalid ~ .currency-code .currency-code-text,
 register .input .invalid ~ .currency-code .currency-code-text,
 reset-password .input .invalid ~ .currency-code .currency-code-text,
 reset-password-complete .input .invalid ~ .currency-code .currency-code-text,
-shippingaddress .input .invalid ~ .currency-code .currency-code-text{
+shippingaddress .input .invalid ~ .currency-code .currency-code-text,
+thankyou .input .invalid ~ .currency-code .currency-code-text{
   border-color:#e91e63;
 }
 cart .input.input.input .invalid,
@@ -931,6 +988,7 @@ register .input.input.input .invalid,
 reset-password .input.input.input .invalid,
 reset-password-complete .input.input.input .invalid,
 shippingaddress .input.input.input .invalid,
+thankyou .input.input.input .invalid,
 cart .input .input.input .invalid,
 checkout .input .input.input .invalid,
 checkout-card .input .input.input .invalid,
@@ -943,7 +1001,8 @@ profile .input .input.input .invalid,
 register .input .input.input .invalid,
 reset-password .input .input.input .invalid,
 reset-password-complete .input .input.input .invalid,
-shippingaddress .input .input.input .invalid{
+shippingaddress .input .input.input .invalid,
+thankyou .input .input.input .invalid{
   border-color:#e91e63;
 }
 cart .checkbox,
@@ -958,7 +1017,8 @@ profile .checkbox,
 register .checkbox,
 reset-password .checkbox,
 reset-password-complete .checkbox,
-shippingaddress .checkbox{
+shippingaddress .checkbox,
+thankyou .checkbox{
   display:block;
 }
 cart .checkbox label,
@@ -973,7 +1033,8 @@ profile .checkbox label,
 register .checkbox label,
 reset-password .checkbox label,
 reset-password-complete .checkbox label,
-shippingaddress .checkbox label{
+shippingaddress .checkbox label,
+thankyou .checkbox label{
   padding-top:2px;
   line-height:1.2rem;
   display:inline-block;
@@ -992,6 +1053,7 @@ register .checkbox [type="checkbox"]:not(:checked),
 reset-password .checkbox [type="checkbox"]:not(:checked),
 reset-password-complete .checkbox [type="checkbox"]:not(:checked),
 shippingaddress .checkbox [type="checkbox"]:not(:checked),
+thankyou .checkbox [type="checkbox"]:not(:checked),
 cart .checkbox [type="checkbox"]:checked,
 checkout .checkbox [type="checkbox"]:checked,
 checkout-card .checkbox [type="checkbox"]:checked,
@@ -1004,7 +1066,8 @@ profile .checkbox [type="checkbox"]:checked,
 register .checkbox [type="checkbox"]:checked,
 reset-password .checkbox [type="checkbox"]:checked,
 reset-password-complete .checkbox [type="checkbox"]:checked,
-shippingaddress .checkbox [type="checkbox"]:checked{
+shippingaddress .checkbox [type="checkbox"]:checked,
+thankyou .checkbox [type="checkbox"]:checked{
   position:absolute;
   left:-9999px;
 }
@@ -1021,6 +1084,7 @@ register .checkbox [type="checkbox"]:not(:checked) + label,
 reset-password .checkbox [type="checkbox"]:not(:checked) + label,
 reset-password-complete .checkbox [type="checkbox"]:not(:checked) + label,
 shippingaddress .checkbox [type="checkbox"]:not(:checked) + label,
+thankyou .checkbox [type="checkbox"]:not(:checked) + label,
 cart .checkbox [type="checkbox"]:checked + label,
 checkout .checkbox [type="checkbox"]:checked + label,
 checkout-card .checkbox [type="checkbox"]:checked + label,
@@ -1033,7 +1097,8 @@ profile .checkbox [type="checkbox"]:checked + label,
 register .checkbox [type="checkbox"]:checked + label,
 reset-password .checkbox [type="checkbox"]:checked + label,
 reset-password-complete .checkbox [type="checkbox"]:checked + label,
-shippingaddress .checkbox [type="checkbox"]:checked + label{
+shippingaddress .checkbox [type="checkbox"]:checked + label,
+thankyou .checkbox [type="checkbox"]:checked + label{
   position:relative;
   text-indent:25px;
   cursor:pointer;
@@ -1051,6 +1116,7 @@ register .checkbox [type="checkbox"]:not(:checked) + label:before,
 reset-password .checkbox [type="checkbox"]:not(:checked) + label:before,
 reset-password-complete .checkbox [type="checkbox"]:not(:checked) + label:before,
 shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:before,
+thankyou .checkbox [type="checkbox"]:not(:checked) + label:before,
 cart .checkbox [type="checkbox"]:checked + label:before,
 checkout .checkbox [type="checkbox"]:checked + label:before,
 checkout-card .checkbox [type="checkbox"]:checked + label:before,
@@ -1063,7 +1129,8 @@ profile .checkbox [type="checkbox"]:checked + label:before,
 register .checkbox [type="checkbox"]:checked + label:before,
 reset-password .checkbox [type="checkbox"]:checked + label:before,
 reset-password-complete .checkbox [type="checkbox"]:checked + label:before,
-shippingaddress .checkbox [type="checkbox"]:checked + label:before{
+shippingaddress .checkbox [type="checkbox"]:checked + label:before,
+thankyou .checkbox [type="checkbox"]:checked + label:before{
   content:'';
   position:absolute;
   left:0;
@@ -1086,6 +1153,7 @@ register .checkbox [type="checkbox"]:not(:checked) + label:after,
 reset-password .checkbox [type="checkbox"]:not(:checked) + label:after,
 reset-password-complete .checkbox [type="checkbox"]:not(:checked) + label:after,
 shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after,
+thankyou .checkbox [type="checkbox"]:not(:checked) + label:after,
 cart .checkbox [type="checkbox"]:checked + label:after,
 checkout .checkbox [type="checkbox"]:checked + label:after,
 checkout-card .checkbox [type="checkbox"]:checked + label:after,
@@ -1098,7 +1166,8 @@ profile .checkbox [type="checkbox"]:checked + label:after,
 register .checkbox [type="checkbox"]:checked + label:after,
 reset-password .checkbox [type="checkbox"]:checked + label:after,
 reset-password-complete .checkbox [type="checkbox"]:checked + label:after,
-shippingaddress .checkbox [type="checkbox"]:checked + label:after{
+shippingaddress .checkbox [type="checkbox"]:checked + label:after,
+thankyou .checkbox [type="checkbox"]:checked + label:after{
   content:'✔';
   position:absolute;
   top:3px;
@@ -1121,7 +1190,8 @@ profile .checkbox [type="checkbox"]:not(:checked) + label:after,
 register .checkbox [type="checkbox"]:not(:checked) + label:after,
 reset-password .checkbox [type="checkbox"]:not(:checked) + label:after,
 reset-password-complete .checkbox [type="checkbox"]:not(:checked) + label:after,
-shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after{
+shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after,
+thankyou .checkbox [type="checkbox"]:not(:checked) + label:after{
   opacity:0;
   -webkit-transform:scale(0);
           transform:scale(0);
@@ -1138,7 +1208,8 @@ profile .checkbox [type="checkbox"]:checked + label:after,
 register .checkbox [type="checkbox"]:checked + label:after,
 reset-password .checkbox [type="checkbox"]:checked + label:after,
 reset-password-complete .checkbox [type="checkbox"]:checked + label:after,
-shippingaddress .checkbox [type="checkbox"]:checked + label:after{
+shippingaddress .checkbox [type="checkbox"]:checked + label:after,
+thankyou .checkbox [type="checkbox"]:checked + label:after{
   opacity:1;
   -webkit-transform:scale(1);
           transform:scale(1);
@@ -1156,6 +1227,7 @@ register .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 reset-password .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 reset-password-complete .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 shippingaddress .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
+thankyou .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 cart .checkbox [type="checkbox"]:disabled:checked + label:before,
 checkout .checkbox [type="checkbox"]:disabled:checked + label:before,
 checkout-card .checkbox [type="checkbox"]:disabled:checked + label:before,
@@ -1168,7 +1240,8 @@ profile .checkbox [type="checkbox"]:disabled:checked + label:before,
 register .checkbox [type="checkbox"]:disabled:checked + label:before,
 reset-password .checkbox [type="checkbox"]:disabled:checked + label:before,
 reset-password-complete .checkbox [type="checkbox"]:disabled:checked + label:before,
-shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:before{
+shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:before,
+thankyou .checkbox [type="checkbox"]:disabled:checked + label:before{
   box-shadow:none;
   border-color:#bbb;
   background-color:#ddd;
@@ -1185,7 +1258,8 @@ profile .checkbox [type="checkbox"]:disabled:checked + label:after,
 register .checkbox [type="checkbox"]:disabled:checked + label:after,
 reset-password .checkbox [type="checkbox"]:disabled:checked + label:after,
 reset-password-complete .checkbox [type="checkbox"]:disabled:checked + label:after,
-shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:after{
+shippingaddress .checkbox [type="checkbox"]:disabled:checked + label:after,
+thankyou .checkbox [type="checkbox"]:disabled:checked + label:after{
   color:#999;
 }
 cart .checkbox [type="checkbox"]:disabled + label,
@@ -1200,7 +1274,8 @@ profile .checkbox [type="checkbox"]:disabled + label,
 register .checkbox [type="checkbox"]:disabled + label,
 reset-password .checkbox [type="checkbox"]:disabled + label,
 reset-password-complete .checkbox [type="checkbox"]:disabled + label,
-shippingaddress .checkbox [type="checkbox"]:disabled + label{
+shippingaddress .checkbox [type="checkbox"]:disabled + label,
+thankyou .checkbox [type="checkbox"]:disabled + label{
   color:#aaa;
 }
 cart .checkbox [type="checkbox"]:checked:focus + label:before,
@@ -1216,6 +1291,7 @@ register .checkbox [type="checkbox"]:checked:focus + label:before,
 reset-password .checkbox [type="checkbox"]:checked:focus + label:before,
 reset-password-complete .checkbox [type="checkbox"]:checked:focus + label:before,
 shippingaddress .checkbox [type="checkbox"]:checked:focus + label:before,
+thankyou .checkbox [type="checkbox"]:checked:focus + label:before,
 cart .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 checkout .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 checkout-card .checkbox [type="checkbox"]:not(:checked):focus + label:before,
@@ -1228,7 +1304,8 @@ profile .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 register .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 reset-password .checkbox [type="checkbox"]:not(:checked):focus + label:before,
 reset-password-complete .checkbox [type="checkbox"]:not(:checked):focus + label:before,
-shippingaddress .checkbox [type="checkbox"]:not(:checked):focus + label:before{
+shippingaddress .checkbox [type="checkbox"]:not(:checked):focus + label:before,
+thankyou .checkbox [type="checkbox"]:not(:checked):focus + label:before{
   border:1px dotted #000;
 }
 cart .checkbox label:hover:before,
@@ -1243,7 +1320,8 @@ profile .checkbox label:hover:before,
 register .checkbox label:hover:before,
 reset-password .checkbox label:hover:before,
 reset-password-complete .checkbox label:hover:before,
-shippingaddress .checkbox label:hover:before{
+shippingaddress .checkbox label:hover:before,
+thankyou .checkbox label:hover:before{
   border:1px solid #00bcd4 !important;
 }
 cart .checkbox .error,
@@ -1258,7 +1336,8 @@ profile .checkbox .error,
 register .checkbox .error,
 reset-password .checkbox .error,
 reset-password-complete .checkbox .error,
-shippingaddress .checkbox .error{
+shippingaddress .checkbox .error,
+thankyou .checkbox .error{
   color:#e91e63;
 }
 cart:not(.ready) > *,
@@ -1273,7 +1352,8 @@ profile:not(.ready) > *,
 register:not(.ready) > *,
 reset-password:not(.ready) > *,
 reset-password-complete:not(.ready) > *,
-shippingaddress:not(.ready) > *{
+shippingaddress:not(.ready) > *,
+thankyou:not(.ready) > *{
   opacity:0;
 }
 cart > *,
@@ -1288,7 +1368,8 @@ profile > *,
 register > *,
 reset-password > *,
 reset-password-complete > *,
-shippingaddress > *{
+shippingaddress > *,
+thankyou > *{
   transition:opacity 500ms ease-in;
 }
 cart,
@@ -1303,13 +1384,14 @@ profile,
 register,
 reset-password,
 reset-password-complete,
-shippingaddress{
+shippingaddress,
+thankyou{
   text-align:left;
   color:#000;
   width:100%;
   display:table;
   padding:1em;
-  background-color:#eee;
+  background-color:#fff;
 }
 cart .fields,
 checkout .fields,
@@ -1323,7 +1405,8 @@ profile .fields,
 register .fields,
 reset-password .fields,
 reset-password-complete .fields,
-shippingaddress .fields{
+shippingaddress .fields,
+thankyou .fields{
   display:box;
   display:flexbox;
   display:-webkit-box;
@@ -1344,7 +1427,8 @@ profile .inline-fields,
 register .inline-fields,
 reset-password .inline-fields,
 reset-password-complete .inline-fields,
-shippingaddress .inline-fields{
+shippingaddress .inline-fields,
+thankyou .inline-fields{
   display:box;
   display:flexbox;
   display:-webkit-box;
@@ -1369,7 +1453,8 @@ profile .inline-fields > *,
 register .inline-fields > *,
 reset-password .inline-fields > *,
 reset-password-complete .inline-fields > *,
-shippingaddress .inline-fields > *{
+shippingaddress .inline-fields > *,
+thankyou .inline-fields > *{
   display:block !important;
   -webkit-box-flex:1;
           flex:1;
@@ -1388,7 +1473,8 @@ profile .inline-fields > *:first-child,
 register .inline-fields > *:first-child,
 reset-password .inline-fields > *:first-child,
 reset-password-complete .inline-fields > *:first-child,
-shippingaddress .inline-fields > *:first-child{
+shippingaddress .inline-fields > *:first-child,
+thankyou .inline-fields > *:first-child{
   margin-left:0;
 }
 cart .inline-fields > *:last-child,
@@ -1403,7 +1489,8 @@ profile .inline-fields > *:last-child,
 register .inline-fields > *:last-child,
 reset-password .inline-fields > *:last-child,
 reset-password-complete .inline-fields > *:last-child,
-shippingaddress .inline-fields > *:last-child{
+shippingaddress .inline-fields > *:last-child,
+thankyou .inline-fields > *:last-child{
   margin-right:0;
 }
 cart .input,
@@ -1418,7 +1505,8 @@ profile .input,
 register .input,
 reset-password .input,
 reset-password-complete .input,
-shippingaddress .input{
+shippingaddress .input,
+thankyou .input{
   margin-bottom:0.5em;
 }
 cart h2,
@@ -1433,7 +1521,8 @@ profile h2,
 register h2,
 reset-password h2,
 reset-password-complete h2,
-shippingaddress h2{
+shippingaddress h2,
+thankyou h2{
   margin:0;
   font-size:2em;
 }
@@ -1450,6 +1539,7 @@ register .button,
 reset-password .button,
 reset-password-complete .button,
 shippingaddress .button,
+thankyou .button,
 cart button,
 checkout button,
 checkout-card button,
@@ -1462,7 +1552,8 @@ profile button,
 register button,
 reset-password button,
 reset-password-complete button,
-shippingaddress button{
+shippingaddress button,
+thankyou button{
   background-color:#2196f3;
   border-color:#000;
   border-radius:2px;
@@ -1488,6 +1579,7 @@ register .button:hover,
 reset-password .button:hover,
 reset-password-complete .button:hover,
 shippingaddress .button:hover,
+thankyou .button:hover,
 cart button:hover,
 checkout button:hover,
 checkout-card button:hover,
@@ -1500,7 +1592,8 @@ profile button:hover,
 register button:hover,
 reset-password button:hover,
 reset-password-complete button:hover,
-shippingaddress button:hover{
+shippingaddress button:hover,
+thankyou button:hover{
   box-shadow:0 4px 10px rgba(0,0,0,0.4);
 }
 cart .button.submit,
@@ -1516,6 +1609,7 @@ register .button.submit,
 reset-password .button.submit,
 reset-password-complete .button.submit,
 shippingaddress .button.submit,
+thankyou .button.submit,
 cart button.submit,
 checkout button.submit,
 checkout-card button.submit,
@@ -1529,6 +1623,7 @@ register button.submit,
 reset-password button.submit,
 reset-password-complete button.submit,
 shippingaddress button.submit,
+thankyou button.submit,
 cart .button[type=submit],
 checkout .button[type=submit],
 checkout-card .button[type=submit],
@@ -1542,6 +1637,7 @@ register .button[type=submit],
 reset-password .button[type=submit],
 reset-password-complete .button[type=submit],
 shippingaddress .button[type=submit],
+thankyou .button[type=submit],
 cart button[type=submit],
 checkout button[type=submit],
 checkout-card button[type=submit],
@@ -1554,7 +1650,8 @@ profile button[type=submit],
 register button[type=submit],
 reset-password button[type=submit],
 reset-password-complete button[type=submit],
-shippingaddress button[type=submit]{
+shippingaddress button[type=submit],
+thankyou button[type=submit]{
   background-color:#2196f3;
   border-color:#000;
   color:#fff;
@@ -1573,7 +1670,8 @@ profile button,
 register button,
 reset-password button,
 reset-password-complete button,
-shippingaddress button{
+shippingaddress button,
+thankyou button{
   outline:none;
 }
 cart .disabled,
@@ -1589,6 +1687,7 @@ register .disabled,
 reset-password .disabled,
 reset-password-complete .disabled,
 shippingaddress .disabled,
+thankyou .disabled,
 cart :disabled,
 checkout :disabled,
 checkout-card :disabled,
@@ -1601,7 +1700,8 @@ profile :disabled,
 register :disabled,
 reset-password :disabled,
 reset-password-complete :disabled,
-shippingaddress :disabled{
+shippingaddress :disabled,
+thankyou :disabled{
   opacity:0.5;
 }
 
@@ -1913,7 +2013,7 @@ side-pane .side-pane{
   z-index:1000;
   transition:background-color 420ms ease-in-out, right 420ms ease-in-out;
   overflow:auto;
-  background-color:#eee;
+  background-color:#fff;
   height:100vh;
 }
 side-pane .side-pane:hover:not('.closed'){
@@ -2061,7 +2161,7 @@ cart .promo.promo .promo-row promocode input{
   border-radius:2px 0 0 2px;
   border:1px solid;
   border-right:0;
-  padding:0 15px;
+  padding:0 1em;
   transition:all 500ms ease-in-out, color 500ms ease-in-out;
   height:32px;
 }
@@ -2257,7 +2357,7 @@ checkout-shippingaddress .state-postal-code :last-child{
   display:table;
   max-width:800px;
   width:100vw;
-  background-color:#eee;
+  background-color:#fff;
   z-index:1002;
   color:#000;
   position:absolute;
@@ -2437,6 +2537,31 @@ checkout-shippingaddress .state-postal-code :last-child{
 .checkout-content .checkout-form.step-3 .checkout-form-parts > :not(:nth-child(3)) > *{
   display:none;
 }
+thankyou .thankyou-title{
+  margin-bottom:1em;
+}
+thankyou qrcode{
+  display:block;
+  text-align:center;
+}
+thankyou copy.input.input input{
+  border-radius:2px;
+  border:1px solid;
+  padding:0 1em;
+}
+thankyou copy.input.input .copy-text{
+  right:1em;
+}
+thankyou .pay-with-metamask .pay-with-metamask-button{
+  content:url("//getshopjs.com/img/metamask.png") url("//getshopjs.com/img/metamask-hover.png");
+  background-image:url("//getshopjs.com/img/metamask.png");
+  height:3rem;
+  background-size:contain;
+  background-repeat:no-repeat;
+}
+thankyou .pay-with-metamask .pay-with-metamask-button:hover{
+  background-image:url("//getshopjs.com/img/metamask-hover.png");
+}
 @media only screen and (max-width: 400px){
   cart .secured-text span,
   checkout .secured-text span,
@@ -2450,7 +2575,8 @@ checkout-shippingaddress .state-postal-code :last-child{
   register .secured-text span,
   reset-password .secured-text span,
   reset-password-complete .secured-text span,
-  shippingaddress .secured-text span{
+  shippingaddress .secured-text span,
+  thankyou .secured-text span{
     display:none;
   }
   cart .product-description{

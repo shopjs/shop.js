@@ -12201,6 +12201,10 @@ var isZeroDecimal = function(code) {
   return false;
 };
 
+var isCrypto = function(code) {
+  return code === 'eth' || code === 'btc' || code === 'xbt';
+};
+
 
 
 var renderUICurrencyFromJSON = function(code, jsonCurrency) {
@@ -15666,7 +15670,10 @@ var Events$2 = Events$1 = {
   DeleteLineItem: 'delete-line-item',
   CreateReferralProgram: 'create-referral-program',
   CreateReferralProgramSuccess: 'create-referral-program-success',
-  CreateReferralProgramFailed: 'create-referral-program-failed'
+  CreateReferralProgramFailed: 'create-referral-program-failed',
+  PayWithMetamask: 'pay-with-metamask',
+  PayWithMetamaskSuccess: 'pay-with-metamask-success',
+  PayWithMetamaskFailed: 'pay-with-metamask-failed'
 };
 
 // node_modules/el.js/lib/el.mjs
@@ -16879,7 +16886,7 @@ LineItemForm.register();
 var LineItem = LineItemForm;
 
 // templates/containers/lineitems.pug
-var html$13 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+var html$13 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
 // src/containers/lineitems.coffee
 var LineItems;
@@ -17551,6 +17558,159 @@ ShippingAddressForm.register();
 
 var ShippingAddress = ShippingAddressForm;
 
+// templates/containers/thankyou.pug
+var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() }\">\n        <div class=\"pay-with-metamask-button\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
+
+// src/containers/thankyou.coffee
+var ThankYouForm;
+var extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$54 = {}.hasOwnProperty;
+
+ThankYouForm = (function(superClass) {
+  extend$55(ThankYouForm, superClass);
+
+  function ThankYouForm() {
+    return ThankYouForm.__super__.constructor.apply(this, arguments);
+  }
+
+  ThankYouForm.prototype.tag = 'thankyou';
+
+  ThankYouForm.prototype.html = html$21;
+
+  ThankYouForm.prototype.errorMessage = '';
+
+  ThankYouForm.prototype.loading = false;
+
+  ThankYouForm.prototype.checkedOut = false;
+
+  ThankYouForm.prototype.orderAddress = '';
+
+  ThankYouForm.prototype.init = function() {
+    ThankYouForm.__super__.init.apply(this, arguments);
+    if (this.testCrypto) {
+      this.test = true;
+    }
+    return this.mediator.on(Events$2.SubmitSuccess, function(order) {
+      var ref, ref1, ref2;
+      return this.orderAddress = order != null ? (ref = order.wallet) != null ? (ref1 = ref.accounts) != null ? (ref2 = ref1[0]) != null ? ref2.address : void 0 : void 0 : void 0 : void 0;
+    });
+  };
+
+  ThankYouForm.prototype.isCrypto = function() {
+    return isCrypto(this.getCurrency());
+  };
+
+  ThankYouForm.prototype.getOrderNumber = function() {
+    var ref;
+    if (this.test) {
+      return "1234";
+    }
+    return (ref = this.data.get('order.number')) != null ? ref : '';
+  };
+
+  ThankYouForm.prototype.getOrderId = function() {
+    var ref;
+    if (this.test) {
+      return "abcd";
+    }
+    return (ref = this.data.get('order.id')) != null ? ref : '';
+  };
+
+  ThankYouForm.prototype.isMetamaskInstalled = function() {
+    return typeof web3 !== 'undefined';
+  };
+
+  ThankYouForm.prototype.payWithMetamask = function() {
+    var err, userAddress;
+    this.mediator.trigger(Events$2.PayWithMetamask);
+    this.errorMessage = '';
+    El$1$1.scheduleUpdate();
+    if (!this.isMetamaskInstalled()) {
+      this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Metamask not installed'));
+      this.errorMessage = 'Metamask not installed';
+      return;
+    }
+    if (this.getCurrency() !== 'eth') {
+      this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Metamask only supports ETH transactions'));
+      this.errorMessage = 'Metamask only supports ETH transactions';
+      return;
+    }
+    this.loading = true;
+    userAddress = web3.eth.accounts[0];
+    try {
+      return web3.eth.sendTransaction({
+        to: this.getAddress(),
+        from: userAddress,
+        value: web3.toWei(this.getAmount(), 'gwei')
+      }, function(err, transactionHash) {
+        this.loading = false;
+        this.checkedOut = true;
+        El$1$1.scheduleUpdate();
+        if (err) {
+          this.mediator.trigger(Events$2.PayWithMetamaskFailed, err);
+          this.errorMessage = err;
+          return;
+        }
+        return this.mediator.trigger(Events$2.PayWithMetamaskSuccess, transactionHash);
+      });
+    } catch (error) {
+      this.loading = false;
+      this.checkedOut = true;
+      El$1$1.scheduleUpdate();
+      if (this.test) {
+        this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode'));
+        return this.errorMessage = 'Error: <thankyou> is in test mode';
+      } else {
+        this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Invalid address'));
+        return this.errorMessage = 'Invalid address';
+      }
+    }
+  };
+
+  ThankYouForm.prototype.getCurrency = function() {
+    if (this.testCrypto) {
+      return 'eth';
+    }
+    if (this.test) {
+      return 'usd';
+    }
+    return this.data.get('order.currency').toLowerCase();
+  };
+
+  ThankYouForm.prototype.getAddress = function() {
+    if (this.test) {
+      return 'address123';
+    }
+    return this.orderAddress;
+  };
+
+  ThankYouForm.prototype.getAmount = function() {
+    if (this.test) {
+      return 1000;
+    }
+    return this.data.get('order.total');
+  };
+
+  ThankYouForm.prototype.getQRCode = function() {
+    var currency;
+    currency = this.getCurrency();
+    switch (currency) {
+      case 'eth':
+        return 'ethereum:' + this.getAddress() + '?value=' + this.data.get('order.total') / 1e9;
+      case 'btc':
+        return 'bitcoin:' + this.getAddress() + '?amount=' + this.data.get('order.total') / 1e9;
+    }
+    return 'unknown';
+  };
+
+  return ThankYouForm;
+
+})(El$1$1.Form);
+
+ThankYouForm.register();
+
+var ThankYou = ThankYouForm;
+
 // src/containers/index.coffee
 var Forms;
 
@@ -17570,19 +17730,20 @@ var Containers = Forms = {
   RegisterComplete: RegisterComplete,
   ResetPassword: ResetPassword,
   ResetPasswordComplete: ResetPasswordComplete,
-  ShippingAddress: ShippingAddress
+  ShippingAddress: ShippingAddress,
+  ThankYou: ThankYou
 };
 
 // templates/widgets/cart-counter.pug
-var html$21 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+var html$22 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
 // src/widgets/cart-counter.coffee
 var CartCounter;
-var extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$54 = {}.hasOwnProperty;
+var extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$55 = {}.hasOwnProperty;
 
 CartCounter = (function(superClass) {
-  extend$55(CartCounter, superClass);
+  extend$56(CartCounter, superClass);
 
   function CartCounter() {
     return CartCounter.__super__.constructor.apply(this, arguments);
@@ -17590,7 +17751,7 @@ CartCounter = (function(superClass) {
 
   CartCounter.prototype.tag = 'cart-counter';
 
-  CartCounter.prototype.html = html$21;
+  CartCounter.prototype.html = html$22;
 
   CartCounter.prototype.init = function() {
     return CartCounter.__super__.init.apply(this, arguments);
@@ -17627,18 +17788,18 @@ CartCounter.register();
 var CartCounter$1 = CartCounter;
 
 // templates/widgets/checkout-modal.pug
-var html$22 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <div class=\"completed\">\n            <yield ></yield >\n          </div>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+var html$23 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <thankyou>\n            <yield ></yield >\n          </thankyou>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
 // src/mediator.coffee
 var m$1 = observable$1({});
 
 // src/widgets/checkout-modal.coffee
 var CheckoutModal;
-var extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$55 = {}.hasOwnProperty;
+var extend$57 = function(child, parent) { for (var key in parent) { if (hasProp$56.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$56 = {}.hasOwnProperty;
 
 CheckoutModal = (function(superClass) {
-  extend$56(CheckoutModal, superClass);
+  extend$57(CheckoutModal, superClass);
 
   function CheckoutModal() {
     return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -17646,7 +17807,7 @@ CheckoutModal = (function(superClass) {
 
   CheckoutModal.prototype.tag = 'checkout-modal';
 
-  CheckoutModal.prototype.html = html$22;
+  CheckoutModal.prototype.html = html$23;
 
   CheckoutModal.prototype.names = null;
 
@@ -17754,15 +17915,15 @@ CheckoutModal.register();
 var CheckoutModal$1 = CheckoutModal;
 
 // templates/widgets/side-pane.pug
-var html$23 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+var html$24 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
 // src/widgets/side-pane.coffee
 var SidePane;
-var extend$57 = function(child, parent) { for (var key in parent) { if (hasProp$56.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$56 = {}.hasOwnProperty;
+var extend$58 = function(child, parent) { for (var key in parent) { if (hasProp$57.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$57 = {}.hasOwnProperty;
 
 SidePane = (function(superClass) {
-  extend$57(SidePane, superClass);
+  extend$58(SidePane, superClass);
 
   function SidePane() {
     return SidePane.__super__.constructor.apply(this, arguments);
@@ -17770,7 +17931,7 @@ SidePane = (function(superClass) {
 
   SidePane.prototype.tag = 'side-pane';
 
-  SidePane.prototype.html = html$23;
+  SidePane.prototype.html = html$24;
 
   SidePane.prototype.id = '';
 
@@ -17918,7 +18079,7 @@ function hasOwnProp(a, b) {
 }
 
 // node_modules/moment/src/lib/utils/extend.js
-function extend$58(a, b) {
+function extend$59(a, b) {
     for (var i in b) {
         if (hasOwnProp(b, i)) {
             a[i] = b[i];
@@ -18026,7 +18187,7 @@ function isValid(m) {
 function createInvalid (flags) {
     var m = createUTC(NaN);
     if (flags != null) {
-        extend$58(getParsingFlags(m), flags);
+        extend$59(getParsingFlags(m), flags);
     }
     else {
         getParsingFlags(m).userInvalidated = true;
@@ -18158,7 +18319,7 @@ function warn(msg) {
 function deprecate(msg, fn) {
     var firstTime = true;
 
-    return extend$58(function () {
+    return extend$59(function () {
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(null, msg);
         }
@@ -18226,13 +18387,13 @@ function set (config) {
 }
 
 function mergeConfigs(parentConfig, childConfig) {
-    var res = extend$58({}, parentConfig), prop;
+    var res = extend$59({}, parentConfig), prop;
     for (prop in childConfig) {
         if (hasOwnProp(childConfig, prop)) {
             if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                 res[prop] = {};
-                extend$58(res[prop], parentConfig[prop]);
-                extend$58(res[prop], childConfig[prop]);
+                extend$59(res[prop], parentConfig[prop]);
+                extend$59(res[prop], childConfig[prop]);
             } else if (childConfig[prop] != null) {
                 res[prop] = childConfig[prop];
             } else {
@@ -18245,7 +18406,7 @@ function mergeConfigs(parentConfig, childConfig) {
                 !hasOwnProp(childConfig, prop) &&
                 isObject$3(parentConfig[prop])) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend$58({}, res[prop]);
+            res[prop] = extend$59({}, res[prop]);
         }
     }
     return res;
@@ -20413,7 +20574,7 @@ function configFromStringAndArray(config) {
         }
     }
 
-    extend$58(config, bestMoment || tempConfig);
+    extend$59(config, bestMoment || tempConfig);
 }
 
 // node_modules/moment/src/lib/create/from-object.js
@@ -21423,7 +21584,7 @@ function isValid$2 () {
 }
 
 function parsingFlags () {
-    return extend$58({}, getParsingFlags(this));
+    return extend$59({}, getParsingFlags(this));
 }
 
 function invalidAt () {
@@ -22485,7 +22646,7 @@ var moment$2 = Object.freeze({
 	default: hooks
 });
 
-//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment/src/moment.js
+//  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/moment/src/moment.js
 var require$$0 = ( moment$2 && hooks ) || moment$2;
 
 var momentTimezone$1 = createCommonjsModule(function (module) {
@@ -23103,9 +23264,9 @@ var latest$1 = Object.freeze({
 	default: latest
 });
 
-//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment-timezone/moment-timezone.js
+//  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/moment-timezone/moment-timezone.js
 
-//  commonjs-proxy:/Users/dtai/work/verus/shop.js/node_modules/moment-timezone/data/packed/latest.json
+//  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/moment-timezone/data/packed/latest.json
 var require$$1 = ( latest$1 && latest ) || latest$1;
 
 var momentTimezone = createCommonjsModule(function (module) {
@@ -23234,7 +23395,7 @@ for (k$1 in ref1) {
 }
 
 initData = function(opts) {
-  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref3, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
+  var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
   queries = getQueries();
   referrer = '';
   referrer = (ref2 = getReferrer((ref3 = opts.config) != null ? ref3.hashReferrer : void 0)) != null ? ref2 : (ref4 = opts.order) != null ? ref4.referrer : void 0;
@@ -23248,21 +23409,22 @@ initData = function(opts) {
     countries: [],
     tokenId: queries.tokenid,
     terms: (ref5 = opts.terms) != null ? ref5 : false,
+    autoGeo: (ref6 = opts.autoGeo) != null ? ref6 : false,
     order: {
       giftType: 'physical',
-      type: (ref6 = (ref7 = opts.processor) != null ? ref7 : (ref8 = opts.order) != null ? ref8.type : void 0) != null ? ref6 : 'stripe',
-      shippingRate: (ref9 = (ref10 = (ref11 = opts.config) != null ? ref11.shippingRate : void 0) != null ? ref10 : (ref12 = opts.order) != null ? ref12.shippingRate : void 0) != null ? ref9 : 0,
-      taxRate: (ref13 = (ref14 = (ref15 = opts.config) != null ? ref15.taxRate : void 0) != null ? ref14 : (ref16 = opts.order) != null ? ref16.taxRate : void 0) != null ? ref13 : 0,
-      currency: (ref17 = (ref18 = (ref19 = opts.config) != null ? ref19.currency : void 0) != null ? ref18 : (ref20 = opts.order) != null ? ref20.currency : void 0) != null ? ref17 : 'usd',
+      type: (ref7 = (ref8 = opts.processor) != null ? ref8 : (ref9 = opts.order) != null ? ref9.type : void 0) != null ? ref7 : 'stripe',
+      shippingRate: (ref10 = (ref11 = (ref12 = opts.config) != null ? ref12.shippingRate : void 0) != null ? ref11 : (ref13 = opts.order) != null ? ref13.shippingRate : void 0) != null ? ref10 : 0,
+      taxRate: (ref14 = (ref15 = (ref16 = opts.config) != null ? ref16.taxRate : void 0) != null ? ref15 : (ref17 = opts.order) != null ? ref17.taxRate : void 0) != null ? ref14 : 0,
+      currency: (ref18 = (ref19 = (ref20 = opts.config) != null ? ref20.currency : void 0) != null ? ref19 : (ref21 = opts.order) != null ? ref21.currency : void 0) != null ? ref18 : 'usd',
       referrerId: referrer,
       discount: 0,
       tax: 0,
       subtotal: 0,
       total: 0,
-      mode: (ref21 = (ref22 = opts.mode) != null ? ref22 : (ref23 = opts.order) != null ? ref23.mode : void 0) != null ? ref21 : '',
+      mode: (ref22 = (ref23 = opts.mode) != null ? ref23 : (ref24 = opts.order) != null ? ref24.mode : void 0) != null ? ref22 : '',
       items: items != null ? items : [],
       cartId: cartId != null ? cartId : null,
-      checkoutUrl: (ref24 = (ref25 = opts.config) != null ? ref25.checkoutUrl : void 0) != null ? ref24 : null,
+      checkoutUrl: (ref25 = (ref26 = opts.config) != null ? ref26.checkoutUrl : void 0) != null ? ref25 : null,
       metadata: meta != null ? meta : {}
     },
     user: null,
@@ -23275,11 +23437,11 @@ initData = function(opts) {
     if (d[k$1] == null) {
       d[k$1] = opts[k$1];
     } else {
-      ref26 = d[k$1];
-      for (k2 in ref26) {
-        v2 = ref26[k2];
+      ref27 = d[k$1];
+      for (k2 in ref27) {
+        v2 = ref27[k2];
         if (v2 == null) {
-          d[k$1][k2] = (ref27 = opts[k$1]) != null ? ref27[k2] : void 0;
+          d[k$1][k2] = (ref28 = opts[k$1]) != null ? ref28[k2] : void 0;
         }
       }
     }
@@ -23304,8 +23466,8 @@ initData = function(opts) {
   country = index$1.get('default-country');
   countriesReady = false;
   dontPrefill = false;
-  if (!state || !country) {
-    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref28 = window.navigator) != null ? ref28.geolocation : void 0 : void 0)) {
+  if (data.get('autoGeo' && (!state || !country))) {
+    if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref29 = window.navigator) != null ? ref29.geolocation : void 0 : void 0)) {
       navigator.geolocation.getCurrentPosition((function(_this) {
         return function(position) {
           return gmaps.geocode({
