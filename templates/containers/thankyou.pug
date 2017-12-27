@@ -8,8 +8,10 @@
         | Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:
       qrcode.thankyou-qrcode(text='{ getQRCode }', margin='0')
       copy.input.thankyou-address(text='{ getAddress }')
-      .pay-with-metamask(if='{ isMetamaskInstalled() }')
+      .pay-with-metamask(if='{ isMetamaskInstalled() && !checkedOut }')
         .pay-with-metamask-button(onclick='{ payWithMetamask }')
+      .pay-with-metamask-success(if='{ checkedOut }' )
+        | Your payment was successfully submited to the blockchain.
       .error(if='{ errorMessage }')
         | { errorMessage }
   .thankyou-body
