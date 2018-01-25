@@ -66,7 +66,7 @@
     "coffee-script": "^1.12.7",
     "connect": "3.6.5",
     "coveralls": "3.0.0",
-    "css-mqpacker": "6.0.1",
+    "css-mqpacker": "6.0.2",
     "debug": "^3.1.0",
     "electron": "1.7.10",
     "es5-shim": "^4.5.10",
