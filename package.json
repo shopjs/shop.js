@@ -64,7 +64,7 @@
     "co-mocha": "1.2.1",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.12.7",
-    "connect": "3.6.5",
+    "connect": "3.6.6",
     "coveralls": "3.0.0",
     "css-mqpacker": "6.0.1",
     "debug": "^3.1.0",
