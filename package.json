@@ -61,7 +61,7 @@
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
     "clean-css": "4.1.9",
-    "co-mocha": "1.2.1",
+    "co-mocha": "1.2.2",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.12.7",
     "connect": "3.6.5",
