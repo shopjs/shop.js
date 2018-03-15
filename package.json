@@ -89,7 +89,7 @@
     "rupture": "0.7.1",
     "sake-bundle": "^0.6.3",
     "sake-cli": "^0.5.24",
-    "sake-outdated": "^0.1.28",
+    "sake-outdated": "^0.2.1",
     "sake-publish": "^0.1.16",
     "sake-version": "^0.1.19",
     "serve-static": "^1.13.1",
