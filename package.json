@@ -68,7 +68,7 @@
     "coveralls": "3.0.0",
     "css-mqpacker": "6.0.1",
     "debug": "^3.1.0",
-    "electron": "1.7.10",
+    "electron": "1.8.4",
     "es5-shim": "^4.5.10",
     "istanbul": "0.4.5",
     "jquery": "3.2.1",
