@@ -70,7 +70,6 @@ class ThankYouForm extends El.Form
         value: web3.toWei @getAmount(), 'gwei'
       , (err, transactionHash) =>
         @loading = false
-        @checkedOut = true
 
         El.scheduleUpdate()
 
@@ -79,6 +78,7 @@ class ThankYouForm extends El.Form
           @errorMessage = err
           return
 
+        @checkedOut = true
         @mediator.trigger Events.PayWithMetamaskSuccess, transactionHash
     catch err
       @loading = false

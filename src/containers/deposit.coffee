@@ -16,4 +16,3 @@ class DepositForm extends CheckoutForm
 DepositForm.register()
 
 export default DepositForm
-
