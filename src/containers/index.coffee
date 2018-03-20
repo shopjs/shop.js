@@ -16,6 +16,7 @@ import ResetPassword           from './reset-password'
 import ResetPasswordComplete   from './reset-password-complete'
 import ShippingAddress         from './shippingaddress'
 import ThankYou                from './thankyou'
+import Veiw                    from './view'
 
 export default Forms =
   Checkout:                 Checkout
@@ -36,3 +37,4 @@ export default Forms =
   ResetPasswordComplete:    ResetPasswordComplete
   ShippingAddress:          ShippingAddress
   ThankYou:                 ThankYou
+  View:                     View
