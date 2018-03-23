@@ -15,22 +15,23 @@ describe 'Shop.js', ->
             event:  'started'
             data:   clone(data.get())
 
-          if ret.length == 4
+          if ret.length == 3
             resolve ret
 
-        m.one 'geo-ready', (geo)->
-          ret.push
-            event:  'geo-ready'
-            geo:    geo
-            data:   clone(Shop.data.get())
+        # geo-ready disabled in electron
+        # m.one 'geo-ready', (geo)->
+        #   ret.push
+        #     event:  'geo-ready'
+        #     geo:    geo
+        #     data:   clone(Shop.data.get())
 
-          if ret.length == 4
-            resolve ret
+        #   if ret.length == 3
+        #     resolve ret
 
         m.one 'ready', ->
           ret.push { event: 'ready' }
 
-          if ret.length == 4
+          if ret.length == 3
             resolve ret
 
         m.one 'async-ready', (constants)->
@@ -39,7 +40,7 @@ describe 'Shop.js', ->
             constants:  constants
             data:       clone(Shop.data.get())
 
-          if ret.length == 4
+          if ret.length == 3
             resolve ret
 
       Shop.start
@@ -50,11 +51,11 @@ describe 'Shop.js', ->
 
     , key, endpoint
 
-    # console.log 'returned', ret
+    console.log 'returned', ret
 
     # Default data
     ret.should.not.be.null
-    ret.length.should.eq 4
+    ret.length.should.eq 3
     ret[0].event.should.eq 'started'
     expect(ret[0].data).to.exist
 
@@ -77,16 +78,16 @@ describe 'Shop.js', ->
     order.referrerId.should.eq 'queryRef'
 
     # Geo is disabled in Electron
-    ret[1].event.should.eq 'geo-ready'
-    ret[1].geo.status.should.eq 'disabled'
+    # ret[1].event.should.eq 'geo-ready'
+    # ret[1].geo.status.should.eq 'disabled'
 
     # Ready to accept commands
-    ret[2].event.should.eq 'ready'
+    ret[1].event.should.eq 'ready'
 
     # Loaded data from server
-    ret[3].event.should.eq 'async-ready'
+    ret[2].event.should.eq 'async-ready'
 
-    data = ret[3].data
+    data = ret[2].data
 
     # Populated after AsyncReady
     expect(data.taxRates).to.exist

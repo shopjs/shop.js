@@ -3975,7 +3975,7 @@ scheduleUpdate = function(tag$$1) {
 };
 
 // node_modules/el.js/src/views/view.coffee
-var View$1;
+var View;
 var collapsePrototype;
 var setPrototypeOf;
 
@@ -4007,7 +4007,7 @@ setPrototypeOf = (function() {
 
 collapsePrototype = function(collapse, proto) {
   var parentProto;
-  if (proto === View$1.prototype) {
+  if (proto === View.prototype) {
     return;
   }
   parentProto = Object.getPrototypeOf(proto);
@@ -4015,7 +4015,7 @@ collapsePrototype = function(collapse, proto) {
   return index(collapse, parentProto);
 };
 
-View$1 = (function() {
+View = (function() {
   View.register = function() {
     return new this;
   };
@@ -4112,7 +4112,7 @@ View$1 = (function() {
 
 })();
 
-var View$2 = View$1;
+var View$1 = View;
 
 // node_modules/el.js/src/views/inputify.coffee
 var inputify;
@@ -4243,7 +4243,7 @@ Form = (function(superClass) {
 
   return Form;
 
-})(View$2);
+})(View$1);
 
 var Form$1 = Form;
 
@@ -4354,7 +4354,7 @@ Input = (function(superClass) {
 
   return Input;
 
-})(View$2);
+})(View$1);
 
 var Input$1 = Input;
 
@@ -4364,7 +4364,7 @@ var Views;
 var Views$1 = Views = {
   Form: Form$1,
   Input: Input$1,
-  View: View$2,
+  View: View$1,
   inputify: inputify$1
 };
 
@@ -15738,7 +15738,7 @@ scheduleUpdate$1 = function(tag$$1) {
 };
 
 // src/views/view.coffee
-var View$3;
+var View$2;
 var collapsePrototype$1;
 var setPrototypeOf$1;
 
@@ -15770,7 +15770,7 @@ setPrototypeOf$1 = (function() {
 
 collapsePrototype$1 = function(collapse, proto) {
   var parentProto;
-  if (proto === View$3.prototype) {
+  if (proto === View$2.prototype) {
     return;
   }
   parentProto = Object.getPrototypeOf(proto);
@@ -15778,7 +15778,7 @@ collapsePrototype$1 = function(collapse, proto) {
   return index(collapse, parentProto);
 };
 
-View$3 = (function() {
+View$2 = (function() {
   View.register = function() {
     return new this;
   };
@@ -15875,7 +15875,7 @@ View$3 = (function() {
 
 })();
 
-var View$1$1 = View$3;
+var View$1$1 = View$2;
 
 // src/views/inputify.coffee
 var inputify$2;
@@ -17715,11 +17715,11 @@ var ThankYou = ThankYouForm;
 var html$22 = "\n<yield></yield>";
 
 // src/containers/view.coffee
-var View$4;
+var View$3;
 var extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$55 = {}.hasOwnProperty;
 
-View$4 = (function(superClass) {
+var View$4 = View$3 = (function(superClass) {
   extend$56(View, superClass);
 
   function View() {
@@ -17738,7 +17738,7 @@ View$4 = (function(superClass) {
 
 })(El$1$1.View);
 
-View$4.register();
+View$3.register();
 
 // src/containers/index.coffee
 var Forms;
@@ -17761,7 +17761,7 @@ var Containers = Forms = {
   ResetPasswordComplete: ResetPasswordComplete,
   ShippingAddress: ShippingAddress,
   ThankYou: ThankYou,
-  View: View
+  View: View$4
 };
 
 // templates/widgets/cart-counter.pug
