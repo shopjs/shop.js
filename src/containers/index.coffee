@@ -16,7 +16,7 @@ import ResetPassword           from './reset-password'
 import ResetPasswordComplete   from './reset-password-complete'
 import ShippingAddress         from './shippingaddress'
 import ThankYou                from './thankyou'
-import Veiw                    from './view'
+import View                    from './view'
 
 export default Forms =
   Checkout:                 Checkout
