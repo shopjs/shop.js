@@ -40,7 +40,7 @@ class ThankYouForm extends El.Form
 
   # crypto
   isMetamaskInstalled: ->
-    return typeof web3 != 'undefined'
+    return (typeof web3 != 'undefined') && web3.currentProvider.isMetaMask
 
   payWithMetamask: ->
     return if @loading

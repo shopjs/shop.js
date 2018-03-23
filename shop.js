@@ -17613,7 +17613,7 @@ ThankYouForm = (function(superClass) {
   };
 
   ThankYouForm.prototype.isMetamaskInstalled = function() {
-    return typeof web3 !== 'undefined';
+    return (typeof web3 !== 'undefined') && web3.currentProvider.isMetaMask;
   };
 
   ThankYouForm.prototype.payWithMetamask = function() {
