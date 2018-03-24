@@ -60,7 +60,7 @@
     "bebop": "^1.12.8",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
-    "clean-css": "4.1.9",
+    "clean-css": "4.1.10",
     "co-mocha": "1.2.1",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.12.7",
