@@ -713,8 +713,7 @@ thankyou .input select ~ .select-indicator{
   top:1rem;
   right:0.375em;
   font-size:0.75em;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
   pointer-events:none;
   display:block;
 }
@@ -812,8 +811,7 @@ thankyou .input .copy-text{
   position:absolute;
   right:0;
   top:50%;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
 }
 cart .input .copy-text,
 checkout .input .copy-text,
@@ -832,8 +830,7 @@ thankyou .input .copy-text{
   position:absolute;
   right:0;
   top:1rem;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
 }
 cart .input .labeled ~ .copy-text,
 checkout .input .labeled ~ .copy-text,
@@ -865,7 +862,6 @@ reset-password .input .currency-container,
 reset-password-complete .input .currency-container,
 shippingaddress .input .currency-container,
 thankyou .input .currency-container{
-  display:-webkit-box;
   display:flex;
 }
 cart .input .currency-amount,
@@ -914,13 +910,9 @@ reset-password .input .currency-code,
 reset-password-complete .input .currency-code,
 shippingaddress .input .currency-code,
 thankyou .input .currency-code{
-  display:-webkit-box;
   display:flex;
-  -webkit-box-pack:end;
-          justify-content:flex-end;
-  -webkit-box-orient:vertical;
-  -webkit-box-direction:normal;
-          flex-direction:column;
+  justify-content:flex-end;
+  flex-direction:column;
 }
 cart .input .currency-code .currency-code-text,
 checkout .input .currency-code .currency-code-text,
@@ -1193,8 +1185,7 @@ reset-password-complete .checkbox [type="checkbox"]:not(:checked) + label:after,
 shippingaddress .checkbox [type="checkbox"]:not(:checked) + label:after,
 thankyou .checkbox [type="checkbox"]:not(:checked) + label:after{
   opacity:0;
-  -webkit-transform:scale(0);
-          transform:scale(0);
+  transform:scale(0);
 }
 cart .checkbox [type="checkbox"]:checked + label:after,
 checkout .checkbox [type="checkbox"]:checked + label:after,
@@ -1211,8 +1202,7 @@ reset-password-complete .checkbox [type="checkbox"]:checked + label:after,
 shippingaddress .checkbox [type="checkbox"]:checked + label:after,
 thankyou .checkbox [type="checkbox"]:checked + label:after{
   opacity:1;
-  -webkit-transform:scale(1);
-          transform:scale(1);
+  transform:scale(1);
 }
 cart .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 checkout .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
@@ -1409,11 +1399,8 @@ shippingaddress .fields,
 thankyou .fields{
   display:box;
   display:flexbox;
-  display:-webkit-box;
   display:flex;
-  -webkit-box-orient:vertical;
-  -webkit-box-direction:normal;
-          flex-direction:column;
+  flex-direction:column;
 }
 cart .inline-fields,
 checkout .inline-fields,
@@ -1431,15 +1418,10 @@ shippingaddress .inline-fields,
 thankyou .inline-fields{
   display:box;
   display:flexbox;
-  display:-webkit-box;
   display:flex;
-  -webkit-box-orient:horizontal;
-  -webkit-box-direction:normal;
-          flex-direction:row;
-  -webkit-box-pack:justify;
-          justify-content:space-between;
-  -webkit-box-align:start;
-          align-items:flex-start;
+  flex-direction:row;
+  justify-content:space-between;
+  align-items:flex-start;
 }
 cart .inline-fields > *,
 checkout .inline-fields > *,
@@ -1456,8 +1438,7 @@ reset-password-complete .inline-fields > *,
 shippingaddress .inline-fields > *,
 thankyou .inline-fields > *{
   display:block !important;
-  -webkit-box-flex:1;
-          flex:1;
+  flex:1;
   margin-left:0.5em;
   margin-right:0.5em;
 }
@@ -2004,6 +1985,9 @@ thankyou :disabled{
 .selectize-control{
   height:2rem;
 }
+recaptcha{
+  display:block;
+}
 side-pane .side-pane{
   width:300px;
   position:fixed;
@@ -2023,8 +2007,7 @@ side-pane .side-pane.opened{
   right:0 !important;
 }
 side-pane .side-pane-close{
-  -webkit-transform:rotate(180deg);
-          transform:rotate(180deg);
+  transform:rotate(180deg);
   display:table;
   color:#000;
   padding-left:1em;
@@ -2319,8 +2302,7 @@ checkout-shippingaddress .line1-line2 :first-child,
 checkout .state-postal-code :first-child,
 checkout-card .state-postal-code :first-child,
 checkout-shippingaddress .state-postal-code :first-child{
-  -webkit-box-flex:2;
-          flex:2;
+  flex:2;
 }
 checkout .line1-line2 :last-child,
 checkout-card .line1-line2 :last-child,
@@ -2328,8 +2310,7 @@ checkout-shippingaddress .line1-line2 :last-child,
 checkout .state-postal-code :last-child,
 checkout-card .state-postal-code :last-child,
 checkout-shippingaddress .state-postal-code :last-child{
-  -webkit-box-flex:1;
-          flex:1;
+  flex:1;
 }
 .checkout-modal-close{
   height:2rem;
@@ -2433,8 +2414,7 @@ checkout-shippingaddress .state-postal-code :last-child{
   top:0.5em;
   right:1em;
   color:#fff;
-  -webkit-transform:rotate(180deg);
-          transform:rotate(180deg);
+  transform:rotate(180deg);
   cursor:pointer;
 }
 .checkout-content{
@@ -2489,9 +2469,7 @@ checkout-shippingaddress .state-postal-code :last-child{
 }
 .checkout-content .checkout-form .checkout-form-parts{
   width:300%;
-  transition:-webkit-transform 500ms ease-in-out;
   transition:transform 500ms ease-in-out;
-  transition:transform 500ms ease-in-out, -webkit-transform 500ms ease-in-out;
 }
 .checkout-content .checkout-form .checkout-form-parts > *{
   width:calc(99.9% * 1/3);
@@ -2518,8 +2496,7 @@ checkout-shippingaddress .state-postal-code :last-child{
   display:none;
 }
 .checkout-content .checkout-form.step-2 .checkout-form-parts{
-  -webkit-transform:translateX(calc(-100% * 1 / 3));
-          transform:translateX(calc(-100% * 1 / 3));
+  transform:translateX(calc(-100% * 1 / 3));
 }
 .checkout-content .checkout-form.step-2 .checkout-form-parts > :not(:nth-child(2)){
   height:10px;
@@ -2528,8 +2505,7 @@ checkout-shippingaddress .state-postal-code :last-child{
   display:none;
 }
 .checkout-content .checkout-form.step-3 .checkout-form-parts{
-  -webkit-transform:translateX(calc(-100% * 2 / 3));
-          transform:translateX(calc(-100% * 2 / 3));
+  transform:translateX(calc(-100% * 2 / 3));
 }
 .checkout-content .checkout-form.step-3 .checkout-form-parts > :not(:nth-child(3)){
   height:10px;
