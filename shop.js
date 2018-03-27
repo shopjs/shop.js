@@ -10586,6 +10586,14 @@ var Shop = (function () {
   }());
 
   // node_modules/es6-tween/src/Interpolator.js
+  var __assign$2 = (undefined && undefined.__assign) || Object.assign || function(t) {
+      for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+      }
+      return t;
+  };
 
   // node_modules/es6-tween/src/index.js
 
@@ -11967,16 +11975,56 @@ var Shop = (function () {
 
   var GiftType$1 = GiftType;
 
+  // node_modules/el-controls/src/controls/readonly.coffee
+  var ReadOnly,
+    extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$34 = {}.hasOwnProperty;
+
+  var ReadOnly$1 = ReadOnly = (function(superClass) {
+    extend$35(ReadOnly, superClass);
+
+    function ReadOnly() {
+      return ReadOnly.__super__.constructor.apply(this, arguments);
+    }
+
+    ReadOnly.prototype.tag = 'readonly';
+
+    ReadOnly.prototype.readonly = true;
+
+    ReadOnly.prototype.text = '';
+
+    ReadOnly.prototype.init = function() {
+      if (!this.text) {
+        return ReadOnly.__super__.init.apply(this, arguments);
+      }
+    };
+
+    ReadOnly.prototype.getText = function() {
+      return valueOrCall(this.text) || this.input.ref.get(input.name);
+    };
+
+    ReadOnly.prototype.change = function() {};
+
+    ReadOnly.prototype._change = function() {};
+
+    ReadOnly.prototype.getName = function() {};
+
+    return ReadOnly;
+
+  })(Text$1);
+
+  ReadOnly.register();
+
   // node_modules/el-controls/templates/controls/copy.pug
   var html$4 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
   // node_modules/el-controls/src/controls/copy.coffee
   var Copy,
-    extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$34 = {}.hasOwnProperty;
+    extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$35 = {}.hasOwnProperty;
 
   Copy = (function(superClass) {
-    extend$35(Copy, superClass);
+    extend$36(Copy, superClass);
 
     function Copy() {
       return Copy.__super__.constructor.apply(this, arguments);
@@ -11991,20 +12039,8 @@ var Shop = (function () {
     Copy.prototype.copied = false;
 
     Copy.prototype.init = function() {
-      if (!this.text) {
-        return Copy.__super__.init.apply(this, arguments);
-      }
+      return Copy.__super__.init.apply(this, arguments);
     };
-
-    Copy.prototype.getText = function() {
-      return valueOrCall(this.text) || this.input.ref.get(input.name);
-    };
-
-    Copy.prototype.change = function() {};
-
-    Copy.prototype._change = function() {};
-
-    Copy.prototype.getName = function() {};
 
     Copy.prototype.copy = function(e) {
       var msg, successful, text, textArea;
@@ -12040,7 +12076,7 @@ var Shop = (function () {
 
     return Copy;
 
-  })(Text$1);
+  })(ReadOnly$1);
 
   Copy.register();
 
@@ -12239,11 +12275,11 @@ var Shop = (function () {
 
   // node_modules/el-controls/src/controls/currency.coffee
   var Currency,
-    extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$35 = {}.hasOwnProperty;
+    extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$36 = {}.hasOwnProperty;
 
   Currency = (function(superClass) {
-    extend$36(Currency, superClass);
+    extend$37(Currency, superClass);
 
     function Currency() {
       return Currency.__super__.constructor.apply(this, arguments);
@@ -13960,7 +13996,7 @@ var Shop = (function () {
     return createSymbol(data, version, errorCorrectionLevel, mask)
   };
 
-  },{"../utils/buffer":26,"./alignment-pattern":1,"./bit-buffer":3,"./bit-matrix":4,"./error-correction-code":6,"./error-correction-level":7,"./finder-pattern":8,"./format-info":9,"./mask-pattern":12,"./mode":13,"./reed-solomon-encoder":17,"./segments":19,"./utils":20,"./version":21,"isarray":28}],17:[function(require,module,exports){
+  },{"../utils/buffer":26,"./alignment-pattern":1,"./bit-buffer":3,"./bit-matrix":4,"./error-correction-code":6,"./error-correction-level":7,"./finder-pattern":8,"./format-info":9,"./mask-pattern":12,"./mode":13,"./reed-solomon-encoder":17,"./segments":19,"./utils":20,"./version":21,"isarray":29}],17:[function(require,module,exports){
   var Buffer = require('../utils/buffer');
   var Polynomial = require('./polynomial');
 
@@ -14023,24 +14059,24 @@ var Shop = (function () {
 
   },{"../utils/buffer":26,"./polynomial":15}],18:[function(require,module,exports){
   var numeric = '[0-9]+';
-  var alphanumeric = '[A-Z $%*+-./:]+';
+  var alphanumeric = '[A-Z $%*+\\-./:]+';
   var kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
     '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
     '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
     '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
   kanji = kanji.replace(/u/g, '\\u');
 
-  var byte = '(?:(?![A-Z0-9 $%*+-./:]|' + kanji + ').)+';
+  var byte = '(?:(?![A-Z0-9 $%*+\\-./:]|' + kanji + ').)+';
 
   exports.KANJI = new RegExp(kanji, 'g');
-  exports.BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+-./:]+', 'g');
+  exports.BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+\\-./:]+', 'g');
   exports.BYTE = new RegExp(byte, 'g');
   exports.NUMERIC = new RegExp(numeric, 'g');
   exports.ALPHANUMERIC = new RegExp(alphanumeric, 'g');
 
   var TEST_KANJI = new RegExp('^' + kanji + '$');
   var TEST_NUMERIC = new RegExp('^' + numeric + '$');
-  var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+-./:]+$');
+  var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+\\-./:]+$');
 
   exports.testKanji = function testKanji (str) {
     return TEST_KANJI.test(str)
@@ -14386,7 +14422,7 @@ var Shop = (function () {
     )
   };
 
-  },{"./alphanumeric-data":2,"./byte-data":5,"./kanji-data":11,"./mode":13,"./numeric-data":14,"./regex":18,"./utils":20,"dijkstrajs":27}],20:[function(require,module,exports){
+  },{"./alphanumeric-data":2,"./byte-data":5,"./kanji-data":11,"./mode":13,"./numeric-data":14,"./regex":18,"./utils":20,"dijkstrajs":28}],20:[function(require,module,exports){
   var toSJISFunction;
   var CODEWORDS_COUNT = [
     0, // Not used
@@ -14626,35 +14662,63 @@ var Shop = (function () {
     return (version << 12) | d
   };
 
-  },{"./error-correction-code":6,"./error-correction-level":7,"./mode":13,"./utils":20,"isarray":28}],22:[function(require,module,exports){
+  },{"./error-correction-code":6,"./error-correction-level":7,"./mode":13,"./utils":20,"isarray":29}],22:[function(require,module,exports){
+  var canPromise = require('can-promise');
   var QRCode = require('./core/qrcode');
   var CanvasRenderer = require('./renderer/canvas');
-  var SvgRenderer = require('./renderer/svg-render.js');
+  var SvgRenderer = require('./renderer/svg-tag.js');
 
   function renderCanvas (renderFunc, canvas, text, opts, cb) {
-    var argsNum = arguments.length - 1;
-    if (argsNum < 2) {
-      throw new Error('Too few arguments provided')
+    var args = [].slice.call(arguments, 1);
+    var argsNum = args.length;
+    var isLastArgCb = typeof args[argsNum - 1] === 'function';
+
+    if (!isLastArgCb && !canPromise()) {
+      throw new Error('Callback required as last argument')
     }
 
-    if (argsNum === 2) {
-      cb = text;
-      text = canvas;
-      canvas = opts = undefined;
-    } else if (argsNum === 3) {
-      if (canvas.getContext && typeof cb === 'undefined') {
-        cb = opts;
-        opts = undefined;
-      } else {
-        cb = opts;
+    if (isLastArgCb) {
+      if (argsNum < 2) {
+        throw new Error('Too few arguments provided')
+      }
+
+      if (argsNum === 2) {
+        cb = text;
+        text = canvas;
+        canvas = opts = undefined;
+      } else if (argsNum === 3) {
+        if (canvas.getContext && typeof cb === 'undefined') {
+          cb = opts;
+          opts = undefined;
+        } else {
+          cb = opts;
+          opts = text;
+          text = canvas;
+          canvas = undefined;
+        }
+      }
+    } else {
+      if (argsNum < 1) {
+        throw new Error('Too few arguments provided')
+      }
+
+      if (argsNum === 1) {
+        text = canvas;
+        canvas = opts = undefined;
+      } else if (argsNum === 2 && !canvas.getContext) {
         opts = text;
         text = canvas;
         canvas = undefined;
       }
-    }
 
-    if (typeof cb !== 'function') {
-      throw new Error('Callback required as last argument')
+      return new Promise(function (resolve, reject) {
+        try {
+          var data = QRCode.create(text, opts);
+          resolve(renderFunc(data, canvas, opts));
+        } catch (e) {
+          reject(e);
+        }
+      })
     }
 
     try {
@@ -14674,7 +14738,7 @@ var Shop = (function () {
     return SvgRenderer.render(data, opts)
   });
 
-  },{"./core/qrcode":16,"./renderer/canvas":23,"./renderer/svg-render.js":24}],23:[function(require,module,exports){
+  },{"./core/qrcode":16,"./renderer/canvas":23,"./renderer/svg-tag.js":24,"can-promise":27}],23:[function(require,module,exports){
   var Utils = require('./utils');
 
   function clearCanvas (ctx, canvas, size) {
@@ -14709,11 +14773,11 @@ var Shop = (function () {
     }
 
     opts = Utils.getOptions(opts);
-    var size = (qrData.modules.size + opts.margin * 2) * opts.scale;
+    var size = Utils.getImageWidth(qrData.modules.size, opts);
 
     var ctx = canvasEl.getContext('2d');
     var image = ctx.createImageData(size, size);
-    Utils.qrToImageData(image.data, qrData, opts.margin, opts.scale, opts.color);
+    Utils.qrToImageData(image.data, qrData, opts);
 
     clearCanvas(ctx, canvasEl, size);
     ctx.putImageData(image, 0, 0);
@@ -14742,45 +14806,84 @@ var Shop = (function () {
   },{"./utils":25}],24:[function(require,module,exports){
   var Utils = require('./utils');
 
-  function getColorAttrib (color) {
-    return 'fill="rgb(' + [color.r, color.g, color.b].join(',') + ')" ' +
-      'fill-opacity="' + (color.a / 255).toFixed(2) + '"'
+  function getColorAttrib (color, attrib) {
+    var alpha = color.a / 255;
+    var str = attrib + '="' + color.hex + '"';
+
+    return alpha < 1
+      ? str + ' ' + attrib + '-opacity="' + alpha.toFixed(2).slice(1) + '"'
+      : str
   }
 
-  exports.render = function render (qrData, options) {
-    var opts = Utils.getOptions(options);
-    var size = qrData.modules.size;
-    var data = qrData.modules.data;
-    var qrcodesize = (size + opts.margin * 2) * opts.scale;
+  function svgCmd (cmd, x, y) {
+    var str = cmd + x;
+    if (typeof y !== 'undefined') str += ' ' + y;
 
-    var xmlStr = '<?xml version="1.0" encoding="utf-8"?>\n';
-    xmlStr += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
+    return str
+  }
 
-    xmlStr += '<svg version="1.1" baseProfile="full"';
-    xmlStr += ' width="' + qrcodesize + '" height="' + qrcodesize + '"';
-    xmlStr += ' viewBox="0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
-    xmlStr += ' xmlns="http://www.w3.org/2000/svg"';
-    xmlStr += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
-    xmlStr += ' xmlns:ev="http://www.w3.org/2001/xml-events">\n';
+  function qrToPath (data, size, margin) {
+    var path = '';
+    var moveBy = 0;
+    var newRow = false;
+    var lineLength = 0;
 
-    xmlStr += '<rect x="0" y="0" width="' + qrcodesize + '" height="' + qrcodesize + '" ' + getColorAttrib(opts.color.light) + ' />\n';
-    xmlStr += '<defs><rect id="p" width="' + opts.scale + '" height="' + opts.scale + '" /></defs>\n';
-    xmlStr += '<g ' + getColorAttrib(opts.color.dark) + '>\n';
+    for (var i = 0; i < data.length; i++) {
+      var col = Math.floor(i % size);
+      var row = Math.floor(i / size);
 
-    for (var i = 0; i < size; i++) {
-      for (var j = 0; j < size; j++) {
-        if (!data[i * size + j]) continue
+      if (!col && !newRow) newRow = true;
 
-        var x = (opts.margin + j) * opts.scale;
-        var y = (opts.margin + i) * opts.scale;
-        xmlStr += '<use x="' + x + '" y="' + y + '" xlink:href="#p" />\n';
+      if (data[i]) {
+        lineLength++;
+
+        if (!(i > 0 && col > 0 && data[i - 1])) {
+          path += newRow
+            ? svgCmd('M', col + margin, 0.5 + row + margin)
+            : svgCmd('m', moveBy, 0);
+
+          moveBy = 0;
+          newRow = false;
+        }
+
+        if (!(col + 1 < size && data[i + 1])) {
+          path += svgCmd('h', lineLength);
+          lineLength = 0;
+        }
+      } else {
+        moveBy++;
       }
     }
 
-    xmlStr += '</g>\n';
-    xmlStr += '</svg>';
+    return path
+  }
 
-    return xmlStr
+  exports.render = function render (qrData, options, cb) {
+    var opts = Utils.getOptions(options);
+    var size = qrData.modules.size;
+    var data = qrData.modules.data;
+    var qrcodesize = size + opts.margin * 2;
+
+    var bg = !opts.color.light.a
+      ? ''
+      : '<path ' + getColorAttrib(opts.color.light, 'fill') +
+        ' d="M0 0h' + qrcodesize + 'v' + qrcodesize + 'H0z"/>';
+
+    var path =
+      '<path ' + getColorAttrib(opts.color.dark, 'stroke') +
+      ' d="' + qrToPath(data, size, opts.margin) + '"/>';
+
+    var viewBox = 'viewBox="' + '0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
+
+    var width = !opts.width ? '' : 'width="' + opts.width + '" height="' + opts.width + '" ';
+
+    var svgTag = '<svg xmlns="http://www.w3.org/2000/svg" ' + width + viewBox + '>' + bg + path + '</svg>';
+
+    if (typeof cb === 'function') {
+      cb(null, svgTag);
+    }
+
+    return svgTag
   };
 
   },{"./utils":25}],25:[function(require,module,exports){
@@ -14810,7 +14913,8 @@ var Shop = (function () {
       r: (hexValue >> 24) & 255,
       g: (hexValue >> 16) & 255,
       b: (hexValue >> 8) & 255,
-      a: hexValue & 255
+      a: hexValue & 255,
+      hex: '#' + hexCode.slice(0, 6).join('')
     }
   }
 
@@ -14822,8 +14926,12 @@ var Shop = (function () {
       options.margin === null ||
       options.margin < 0 ? 4 : options.margin;
 
+    var width = options.width && options.width >= 21 ? options.width : undefined;
+    var scale = options.scale || 4;
+
     return {
-      scale: options.scale || 4,
+      width: width,
+      scale: width ? 4 : scale,
       margin: margin,
       color: {
         dark: hex2rgba(options.color.dark || '#000000ff'),
@@ -14834,17 +14942,29 @@ var Shop = (function () {
     }
   };
 
-  exports.qrToImageData = function qrToImageData (imgData, qr, margin, scale, color) {
+  exports.getScale = function getScale (qrSize, opts) {
+    return opts.width && opts.width >= qrSize + opts.margin * 2
+      ? opts.width / (qrSize + opts.margin * 2)
+      : opts.scale
+  };
+
+  exports.getImageWidth = function getImageWidth (qrSize, opts) {
+    var scale = exports.getScale(qrSize, opts);
+    return Math.floor((qrSize + opts.margin * 2) * scale)
+  };
+
+  exports.qrToImageData = function qrToImageData (imgData, qr, opts) {
     var size = qr.modules.size;
     var data = qr.modules.data;
-    var scaledMargin = margin * scale;
-    var symbolSize = size * scale + scaledMargin * 2;
-    var palette = [color.light, color.dark];
+    var scale = exports.getScale(size, opts);
+    var symbolSize = Math.floor((size + opts.margin * 2) * scale);
+    var scaledMargin = opts.margin * scale;
+    var palette = [opts.color.light, opts.color.dark];
 
     for (var i = 0; i < symbolSize; i++) {
       for (var j = 0; j < symbolSize; j++) {
         var posDst = (i * symbolSize + j) * 4;
-        var pxColor = color.light;
+        var pxColor = opts.color.light;
 
         if (i >= scaledMargin && j >= scaledMargin &&
           i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
@@ -15367,7 +15487,18 @@ var Shop = (function () {
 
   module.exports = Buffer;
 
-  },{"isarray":28}],27:[function(require,module,exports){
+  },{"isarray":29}],27:[function(require,module,exports){
+
+  var G = require('window-or-global');
+
+  module.exports = function() {
+    return (
+      typeof G.Promise === 'function' &&
+      typeof G.Promise.prototype.then === 'function'
+    )
+  };
+
+  },{"window-or-global":30}],28:[function(require,module,exports){
 
   /******************************************************************************
    * Created 2008-08-19.
@@ -15533,12 +15664,20 @@ var Shop = (function () {
     module.exports = dijkstra;
   }
 
-  },{}],28:[function(require,module,exports){
+  },{}],29:[function(require,module,exports){
   var toString = {}.toString;
 
   module.exports = Array.isArray || function (arr) {
     return toString.call(arr) == '[object Array]';
   };
+
+  },{}],30:[function(require,module,exports){
+  (function (global){
+  module.exports = (typeof self === 'object' && self.self === self && self) ||
+    (typeof global === 'object' && global.global === global && global) ||
+    this;
+
+  }).call(this,typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
 
   },{}]},{},[22])(22)
   });
@@ -15547,11 +15686,11 @@ var Shop = (function () {
 
   // node_modules/el-controls/src/controls/qrcode.coffee
   var QRCode,
-    extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$36 = {}.hasOwnProperty;
+    extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$37 = {}.hasOwnProperty;
 
   QRCode = (function(superClass) {
-    extend$37(QRCode, superClass);
+    extend$38(QRCode, superClass);
 
     function QRCode() {
       return QRCode.__super__.constructor.apply(this, arguments);
@@ -15581,9 +15720,7 @@ var Shop = (function () {
     };
 
     QRCode.prototype.init = function() {
-      if (!this.text) {
-        return QRCode.__super__.init.apply(this, arguments);
-      }
+      return QRCode.__super__.init.apply(this, arguments);
     };
 
     QRCode.prototype.onUpdated = function() {
@@ -15601,19 +15738,9 @@ var Shop = (function () {
       });
     };
 
-    QRCode.prototype.getText = function() {
-      return valueOrCall(this.text) || this.input.ref.get(input.name);
-    };
-
-    QRCode.prototype.change = function() {};
-
-    QRCode.prototype._change = function() {};
-
-    QRCode.prototype.getName = function() {};
-
     return QRCode;
 
-  })(Text$1);
+  })(ReadOnly$1);
 
   QRCode.register();
 
@@ -15958,11 +16085,11 @@ var Shop = (function () {
 
   // src/views/form.coffee
   var Form$2;
-  var extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-  var hasProp$37 = {}.hasOwnProperty;
+  var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  var hasProp$38 = {}.hasOwnProperty;
 
   Form$2 = (function(superClass) {
-    extend$38(Form, superClass);
+    extend$39(Form, superClass);
 
     function Form() {
       return Form.__super__.constructor.apply(this, arguments);
@@ -16418,11 +16545,11 @@ var Shop = (function () {
 
   // src/containers/checkout.coffee
   var CheckoutForm,
-    extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$38 = {}.hasOwnProperty;
+    extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$39 = {}.hasOwnProperty;
 
   CheckoutForm = (function(superClass) {
-    extend$39(CheckoutForm, superClass);
+    extend$40(CheckoutForm, superClass);
 
     function CheckoutForm() {
       return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -16589,11 +16716,11 @@ var Shop = (function () {
 
   // src/containers/checkout-card.coffee
   var CheckoutCardForm,
-    extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$39 = {}.hasOwnProperty;
+    extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$40 = {}.hasOwnProperty;
 
   CheckoutCardForm = (function(superClass) {
-    extend$40(CheckoutCardForm, superClass);
+    extend$41(CheckoutCardForm, superClass);
 
     function CheckoutCardForm() {
       return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -16638,11 +16765,11 @@ var Shop = (function () {
 
   // src/containers/checkout-shippingaddress.coffee
   var CheckoutShippingAddressForm,
-    extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$40 = {}.hasOwnProperty;
+    extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$41 = {}.hasOwnProperty;
 
   CheckoutShippingAddressForm = (function(superClass) {
-    extend$41(CheckoutShippingAddressForm, superClass);
+    extend$42(CheckoutShippingAddressForm, superClass);
 
     function CheckoutShippingAddressForm() {
       return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -16700,11 +16827,11 @@ var Shop = (function () {
 
   // src/containers/cart.coffee
   var CartForm,
-    extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$41 = {}.hasOwnProperty;
+    extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$42 = {}.hasOwnProperty;
 
   CartForm = (function(superClass) {
-    extend$42(CartForm, superClass);
+    extend$43(CartForm, superClass);
 
     function CartForm() {
       return CartForm.__super__.constructor.apply(this, arguments);
@@ -16827,11 +16954,11 @@ var Shop = (function () {
 
   // src/containers/deposit.coffee
   var DepositForm,
-    extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$42 = {}.hasOwnProperty;
+    extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$43 = {}.hasOwnProperty;
 
   DepositForm = (function(superClass) {
-    extend$43(DepositForm, superClass);
+    extend$44(DepositForm, superClass);
 
     function DepositForm() {
       return DepositForm.__super__.constructor.apply(this, arguments);
@@ -16858,11 +16985,11 @@ var Shop = (function () {
 
   // src/containers/lineitem.coffee
   var LineItemForm,
-    extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$43 = {}.hasOwnProperty;
+    extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$44 = {}.hasOwnProperty;
 
   LineItemForm = (function(superClass) {
-    extend$44(LineItemForm, superClass);
+    extend$45(LineItemForm, superClass);
 
     function LineItemForm() {
       return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -16897,11 +17024,11 @@ var Shop = (function () {
 
   // src/containers/lineitems.coffee
   var LineItems,
-    extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$44 = {}.hasOwnProperty;
+    extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$45 = {}.hasOwnProperty;
 
   LineItems = (function(superClass) {
-    extend$45(LineItems, superClass);
+    extend$46(LineItems, superClass);
 
     function LineItems() {
       return LineItems.__super__.constructor.apply(this, arguments);
@@ -16938,11 +17065,11 @@ var Shop = (function () {
 
   // src/containers/login.coffee
   var LoginForm,
-    extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$45 = {}.hasOwnProperty;
+    extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$46 = {}.hasOwnProperty;
 
   LoginForm = (function(superClass) {
-    extend$46(LoginForm, superClass);
+    extend$47(LoginForm, superClass);
 
     function LoginForm() {
       return LoginForm.__super__.constructor.apply(this, arguments);
@@ -16995,11 +17122,11 @@ var Shop = (function () {
 
   // src/containers/order.coffee
   var OrderForm,
-    extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$46 = {}.hasOwnProperty;
+    extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$47 = {}.hasOwnProperty;
 
   OrderForm = (function(superClass) {
-    extend$47(OrderForm, superClass);
+    extend$48(OrderForm, superClass);
 
     function OrderForm() {
       return OrderForm.__super__.constructor.apply(this, arguments);
@@ -17051,11 +17178,11 @@ var Shop = (function () {
 
   // src/containers/orders.coffee
   var Orders,
-    extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$47 = {}.hasOwnProperty;
+    extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$48 = {}.hasOwnProperty;
 
   Orders = (function(superClass) {
-    extend$48(Orders, superClass);
+    extend$49(Orders, superClass);
 
     function Orders() {
       return Orders.__super__.constructor.apply(this, arguments);
@@ -17082,11 +17209,11 @@ var Shop = (function () {
 
   // src/containers/profile.coffee
   var ProfileForm,
-    extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$48 = {}.hasOwnProperty;
+    extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$49 = {}.hasOwnProperty;
 
   ProfileForm = (function(superClass) {
-    extend$49(ProfileForm, superClass);
+    extend$50(ProfileForm, superClass);
 
     function ProfileForm() {
       return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -17200,11 +17327,11 @@ var Shop = (function () {
 
   // src/containers/register.coffee
   var RegisterForm,
-    extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$49 = {}.hasOwnProperty;
+    extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$50 = {}.hasOwnProperty;
 
   RegisterForm = (function(superClass) {
-    extend$50(RegisterForm, superClass);
+    extend$51(RegisterForm, superClass);
 
     function RegisterForm() {
       return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -17294,11 +17421,11 @@ var Shop = (function () {
 
   // src/containers/register-complete.coffee
   var RegisterCompleteForm,
-    extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$50 = {}.hasOwnProperty;
+    extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$51 = {}.hasOwnProperty;
 
   RegisterCompleteForm = (function(superClass) {
-    extend$51(RegisterCompleteForm, superClass);
+    extend$52(RegisterCompleteForm, superClass);
 
     function RegisterCompleteForm() {
       return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17373,11 +17500,11 @@ var Shop = (function () {
 
   // src/containers/reset-password.coffee
   var ResetPasswordForm,
-    extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$51 = {}.hasOwnProperty;
+    extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$52 = {}.hasOwnProperty;
 
   ResetPasswordForm = (function(superClass) {
-    extend$52(ResetPasswordForm, superClass);
+    extend$53(ResetPasswordForm, superClass);
 
     function ResetPasswordForm() {
       return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -17432,11 +17559,11 @@ var Shop = (function () {
 
   // src/containers/reset-password-complete.coffee
   var ResetPasswordCompleteForm,
-    extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$52 = {}.hasOwnProperty;
+    extend$54 = function(child, parent) { for (var key in parent) { if (hasProp$53.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$53 = {}.hasOwnProperty;
 
   ResetPasswordCompleteForm = (function(superClass) {
-    extend$53(ResetPasswordCompleteForm, superClass);
+    extend$54(ResetPasswordCompleteForm, superClass);
 
     function ResetPasswordCompleteForm() {
       return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17494,11 +17621,11 @@ var Shop = (function () {
 
   // src/containers/shippingaddress.coffee
   var ShippingAddressForm,
-    extend$54 = function(child, parent) { for (var key in parent) { if (hasProp$53.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$53 = {}.hasOwnProperty;
+    extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$54 = {}.hasOwnProperty;
 
   ShippingAddressForm = (function(superClass) {
-    extend$54(ShippingAddressForm, superClass);
+    extend$55(ShippingAddressForm, superClass);
 
     function ShippingAddressForm() {
       return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -17570,11 +17697,11 @@ var Shop = (function () {
 
   // src/containers/thankyou.coffee
   var ThankYouForm,
-    extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$54 = {}.hasOwnProperty;
+    extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$55 = {}.hasOwnProperty;
 
   ThankYouForm = (function(superClass) {
-    extend$55(ThankYouForm, superClass);
+    extend$56(ThankYouForm, superClass);
 
     function ThankYouForm() {
       return ThankYouForm.__super__.constructor.apply(this, arguments);
@@ -17723,11 +17850,11 @@ var Shop = (function () {
 
   // src/containers/view.coffee
   var View$3,
-    extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$55 = {}.hasOwnProperty;
+    extend$57 = function(child, parent) { for (var key in parent) { if (hasProp$56.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$56 = {}.hasOwnProperty;
 
   var View$4 = View$3 = (function(superClass) {
-    extend$56(View, superClass);
+    extend$57(View, superClass);
 
     function View() {
       return View.__super__.constructor.apply(this, arguments);
@@ -17776,11 +17903,11 @@ var Shop = (function () {
 
   // src/widgets/cart-counter.coffee
   var CartCounter,
-    extend$57 = function(child, parent) { for (var key in parent) { if (hasProp$56.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$56 = {}.hasOwnProperty;
+    extend$58 = function(child, parent) { for (var key in parent) { if (hasProp$57.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$57 = {}.hasOwnProperty;
 
   CartCounter = (function(superClass) {
-    extend$57(CartCounter, superClass);
+    extend$58(CartCounter, superClass);
 
     function CartCounter() {
       return CartCounter.__super__.constructor.apply(this, arguments);
@@ -17833,11 +17960,11 @@ var Shop = (function () {
 
   // src/widgets/checkout-modal.coffee
   var CheckoutModal,
-    extend$58 = function(child, parent) { for (var key in parent) { if (hasProp$57.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$57 = {}.hasOwnProperty;
+    extend$59 = function(child, parent) { for (var key in parent) { if (hasProp$58.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$58 = {}.hasOwnProperty;
 
   CheckoutModal = (function(superClass) {
-    extend$58(CheckoutModal, superClass);
+    extend$59(CheckoutModal, superClass);
 
     function CheckoutModal() {
       return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -17957,11 +18084,11 @@ var Shop = (function () {
 
   // src/widgets/side-pane.coffee
   var SidePane,
-    extend$59 = function(child, parent) { for (var key in parent) { if (hasProp$58.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$58 = {}.hasOwnProperty;
+    extend$60 = function(child, parent) { for (var key in parent) { if (hasProp$59.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$59 = {}.hasOwnProperty;
 
   SidePane = (function(superClass) {
-    extend$59(SidePane, superClass);
+    extend$60(SidePane, superClass);
 
     function SidePane() {
       return SidePane.__super__.constructor.apply(this, arguments);
@@ -18119,7 +18246,7 @@ var Shop = (function () {
 
   // node_modules/moment/src/lib/utils/extend.js
 
-  function extend$60(a, b) {
+  function extend$61(a, b) {
       for (var i in b) {
           if (hasOwnProp(b, i)) {
               a[i] = b[i];
@@ -18229,7 +18356,7 @@ var Shop = (function () {
   function createInvalid (flags) {
       var m = createUTC(NaN);
       if (flags != null) {
-          extend$60(getParsingFlags(m), flags);
+          extend$61(getParsingFlags(m), flags);
       }
       else {
           getParsingFlags(m).userInvalidated = true;
@@ -18365,7 +18492,7 @@ var Shop = (function () {
   function deprecate(msg, fn) {
       var firstTime = true;
 
-      return extend$60(function () {
+      return extend$61(function () {
           if (hooks.deprecationHandler != null) {
               hooks.deprecationHandler(null, msg);
           }
@@ -18434,13 +18561,13 @@ var Shop = (function () {
   }
 
   function mergeConfigs(parentConfig, childConfig) {
-      var res = extend$60({}, parentConfig), prop;
+      var res = extend$61({}, parentConfig), prop;
       for (prop in childConfig) {
           if (hasOwnProp(childConfig, prop)) {
               if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                   res[prop] = {};
-                  extend$60(res[prop], parentConfig[prop]);
-                  extend$60(res[prop], childConfig[prop]);
+                  extend$61(res[prop], parentConfig[prop]);
+                  extend$61(res[prop], childConfig[prop]);
               } else if (childConfig[prop] != null) {
                   res[prop] = childConfig[prop];
               } else {
@@ -18453,7 +18580,7 @@ var Shop = (function () {
                   !hasOwnProp(childConfig, prop) &&
                   isObject$3(parentConfig[prop])) {
               // make sure changes to properties don't modify parent config
-              res[prop] = extend$60({}, res[prop]);
+              res[prop] = extend$61({}, res[prop]);
           }
       }
       return res;
@@ -20645,7 +20772,7 @@ var Shop = (function () {
           }
       }
 
-      extend$60(config, bestMoment || tempConfig);
+      extend$61(config, bestMoment || tempConfig);
   }
 
   // node_modules/moment/src/lib/create/from-object.js
@@ -21675,7 +21802,7 @@ var Shop = (function () {
   }
 
   function parsingFlags () {
-      return extend$60({}, getParsingFlags(this));
+      return extend$61({}, getParsingFlags(this));
   }
 
   function invalidAt () {
