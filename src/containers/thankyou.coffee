@@ -89,8 +89,8 @@ class ThankYouForm extends El.Form
         @mediator.trigger Events.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode')
         @errorMessage = 'Error: <thankyou> is in test mode'
       else
-        @mediator.trigger Events.PayWithMetamaskFailed, new Error('Invalid address')
-        @errorMessage = 'Invalid address'
+        @mediator.trigger Events.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?')
+        @errorMessage = 'Invalid sender address, are you logged into Metamask?'
 
   getCurrency: ->
     return 'eth' if @testCrypto
