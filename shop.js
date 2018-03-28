@@ -17795,8 +17795,8 @@ var Shop = (function () {
           this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode'));
           return this.errorMessage = 'Error: <thankyou> is in test mode';
         } else {
-          this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Invalid address'));
-          return this.errorMessage = 'Invalid address';
+          this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?'));
+          return this.errorMessage = 'Invalid sender address, are you logged into Metamask?';
         }
       }
     };
