@@ -19,13 +19,49 @@ class ThankYouForm extends El.Form
   loading:      false
   checkedOut:   false
 
-  orderAddress: ''
+  loggedIntoMetamask:  false
+  metamaskNetworkMismatch: false
+  metamaskInterval : null
 
   init: ->
     super
 
     if @testCrypto
       @test = true
+
+    @on 'mount', =>
+      update = =>
+        if @isMetamaskInstalled()
+          web3.eth.getAccounts (err, accounts) =>
+            if err?
+              console.log('web3 error occurred: '+err)
+            else if accounts.length == 0
+              @loggedIntoMetamask = false
+            else
+              @loggedIntoMetamask = true
+
+          web3.version.getNetwork (err, netId) =>
+            if err?
+              console.log('web3 error occurred: '+err)
+
+            net = @getNetwork()
+
+            if netId =='1' && net == 'Mainnet'
+              @metamaskNetworkMismatch = false
+            else if netId =='3' && net == 'Ropsten'
+              @metamaskNetworkMismatch = false
+            else
+              @metamaskNetworkMismatch = true
+        else
+          @loggedIntoMetamask = false
+
+        @scheduleUpdate()
+
+      update()
+      @metamaskInterval = setInterval update, 1000
+
+      @on 'unmount', =>
+        clearInterval @metamaskInterval
 
   isCrypto: ->
     return isCrypto @getCurrency()
@@ -41,6 +77,11 @@ class ThankYouForm extends El.Form
   # crypto
   isMetamaskInstalled: ->
     return (typeof web3 != 'undefined') && web3.currentProvider.isMetaMask
+
+  isMetamaskLoggedIn: ->
+    return @isMetamaskInstalled() && @loggedIntoMetamask
+
+  isMetamaskNetworkMismatched: ->
 
   payWithMetamask: ->
     return if @loading
@@ -91,6 +132,12 @@ class ThankYouForm extends El.Form
       else
         @mediator.trigger Events.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?')
         @errorMessage = 'Invalid sender address, are you logged into Metamask?'
+
+  getNetwork: ->
+    if @data.get 'live'
+      return 'Mainnet'
+    else
+      return 'Ropsten'
 
   getCurrency: ->
     return 'eth' if @testCrypto

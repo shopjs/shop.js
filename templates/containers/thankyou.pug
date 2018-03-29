@@ -8,11 +8,15 @@
         | Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:
       qrcode.thankyou-qrcode(text='{ getQRCode }', margin='0')
       copy.input.thankyou-address(text='{ getAddress }')
+      p.thankyou-metamask-warning(if='{ isMetamaskInstalled() && !isMetamaskLoggedIn() }')
+        | Log into your Metamask account to pay.
+      p.thankyou-metamask-warning(if='{ isMetamaskInstalled() && isMetamaskLoggedIn() && metamaskNetworkMismatch }')
+        | Set your Metamask to use the { @getNetwork() } network.
       .pay-with-metamask(if='{ isMetamaskInstalled() && !checkedOut }')
-        .pay-with-metamask-button(class='{ disabled: loading }' onclick='{ payWithMetamask }')
-      .pay-with-metamask-success(if='{ checkedOut }' )
+        .pay-with-metamask-button(class='{ disabled: loading || !isMetamaskLoggedIn() || metamaskNetworkMismatch }' onclick='{ payWithMetamask }')
+      p.pay-with-metamask-success(if='{ checkedOut }' )
         | Your payment was successfully submited to the blockchain.
-      .error(if='{ errorMessage }')
+      p.error(if='{ errorMessage }')
         | { errorMessage }
   .thankyou-body
     #{ 'yield' }(from='thankyou-body')
