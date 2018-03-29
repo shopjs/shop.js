@@ -17693,7 +17693,7 @@ var Shop = (function () {
   var ShippingAddress = ShippingAddressForm;
 
   // templates/containers/thankyou.pug
-  var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() &amp;&amp; !checkedOut }\">\n        <div class=\"pay-with-metamask-button { disabled: loading }\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <div class=\"pay-with-metamask-success\" if=\"{ checkedOut }\">Your payment was successfully submited to the blockchain.</div>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
+  var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; !isMetamaskLoggedIn() }\">Log into your Metamask account to pay.</p>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; isMetamaskLoggedIn() &amp;&amp; metamaskNetworkMismatch }\">Set your Metamask to use the { @getNetwork() } network.</p>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() &amp;&amp; !checkedOut }\">\n        <div class=\"pay-with-metamask-button { disabled: loading || !isMetamaskLoggedIn() || metamaskNetworkMismatch }\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <p class=\"pay-with-metamask-success\" if=\"{ checkedOut }\">Your payment was successfully submited to the blockchain.</p>\n      <p class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</p>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
 
   // src/containers/thankyou.coffee
   var ThankYouForm,
@@ -17717,13 +17717,57 @@ var Shop = (function () {
 
     ThankYouForm.prototype.checkedOut = false;
 
-    ThankYouForm.prototype.orderAddress = '';
+    ThankYouForm.prototype.loggedIntoMetamask = false;
+
+    ThankYouForm.prototype.metamaskNetworkMismatch = false;
+
+    ThankYouForm.prototype.metamaskInterval = null;
 
     ThankYouForm.prototype.init = function() {
       ThankYouForm.__super__.init.apply(this, arguments);
       if (this.testCrypto) {
-        return this.test = true;
+        this.test = true;
       }
+      return this.on('mount', (function(_this) {
+        return function() {
+          var update;
+          update = function() {
+            if (_this.isMetamaskInstalled()) {
+              web3.eth.getAccounts(function(err, accounts) {
+                if (err != null) {
+                  return console.log('web3 error occurred: ' + err);
+                } else if (accounts.length === 0) {
+                  return _this.loggedIntoMetamask = false;
+                } else {
+                  return _this.loggedIntoMetamask = true;
+                }
+              });
+              web3.version.getNetwork(function(err, netId) {
+                var net;
+                if (err != null) {
+                  console.log('web3 error occurred: ' + err);
+                }
+                net = _this.getNetwork();
+                if (netId === '1' && net === 'Mainnet') {
+                  return _this.metamaskNetworkMismatch = false;
+                } else if (netId === '3' && net === 'Ropsten') {
+                  return _this.metamaskNetworkMismatch = false;
+                } else {
+                  return _this.metamaskNetworkMismatch = true;
+                }
+              });
+            } else {
+              _this.loggedIntoMetamask = false;
+            }
+            return _this.scheduleUpdate();
+          };
+          update();
+          _this.metamaskInterval = setInterval(update, 1000);
+          return _this.on('unmount', function() {
+            return clearInterval(_this.metamaskInterval);
+          });
+        };
+      })(this));
     };
 
     ThankYouForm.prototype.isCrypto = function() {
@@ -17749,6 +17793,12 @@ var Shop = (function () {
     ThankYouForm.prototype.isMetamaskInstalled = function() {
       return (typeof web3 !== 'undefined') && web3.currentProvider.isMetaMask;
     };
+
+    ThankYouForm.prototype.isMetamaskLoggedIn = function() {
+      return this.isMetamaskInstalled() && this.loggedIntoMetamask;
+    };
+
+    ThankYouForm.prototype.isMetamaskNetworkMismatched = function() {};
 
     ThankYouForm.prototype.payWithMetamask = function() {
       var userAddress;
@@ -17798,6 +17848,14 @@ var Shop = (function () {
           this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?'));
           return this.errorMessage = 'Invalid sender address, are you logged into Metamask?';
         }
+      }
+    };
+
+    ThankYouForm.prototype.getNetwork = function() {
+      if (this.data.get('live')) {
+        return 'Mainnet';
+      } else {
+        return 'Ropsten';
       }
     };
 
@@ -23621,7 +23679,8 @@ var Shop = (function () {
       user: null,
       payment: {
         type: opts.processor
-      }
+      },
+      live: false
     };
     for (k$3 in opts) {
       v$2 = opts[k$3];
@@ -23742,7 +23801,7 @@ var Shop = (function () {
       hasShippingRates: !!shippingRates,
       lastChecked: renderDate(lastChecked || '2000-01-01', rfc3339)
     }).then(function(res) {
-      var ref3, ref4, ref5, ref6, ref7;
+      var ref3, ref4, ref5, ref6, ref7, ref8;
       countries = (ref3 = res.countries) != null ? ref3 : countries;
       taxRates = (ref4 = res.taxRates) != null ? ref4 : taxRates;
       shippingRates = (ref5 = res.shippingRates) != null ? ref5 : shippingRates;
@@ -23753,11 +23812,12 @@ var Shop = (function () {
       data.set('countries', countries);
       data.set('taxRates', taxRates);
       data.set('shippingRates', shippingRates);
+      data.set('live', (ref6 = res.live) != null ? ref6 : false);
       if (res.currency) {
         data.set('order.currency', res.currency);
       }
-      cart.taxRates((ref6 = res.taxRates) != null ? ref6 : taxRates);
-      cart.shippingRates((ref7 = res.shippingRates) != null ? ref7 : shippingRates);
+      cart.taxRates((ref7 = res.taxRates) != null ? ref7 : taxRates);
+      cart.shippingRates((ref8 = res.shippingRates) != null ? ref8 : shippingRates);
       cart.invoice();
       m$1.trigger(Events$2.AsyncReady, res);
       return El$1.scheduleUpdate();

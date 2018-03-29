@@ -196,6 +196,7 @@ initData = (opts)->
     user: null
     payment:
       type: opts.processor
+    live: false
 
   for k, v of opts
     unless d[k]?
@@ -325,6 +326,7 @@ initCart = (client, data, cartOptions)->
     data.set 'countries', countries
     data.set 'taxRates', taxRates
     data.set 'shippingRates', shippingRates
+    data.set 'live', res.live ? false
 
     if res.currency
       data.set 'order.currency', res.currency
