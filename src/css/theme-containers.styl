@@ -12,7 +12,6 @@ reset-password
 reset-password-complete
 shippingaddress
 thankyou
-view
   box-sizing: border-box
 
   *
@@ -26,6 +25,26 @@ view
 
   @import 'ready'
   @import 'form'
+  @import 'font'
+  @import 'buttons'
+
+  .disabled
+  :disabled
+    opacity: 0.5
+
+view
+  box-sizing: border-box
+
+  *
+    box-sizing: border-box
+
+  .input
+    @import 'el-controls/src/css/theme-inputs-no-context'
+
+  .checkbox
+    @import 'el-controls/src/css/theme-checkboxes-no-context'
+
+  @import 'ready'
   @import 'font'
   @import 'buttons'
 
