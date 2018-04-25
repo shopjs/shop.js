@@ -1397,8 +1397,6 @@ reset-password .fields,
 reset-password-complete .fields,
 shippingaddress .fields,
 thankyou .fields{
-  display:box;
-  display:flexbox;
   display:flex;
   flex-direction:column;
 }
@@ -1416,8 +1414,6 @@ reset-password .inline-fields,
 reset-password-complete .inline-fields,
 shippingaddress .inline-fields,
 thankyou .inline-fields{
-  display:box;
-  display:flexbox;
   display:flex;
   flex-direction:row;
   justify-content:space-between;
