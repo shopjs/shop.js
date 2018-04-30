@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "autoprefixer": "8.4.1",
-    "bebop": "^1.12.8",
+    "bebop": "^1.14.1",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
     "clean-css": "4.1.11",
