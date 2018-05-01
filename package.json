@@ -63,7 +63,7 @@
     "clean-css": "4.1.11",
     "co-mocha": "1.2.2",
     "codecov.io": "^0.1.6",
-    "coffee-script": "^1.12.7",
+    "coffee-script": "^1.12.7 < 2",
     "connect": "3.6.6",
     "coveralls": "3.0.0",
     "css-mqpacker": "6.0.2",
