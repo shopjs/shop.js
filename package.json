@@ -87,7 +87,7 @@
     "referential": "0.5.23",
     "rucksack-css": "1.0.2",
     "rupture": "0.7.1",
-    "sake-bundle": "^0.6.7",
+    "sake-bundle": "^0.6.8",
     "sake-cli": "^0.7.2",
     "sake-outdated": "^0.3.0",
     "sake-publish": "^0.1.17",
