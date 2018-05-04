@@ -1,5 +1,12 @@
-var Shop = (function () {
+var Shop = (function (buffer,util,stream,zlib,assert,fs) {
   'use strict';
+
+  buffer = buffer && buffer.hasOwnProperty('default') ? buffer['default'] : buffer;
+  util = util && util.hasOwnProperty('default') ? util['default'] : util;
+  stream = stream && stream.hasOwnProperty('default') ? stream['default'] : stream;
+  zlib = zlib && zlib.hasOwnProperty('default') ? zlib['default'] : zlib;
+  assert = assert && assert.hasOwnProperty('default') ? assert['default'] : assert;
+  fs = fs && fs.hasOwnProperty('default') ? fs['default'] : fs;
 
   // node_modules/broken/lib/broken.mjs
   // src/promise-inspection.coffee
@@ -3535,7 +3542,7 @@ var Shop = (function () {
    * Riot public api
    */
   const settings$1 = settings;
-  const util = {
+  const util$1 = {
     tmpl,
     brackets,
     styleManager,
@@ -3551,7 +3558,7 @@ var Shop = (function () {
   var riot$1 = extend({}, core, {
     observable: observable,
     settings: settings$1,
-    util,
+    util: util$1,
   })
 
   // node_modules/es-is/number.js
@@ -6535,10 +6542,6 @@ var Shop = (function () {
 
   var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-  function commonjsRequire () {
-  	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
-  }
-
   function createCommonjsModule(fn, module) {
   	return module = { exports: {} }, fn(module, module.exports), module.exports;
   }
@@ -8987,30 +8990,36 @@ var Shop = (function () {
   // node_modules/el-controls/src/events.coffee
   var Events;
 
-  var ControlEvents = Events = {
+  var Events$1 = Events = {
     Change: 'change',
     ChangeSuccess: 'change-success',
     ChangeFailed: 'change-failed'
   };
 
-  // node_modules/es6-tween/src/shim.js
-  var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
+  // node_modules/el-controls/src/utils/valueOrCall.coffee
+  var valueOrCall;
+
+  var valueOrCall$1 = valueOrCall = function(valueOrFunc) {
+    if (typeof valueOrFunc === 'function') {
+      return valueOrFunc();
+    }
+    return valueOrFunc;
   };
-  var root = typeof window !== 'undefined'
+
+  // node_modules/es6-tween/src/shim.js
+  let root =
+    typeof window !== 'undefined'
       ? window
       : typeof global !== 'undefined' ? global : undefined;
-  var requestAnimationFrame$2 = root.requestAnimationFrame ||
-      (function (fn) { return root.setTimeout(fn, 16); });
-  var cancelAnimationFrame$1 = root.cancelAnimationFrame ||
-      (function (id) { return root.clearTimeout(id); });
+  let requestAnimationFrame$2 =
+    root.requestAnimationFrame ||
+    ((fn) => root.setTimeout(fn, 16));
+  let cancelAnimationFrame$1 =
+    root.cancelAnimationFrame ||
+    ((id) => root.clearTimeout(id));
 
   // node_modules/es6-tween/src/core.js
+
   /**
    * Get browser/Node.js current time-stamp
    * @return Normalised current time-stamp in milliseconds
@@ -9018,33 +9027,36 @@ var Shop = (function () {
    * @example
    * TWEEN.now
    */
-  var now = (function () {
-      if (typeof process !== 'undefined' && process.hrtime !== undefined && (!process.versions || process.versions.electron === undefined)) {
-          return function () {
-              var time = process.hrtime();
-              // Convert [seconds, nanoseconds] to milliseconds.
-              return time[0] * 1000 + time[1] / 1000000;
-          };
-          // In a browser, use window.performance.now if it is available.
+  const now = (function () {
+    if (typeof process !== 'undefined' && process.hrtime !== undefined && (!process.versions || process.versions.electron === undefined)) {
+      return function () {
+        const time = process.hrtime();
+
+        // Convert [seconds, nanoseconds] to milliseconds.
+        return time[0] * 1000 + time[1] / 1000000
       }
-      else if (root.performance !== undefined &&
-          root.performance.now !== undefined) {
-          // This must be bound, because directly assigning this function
-          // leads to an invocation exception in Chrome.
-          return root.performance.now.bind(root.performance);
-          // Use Date.now if it is available.
+      // In a browser, use window.performance.now if it is available.
+    } else if (
+      root.performance !== undefined &&
+      root.performance.now !== undefined
+    ) {
+      // This must be bound, because directly assigning this function
+      // leads to an invocation exception in Chrome.
+      return root.performance.now.bind(root.performance)
+      // Use Date.now if it is available.
+    } else {
+      const offset =
+        root.performance &&
+        root.performance.timing &&
+        root.performance.timing.navigationStart
+          ? root.performance.timing.navigationStart
+          : Date.now();
+      return function () {
+        return Date.now() - offset
       }
-      else {
-          var offset_1 = root.performance &&
-              root.performance.timing &&
-              root.performance.timing.navigationStart
-              ? root.performance.timing.navigationStart
-              : Date.now();
-          return function () {
-              return Date.now() - offset_1;
-          };
-      }
+    }
   })();
+
   /**
    * Lightweight, effecient and modular ES6 version of tween.js
    * @copyright 2017 @dalisoft and es6-tween contributors
@@ -9054,14 +9066,15 @@ var Shop = (function () {
    * // ES6
    * const {add, remove, isRunning, autoPlay} = TWEEN
    */
-  var _tweens = [];
-  var isStarted = false;
-  var _autoPlay = false;
-  var _tick;
-  var _ticker = requestAnimationFrame$2;
-  var _stopTicker = cancelAnimationFrame$1;
-  var emptyFrame = 0;
-  var powerModeThrottle = 120;
+  const _tweens = [];
+  let isStarted = false;
+  let _autoPlay = false;
+  let _tick;
+  const _ticker = requestAnimationFrame$2;
+  const _stopTicker = cancelAnimationFrame$1;
+  let emptyFrame = 0;
+  let powerModeThrottle = 120;
+
   /**
    * Adds tween to list
    * @param {Tween} tween Tween instance
@@ -9071,26 +9084,31 @@ var Shop = (function () {
    * tween.to({x:200}, 1000)
    * TWEEN.add(tween)
    */
-  var add = function (tween) {
-      var i = _tweens.indexOf(tween);
-      if (i > -1) {
-          _tweens.splice(i, 1);
-      }
-      _tweens.push(tween);
-      emptyFrame = 0;
-      if (_autoPlay && !isStarted) {
-          _tick = _ticker(update$2);
-          isStarted = true;
-      }
+  const add = (tween) => {
+    let i = _tweens.indexOf(tween);
+
+    if (i > -1) {
+      _tweens.splice(i, 1);
+    }
+
+    _tweens.push(tween);
+
+    emptyFrame = 0;
+
+    if (_autoPlay && !isStarted) {
+      _tick = _ticker(update$2);
+      isStarted = true;
+    }
   };
+
   /**
    * Runs update loop automaticlly
    * @param {Boolean} state State of auto-run of update loop
    * @example TWEEN.autoPlay(true)
    * @memberof TWEEN
    */
-  var autoPlay = function (state) {
-      _autoPlay = state;
+  const autoPlay = (state) => {
+    _autoPlay = state;
   };
   /**
    * Removes tween from list
@@ -9099,12 +9117,13 @@ var Shop = (function () {
    * @example
    * TWEEN.remove(tween)
    */
-  var remove$1 = function (tween) {
-      var i = _tweens.indexOf(tween);
-      if (i !== -1) {
-          _tweens.splice(i, 1);
-      }
+  const remove$1 = (tween) => {
+    const i = _tweens.indexOf(tween);
+    if (i !== -1) {
+      _tweens.splice(i, 1);
+    }
   };
+
   /**
    * Updates global tweens by given time
    * @param {number=} time Timestamp
@@ -9113,26 +9132,31 @@ var Shop = (function () {
    * @example
    * TWEEN.update(500)
    */
-  var update$2 = function (time, preserve) {
-      time = time !== undefined ? time : now();
-      if (_autoPlay && isStarted) {
-          _tick = _ticker(update$2);
-      }
-      if (!_tweens.length) {
-          emptyFrame++;
-      }
-      if (emptyFrame > powerModeThrottle) {
-          _stopTicker(_tick);
-          isStarted = false;
-          emptyFrame = 0;
-          return false;
-      }
-      var i = 0;
-      while (i < _tweens.length) {
-          _tweens[i++].update(time, preserve);
-      }
-      return true;
+
+  const update$2 = (time = now(), preserve) => {
+    if (_autoPlay && isStarted) {
+      _tick = _ticker(update$2);
+    }
+
+    if (!_tweens.length) {
+      emptyFrame++;
+    }
+
+    if (emptyFrame > powerModeThrottle) {
+      _stopTicker(_tick);
+      isStarted = false;
+      emptyFrame = 0;
+      return false
+    }
+
+    let i = 0;
+    while (i < _tweens.length) {
+      _tweens[i++].update(time, preserve);
+    }
+
+    return true
   };
+
   /**
    * The plugins store object
    * @namespace TWEEN.Plugins
@@ -9144,7 +9168,7 @@ var Shop = (function () {
    *
    * @static
    */
-  var Plugins = {};
+  const Plugins = {};
 
   // node_modules/es6-tween/src/Easing.js
   /**
@@ -9155,476 +9179,539 @@ var Shop = (function () {
    *
    * // then set via new Tween({x:0}).to({x:100}, 1000).easing(Easing.Quadratic.InOut).start()
    */
-  var Easing = {
-      Linear: {
-          None: function (k) {
-              return k;
-          }
-      },
-      Quadratic: {
-          In: function (k) {
-              return k * k;
-          },
-          Out: function (k) {
-              return k * (2 - k);
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k;
-              }
-              return -0.5 * (--k * (k - 2) - 1);
-          }
-      },
-      Cubic: {
-          In: function (k) {
-              return k * k * k;
-          },
-          Out: function (k) {
-              return --k * k * k + 1;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k;
-              }
-              return 0.5 * ((k -= 2) * k * k + 2);
-          }
-      },
-      Quartic: {
-          In: function (k) {
-              return k * k * k * k;
-          },
-          Out: function (k) {
-              return 1 - --k * k * k * k;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k * k;
-              }
-              return -0.5 * ((k -= 2) * k * k * k - 2);
-          }
-      },
-      Quintic: {
-          In: function (k) {
-              return k * k * k * k * k;
-          },
-          Out: function (k) {
-              return --k * k * k * k * k + 1;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k * k * k;
-              }
-              return 0.5 * ((k -= 2) * k * k * k * k + 2);
-          }
-      },
-      Sinusoidal: {
-          In: function (k) {
-              return 1 - Math.cos(k * Math.PI / 2);
-          },
-          Out: function (k) {
-              return Math.sin(k * Math.PI / 2);
-          },
-          InOut: function (k) {
-              return 0.5 * (1 - Math.cos(Math.PI * k));
-          }
-      },
-      Exponential: {
-          In: function (k) {
-              return k === 0 ? 0 : Math.pow(1024, k - 1);
-          },
-          Out: function (k) {
-              return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
-          },
-          InOut: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              if ((k *= 2) < 1) {
-                  return 0.5 * Math.pow(1024, k - 1);
-              }
-              return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
-          }
-      },
-      Circular: {
-          In: function (k) {
-              return 1 - Math.sqrt(1 - k * k);
-          },
-          Out: function (k) {
-              return Math.sqrt(1 - --k * k);
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return -0.5 * (Math.sqrt(1 - k * k) - 1);
-              }
-              return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
-          }
-      },
-      Elastic: {
-          In: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
-          },
-          Out: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
-          },
-          InOut: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              k *= 2;
-              if (k < 1) {
-                  return (-0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI));
-              }
-              return (0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1);
-          }
-      },
-      Back: {
-          In: function (k) {
-              var s = 1.70158;
-              return k * k * ((s + 1) * k - s);
-          },
-          Out: function (k) {
-              var s = 1.70158;
-              return --k * k * ((s + 1) * k + s) + 1;
-          },
-          InOut: function (k) {
-              var s = 1.70158 * 1.525;
-              if ((k *= 2) < 1) {
-                  return 0.5 * (k * k * ((s + 1) * k - s));
-              }
-              return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
-          }
-      },
-      Bounce: {
-          In: function (k) {
-              return 1 - Easing.Bounce.Out(1 - k);
-          },
-          Out: function (k) {
-              if (k < 1 / 2.75) {
-                  return 7.5625 * k * k;
-              }
-              else if (k < 2 / 2.75) {
-                  return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-              }
-              else if (k < 2.5 / 2.75) {
-                  return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-              }
-              else {
-                  return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
-              }
-          },
-          InOut: function (k) {
-              if (k < 0.5) {
-                  return Easing.Bounce.In(k * 2) * 0.5;
-              }
-              return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
-          }
-      },
-      Stepped: {
-          steps: function (steps) { return function (k) { return ((k * steps) | 0) / steps; }; }
+  const Easing = {
+    Linear: {
+      None (k) {
+        return k
       }
+    },
+
+    Quadratic: {
+      In (k) {
+        return k * k
+      },
+
+      Out (k) {
+        return k * (2 - k)
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k
+        }
+
+        return -0.5 * (--k * (k - 2) - 1)
+      }
+    },
+
+    Cubic: {
+      In (k) {
+        return k * k * k
+      },
+
+      Out (k) {
+        return --k * k * k + 1
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k
+        }
+
+        return 0.5 * ((k -= 2) * k * k + 2)
+      }
+    },
+
+    Quartic: {
+      In (k) {
+        return k * k * k * k
+      },
+
+      Out (k) {
+        return 1 - --k * k * k * k
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k * k
+        }
+
+        return -0.5 * ((k -= 2) * k * k * k - 2)
+      }
+    },
+
+    Quintic: {
+      In (k) {
+        return k * k * k * k * k
+      },
+
+      Out (k) {
+        return --k * k * k * k * k + 1
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k * k * k
+        }
+
+        return 0.5 * ((k -= 2) * k * k * k * k + 2)
+      }
+    },
+
+    Sinusoidal: {
+      In (k) {
+        return 1 - Math.cos(k * Math.PI / 2)
+      },
+
+      Out (k) {
+        return Math.sin(k * Math.PI / 2)
+      },
+
+      InOut (k) {
+        return 0.5 * (1 - Math.cos(Math.PI * k))
+      }
+    },
+
+    Exponential: {
+      In (k) {
+        return k === 0 ? 0 : Math.pow(1024, k - 1)
+      },
+
+      Out (k) {
+        return k === 1 ? 1 : 1 - Math.pow(2, -10 * k)
+      },
+
+      InOut (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        if ((k *= 2) < 1) {
+          return 0.5 * Math.pow(1024, k - 1)
+        }
+
+        return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2)
+      }
+    },
+
+    Circular: {
+      In (k) {
+        return 1 - Math.sqrt(1 - k * k)
+      },
+
+      Out (k) {
+        return Math.sqrt(1 - --k * k)
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return -0.5 * (Math.sqrt(1 - k * k) - 1)
+        }
+
+        return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1)
+      }
+    },
+
+    Elastic: {
+      In (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+      },
+
+      Out (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1
+      },
+
+      InOut (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        k *= 2;
+
+        if (k < 1) {
+          return (
+            -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+          )
+        }
+
+        return (
+          0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1
+        )
+      }
+    },
+
+    Back: {
+      In (k) {
+        const s = 1.70158;
+
+        return k * k * ((s + 1) * k - s)
+      },
+
+      Out (k) {
+        const s = 1.70158;
+
+        return --k * k * ((s + 1) * k + s) + 1
+      },
+
+      InOut (k) {
+        const s = 1.70158 * 1.525;
+
+        if ((k *= 2) < 1) {
+          return 0.5 * (k * k * ((s + 1) * k - s))
+        }
+
+        return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2)
+      }
+    },
+
+    Bounce: {
+      In (k) {
+        return 1 - Easing.Bounce.Out(1 - k)
+      },
+
+      Out (k) {
+        if (k < 1 / 2.75) {
+          return 7.5625 * k * k
+        } else if (k < 2 / 2.75) {
+          return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75
+        } else if (k < 2.5 / 2.75) {
+          return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375
+        } else {
+          return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375
+        }
+      },
+
+      InOut (k) {
+        if (k < 0.5) {
+          return Easing.Bounce.In(k * 2) * 0.5
+        }
+
+        return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5
+      }
+    },
+
+    Stepped: {
+      steps: steps => k => ((k * steps) | 0) / steps
+    }
   };
 
   // node_modules/es6-tween/src/constants.js
   // Frame lag-fix constants
-  var FRAME_MS = 50 / 3;
-  var TOO_LONG_FRAME_MS = 250;
-  var CHAINED_TWEENS = '_chainedTweens';
+  const FRAME_MS = 50 / 3;
+  const TOO_LONG_FRAME_MS = 250;
+
+  const CHAINED_TWEENS = '_chainedTweens';
+
   // Event System
-  var EVENT_CALLBACK = 'Callback';
-  var EVENT_UPDATE = 'update';
-  var EVENT_COMPLETE = 'complete';
-  var EVENT_START = 'start';
-  var EVENT_REPEAT = 'repeat';
-  var EVENT_REVERSE = 'reverse';
-  var EVENT_PAUSE = 'pause';
-  var EVENT_PLAY = 'play';
-  var EVENT_RESTART = 'restart';
-  var EVENT_STOP = 'stop';
-  var EVENT_SEEK = 'seek';
+  const EVENT_CALLBACK = 'Callback';
+  const EVENT_UPDATE = 'update';
+  const EVENT_COMPLETE = 'complete';
+  const EVENT_START = 'start';
+  const EVENT_REPEAT = 'repeat';
+  const EVENT_REVERSE = 'reverse';
+  const EVENT_PAUSE = 'pause';
+  const EVENT_PLAY = 'play';
+  const EVENT_RESTART = 'restart';
+  const EVENT_STOP = 'stop';
+  const EVENT_SEEK = 'seek';
+
   // For String tweening stuffs
-  var STRING_PROP = 'STRING_PROP';
+  const STRING_PROP = 'STRING_PROP';
   // Also RegExp's for string tweening
-  var NUM_REGEX = /\s+|([A-Za-z?().,{}:""[\]#\%]+)|([-+]=+)?([-+]+)?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]=?\d+)?/g;
+  const NUM_REGEX = /\s+|([A-Za-z?().,{}:""[\]#%]+)|([-+]=+)?([-+]+)?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]=?\d+)?/g;
+
   // Copies everything, duplicates, no shallow-copy
-  function deepCopy(source) {
-      if ((source && source.nodeType) || source === undefined || typeof source !== 'object') {
-          return source;
+  function deepCopy (source) {
+    if ((source && source.nodeType) || source === undefined || typeof source !== 'object') {
+      return source
+    } else if (Array.isArray(source)) {
+      return [].concat(source)
+    } else if (typeof source === 'object') {
+      let target = {};
+      for (let prop in source) {
+        target[prop] = deepCopy(source[prop]);
       }
-      else if (Array.isArray(source)) {
-          return [].concat(source);
-      }
-      else if (typeof source === 'object') {
-          var target = {};
-          for (var prop in source) {
-              target[prop] = deepCopy(source[prop]);
-          }
-          return target;
-      }
-      return source;
+      return target
+    }
+    return source
   }
-  var isNaNForST = function (v) {
-      return isNaN(+v) || ((v[0] === '+' || v[0] === '-') && v[1] === '=') || v === '' || v === ' ';
+
+  const isNaNForST = v =>
+    isNaN(+v) || ((v[0] === '+' || v[0] === '-') && v[1] === '=') || v === '' || v === ' ';
+
+  const hexColor = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i;
+  const hex2rgb = (all, hex) => {
+    let r;
+    let g;
+    let b;
+    if (hex.length === 3) {
+      r = hex[0];
+      g = hex[1];
+      b = hex[2];
+      hex = r + r + g + g + b + b;
+    }
+    let color = parseInt(hex, 16);
+    r = color >> 16 & 255;
+    g = color >> 8 & 255;
+    b = color & 255;
+    return 'rgb(' + r + ',' + g + ',' + b + ')'
   };
-  var hexColor = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i;
-  var hex2rgb = function (all, hex) {
-      var r;
-      var g;
-      var b;
-      if (hex.length === 3) {
-          r = hex[0];
-          g = hex[1];
-          b = hex[2];
-          hex = r + r + g + g + b + b;
-      }
-      var color = parseInt(hex, 16);
-      r = color >> 16 & 255;
-      g = color >> 8 & 255;
-      b = color & 255;
-      return "rgb(" + r + "," + g + "," + b + ")";
-  };
-  function decomposeString(fromValue) {
-      return typeof fromValue !== 'string' ? fromValue : fromValue.replace(hexColor, hex2rgb).match(NUM_REGEX).map(function (v) { return (isNaNForST(v) ? v : +v); });
+
+  function decomposeString (fromValue) {
+    return typeof fromValue !== 'string' ? fromValue : fromValue.replace(hexColor, hex2rgb).match(NUM_REGEX).map(v => (isNaNForST(v) ? v : +v))
   }
+
   // Decompose value, now for only `string` that required
-  function decompose(prop, obj, from, to, stringBuffer) {
-      var fromValue = from[prop];
-      var toValue = to[prop];
-      if (typeof fromValue === 'string' || typeof toValue === 'string') {
-          var fromValue1 = Array.isArray(fromValue) && fromValue[0] === STRING_PROP ? fromValue : decomposeString(fromValue);
-          var toValue1 = Array.isArray(toValue) && toValue[0] === STRING_PROP ? toValue : decomposeString(toValue);
-          var i = 1;
-          while (i < fromValue1.length) {
-              if (fromValue1[i] === toValue1[i] && typeof fromValue1[i - 1] === 'string') {
-                  fromValue1.splice(i - 1, 2, fromValue1[i - 1] + fromValue1[i]);
-                  toValue1.splice(i - 1, 2, toValue1[i - 1] + toValue1[i]);
-              }
-              else {
-                  i++;
-              }
-          }
-          i = 0;
-          if (fromValue1[0] === STRING_PROP) {
-              fromValue1.shift();
-          }
-          if (toValue1[0] === STRING_PROP) {
-              toValue1.shift();
-          }
-          var fromValue2 = { isString: true, length: fromValue1.length };
-          var toValue2 = { isString: true, length: toValue1.length };
-          while (i < fromValue2.length) {
-              fromValue2[i] = fromValue1[i];
-              toValue2[i] = toValue1[i];
-              i++;
-          }
-          from[prop] = fromValue2;
-          to[prop] = toValue2;
-          return true;
+  function decompose (prop, obj, from, to, stringBuffer) {
+    const fromValue = from[prop];
+    const toValue = to[prop];
+
+    if (typeof fromValue === 'string' || typeof toValue === 'string') {
+      let fromValue1 = Array.isArray(fromValue) && fromValue[0] === STRING_PROP ? fromValue : decomposeString(fromValue);
+      let toValue1 = Array.isArray(toValue) && toValue[0] === STRING_PROP ? toValue : decomposeString(toValue);
+
+      let i = 1;
+      while (i < fromValue1.length) {
+        if (fromValue1[i] === toValue1[i] && typeof fromValue1[i - 1] === 'string') {
+          fromValue1.splice(i - 1, 2, fromValue1[i - 1] + fromValue1[i]);
+          toValue1.splice(i - 1, 2, toValue1[i - 1] + toValue1[i]);
+        } else {
+          i++;
+        }
       }
-      else if (typeof fromValue === 'object' && typeof toValue === 'object') {
-          if (Array.isArray(fromValue)) {
-              return fromValue.map(function (v, i) {
-                  return decompose(i, obj[prop], fromValue, toValue);
-              });
-          }
-          else {
-              for (var prop2 in toValue) {
-                  decompose(prop2, obj[prop], fromValue, toValue);
-              }
-          }
-          return true;
+
+      i = 0;
+
+      if (fromValue1[0] === STRING_PROP) {
+        fromValue1.shift();
       }
-      return false;
+      if (toValue1[0] === STRING_PROP) {
+        toValue1.shift();
+      }
+
+      let fromValue2 = {
+        isString: true,
+        length: fromValue1.length
+      };
+      let toValue2 = {
+        isString: true,
+        length: toValue1.length
+      };
+
+      while (i < fromValue2.length) {
+        fromValue2[i] = fromValue1[i];
+        toValue2[i] = toValue1[i];
+        i++;
+      }
+
+      from[prop] = fromValue2;
+      to[prop] = toValue2;
+      return true
+    } else if (typeof fromValue === 'object' && typeof toValue === 'object') {
+      if (Array.isArray(fromValue)) {
+        return fromValue.map((v, i) =>
+          decompose(i, obj[prop], fromValue, toValue)
+        )
+      } else {
+        for (let prop2 in toValue) {
+          decompose(prop2, obj[prop], fromValue, toValue);
+        }
+      }
+      return true
+    }
+    return false
   }
+
   // Recompose value
-  var DECIMAL = Math.pow(10, 4);
-  var RGB = 'rgb(';
-  var RGBA = 'rgba(';
-  var isRGBColor = function (v, i, r) {
-      if (r === void 0) { r = RGB; }
-      return typeof v[i] === 'number' &&
-          (v[i - 1] === r || v[i - 3] === r || v[i - 5] === r);
-  };
-  function recompose(prop, obj, from, to, t, originalT, stringBuffer) {
-      var fromValue = stringBuffer ? from : from[prop];
-      var toValue = stringBuffer ? to : to[prop];
-      if (toValue === undefined) {
-          return fromValue;
+  const DECIMAL = Math.pow(10, 4);
+  const RGB = 'rgb(';
+  const RGBA = 'rgba(';
+
+  const isRGBColor = (v, i, r = RGB) =>
+    typeof v[i] === 'number' &&
+    (v[i - 1] === r || v[i - 3] === r || v[i - 5] === r);
+  function recompose (prop, obj, from, to, t, originalT, stringBuffer) {
+    const fromValue = stringBuffer ? from : from[prop];
+    const toValue = stringBuffer ? to : to[prop];
+    if (toValue === undefined) {
+      return fromValue
+    }
+    if (
+      fromValue === undefined ||
+      typeof fromValue === 'string' ||
+      fromValue === toValue
+    ) {
+      return toValue
+    } else if (typeof fromValue === 'object' && typeof toValue === 'object') {
+      if (!fromValue || !toValue) {
+        return obj[prop]
       }
-      if (fromValue === undefined ||
-          typeof fromValue === 'string' ||
-          fromValue === toValue) {
-          return toValue;
-      }
-      else if (typeof fromValue === 'object' && typeof toValue === 'object') {
-          if (!fromValue || !toValue) {
-              return obj[prop];
+      if (typeof fromValue === 'object' && !!fromValue && fromValue.isString) {
+        let STRING_BUFFER = '';
+        for (let i = 0, len = fromValue.length; i < len; i++) {
+          const isRelative = typeof fromValue[i] === 'number' && typeof toValue[i] === 'string' && toValue[i][1] === '=';
+          let currentValue =
+            typeof fromValue[i] !== 'number'
+              ? fromValue[i]
+              : (((isRelative
+                ? fromValue[i] +
+                  parseFloat(toValue[i][0] + toValue[i].substr(2)) * t
+                : fromValue[i] + (toValue[i] - fromValue[i]) * t) *
+                DECIMAL) |
+              0) /
+            DECIMAL;
+          if (isRGBColor(fromValue, i) || isRGBColor(fromValue, i, RGBA)) {
+            currentValue |= 0;
           }
-          if (typeof fromValue === 'object' && !!fromValue && fromValue.isString) {
-              var STRING_BUFFER = '';
-              for (var i = 0, len = fromValue.length; i < len; i++) {
-                  var isRelative = typeof fromValue[i] === 'number' && typeof toValue[i] === 'string' && toValue[i][1] === '=';
-                  var currentValue = typeof fromValue[i] !== 'number'
-                      ? fromValue[i]
-                      : (((isRelative
-                          ? fromValue[i] +
-                              parseFloat(toValue[i][0] + toValue[i].substr(2)) * t
-                          : fromValue[i] + (toValue[i] - fromValue[i]) * t) *
-                          DECIMAL) |
-                          0) /
-                          DECIMAL;
-                  if (isRGBColor(fromValue, i) || isRGBColor(fromValue, i, RGBA)) {
-                      currentValue |= 0;
-                  }
-                  STRING_BUFFER += currentValue;
-                  if (isRelative && originalT === 1) {
-                      fromValue[i] =
-                          fromValue[i] +
-                              parseFloat(toValue[i][0] + toValue[i].substr(2));
-                  }
-              }
-              if (!stringBuffer) {
-                  obj[prop] = STRING_BUFFER;
-              }
-              return STRING_BUFFER;
-          }
-          else if (Array.isArray(fromValue) && fromValue[0] !== STRING_PROP) {
-              for (var i = 0, len = fromValue.length; i < len; i++) {
-                  if (fromValue[i] === toValue[i]) {
-                      continue;
-                  }
-                  recompose(i, obj[prop], fromValue, toValue, t, originalT);
-              }
-          }
-          else if (typeof fromValue === 'object' && !!fromValue && !fromValue.isString) {
-              for (var i in fromValue) {
-                  if (fromValue[i] === toValue[i]) {
-                      continue;
-                  }
-                  recompose(i, obj[prop], fromValue, toValue, t, originalT);
-              }
-          }
-      }
-      else if (typeof fromValue === 'number') {
-          var isRelative = typeof toValue === 'string';
-          obj[prop] =
-              (((isRelative
-                  ? fromValue + parseFloat(toValue[0] + toValue.substr(2)) * t
-                  : fromValue + (toValue - fromValue) * t) *
-                  DECIMAL) |
-                  0) /
-                  DECIMAL;
+          STRING_BUFFER += currentValue;
           if (isRelative && originalT === 1) {
-              from[prop] = obj[prop];
+            fromValue[i] =
+              fromValue[i] +
+              parseFloat(toValue[i][0] + toValue[i].substr(2));
           }
+        }
+        if (!stringBuffer) {
+          obj[prop] = STRING_BUFFER;
+        }
+        return STRING_BUFFER
+      } else if (Array.isArray(fromValue) && fromValue[0] !== STRING_PROP) {
+        for (let i = 0, len = fromValue.length; i < len; i++) {
+          if (fromValue[i] === toValue[i]) {
+            continue
+          }
+          recompose(i, obj[prop], fromValue, toValue, t, originalT);
+        }
+      } else if (typeof fromValue === 'object' && !!fromValue && !fromValue.isString) {
+        for (let i in fromValue) {
+          if (fromValue[i] === toValue[i]) {
+            continue
+          }
+          recompose(i, obj[prop], fromValue, toValue, t, originalT);
+        }
       }
-      else if (typeof toValue === 'function') {
-          obj[prop] = toValue(t);
+    } else if (typeof fromValue === 'number') {
+      const isRelative = typeof toValue === 'string';
+      obj[prop] =
+        (((isRelative
+          ? fromValue + parseFloat(toValue[0] + toValue.substr(2)) * t
+          : fromValue + (toValue - fromValue) * t) *
+            DECIMAL) |
+          0) /
+        DECIMAL;
+      if (isRelative && originalT === 1) {
+        from[prop] = obj[prop];
       }
-      return obj[prop];
+    } else if (typeof toValue === 'function') {
+      obj[prop] = toValue(t);
+    }
+    return obj[prop]
   }
+
   // Dot notation => Object structure converter
   // example
   // {'scale.x.y.z':'VALUE'} => {scale:{x:{y:{z:'VALUE'}}}}
   // Only works for 3-level parsing, after 3-level, parsing dot-notation not works as it's not affects
-  var propRegExp = /([.\[])/g;
-  var replaceBrace = /\]/g;
-  var propExtract = function (obj, property) {
-      var value = obj[property];
-      var props = property.replace(replaceBrace, '').split(propRegExp);
-      var propsLastIndex = props.length - 1;
-      var lastArr = Array.isArray(obj);
-      var lastObj = typeof obj === 'object' && !lastArr;
-      if (lastObj) {
-          obj[property] = null;
-          delete obj[property];
+  const propRegExp = /([.[])/g;
+  const replaceBrace = /\]/g;
+  const propExtract = function (obj, property) {
+    const value = obj[property];
+    const props = property.replace(replaceBrace, '').split(propRegExp);
+    const propsLastIndex = props.length - 1;
+    let lastArr = Array.isArray(obj);
+    let lastObj = typeof obj === 'object' && !lastArr;
+    if (lastObj) {
+      obj[property] = null;
+      delete obj[property];
+    } else if (lastArr) {
+      obj.splice(property, 1);
+    }
+    return props.reduce((nested, prop, index) => {
+      if (lastArr) {
+        if (prop !== '.' && prop !== '[') {
+          prop *= 1;
+        }
       }
-      else if (lastArr) {
-          obj.splice(property, 1);
+      let nextProp = props[index + 1];
+      let nextIsArray = nextProp === '[';
+      if (prop === '.' || prop === '[') {
+        if (prop === '.') {
+          lastObj = true;
+          lastArr = false;
+        } else if (prop === '[') {
+          lastObj = false;
+          lastArr = true;
+        }
+        return nested
+      } else if (nested[prop] === undefined) {
+        if (lastArr || lastObj) {
+          nested[prop] =
+            index === propsLastIndex
+              ? value
+              : lastArr || nextIsArray ? [] : lastObj ? {} : null;
+          lastObj = lastArr = false;
+          return nested[prop]
+        }
+      } else if (nested[prop] !== undefined) {
+        if (index === propsLastIndex) {
+          nested[prop] = value;
+        }
+        return nested[prop]
       }
-      return props.reduce(function (nested, prop, index) {
-          if (lastArr) {
-              if (prop !== '.' && prop !== '[') {
-                  prop *= 1;
-              }
-          }
-          var nextProp = props[index + 1];
-          var nextIsArray = nextProp === '[';
-          if (prop === '.' || prop === '[') {
-              if (prop === '.') {
-                  lastObj = true;
-                  lastArr = false;
-              }
-              else if (prop === '[') {
-                  lastObj = false;
-                  lastArr = true;
-              }
-              return nested;
-          }
-          else if (nested[prop] === undefined) {
-              if (lastArr || lastObj) {
-                  nested[prop] =
-                      index === propsLastIndex
-                          ? value
-                          : lastArr || nextIsArray ? [] : lastObj ? {} : null;
-                  lastObj = lastArr = false;
-                  return nested[prop];
-              }
-          }
-          else if (nested[prop] !== undefined) {
-              if (index === propsLastIndex) {
-                  nested[prop] = value;
-              }
-              return nested[prop];
-          }
-          return nested;
-      }, obj);
+      return nested
+    }, obj)
   };
-  var SET_NESTED = function (nested) {
-      if (typeof nested === 'object' && !!nested) {
-          for (var prop in nested) {
-              if (prop.indexOf('.') !== -1 || prop.indexOf('[') !== -1) {
-                  propExtract(nested, prop);
+
+  const SET_NESTED = function (nested) {
+    if (typeof nested === 'object' && !!nested) {
+      for (let prop in nested) {
+        if (prop.indexOf('.') !== -1 || prop.indexOf('[') !== -1) {
+          propExtract(nested, prop);
+        } else if (typeof nested[prop] === 'object' && !!nested[prop]) {
+          let nested2 = nested[prop];
+          for (let prop2 in nested2) {
+            if (prop2.indexOf('.') !== -1 || prop2.indexOf('[') !== -1) {
+              propExtract(nested2, prop2);
+            } else if (typeof nested2[prop2] === 'object' && !!nested2[prop2]) {
+              let nested3 = nested2[prop2];
+              for (let prop3 in nested3) {
+                if (prop3.indexOf('.') !== -1 || prop3.indexOf('[') !== -1) {
+                  propExtract(nested3, prop3);
+                }
               }
-              else if (typeof nested[prop] === 'object' && !!nested[prop]) {
-                  var nested2 = nested[prop];
-                  for (var prop2 in nested2) {
-                      if (prop2.indexOf('.') !== -1 || prop2.indexOf('[') !== -1) {
-                          propExtract(nested2, prop2);
-                      }
-                      else if (typeof nested2[prop2] === 'object' && !!nested2[prop2]) {
-                          var nested3 = nested2[prop2];
-                          for (var prop3 in nested3) {
-                              if (prop3.indexOf('.') !== -1 || prop3.indexOf('[') !== -1) {
-                                  propExtract(nested3, prop3);
-                              }
-                          }
-                      }
-                  }
-              }
+            }
           }
+        }
       }
-      return nested;
+    }
+    return nested
   };
 
   // node_modules/es6-tween/src/Interpolation.js
+
   /**
    * List of full Interpolation
    * @namespace TWEEN.Interpolation
@@ -9635,268 +9722,317 @@ var Shop = (function () {
    * new Tween({x:0}).to({x:[0, 4, 8, 12, 15, 20, 30, 40, 20, 40, 10, 50]}, 1000).interpolation(bezier).start()
    * @memberof TWEEN
    */
-  var Interpolation = {
-      Linear: function (v, k, value) {
-          var m = v.length - 1;
-          var f = m * k;
-          var i = Math.floor(f);
-          var fn = Interpolation.Utils.Linear;
-          if (k < 0) {
-              return fn(v[0], v[1], f, value);
-          }
-          if (k > 1) {
-              return fn(v[m], v[m - 1], m - f, value);
-          }
-          return fn(v[i], v[i + 1 > m ? m : i + 1], f - i, value);
-      },
-      Bezier: function (v, k, value) {
-          var b = Interpolation.Utils.Reset(value);
-          var n = v.length - 1;
-          var pw = Math.pow;
-          var fn = Interpolation.Utils.Bernstein;
-          var isBArray = Array.isArray(b);
-          for (var i = 0; i <= n; i++) {
-              if (typeof b === 'number') {
-                  b += pw(1 - k, n - i) * pw(k, i) * v[i] * fn(n, i);
-              }
-              else if (isBArray) {
-                  for (var p = 0, len = b.length; p < len; p++) {
-                      if (typeof b[p] === 'number') {
-                          b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
-                      }
-                      else {
-                          b[p] = v[i][p];
-                      }
-                  }
-              }
-              else if (typeof b === 'object') {
-                  for (var p in b) {
-                      if (typeof b[p] === 'number') {
-                          b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
-                      }
-                      else {
-                          b[p] = v[i][p];
-                      }
-                  }
-              }
-              else if (typeof b === 'string') {
-                  var STRING_BUFFER = '', idx = Math.round(n * k), pidx = idx - 1 < 0 ? 0 : idx - 1, vCurr = v[idx], vPrev = v[pidx];
-                  for (var ks = 1, len = vCurr.length; ks < len; ks++) {
-                      STRING_BUFFER += vCurr[ks];
-                  }
-                  return STRING_BUFFER;
-              }
-          }
-          return b;
-      },
-      CatmullRom: function (v, k, value) {
-          var m = v.length - 1;
-          var f = m * k;
-          var i = Math.floor(f);
-          var fn = Interpolation.Utils.CatmullRom;
-          if (v[0] === v[m]) {
-              if (k < 0) {
-                  i = Math.floor((f = m * (1 + k)));
-              }
-              return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i, value);
-          }
-          else {
-              if (k < 0) {
-                  return fn(v[1], v[1], v[0], v[0], -k, value);
-              }
-              if (k > 1) {
-                  return fn(v[m - 1], v[m - 1], v[m], v[m], (k | 0) - k, value);
-              }
-              return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i, value);
-          }
-      },
-      Utils: {
-          Linear: function (p0, p1, t, v) {
-              if (typeof p0 === 'string') {
-                  return p1;
-              }
-              else if (typeof p0 === 'number') {
-                  return typeof p0 === 'function' ? p0(t) : p0 + (p1 - p0) * t;
-              }
-              else if (typeof p0 === 'object') {
-                  if (p0.length !== undefined) {
-                      if (p0[0] === STRING_PROP) {
-                          var STRING_BUFFER = '';
-                          for (var i = 1, len = p0.length; i < len; i++) {
-                              var currentValue = typeof p0[i] === 'number' ? p0[i] + (p1[i] - p0[i]) * t : p1[i];
-                              if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
-                                  currentValue |= 0;
-                              }
-                              STRING_BUFFER += currentValue;
-                          }
-                          return STRING_BUFFER;
-                      }
-                      for (var p = 0, len = v.length; p < len; p++) {
-                          v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
-                      }
-                  }
-                  else {
-                      for (var p in v) {
-                          v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
-                      }
-                  }
-                  return v;
-              }
-          },
-          Reset: function (value) {
-              if (Array.isArray(value)) {
-                  for (var i = 0, len = value.length; i < len; i++) {
-                      value[i] = Interpolation.Utils.Reset(value[i]);
-                  }
-                  return value;
-              }
-              else if (typeof value === 'object') {
-                  for (var i in value) {
-                      value[i] = Interpolation.Utils.Reset(value[i]);
-                  }
-                  return value;
-              }
-              else if (typeof value === 'number') {
-                  return 0;
-              }
-              return value;
-          },
-          Bernstein: function (n, i) {
-              var fc = Interpolation.Utils.Factorial;
-              return fc(n) / fc(i) / fc(n - i);
-          },
-          Factorial: (function () {
-              var a = [1];
-              return function (n) {
-                  var s = 1;
-                  if (a[n]) {
-                      return a[n];
-                  }
-                  for (var i = n; i > 1; i--) {
-                      s *= i;
-                  }
-                  a[n] = s;
-                  return s;
-              };
-          })(),
-          CatmullRom: function (p0, p1, p2, p3, t, v) {
-              if (typeof p0 === 'string') {
-                  return p1;
-              }
-              else if (typeof p0 === 'number') {
-                  var v0 = (p2 - p0) * 0.5;
-                  var v1 = (p3 - p1) * 0.5;
-                  var t2 = t * t;
-                  var t3 = t * t2;
-                  return ((2 * p1 - 2 * p2 + v0 + v1) * t3 +
-                      (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 +
-                      v0 * t +
-                      p1);
-              }
-              else if (typeof p0 === 'object') {
-                  if (p0.length !== undefined) {
-                      if (p0[0] === STRING_PROP) {
-                          var STRING_BUFFER = '';
-                          for (var i = 1, len = p0.length; i < len; i++) {
-                              var currentValue = typeof p0[i] === 'number'
-                                  ? Interpolation.Utils.CatmullRom(p0[i], p1[i], p2[i], p3[i], t)
-                                  : p3[i];
-                              if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
-                                  currentValue |= 0;
-                              }
-                              STRING_BUFFER += currentValue;
-                          }
-                          return STRING_BUFFER;
-                      }
-                      for (var p = 0, len = v.length; p < len; p++) {
-                          v[p] = Interpolation.Utils.CatmullRom(p0[p], p1[p], p2[p], p3[p], t, v[p]);
-                      }
-                  }
-                  else {
-                      for (var p in v) {
-                          v[p] = Interpolation.Utils.CatmullRom(p0[p], p1[p], p2[p], p3[p], t, v[p]);
-                      }
-                  }
-                  return v;
-              }
-          }
+  const Interpolation = {
+    Linear (v, k, value) {
+      const m = v.length - 1;
+      const f = m * k;
+      const i = Math.floor(f);
+      const fn = Interpolation.Utils.Linear;
+      if (k < 0) {
+        return fn(v[0], v[1], f, value)
       }
+      if (k > 1) {
+        return fn(v[m], v[m - 1], m - f, value)
+      }
+      return fn(v[i], v[i + 1 > m ? m : i + 1], f - i, value)
+    },
+
+    Bezier (v, k, value) {
+      let b = Interpolation.Utils.Reset(value);
+      let n = v.length - 1;
+      let pw = Math.pow;
+      let fn = Interpolation.Utils.Bernstein;
+
+      let isBArray = Array.isArray(b);
+
+      for (let i = 0; i <= n; i++) {
+        if (typeof b === 'number') {
+          b += pw(1 - k, n - i) * pw(k, i) * v[i] * fn(n, i);
+        } else if (isBArray) {
+          for (let p = 0, len = b.length; p < len; p++) {
+            if (typeof b[p] === 'number') {
+              b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
+            } else {
+              b[p] = v[i][p];
+            }
+          }
+        } else if (typeof b === 'object') {
+          for (let p in b) {
+            if (typeof b[p] === 'number') {
+              b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
+            } else {
+              b[p] = v[i][p];
+            }
+          }
+        } else if (typeof b === 'string') {
+          let STRING_BUFFER = '';
+          let idx = Math.round(n * k);
+          let vCurr = v[idx];
+          for (let ks = 1, len = vCurr.length; ks < len; ks++) {
+            STRING_BUFFER += vCurr[ks];
+          }
+          return STRING_BUFFER
+        }
+      }
+
+      return b
+    },
+
+    CatmullRom (v, k, value) {
+      const m = v.length - 1;
+      let f = m * k;
+      let i = Math.floor(f);
+      const fn = Interpolation.Utils.CatmullRom;
+
+      if (v[0] === v[m]) {
+        if (k < 0) {
+          i = Math.floor((f = m * (1 + k)));
+        }
+
+        return fn(
+          v[(i - 1 + m) % m],
+          v[i],
+          v[(i + 1) % m],
+          v[(i + 2) % m],
+          f - i,
+          value
+        )
+      } else {
+        if (k < 0) {
+          return fn(v[1], v[1], v[0], v[0], -k, value)
+        }
+
+        if (k > 1) {
+          return fn(v[m - 1], v[m - 1], v[m], v[m], (k | 0) - k, value)
+        }
+
+        return fn(
+          v[i ? i - 1 : 0],
+          v[i],
+          v[m < i + 1 ? m : i + 1],
+          v[m < i + 2 ? m : i + 2],
+          f - i,
+          value
+        )
+      }
+    },
+
+    Utils: {
+      Linear (p0, p1, t, v) {
+        if (typeof p0 === 'string') {
+          return p1
+        } else if (typeof p0 === 'number') {
+          return typeof p0 === 'function' ? p0(t) : p0 + (p1 - p0) * t
+        } else if (typeof p0 === 'object') {
+          if (p0.length !== undefined) {
+            if (p0[0] === STRING_PROP) {
+              let STRING_BUFFER = '';
+              for (let i = 1, len = p0.length; i < len; i++) {
+                let currentValue =
+                  typeof p0[i] === 'number' ? p0[i] + (p1[i] - p0[i]) * t : p1[i];
+                if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
+                  currentValue |= 0;
+                }
+                STRING_BUFFER += currentValue;
+              }
+              return STRING_BUFFER
+            }
+            for (let p = 0, len = v.length; p < len; p++) {
+              v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
+            }
+          } else {
+            for (const p in v) {
+              v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
+            }
+          }
+          return v
+        }
+      },
+
+      Reset (value) {
+        if (Array.isArray(value)) {
+          for (let i = 0, len = value.length; i < len; i++) {
+            value[i] = Interpolation.Utils.Reset(value[i]);
+          }
+          return value
+        } else if (typeof value === 'object') {
+          for (let i in value) {
+            value[i] = Interpolation.Utils.Reset(value[i]);
+          }
+          return value
+        } else if (typeof value === 'number') {
+          return 0
+        }
+        return value
+      },
+
+      Bernstein (n, i) {
+        const fc = Interpolation.Utils.Factorial;
+
+        return fc(n) / fc(i) / fc(n - i)
+      },
+
+      Factorial: (function () {
+        const a = [1];
+
+        return n => {
+          let s = 1;
+
+          if (a[n]) {
+            return a[n]
+          }
+
+          for (let i = n; i > 1; i--) {
+            s *= i;
+          }
+
+          a[n] = s;
+          return s
+        }
+      })(),
+
+      CatmullRom (p0, p1, p2, p3, t, v) {
+        if (typeof p0 === 'string') {
+          return p1
+        } else if (typeof p0 === 'number') {
+          const v0 = (p2 - p0) * 0.5;
+          const v1 = (p3 - p1) * 0.5;
+          const t2 = t * t;
+          const t3 = t * t2;
+
+          return (
+            (2 * p1 - 2 * p2 + v0 + v1) * t3 +
+            (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 +
+            v0 * t +
+            p1
+          )
+        } else if (typeof p0 === 'object') {
+          if (p0.length !== undefined) {
+            if (p0[0] === STRING_PROP) {
+              let STRING_BUFFER = '';
+              for (let i = 1, len = p0.length; i < len; i++) {
+                let currentValue =
+                  typeof p0[i] === 'number'
+                    ? Interpolation.Utils.CatmullRom(
+                      p0[i],
+                      p1[i],
+                      p2[i],
+                      p3[i],
+                      t
+                    )
+                    : p3[i];
+                if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
+                  currentValue |= 0;
+                }
+                STRING_BUFFER += currentValue;
+              }
+              return STRING_BUFFER
+            }
+            for (let p = 0, len = v.length; p < len; p++) {
+              v[p] = Interpolation.Utils.CatmullRom(
+                p0[p],
+                p1[p],
+                p2[p],
+                p3[p],
+                t,
+                v[p]
+              );
+            }
+          } else {
+            for (const p in v) {
+              v[p] = Interpolation.Utils.CatmullRom(
+                p0[p],
+                p1[p],
+                p2[p],
+                p3[p],
+                t,
+                v[p]
+              );
+            }
+          }
+          return v
+        }
+      }
+    }
   };
 
   // node_modules/es6-tween/src/NodeCache.js
-  var __assign$1 = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
-  };
-  var Store = {};
+
+  const Store = {};
   function NodeCache (node, object, tween) {
-      if (!node || !node.nodeType) {
-          return object;
-      }
-      var ID = node.queueID || 'q_' + Date.now();
-      if (!node.queueID) {
-          node.queueID = ID;
-      }
-      var storeID = Store[ID];
-      if (storeID) {
-          if (storeID.object === object &&
-              node === storeID.tween.node &&
-              tween._startTime === storeID.tween._startTime) {
-              remove$1(storeID.tween);
+    if (!node || !node.nodeType) {
+      return object
+    }
+    const ID = node.queueID || 'q_' + Date.now();
+    if (!node.queueID) {
+      node.queueID = ID;
+    }
+    const storeID = Store[ID];
+    if (storeID) {
+      if (
+        storeID.object === object &&
+        node === storeID.tween.node &&
+        tween._startTime === storeID.tween._startTime
+      ) {
+        remove$1(storeID.tween);
+      } else if (typeof object === 'object' && !!object && !!storeID.object) {
+        for (let prop in object) {
+          if (prop in storeID.object) {
+            if (tween._startTime === storeID.tween._startTime) {
+              delete storeID.object[prop];
+            } else {
+              storeID.propNormaliseRequired = true;
+            }
           }
-          else if (typeof object === 'object' && !!object && !!storeID.object) {
-              for (var prop in object) {
-                  if (prop in storeID.object) {
-                      if (tween._startTime === storeID.tween._startTime) {
-                          delete storeID.object[prop];
-                      }
-                      else {
-                          storeID.propNormaliseRequired = true;
-                      }
-                  }
-              }
-              storeID.object = __assign$1({}, storeID.object, object);
-          }
-          return storeID.object;
+        }
+        storeID.object = { ...storeID.object,
+          ...object
+        };
       }
-      if (typeof object === 'object' && !!object) {
-          Store[ID] = { tween: tween, object: object, propNormaliseRequired: false };
-          return Store[ID].object;
-      }
-      return object;
+      return storeID.object
+    }
+
+    if (typeof object === 'object' && !!object) {
+      Store[ID] = {
+        tween,
+        object,
+        propNormaliseRequired: false
+      };
+      return Store[ID].object
+    }
+
+    return object
   }
 
   // node_modules/es6-tween/src/selector.js
   function Selector (selector, collection) {
-      if (collection) {
-          return !selector
-              ? null
-              : selector === window || selector === document
-                  ? [selector]
-                  : typeof selector === 'string'
-                      ? !!document.querySelectorAll && document.querySelectorAll(selector)
-                      : Array.isArray(selector)
-                          ? selector
-                          : selector.nodeType ? [selector] : [];
-      }
+    if (collection) {
       return !selector
-          ? null
-          : selector === window || selector === document
+        ? null
+        : selector === window || selector === document
+          ? [selector]
+          : typeof selector === 'string'
+            ? !!document.querySelectorAll && document.querySelectorAll(selector)
+            : Array.isArray(selector)
               ? selector
-              : typeof selector === 'string'
-                  ? !!document.querySelector && document.querySelector(selector)
-                  : Array.isArray(selector)
-                      ? selector[0]
-                      : selector.nodeType ? selector : null;
+              : selector.nodeType ? [selector] : []
+    }
+    return !selector
+      ? null
+      : selector === window || selector === document
+        ? selector
+        : typeof selector === 'string'
+          ? !!document.querySelector && document.querySelector(selector)
+          : Array.isArray(selector)
+            ? selector[0]
+            : selector.nodeType ? selector : null
   }
 
   // node_modules/es6-tween/src/Tween.js
-  var _id = 0; // Unique ID
-  var defaultEasing = Easing.Linear.None;
+
+  let _id = 0; // Unique ID
+  const defaultEasing = Easing.Linear.None;
+
   /**
    * Tween main constructor
    * @constructor
@@ -9906,704 +10042,840 @@ var Shop = (function () {
    * @param {Object=} object If Node Element is using, second argument is used for Tween initial object
    * @example let tween = new Tween(myNode, {width:'100px'}).to({width:'300px'}, 2000).start()
    */
-  var Tween = /** @class */ (function () {
-      function Tween(node, object) {
-          this._chainedTweensCount = 0;
-          this.id = _id++;
-          if (!!node && typeof node === 'object' && !object && !node.nodeType) {
-              object = this.object = node;
-              node = null;
-          }
-          else if (!!node &&
-              (node.nodeType || node.length || typeof node === 'string')) {
-              node = this.node = Selector(node);
-              object = this.object = NodeCache(node, object, this);
-          }
-          this._valuesEnd = null;
-          this._valuesStart = {};
-          this._duration = 1000;
-          this._easingFunction = defaultEasing;
-          this._easingReverse = defaultEasing;
-          this._interpolationFunction = Interpolation.Linear;
-          this._startTime = 0;
-          this._initTime = 0;
-          this._delayTime = 0;
-          this._repeat = 0;
-          this._r = 0;
-          this._isPlaying = false;
-          this._yoyo = false;
-          this._reversed = false;
-          this._onStartCallbackFired = false;
-          this._pausedTime = null;
-          this._isFinite = true;
-          this._maxListener = 15;
-          this._prevTime = null;
-          return this;
+  class Tween {
+    /**
+     * Easier way to call the Tween
+     * @param {Element} node DOM Element
+     * @param {object} object - Initial value
+     * @param {object} to - Target value
+     * @param {object} params - Options of tweens
+     * @example Tween.fromTo(node, {x:0}, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static fromTo (node, object, to, params = {}) {
+      params.quickRender = params.quickRender ? params.quickRender : !to;
+      const tween = new Tween(node, object).to(to, params);
+      if (params.quickRender) {
+        tween.render().update(tween._startTime);
+        tween._rendered = false;
+        tween._onStartCallbackFired = false;
       }
-      /**
-       * Easier way to call the Tween
-       * @param {Element} node DOM Element
-       * @param {object} object - Initial value
-       * @param {object} to - Target value
-       * @param {object} params - Options of tweens
-       * @example Tween.fromTo(node, {x:0}, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.fromTo = function (node, object, to, params) {
-          if (params === void 0) { params = {}; }
-          params.quickRender = params.quickRender ? params.quickRender : !to;
-          var tween = new Tween(node, object).to(to, params);
-          if (params.quickRender) {
-              tween.render().update(tween._startTime);
-              tween._rendered = false;
-              tween._onStartCallbackFired = false;
-          }
-          return tween;
-      };
-      /**
-       * Easier way calling constructor only applies the `to` value, useful for CSS Animation
-       * @param {Element} node DOM Element
-       * @param {object} to - Target value
-       * @param {object} params - Options of tweens
-       * @example Tween.to(node, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.to = function (node, to, params) {
-          return Tween.fromTo(node, null, to, params);
-      };
-      /**
-       * Easier way calling constructor only applies the `from` value, useful for CSS Animation
-       * @param {Element} node DOM Element
-       * @param {object} from - Initial value
-       * @param {object} params - Options of tweens
-       * @example Tween.from(node, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.from = function (node, from, params) {
-          return Tween.fromTo(node, from, null, params);
-      };
-      /**
-       * Sets max `event` listener's count to Events system
-       * @param {number} count - Event listener's count
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.setMaxListener = function (count) {
-          if (count === void 0) { count = 15; }
-          this._maxListener = count;
-          return this;
-      };
-      /**
-       * Adds `event` to Events system
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.on = function (event, callback) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (!this[callbackId]) {
-                  this[callbackId] = callback;
-                  break;
-              }
-          }
-          return this;
-      };
-      /**
-       * Adds `event` to Events system.
-       * Removes itself after fired once
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.once = function (event, callback) {
-          var _this = this;
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          var _loop_1 = function (i) {
-              var callbackId = callbackName + i;
-              if (!this_1[callbackId]) {
-                  this_1[callbackId] = function () {
-                      var args = [];
-                      for (var _i = 0; _i < arguments.length; _i++) {
-                          args[_i] = arguments[_i];
-                      }
-                      callback.apply(_this, args);
-                      _this[callbackId] = null;
-                  };
-                  return "break";
-              }
+      return tween
+    }
+    /**
+     * Easier way calling constructor only applies the `to` value, useful for CSS Animation
+     * @param {Element} node DOM Element
+     * @param {object} to - Target value
+     * @param {object} params - Options of tweens
+     * @example Tween.to(node, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static to (node, to, params) {
+      return Tween.fromTo(node, null, to, params)
+    }
+    /**
+     * Easier way calling constructor only applies the `from` value, useful for CSS Animation
+     * @param {Element} node DOM Element
+     * @param {object} from - Initial value
+     * @param {object} params - Options of tweens
+     * @example Tween.from(node, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static from (node, from, params) {
+      return Tween.fromTo(node, from, null, params)
+    }
+    constructor (node, object) {
+      this.id = _id++;
+      if (!!node && typeof node === 'object' && !object && !node.nodeType) {
+        object = this.object = node;
+        node = null;
+      } else if (!!node &&
+        (node.nodeType || node.length || typeof node === 'string')
+      ) {
+        node = this.node = Selector(node);
+        object = this.object = NodeCache(node, object, this);
+      }
+      this._valuesEnd = null;
+      this._valuesStart = {};
+
+      this._duration = 1000;
+      this._easingFunction = defaultEasing;
+      this._easingReverse = defaultEasing;
+      this._interpolationFunction = Interpolation.Linear;
+
+      this._startTime = 0;
+      this._initTime = 0;
+      this._delayTime = 0;
+      this._repeat = 0;
+      this._r = 0;
+      this._isPlaying = false;
+      this._yoyo = false;
+      this._reversed = false;
+
+      this._onStartCallbackFired = false;
+      this._pausedTime = null;
+      this._isFinite = true;
+      this._maxListener = 15;
+      this._chainedTweensCount = 0;
+      this._prevTime = null;
+
+      return this
+    }
+
+    /**
+     * Sets max `event` listener's count to Events system
+     * @param {number} count - Event listener's count
+     * @memberof TWEEN.Tween
+     */
+    setMaxListener (count = 15) {
+      this._maxListener = count;
+      return this
+    }
+
+    /**
+     * Adds `event` to Events system
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    on (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (!this[callbackId]) {
+          this[callbackId] = callback;
+          break
+        }
+      }
+      return this
+    }
+
+    /**
+     * Adds `event` to Events system.
+     * Removes itself after fired once
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    once (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (!this[callbackId]) {
+          this[callbackId] = (...args) => {
+            callback.apply(this, args);
+            this[callbackId] = null;
           };
-          var this_1 = this;
-          for (var i = 0; i < _maxListener; i++) {
-              var state_1 = _loop_1(i);
-              if (state_1 === "break")
-                  break;
+          break
+        }
+      }
+      return this
+    }
+
+    /**
+     * Removes `event` from Events system
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    off (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (this[callbackId] === callback) {
+          this[callbackId] = null;
+        }
+      }
+      return this
+    }
+
+    /**
+     * Emits/Fired/Trigger `event` from Events system listeners
+     * @param {string} event - Event listener name
+     * @memberof TWEEN.Tween
+     */
+    emit (event, arg1, arg2, arg3, arg4) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+
+      if (!this[callbackName + 0]) {
+        return this
+      }
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (this[callbackId]) {
+          this[callbackId](arg1, arg2, arg3, arg4);
+        }
+      }
+      return this
+    }
+
+    /**
+     * @return {boolean} State of playing of tween
+     * @example tween.isPlaying() // returns `true` if tween in progress
+     * @memberof TWEEN.Tween
+     */
+    isPlaying () {
+      return this._isPlaying
+    }
+
+    /**
+     * @return {boolean} State of started of tween
+     * @example tween.isStarted() // returns `true` if tween in started
+     * @memberof TWEEN.Tween
+     */
+    isStarted () {
+      return this._onStartCallbackFired
+    }
+
+    /**
+     * Reverses the tween state/direction
+     * @example tween.reverse()
+     * @param {boolean=} state Set state of current reverse
+     * @memberof TWEEN.Tween
+     */
+    reverse (state) {
+      const {
+        _reversed
+      } = this;
+
+      this._reversed = state !== undefined ? state : !_reversed;
+
+      return this
+    }
+
+    /**
+     * @return {boolean} State of reversed
+     * @example tween.reversed() // returns `true` if tween in reversed state
+     * @memberof TWEEN.Tween
+     */
+    reversed () {
+      return this._reversed
+    }
+
+    /**
+     * Pauses tween
+     * @example tween.pause()
+     * @memberof TWEEN.Tween
+     */
+    pause () {
+      if (!this._isPlaying) {
+        return this
+      }
+
+      this._isPlaying = false;
+
+      remove$1(this);
+      this._pausedTime = now();
+
+      return this.emit(EVENT_PAUSE, this.object)
+    }
+
+    /**
+     * Play/Resume the tween
+     * @example tween.play()
+     * @memberof TWEEN.Tween
+     */
+    play () {
+      if (this._isPlaying) {
+        return this
+      }
+
+      this._isPlaying = true;
+
+      this._startTime += now() - this._pausedTime;
+      this._initTime = this._startTime;
+      add(this);
+      this._pausedTime = now();
+
+      return this.emit(EVENT_PLAY, this.object)
+    }
+
+    /**
+     * Restarts tween from initial value
+     * @param {boolean=} noDelay If this param is set to `true`, restarts tween without `delay`
+     * @example tween.restart()
+     * @memberof TWEEN.Tween
+     */
+    restart (noDelay) {
+      this._repeat = this._r;
+      this.reassignValues();
+
+      add(this);
+
+      return this.emit(EVENT_RESTART, this.object)
+    }
+
+    /**
+     * Seek tween value by `time`. Note: Not works as excepted. PR are welcome
+     * @param {Time} time Tween update time
+     * @param {boolean=} keepPlaying When this param is set to `false`, tween pausing after seek
+     * @example tween.seek(500)
+     * @memberof TWEEN.Tween
+     * @deprecated Not works as excepted, so we deprecated this method
+     */
+    seek (time, keepPlaying) {
+      const {
+        _duration,
+        _initTime,
+        _startTime,
+        _reversed
+      } = this;
+
+      let updateTime = _initTime + time;
+      this._isPlaying = true;
+
+      if (updateTime < _startTime && _startTime >= _initTime) {
+        this._startTime -= _duration;
+        this._reversed = !_reversed;
+      }
+
+      this.update(time, false);
+
+      this.emit(EVENT_SEEK, time, this.object);
+
+      return keepPlaying ? this : this.pause()
+    }
+
+    /**
+     * Sets tween duration
+     * @param {number} amount Duration is milliseconds
+     * @example tween.duration(2000)
+     * @memberof TWEEN.Tween
+     */
+    duration (amount) {
+      this._duration =
+        typeof amount === 'function' ? amount(this._duration) : amount;
+
+      return this
+    }
+
+    /**
+     * Sets target value and duration
+     * @param {object} properties Target value (to value)
+     * @param {number|Object=} [duration=1000] Duration of tween
+     * @example let tween = new Tween({x:0}).to({x:100}, 2000)
+     * @memberof TWEEN.Tween
+     */
+    to (properties, duration = 1000, maybeUsed) {
+      this._valuesEnd = properties;
+
+      if (typeof duration === 'number' || typeof duration === 'function') {
+        this._duration =
+          typeof duration === 'function' ? duration(this._duration) : duration;
+      } else if (typeof duration === 'object') {
+        for (const prop in duration) {
+          if (typeof this[prop] === 'function') {
+            const [
+              arg1 = null,
+              arg2 = null,
+              arg3 = null,
+              arg4 = null
+            ] = Array.isArray(duration[prop]) ? duration[prop] : [duration[prop]];
+            this[prop](arg1, arg2, arg3, arg4);
           }
-          return this;
-      };
-      /**
-       * Removes `event` from Events system
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.off = function (event, callback) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (this[callbackId] === callback) {
-                  this[callbackId] = null;
+        }
+      }
+
+      return this
+    }
+
+    /**
+     * Renders and computes value at first render
+     * @private
+     * @memberof TWEEN.Tween
+     */
+    render () {
+      if (this._rendered) {
+        return this
+      }
+      let {
+        _valuesStart,
+        _valuesEnd,
+        object,
+        node,
+        InitialValues
+      } = this;
+
+      SET_NESTED(object);
+      SET_NESTED(_valuesEnd);
+
+      if (node && node.queueID && Store[node.queueID]) {
+        const prevTweenByNode = Store[node.queueID];
+        if (
+          prevTweenByNode.propNormaliseRequired &&
+          prevTweenByNode.tween !== this
+        ) {
+          for (const property in _valuesEnd) {
+            if (prevTweenByNode.tween._valuesEnd[property] !== undefined) ;
+          }
+          prevTweenByNode.normalisedProp = true;
+          prevTweenByNode.propNormaliseRequired = false;
+        }
+      }
+
+      if (node && InitialValues) {
+        if (!object || Object.keys(object).length === 0) {
+          object = this.object = NodeCache(
+            node,
+            InitialValues(node, _valuesEnd),
+            this
+          );
+        } else if (!_valuesEnd || Object.keys(_valuesEnd).length === 0) {
+          _valuesEnd = this._valuesEnd = InitialValues(node, object);
+        }
+      }
+      for (const property in _valuesEnd) {
+        let start = object && object[property] && deepCopy(object[property]);
+        let end = _valuesEnd[property];
+        if (Plugins[property] && Plugins[property].init) {
+          Plugins[property].init.call(this, start, end, property, object);
+          if (start === undefined && _valuesStart[property]) {
+            start = _valuesStart[property];
+          }
+          if (Plugins[property].skipProcess) {
+            continue
+          }
+        }
+        if (
+          (typeof start === 'number' && isNaN(start)) ||
+          start === null ||
+          end === null ||
+          start === false ||
+          end === false ||
+          start === undefined ||
+          end === undefined ||
+          start === end
+        ) {
+          continue
+        }
+        if (Array.isArray(end) && !Array.isArray(start)) {
+          end.unshift(start);
+          for (let i = 0, len = end.length; i < len; i++) {
+            if (typeof end[i] === 'string') {
+              let arrayOfStrings = decomposeString(end[i]);
+              let stringObject = {
+                length: arrayOfStrings.length,
+                isString: true
+              };
+              for (let ii = 0, len2 = arrayOfStrings.length; ii < len2; ii++) {
+                stringObject[ii] = arrayOfStrings[ii];
               }
+              end[i] = stringObject;
+            }
           }
-          return this;
-      };
-      /**
-       * Emits/Fired/Trigger `event` from Events system listeners
-       * @param {string} event - Event listener name
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.emit = function (event, arg1, arg2, arg3, arg4) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          if (!this[callbackName + 0]) {
-              return this;
+        }
+        _valuesStart[property] = start;
+        if (typeof start === 'number' && typeof end === 'string' && end[1] === '=') {
+          continue
+        }
+        decompose(property, object, _valuesStart, _valuesEnd);
+      }
+
+      if (Tween.Renderer && this.node && Tween.Renderer.init) {
+        Tween.Renderer.init.call(this, object, _valuesStart, _valuesEnd);
+        this.__render = true;
+      }
+
+      return this
+    }
+
+    /**
+     * Start the tweening
+     * @param {number|string} time setting manual time instead of Current browser timestamp or like `+1000` relative to current timestamp
+     * @example tween.start()
+     * @memberof TWEEN.Tween
+     */
+    start (time) {
+      this._startTime =
+        time !== undefined
+          ? typeof time === 'string' ? now() + parseFloat(time) : time
+          : now();
+      this._startTime += this._delayTime;
+      this._initTime = this._prevTime = this._startTime;
+
+      this._onStartCallbackFired = false;
+      this._rendered = false;
+      this._isPlaying = true;
+
+      add(this);
+
+      return this
+    }
+
+    /**
+     * Stops the tween
+     * @example tween.stop()
+     * @memberof TWEEN.Tween
+     */
+    stop () {
+      let {
+        _isPlaying,
+        _isFinite,
+        object,
+        _startTime,
+        _duration,
+        _r,
+        _yoyo,
+        _reversed
+      } = this;
+
+      if (!_isPlaying) {
+        return this
+      }
+
+      let atStart = _isFinite ? (_r + 1) % 2 === 1 : !_reversed;
+
+      this._reversed = false;
+
+      if (_yoyo && atStart) {
+        this.update(_startTime);
+      } else {
+        this.update(_startTime + _duration);
+      }
+      remove$1(this);
+
+      return this.emit(EVENT_STOP, object)
+    }
+
+    /**
+     * Set delay of tween
+     * @param {number} amount Sets tween delay / wait duration
+     * @example tween.delay(500)
+     * @memberof TWEEN.Tween
+     */
+    delay (amount) {
+      this._delayTime =
+        typeof amount === 'function' ? amount(this._delayTime) : amount;
+
+      return this
+    }
+
+    /**
+     * Chained tweens
+     * @param {any} arguments Arguments list
+     * @example tween.chainedTweens(tween1, tween2)
+     * @memberof TWEEN.Tween
+     */
+    chainedTweens () {
+      this._chainedTweensCount = arguments.length;
+      if (!this._chainedTweensCount) {
+        return this
+      }
+      for (let i = 0, len = this._chainedTweensCount; i < len; i++) {
+        this[CHAINED_TWEENS + i] = arguments[i];
+      }
+
+      return this
+    }
+
+    /**
+     * Sets how times tween is repeating
+     * @param {amount} amount the times of repeat
+     * @example tween.repeat(5)
+     * @memberof TWEEN.Tween
+     */
+    repeat (amount) {
+      this._repeat = !this._duration
+        ? 0
+        : typeof amount === 'function' ? amount(this._repeat) : amount;
+      this._r = this._repeat;
+      this._isFinite = isFinite(amount);
+
+      return this
+    }
+
+    /**
+     * Set delay of each repeat alternate of tween
+     * @param {number} amount Sets tween repeat alternate delay / repeat alternate wait duration
+     * @example tween.reverseDelay(500)
+     * @memberof TWEEN.Tween
+     */
+    reverseDelay (amount) {
+      this._reverseDelayTime =
+        typeof amount === 'function' ? amount(this._reverseDelayTime) : amount;
+
+      return this
+    }
+
+    /**
+     * Set `yoyo` state (enables reverse in repeat)
+     * @param {boolean} state Enables alternate direction for repeat
+     * @param {Function=} _easingReverse Easing function in reverse direction
+     * @example tween.yoyo(true)
+     * @memberof TWEEN.Tween
+     */
+    yoyo (state, _easingReverse) {
+      this._yoyo =
+        typeof state === 'function'
+          ? state(this._yoyo)
+          : state === null ? this._yoyo : state;
+      if (!state) {
+        this._reversed = false;
+      }
+      this._easingReverse = _easingReverse || null;
+
+      return this
+    }
+
+    /**
+     * Set easing
+     * @param {Function} _easingFunction Easing function, applies in non-reverse direction if Tween#yoyo second argument is applied
+     * @example tween.easing(Easing.Elastic.InOut)
+     * @memberof TWEEN.Tween
+     */
+    easing (_easingFunction) {
+      this._easingFunction = _easingFunction;
+
+      return this
+    }
+
+    /**
+     * Set interpolation
+     * @param {Function} _interpolationFunction Interpolation function
+     * @example tween.interpolation(Interpolation.Bezier)
+     * @memberof TWEEN.Tween
+     */
+    interpolation (_interpolationFunction) {
+      if (typeof _interpolationFunction === 'function') {
+        this._interpolationFunction = _interpolationFunction;
+      }
+
+      return this
+    }
+
+    /**
+     * Reassigns value for rare-case like Tween#restart or for Timeline
+     * @private
+     * @memberof TWEEN.Tween
+     */
+    reassignValues (time) {
+      const {
+        _valuesStart,
+        object,
+        _delayTime
+      } = this;
+
+      this._isPlaying = true;
+      this._startTime = time !== undefined ? time : now();
+      this._startTime += _delayTime;
+      this._reversed = false;
+      add(this);
+
+      for (const property in _valuesStart) {
+        const start = _valuesStart[property];
+
+        object[property] = start;
+      }
+
+      return this
+    }
+
+    /**
+     * Updates initial object to target value by given `time`
+     * @param {Time} time Current time
+     * @param {boolean=} preserve Prevents from removing tween from store
+     * @param {boolean=} forceTime Forces to be frame rendered, even mismatching time
+     * @example tween.update(100)
+     * @memberof TWEEN.Tween
+     */
+    update (time, preserve, forceTime) {
+      let {
+        _onStartCallbackFired,
+        _easingFunction,
+        _interpolationFunction,
+        _easingReverse,
+        _repeat,
+        _delayTime,
+        _reverseDelayTime,
+        _yoyo,
+        _reversed,
+        _startTime,
+        _prevTime,
+        _duration,
+        _valuesStart,
+        _valuesEnd,
+        object,
+        _isFinite,
+        _isPlaying,
+        __render,
+        _chainedTweensCount
+      } = this;
+
+      let elapsed;
+      let currentEasing;
+      let property;
+      let propCount = 0;
+
+      if (!_duration) {
+        elapsed = 1;
+        _repeat = 0;
+      } else {
+        time = time !== undefined ? time : now();
+
+        let delta = time - _prevTime;
+        this._prevTime = time;
+        if (delta > TOO_LONG_FRAME_MS) {
+          time -= delta - FRAME_MS;
+        }
+
+        if (!_isPlaying || (time < _startTime && !forceTime)) {
+          return true
+        }
+
+        elapsed = (time - _startTime) / _duration;
+        elapsed = elapsed > 1 ? 1 : elapsed;
+        elapsed = _reversed ? 1 - elapsed : elapsed;
+      }
+
+      if (!_onStartCallbackFired) {
+        if (!this._rendered) {
+          this.render();
+          this._rendered = true;
+        }
+
+        this.emit(EVENT_START, object);
+
+        this._onStartCallbackFired = true;
+      }
+
+      currentEasing = _reversed
+        ? _easingReverse || _easingFunction
+        : _easingFunction;
+
+      if (!object) {
+        return true
+      }
+
+      for (property in _valuesEnd) {
+        const start = _valuesStart[property];
+        if (
+          (start === undefined || start === null) &&
+          !(Plugins[property] && Plugins[property].update)
+        ) {
+          continue
+        }
+        const end = _valuesEnd[property];
+        const value = currentEasing[property]
+          ? currentEasing[property](elapsed)
+          : typeof currentEasing === 'function'
+            ? currentEasing(elapsed)
+            : defaultEasing(elapsed);
+        const _interpolationFunctionCall = _interpolationFunction[property]
+          ? _interpolationFunction[property]
+          : typeof _interpolationFunction === 'function'
+            ? _interpolationFunction
+            : Interpolation.Linear;
+
+        if (typeof end === 'number') {
+          object[property] =
+            (((start + (end - start) * value) * DECIMAL) | 0) / DECIMAL;
+        } else if (Array.isArray(end) && !Array.isArray(start)) {
+          object[property] = _interpolationFunctionCall(
+            end,
+            value,
+            object[property]
+          );
+        } else if (end && end.update) {
+          end.update(value);
+        } else if (typeof end === 'function') {
+          object[property] = end(value);
+        } else if (typeof end === 'string' && typeof start === 'number') {
+          object[property] = start + parseFloat(end[0] + end.substr(2)) * value;
+        } else {
+          recompose(property, object, _valuesStart, _valuesEnd, value, elapsed);
+        }
+        if (Plugins[property] && Plugins[property].update) {
+          Plugins[property].update.call(
+            this,
+            object[property],
+            start,
+            end,
+            value,
+            elapsed,
+            property
+          );
+        }
+        propCount++;
+      }
+
+      if (!propCount) {
+        remove$1(this);
+        return false
+      }
+
+      if (__render && Tween.Renderer && Tween.Renderer.update) {
+        Tween.Renderer.update.call(this, object, elapsed);
+      }
+
+      this.emit(EVENT_UPDATE, object, elapsed, time);
+
+      if (elapsed === 1 || (_reversed && elapsed === 0)) {
+        if (_repeat > 0 && _duration > 0) {
+          if (_isFinite) {
+            this._repeat--;
           }
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (this[callbackId]) {
-                  this[callbackId](arg1, arg2, arg3, arg4);
+
+          if (_yoyo) {
+            this._reversed = !_reversed;
+          } else {
+            for (property in _valuesEnd) {
+              let end = _valuesEnd[property];
+              if (typeof end === 'string' && typeof _valuesStart[property] === 'number') {
+                _valuesStart[property] += parseFloat(end[0] + end.substr(2));
               }
+            }
           }
-          return this;
-      };
-      /**
-       * @return {boolean} State of playing of tween
-       * @example tween.isPlaying() // returns `true` if tween in progress
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.isPlaying = function () {
-          return this._isPlaying;
-      };
-      /**
-       * @return {boolean} State of started of tween
-       * @example tween.isStarted() // returns `true` if tween in started
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.isStarted = function () {
-          return this._onStartCallbackFired;
-      };
-      /**
-       * Reverses the tween state/direction
-       * @example tween.reverse()
-       * @param {boolean=} state Set state of current reverse
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reverse = function (state) {
-          var _reversed = this._reversed;
-          this._reversed = state !== undefined ? state : !_reversed;
-          return this;
-      };
-      /**
-       * @return {boolean} State of reversed
-       * @example tween.reversed() // returns `true` if tween in reversed state
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reversed = function () {
-          return this._reversed;
-      };
-      /**
-       * Pauses tween
-       * @example tween.pause()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.pause = function () {
-          if (!this._isPlaying) {
-              return this;
+
+          this.emit(_yoyo && !_reversed ? EVENT_REVERSE : EVENT_REPEAT, object);
+
+          if (_reversed && _reverseDelayTime) {
+            this._startTime = time - _reverseDelayTime;
+          } else {
+            this._startTime = time + _delayTime;
           }
-          this._isPlaying = false;
-          remove$1(this);
-          this._pausedTime = now();
-          return this.emit(EVENT_PAUSE, this.object);
-      };
-      /**
-       * Play/Resume the tween
-       * @example tween.play()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.play = function () {
-          if (this._isPlaying) {
-              return this;
+
+          return true
+        } else {
+          if (!preserve) {
+            this._isPlaying = false;
+            remove$1(this);
+            _id--;
           }
-          this._isPlaying = true;
-          this._startTime += now() - this._pausedTime;
-          this._initTime = this._startTime;
-          add(this);
-          this._pausedTime = now();
-          return this.emit(EVENT_PLAY, this.object);
-      };
-      /**
-       * Restarts tween from initial value
-       * @param {boolean=} noDelay If this param is set to `true`, restarts tween without `delay`
-       * @example tween.restart()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.restart = function (noDelay) {
+          this.emit(EVENT_COMPLETE, object);
           this._repeat = this._r;
-          this.reassignValues();
-          add(this);
-          return this.emit(EVENT_RESTART, this.object);
-      };
-      /**
-       * Seek tween value by `time`. Note: Not works as excepted. PR are welcome
-       * @param {Time} time Tween update time
-       * @param {boolean=} keepPlaying When this param is set to `false`, tween pausing after seek
-       * @example tween.seek(500)
-       * @memberof TWEEN.Tween
-       * @deprecated Not works as excepted, so we deprecated this method
-       */
-      Tween.prototype.seek = function (time, keepPlaying) {
-          var _a = this, _duration = _a._duration, _repeat = _a._repeat, _initTime = _a._initTime, _startTime = _a._startTime, _delayTime = _a._delayTime, _reversed = _a._reversed;
-          var updateTime = _initTime + time;
-          this._isPlaying = true;
-          if (updateTime < _startTime && _startTime >= _initTime) {
-              this._startTime -= _duration;
-              this._reversed = !_reversed;
+
+          if (_chainedTweensCount) {
+            for (let i = 0; i < _chainedTweensCount; i++) {
+              this[CHAINED_TWEENS + i].start(time + _duration);
+            }
           }
-          this.update(time, false);
-          this.emit(EVENT_SEEK, time, this.object);
-          return keepPlaying ? this : this.pause();
-      };
-      /**
-       * Sets tween duration
-       * @param {number} amount Duration is milliseconds
-       * @example tween.duration(2000)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.duration = function (amount) {
-          this._duration =
-              typeof amount === 'function' ? amount(this._duration) : amount;
-          return this;
-      };
-      /**
-       * Sets target value and duration
-       * @param {object} properties Target value (to value)
-       * @param {number|Object=} [duration=1000] Duration of tween
-       * @example let tween = new Tween({x:0}).to({x:100}, 2000)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.to = function (properties, duration, maybeUsed) {
-          if (duration === void 0) { duration = 1000; }
-          this._valuesEnd = properties;
-          if (typeof duration === 'number' || typeof duration === 'function') {
-              this._duration =
-                  typeof duration === 'function' ? duration(this._duration) : duration;
-          }
-          else if (typeof duration === 'object') {
-              for (var prop in duration) {
-                  if (typeof this[prop] === 'function') {
-                      var _a = Array.isArray(duration[prop]) ? duration[prop] : [duration[prop]], _b = _a[0], arg1 = _b === void 0 ? null : _b, _c = _a[1], arg2 = _c === void 0 ? null : _c, _d = _a[2], arg3 = _d === void 0 ? null : _d, _e = _a[3], arg4 = _e === void 0 ? null : _e;
-                      this[prop](arg1, arg2, arg3, arg4);
-                  }
-              }
-          }
-          return this;
-      };
-      /**
-       * Renders and computes value at first render
-       * @private
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.render = function () {
-          if (this._rendered) {
-              return this;
-          }
-          var _a = this, _valuesStart = _a._valuesStart, _valuesEnd = _a._valuesEnd, object = _a.object, node = _a.node, InitialValues = _a.InitialValues, _easingFunction = _a._easingFunction;
-          SET_NESTED(object);
-          SET_NESTED(_valuesEnd);
-          if (node && node.queueID && Store[node.queueID]) {
-              var prevTweenByNode = Store[node.queueID];
-              if (prevTweenByNode.propNormaliseRequired &&
-                  prevTweenByNode.tween !== this) {
-                  for (var property in _valuesEnd) {
-                      if (prevTweenByNode.tween._valuesEnd[property] !== undefined) {
-                          //delete prevTweenByNode.tween._valuesEnd[property];
-                      }
-                  }
-                  prevTweenByNode.normalisedProp = true;
-                  prevTweenByNode.propNormaliseRequired = false;
-              }
-          }
-          if (node && InitialValues) {
-              if (!object || Object.keys(object).length === 0) {
-                  object = this.object = NodeCache(node, InitialValues(node, _valuesEnd), this);
-              }
-              else if (!_valuesEnd || Object.keys(_valuesEnd).length === 0) {
-                  _valuesEnd = this._valuesEnd = InitialValues(node, object);
-              }
-          }
-          for (var property in _valuesEnd) {
-              var start = object && object[property] && deepCopy(object[property]);
-              var end = _valuesEnd[property];
-              if (Plugins[property] && Plugins[property].init) {
-                  Plugins[property].init.call(this, start, end, property, object);
-                  if (start === undefined && _valuesStart[property]) {
-                      start = _valuesStart[property];
-                  }
-                  if (Plugins[property].skipProcess) {
-                      continue;
-                  }
-              }
-              if ((typeof start === 'number' && isNaN(start)) ||
-                  start === null ||
-                  end === null ||
-                  start === false ||
-                  end === false ||
-                  start === undefined ||
-                  end === undefined ||
-                  start === end) {
-                  continue;
-              }
-              if (Array.isArray(end) && !Array.isArray(start)) {
-                  end.unshift(start);
-                  for (var i = 0, len = end.length; i < len; i++) {
-                      if (typeof end[i] === 'string') {
-                          var arrayOfStrings = decomposeString(end[i]);
-                          var stringObject = { length: arrayOfStrings.length, isString: true };
-                          for (var ii = 0, len2 = arrayOfStrings.length; ii < len2; ii++) {
-                              stringObject[ii] = arrayOfStrings[ii];
-                          }
-                          end[i] = stringObject;
-                      }
-                  }
-              }
-              _valuesStart[property] = start;
-              if (typeof start === 'number' && typeof end === 'string' && end[1] === '=') {
-                  continue;
-              }
-              decompose(property, object, _valuesStart, _valuesEnd);
-          }
-          if (Tween.Renderer && this.node && Tween.Renderer.init) {
-              Tween.Renderer.init.call(this, object, _valuesStart, _valuesEnd);
-              this.__render = true;
-          }
-          return this;
-      };
-      /**
-       * Start the tweening
-       * @param {number|string} time setting manual time instead of Current browser timestamp or like `+1000` relative to current timestamp
-       * @example tween.start()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.start = function (time) {
-          this._startTime =
-              time !== undefined
-                  ? typeof time === 'string' ? now() + parseFloat(time) : time
-                  : now();
-          this._startTime += this._delayTime;
-          this._initTime = this._prevTime = this._startTime;
-          this._onStartCallbackFired = false;
-          this._rendered = false;
-          this._isPlaying = true;
-          add(this);
-          return this;
-      };
-      /**
-       * Stops the tween
-       * @example tween.stop()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.stop = function () {
-          var _a = this, _isPlaying = _a._isPlaying, _isFinite = _a._isFinite, object = _a.object, _startTime = _a._startTime, _delayTime = _a._delayTime, _duration = _a._duration, _r = _a._r, _yoyo = _a._yoyo, _reversed = _a._reversed;
-          if (!_isPlaying) {
-              return this;
-          }
-          var atStart = _isFinite ? (_r + 1) % 2 === 1 : !_reversed;
-          this._reversed = false;
-          if (_yoyo && atStart) {
-              this.update(_startTime);
-          }
-          else {
-              this.update(_startTime + _duration);
-          }
-          remove$1(this);
-          return this.emit(EVENT_STOP, object);
-      };
-      /**
-       * Set delay of tween
-       * @param {number} amount Sets tween delay / wait duration
-       * @example tween.delay(500)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.delay = function (amount) {
-          this._delayTime =
-              typeof amount === 'function' ? amount(this._delayTime) : amount;
-          return this;
-      };
-      /**
-       * Chained tweens
-       * @param {any} arguments Arguments list
-       * @example tween.chainedTweens(tween1, tween2)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.chainedTweens = function () {
-          this._chainedTweensCount = arguments.length;
-          if (!this._chainedTweensCount) {
-              return this;
-          }
-          for (var i = 0, len = this._chainedTweensCount; i < len; i++) {
-              this[CHAINED_TWEENS + i] = arguments[i];
-          }
-          return this;
-      };
-      /**
-       * Sets how times tween is repeating
-       * @param {amount} amount the times of repeat
-       * @example tween.repeat(5)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.repeat = function (amount) {
-          this._repeat = !this._duration
-              ? 0
-              : typeof amount === 'function' ? amount(this._repeat) : amount;
-          this._r = this._repeat;
-          this._isFinite = isFinite(amount);
-          return this;
-      };
-      /**
-       * Set delay of each repeat alternate of tween
-       * @param {number} amount Sets tween repeat alternate delay / repeat alternate wait duration
-       * @example tween.reverseDelay(500)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reverseDelay = function (amount) {
-          this._reverseDelayTime =
-              typeof amount === 'function' ? amount(this._reverseDelayTime) : amount;
-          return this;
-      };
-      /**
-       * Set `yoyo` state (enables reverse in repeat)
-       * @param {boolean} state Enables alternate direction for repeat
-       * @param {Function=} _easingReverse Easing function in reverse direction
-       * @example tween.yoyo(true)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.yoyo = function (state, _easingReverse) {
-          this._yoyo =
-              typeof state === 'function'
-                  ? state(this._yoyo)
-                  : state === null ? this._yoyo : state;
-          if (!state) {
-              this._reversed = false;
-          }
-          this._easingReverse = _easingReverse || null;
-          return this;
-      };
-      /**
-       * Set easing
-       * @param {Function} _easingFunction Easing function, applies in non-reverse direction if Tween#yoyo second argument is applied
-       * @example tween.easing(Easing.Elastic.InOut)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.easing = function (_easingFunction) {
-          this._easingFunction = _easingFunction;
-          return this;
-      };
-      /**
-       * Set interpolation
-       * @param {Function} _interpolationFunction Interpolation function
-       * @example tween.interpolation(Interpolation.Bezier)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.interpolation = function (_interpolationFunction) {
-          if (typeof _interpolationFunction === 'function') {
-              this._interpolationFunction = _interpolationFunction;
-          }
-          return this;
-      };
-      /**
-       * Reassigns value for rare-case like Tween#restart or for Timeline
-       * @private
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reassignValues = function (time) {
-          var _a = this, _valuesStart = _a._valuesStart, object = _a.object, _delayTime = _a._delayTime;
-          this._isPlaying = true;
-          this._startTime = time !== undefined ? time : now();
-          this._startTime += _delayTime;
-          this._reversed = false;
-          add(this);
-          for (var property in _valuesStart) {
-              var start = _valuesStart[property];
-              object[property] = start;
-          }
-          return this;
-      };
-      /**
-       * Updates initial object to target value by given `time`
-       * @param {Time} time Current time
-       * @param {boolean=} preserve Prevents from removing tween from store
-       * @param {boolean=} forceTime Forces to be frame rendered, even mismatching time
-       * @example tween.update(100)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.update = function (time, preserve, forceTime) {
-          var _a = this, _onStartCallbackFired = _a._onStartCallbackFired, _easingFunction = _a._easingFunction, _interpolationFunction = _a._interpolationFunction, _easingReverse = _a._easingReverse, _repeat = _a._repeat, _delayTime = _a._delayTime, _reverseDelayTime = _a._reverseDelayTime, _yoyo = _a._yoyo, _reversed = _a._reversed, _startTime = _a._startTime, _prevTime = _a._prevTime, _duration = _a._duration, _valuesStart = _a._valuesStart, _valuesEnd = _a._valuesEnd, object = _a.object, _isFinite = _a._isFinite, _isPlaying = _a._isPlaying, __render = _a.__render, _chainedTweensCount = _a._chainedTweensCount;
-          var elapsed;
-          var currentEasing;
-          var property;
-          var propCount = 0;
-          if (!_duration) {
-              elapsed = 1;
-              _repeat = 0;
-          }
-          else {
-              time = time !== undefined ? time : now();
-              var delta = time - _prevTime;
-              this._prevTime = time;
-              if (delta > TOO_LONG_FRAME_MS) {
-                  time -= delta - FRAME_MS;
-              }
-              if (!_isPlaying || (time < _startTime && !forceTime)) {
-                  return true;
-              }
-              elapsed = (time - _startTime) / _duration;
-              elapsed = elapsed > 1 ? 1 : elapsed;
-              elapsed = _reversed ? 1 - elapsed : elapsed;
-          }
-          if (!_onStartCallbackFired) {
-              if (!this._rendered) {
-                  this.render();
-                  this._rendered = true;
-              }
-              this.emit(EVENT_START, object);
-              this._onStartCallbackFired = true;
-          }
-          currentEasing = _reversed
-              ? _easingReverse || _easingFunction
-              : _easingFunction;
-          if (!object) {
-              return true;
-          }
-          for (property in _valuesEnd) {
-              var start = _valuesStart[property];
-              if ((start === undefined || start === null) &&
-                  !(Plugins[property] && Plugins[property].update)) {
-                  continue;
-              }
-              var end = _valuesEnd[property];
-              var value = currentEasing[property]
-                  ? currentEasing[property](elapsed)
-                  : typeof currentEasing === 'function'
-                      ? currentEasing(elapsed)
-                      : defaultEasing(elapsed);
-              var _interpolationFunctionCall = _interpolationFunction[property]
-                  ? _interpolationFunction[property]
-                  : typeof _interpolationFunction === 'function'
-                      ? _interpolationFunction
-                      : Interpolation.Linear;
-              if (typeof end === 'number') {
-                  object[property] =
-                      (((start + (end - start) * value) * DECIMAL) | 0) / DECIMAL;
-              }
-              else if (Array.isArray(end) && !Array.isArray(start)) {
-                  object[property] = _interpolationFunctionCall(end, value, object[property]);
-              }
-              else if (end && end.update) {
-                  end.update(value);
-              }
-              else if (typeof end === 'function') {
-                  object[property] = end(value);
-              }
-              else if (typeof end === 'string' && typeof start === 'number') {
-                  object[property] = start + parseFloat(end[0] + end.substr(2)) * value;
-              }
-              else {
-                  recompose(property, object, _valuesStart, _valuesEnd, value, elapsed);
-              }
-              if (Plugins[property] && Plugins[property].update) {
-                  Plugins[property].update.call(this, object[property], start, end, value, elapsed, property);
-              }
-              propCount++;
-          }
-          if (!propCount) {
-              remove$1(this);
-              return false;
-          }
-          if (__render && Tween.Renderer && Tween.Renderer.update) {
-              Tween.Renderer.update.call(this, object, elapsed);
-          }
-          this.emit(EVENT_UPDATE, object, elapsed, time);
-          if (elapsed === 1 || (_reversed && elapsed === 0)) {
-              if (_repeat > 0 && _duration > 0) {
-                  if (_isFinite) {
-                      this._repeat--;
-                  }
-                  if (_yoyo) {
-                      this._reversed = !_reversed;
-                  }
-                  else {
-                      for (property in _valuesEnd) {
-                          var end = _valuesEnd[property];
-                          if (typeof end === 'string' && typeof _valuesStart[property] === 'number') {
-                              _valuesStart[property] += parseFloat(end[0] + end.substr(2));
-                          }
-                      }
-                  }
-                  this.emit(_yoyo && !_reversed ? EVENT_REVERSE : EVENT_REPEAT, object);
-                  if (_reversed && _reverseDelayTime) {
-                      this._startTime = time - _reverseDelayTime;
-                  }
-                  else {
-                      this._startTime = time + _delayTime;
-                  }
-                  return true;
-              }
-              else {
-                  if (!preserve) {
-                      this._isPlaying = false;
-                      remove$1(this);
-                      _id--;
-                  }
-                  this.emit(EVENT_COMPLETE, object);
-                  this._repeat = this._r;
-                  if (_chainedTweensCount) {
-                      for (var i = 0; i < _chainedTweensCount; i++) {
-                          this[CHAINED_TWEENS + i].start(time + _duration);
-                      }
-                  }
-                  return false;
-              }
-          }
-          return true;
-      };
-      return Tween;
-  }());
+
+          return false
+        }
+      }
+
+      return true
+    }
+  }
 
   // node_modules/es6-tween/src/Interpolator.js
-  var __assign$2 = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
-  };
 
   // node_modules/es6-tween/src/index.js
-
-  // node_modules/el-controls/src/utils/valueOrCall.coffee
-  var valueOrCall = function(valueOrFunc) {
-    if (typeof valueOrFunc === 'function') {
-      return valueOrFunc();
-    }
-    return valueOrFunc;
-  };
 
   // node_modules/el-controls/src/controls/control.coffee
   var Control, _controlId, scrolling,
@@ -10626,7 +10898,7 @@ var Shop = (function () {
     Control.prototype.name = null;
 
     Control.prototype.init = function() {
-      Control.__super__.init.apply(this, arguments);
+      Control.__super__.init.call(this);
       return this._controlId = _controlId++;
     };
 
@@ -10636,7 +10908,7 @@ var Shop = (function () {
 
     Control.prototype.getName = function() {
       var ref;
-      return (ref = valueOrCall(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
+      return (ref = valueOrCall$1(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
     };
 
     Control.prototype.getValue = function(event) {
@@ -10650,7 +10922,7 @@ var Shop = (function () {
         console.log('WARNING: Error in riot dom manipulation ignored:', err);
         return;
       }
-      Control.__super__.error.apply(this, arguments);
+      Control.__super__.error.call(this);
       rect = this.root.getBoundingClientRect();
       elTop = rect.top - window.innerHeight / 2;
       wTop = window.pageYOffset;
@@ -10670,16 +10942,16 @@ var Shop = (function () {
           return autoPlay(false);
         }).start();
       }
-      return this.mediator.trigger(ControlEvents.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+      return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
     };
 
     Control.prototype.change = function() {
-      Control.__super__.change.apply(this, arguments);
-      return this.mediator.trigger(ControlEvents.Change, this.input.name, this.input.ref.get(this.input.name));
+      Control.__super__.change.call(this);
+      return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
     };
 
     Control.prototype.changed = function(value) {
-      this.mediator.trigger(ControlEvents.ChangeSuccess, this.input.name, value);
+      this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
       return El$1.scheduleUpdate();
     };
 
@@ -10778,7 +11050,7 @@ var Shop = (function () {
     Text.prototype.instructions = null;
 
     Text.prototype.init = function() {
-      Text.__super__.init.apply(this, arguments);
+      Text.__super__.init.call(this);
       return this.on('mounted', (function(_this) {
         return function() {
           var el;
@@ -11265,7 +11537,7 @@ var Shop = (function () {
     };
 
     Select.prototype.init = function() {
-      return Select.__super__.init.apply(this, arguments);
+      return Select.__super__.init.call(this);
     };
 
     return Select;
@@ -11396,7 +11668,7 @@ var Shop = (function () {
     };
 
     CountrySelect.prototype.init = function() {
-      return CountrySelect.__super__.init.apply(this, arguments);
+      return CountrySelect.__super__.init.call(this);
     };
 
     return CountrySelect;
@@ -11594,7 +11866,7 @@ var Shop = (function () {
     };
 
     StateSelect.prototype.init = function() {
-      return StateSelect.__super__.init.apply(this, arguments);
+      return StateSelect.__super__.init.call(this);
     };
 
     return StateSelect;
@@ -11867,7 +12139,7 @@ var Shop = (function () {
   GiftEmail.register();
 
   // node_modules/el-controls/templates/controls/textarea.pug
-  var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // node_modules/el-controls/src/controls/textbox.coffee
   var TextBox,
@@ -11995,12 +12267,12 @@ var Shop = (function () {
 
     ReadOnly.prototype.init = function() {
       if (!this.text) {
-        return ReadOnly.__super__.init.apply(this, arguments);
+        return ReadOnly.__super__.init.call(this);
       }
     };
 
     ReadOnly.prototype.getText = function() {
-      return valueOrCall(this.text) || this.input.ref.get(input.name);
+      return valueOrCall$1(this.text) || this.input.ref.get(input.name);
     };
 
     ReadOnly.prototype.change = function() {};
@@ -12039,7 +12311,7 @@ var Shop = (function () {
     Copy.prototype.copied = false;
 
     Copy.prototype.init = function() {
-      return Copy.__super__.init.apply(this, arguments);
+      return Copy.__super__.init.call(this);
     };
 
     Copy.prototype.copy = function(e) {
@@ -12081,7 +12353,7 @@ var Shop = (function () {
   Copy.register();
 
   // node_modules/el-controls/templates/controls/currency.pug
-  var html$5 = "\n<yield from=\"input\">\n  <div class=\"currency-container {invalid: errorMessage, valid: valid, labeled: label}\">\n    <input class=\"currency-amount right-aligned {invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n    <div class=\"currency-code\">\n      <div class=\"currency-code-text\">{ getCurrency().toUpperCase() }</div>\n    </div>\n  </div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  var html$5 = "\n<yield from=\"input\">\n  <div class=\"currency-container { invalid: errorMessage, valid: valid }\">\n    <input class=\"currency-amount right-aligned {invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n    <div class=\"currency-code\">\n      <div class=\"currency-code-text\">{ getCurrency().toUpperCase() }</div>\n    </div>\n  </div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // node_modules/shop.js-util/src/data/currencies.coffee
   var currencies = {
@@ -12199,7 +12471,9 @@ var Shop = (function () {
       'rub': 'руб',
       'inr': '',
       'try': '',
-      '': ''
+      'pnt': '',
+      'btc': '',
+      'eth': ''
     }
   };
 
@@ -12292,11 +12566,11 @@ var Shop = (function () {
     Currency.prototype.currency = '';
 
     Currency.prototype.init = function() {
-      return Currency.__super__.init.apply(this, arguments);
+      return Currency.__super__.init.call(this);
     };
 
     Currency.prototype.getCurrency = function(e) {
-      return valueOrCall(this.currency);
+      return valueOrCall$1(this.currency);
     };
 
     Currency.prototype.renderValue = function() {
@@ -12315,12 +12589,274 @@ var Shop = (function () {
 
   Currency.register();
 
-  // node_modules/el-controls/templates/controls/qrcode.pug
-  var html$6 = "\n<canvas></canvas>";
+  var lib = (typeof self === 'object' && self.self === self && self) ||
+    (typeof commonjsGlobal === 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal) ||
+    commonjsGlobal;
 
-  var qrcode = createCommonjsModule(function (module, exports) {
-  // node_modules/qrcode/build/qrcode.js
-  (function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND", f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/window-or-global/lib/index.js
+
+  var canPromise = function() {
+    return (
+      typeof lib.Promise === 'function' &&
+      typeof lib.Promise.prototype.then === 'function'
+    )
+  };
+
+  //  commonjs-external:buffer
+
+  // node_modules/qrcode/lib/utils/buffer.js
+  var buffer$1 = buffer.Buffer;
+
+  // node_modules/qrcode/lib/core/utils.js
+  var toSJISFunction;
+  var CODEWORDS_COUNT = [
+    0, // Not used
+    26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
+    404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
+    1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
+    2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
+  ];
+
+  /**
+   * Returns the QR Code size for the specified version
+   *
+   * @param  {Number} version QR Code version
+   * @return {Number}         size of QR code
+   */
+  var getSymbolSize = function getSymbolSize (version) {
+    if (!version) throw new Error('"version" cannot be null or undefined')
+    if (version < 1 || version > 40) throw new Error('"version" should be in range from 1 to 40')
+    return version * 4 + 17
+  };
+
+  /**
+   * Returns the total number of codewords used to store data and EC information.
+   *
+   * @param  {Number} version QR Code version
+   * @return {Number}         Data length in bits
+   */
+  var getSymbolTotalCodewords = function getSymbolTotalCodewords (version) {
+    return CODEWORDS_COUNT[version]
+  };
+
+  /**
+   * Encode data with Bose-Chaudhuri-Hocquenghem
+   *
+   * @param  {Number} data Value to encode
+   * @return {Number}      Encoded value
+   */
+  var getBCHDigit = function (data) {
+    var digit = 0;
+
+    while (data !== 0) {
+      digit++;
+      data >>>= 1;
+    }
+
+    return digit
+  };
+
+  var setToSJISFunction = function setToSJISFunction (f) {
+    if (typeof f !== 'function') {
+      throw new Error('"toSJISFunc" is not a valid function.')
+    }
+
+    toSJISFunction = f;
+  };
+
+  var isKanjiModeEnabled = function () {
+    return typeof toSJISFunction !== 'undefined'
+  };
+
+  var toSJIS = function toSJIS (kanji) {
+    return toSJISFunction(kanji)
+  };
+
+  var utils = {
+  	getSymbolSize: getSymbolSize,
+  	getSymbolTotalCodewords: getSymbolTotalCodewords,
+  	getBCHDigit: getBCHDigit,
+  	setToSJISFunction: setToSJISFunction,
+  	isKanjiModeEnabled: isKanjiModeEnabled,
+  	toSJIS: toSJIS
+  };
+
+  var errorCorrectionLevel = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/error-correction-level.js
+  exports.L = { bit: 1 };
+  exports.M = { bit: 0 };
+  exports.Q = { bit: 3 };
+  exports.H = { bit: 2 };
+
+  function fromString (string) {
+    if (typeof string !== 'string') {
+      throw new Error('Param is not a string')
+    }
+
+    var lcStr = string.toLowerCase();
+
+    switch (lcStr) {
+      case 'l':
+      case 'low':
+        return exports.L
+
+      case 'm':
+      case 'medium':
+        return exports.M
+
+      case 'q':
+      case 'quartile':
+        return exports.Q
+
+      case 'h':
+      case 'high':
+        return exports.H
+
+      default:
+        throw new Error('Unknown EC Level: ' + string)
+    }
+  }
+
+  exports.isValid = function isValid (level) {
+    return level && typeof level.bit !== 'undefined' &&
+      level.bit >= 0 && level.bit < 4
+  };
+
+  exports.from = function from (value, defaultValue) {
+    if (exports.isValid(value)) {
+      return value
+    }
+
+    try {
+      return fromString(value)
+    } catch (e) {
+      return defaultValue
+    }
+  };
+  });
+  var errorCorrectionLevel_1 = errorCorrectionLevel.L;
+  var errorCorrectionLevel_2 = errorCorrectionLevel.M;
+  var errorCorrectionLevel_3 = errorCorrectionLevel.Q;
+  var errorCorrectionLevel_4 = errorCorrectionLevel.H;
+  var errorCorrectionLevel_5 = errorCorrectionLevel.isValid;
+  var errorCorrectionLevel_6 = errorCorrectionLevel.from;
+
+  // node_modules/qrcode/lib/core/bit-buffer.js
+  function BitBuffer () {
+    this.buffer = [];
+    this.length = 0;
+  }
+
+  BitBuffer.prototype = {
+
+    get: function (index) {
+      var bufIndex = Math.floor(index / 8);
+      return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) === 1
+    },
+
+    put: function (num, length) {
+      for (var i = 0; i < length; i++) {
+        this.putBit(((num >>> (length - i - 1)) & 1) === 1);
+      }
+    },
+
+    getLengthInBits: function () {
+      return this.length
+    },
+
+    putBit: function (bit) {
+      var bufIndex = Math.floor(this.length / 8);
+      if (this.buffer.length <= bufIndex) {
+        this.buffer.push(0);
+      }
+
+      if (bit) {
+        this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+      }
+
+      this.length++;
+    }
+  };
+
+  var bitBuffer = BitBuffer;
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/utils/buffer.js
+
+  // node_modules/qrcode/lib/core/bit-matrix.js
+
+
+  /**
+   * Helper class to handle QR Code symbol modules
+   *
+   * @param {Number} size Symbol size
+   */
+  function BitMatrix (size) {
+    if (!size || size < 1) {
+      throw new Error('BitMatrix size must be defined and greater than 0')
+    }
+
+    this.size = size;
+    this.data = new buffer$1(size * size);
+    this.data.fill(0);
+    this.reservedBit = new buffer$1(size * size);
+    this.reservedBit.fill(0);
+  }
+
+  /**
+   * Set bit value at specified location
+   * If reserved flag is set, this bit will be ignored during masking process
+   *
+   * @param {Number}  row
+   * @param {Number}  col
+   * @param {Boolean} value
+   * @param {Boolean} reserved
+   */
+  BitMatrix.prototype.set = function (row, col, value, reserved) {
+    var index = row * this.size + col;
+    this.data[index] = value;
+    if (reserved) this.reservedBit[index] = true;
+  };
+
+  /**
+   * Returns bit value at specified location
+   *
+   * @param  {Number}  row
+   * @param  {Number}  col
+   * @return {Boolean}
+   */
+  BitMatrix.prototype.get = function (row, col) {
+    return this.data[row * this.size + col]
+  };
+
+  /**
+   * Applies xor operator at specified location
+   * (used during masking process)
+   *
+   * @param {Number}  row
+   * @param {Number}  col
+   * @param {Boolean} value
+   */
+  BitMatrix.prototype.xor = function (row, col, value) {
+    this.data[row * this.size + col] ^= value;
+  };
+
+  /**
+   * Check if bit at specified location is reserved
+   *
+   * @param {Number}   row
+   * @param {Number}   col
+   * @return {Boolean}
+   */
+  BitMatrix.prototype.isReserved = function (row, col) {
+    return this.reservedBit[row * this.size + col]
+  };
+
+  var bitMatrix = BitMatrix;
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/utils.js
+
+  var alignmentPattern = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/alignment-pattern.js
   /**
    * Alignment pattern are fixed reference pattern in defined positions
    * in a matrix symbology, which enables the decode software to re-synchronise
@@ -12331,7 +12867,7 @@ var Shop = (function () {
    * and their number depends on the symbol version.
    */
 
-  var getSymbolSize = require('./utils').getSymbolSize;
+  var getSymbolSize = utils.getSymbolSize;
 
   /**
    * Calculate the row/column coordinates of the center module of each alignment pattern
@@ -12404,398 +12940,12 @@ var Shop = (function () {
 
     return coords
   };
+  });
+  var alignmentPattern_1 = alignmentPattern.getRowColCoords;
+  var alignmentPattern_2 = alignmentPattern.getPositions;
 
-  },{"./utils":20}],2:[function(require,module,exports){
-  var Mode = require('./mode');
-
-  /**
-   * Array of characters available in alphanumeric mode
-   *
-   * As per QR Code specification, to each character
-   * is assigned a value from 0 to 44 which in this case coincides
-   * with the array index
-   *
-   * @type {Array}
-   */
-  var ALPHA_NUM_CHARS = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    ' ', '$', '%', '*', '+', '-', '.', '/', ':'
-  ];
-
-  function AlphanumericData (data) {
-    this.mode = Mode.ALPHANUMERIC;
-    this.data = data;
-  }
-
-  AlphanumericData.getBitsLength = function getBitsLength (length) {
-    return 11 * Math.floor(length / 2) + 6 * (length % 2)
-  };
-
-  AlphanumericData.prototype.getLength = function getLength () {
-    return this.data.length
-  };
-
-  AlphanumericData.prototype.getBitsLength = function getBitsLength () {
-    return AlphanumericData.getBitsLength(this.data.length)
-  };
-
-  AlphanumericData.prototype.write = function write (bitBuffer) {
-    var i;
-
-    // Input data characters are divided into groups of two characters
-    // and encoded as 11-bit binary codes.
-    for (i = 0; i + 2 <= this.data.length; i += 2) {
-      // The character value of the first character is multiplied by 45
-      var value = ALPHA_NUM_CHARS.indexOf(this.data[i]) * 45;
-
-      // The character value of the second digit is added to the product
-      value += ALPHA_NUM_CHARS.indexOf(this.data[i + 1]);
-
-      // The sum is then stored as 11-bit binary number
-      bitBuffer.put(value, 11);
-    }
-
-    // If the number of input data characters is not a multiple of two,
-    // the character value of the final character is encoded as a 6-bit binary number.
-    if (this.data.length % 2) {
-      bitBuffer.put(ALPHA_NUM_CHARS.indexOf(this.data[i]), 6);
-    }
-  };
-
-  module.exports = AlphanumericData;
-
-  },{"./mode":13}],3:[function(require,module,exports){
-  function BitBuffer () {
-    this.buffer = [];
-    this.length = 0;
-  }
-
-  BitBuffer.prototype = {
-
-    get: function (index) {
-      var bufIndex = Math.floor(index / 8);
-      return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) === 1
-    },
-
-    put: function (num, length) {
-      for (var i = 0; i < length; i++) {
-        this.putBit(((num >>> (length - i - 1)) & 1) === 1);
-      }
-    },
-
-    getLengthInBits: function () {
-      return this.length
-    },
-
-    putBit: function (bit) {
-      var bufIndex = Math.floor(this.length / 8);
-      if (this.buffer.length <= bufIndex) {
-        this.buffer.push(0);
-      }
-
-      if (bit) {
-        this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
-      }
-
-      this.length++;
-    }
-  };
-
-  module.exports = BitBuffer;
-
-  },{}],4:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-
-  /**
-   * Helper class to handle QR Code symbol modules
-   *
-   * @param {Number} size Symbol size
-   */
-  function BitMatrix (size) {
-    if (!size || size < 1) {
-      throw new Error('BitMatrix size must be defined and greater than 0')
-    }
-
-    this.size = size;
-    this.data = new Buffer(size * size);
-    this.data.fill(0);
-    this.reservedBit = new Buffer(size * size);
-    this.reservedBit.fill(0);
-  }
-
-  /**
-   * Set bit value at specified location
-   * If reserved flag is set, this bit will be ignored during masking process
-   *
-   * @param {Number}  row
-   * @param {Number}  col
-   * @param {Boolean} value
-   * @param {Boolean} reserved
-   */
-  BitMatrix.prototype.set = function (row, col, value, reserved) {
-    var index = row * this.size + col;
-    this.data[index] = value;
-    if (reserved) this.reservedBit[index] = true;
-  };
-
-  /**
-   * Returns bit value at specified location
-   *
-   * @param  {Number}  row
-   * @param  {Number}  col
-   * @return {Boolean}
-   */
-  BitMatrix.prototype.get = function (row, col) {
-    return this.data[row * this.size + col]
-  };
-
-  /**
-   * Applies xor operator at specified location
-   * (used during masking process)
-   *
-   * @param {Number}  row
-   * @param {Number}  col
-   * @param {Boolean} value
-   */
-  BitMatrix.prototype.xor = function (row, col, value) {
-    this.data[row * this.size + col] ^= value;
-  };
-
-  /**
-   * Check if bit at specified location is reserved
-   *
-   * @param {Number}   row
-   * @param {Number}   col
-   * @return {Boolean}
-   */
-  BitMatrix.prototype.isReserved = function (row, col) {
-    return this.reservedBit[row * this.size + col]
-  };
-
-  module.exports = BitMatrix;
-
-  },{"../utils/buffer":26}],5:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-  var Mode = require('./mode');
-
-  function ByteData (data) {
-    this.mode = Mode.BYTE;
-    this.data = new Buffer(data);
-  }
-
-  ByteData.getBitsLength = function getBitsLength (length) {
-    return length * 8
-  };
-
-  ByteData.prototype.getLength = function getLength () {
-    return this.data.length
-  };
-
-  ByteData.prototype.getBitsLength = function getBitsLength () {
-    return ByteData.getBitsLength(this.data.length)
-  };
-
-  ByteData.prototype.write = function (bitBuffer) {
-    for (var i = 0, l = this.data.length; i < l; i++) {
-      bitBuffer.put(this.data[i], 8);
-    }
-  };
-
-  module.exports = ByteData;
-
-  },{"../utils/buffer":26,"./mode":13}],6:[function(require,module,exports){
-  var ECLevel = require('./error-correction-level');
-
-  var EC_BLOCKS_TABLE = [
-  // L  M  Q  H
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    1, 1, 2, 2,
-    1, 2, 2, 4,
-    1, 2, 4, 4,
-    2, 4, 4, 4,
-    2, 4, 6, 5,
-    2, 4, 6, 6,
-    2, 5, 8, 8,
-    4, 5, 8, 8,
-    4, 5, 8, 11,
-    4, 8, 10, 11,
-    4, 9, 12, 16,
-    4, 9, 16, 16,
-    6, 10, 12, 18,
-    6, 10, 17, 16,
-    6, 11, 16, 19,
-    6, 13, 18, 21,
-    7, 14, 21, 25,
-    8, 16, 20, 25,
-    8, 17, 23, 25,
-    9, 17, 23, 34,
-    9, 18, 25, 30,
-    10, 20, 27, 32,
-    12, 21, 29, 35,
-    12, 23, 34, 37,
-    12, 25, 34, 40,
-    13, 26, 35, 42,
-    14, 28, 38, 45,
-    15, 29, 40, 48,
-    16, 31, 43, 51,
-    17, 33, 45, 54,
-    18, 35, 48, 57,
-    19, 37, 51, 60,
-    19, 38, 53, 63,
-    20, 40, 56, 66,
-    21, 43, 59, 70,
-    22, 45, 62, 74,
-    24, 47, 65, 77,
-    25, 49, 68, 81
-  ];
-
-  var EC_CODEWORDS_TABLE = [
-  // L  M  Q  H
-    7, 10, 13, 17,
-    10, 16, 22, 28,
-    15, 26, 36, 44,
-    20, 36, 52, 64,
-    26, 48, 72, 88,
-    36, 64, 96, 112,
-    40, 72, 108, 130,
-    48, 88, 132, 156,
-    60, 110, 160, 192,
-    72, 130, 192, 224,
-    80, 150, 224, 264,
-    96, 176, 260, 308,
-    104, 198, 288, 352,
-    120, 216, 320, 384,
-    132, 240, 360, 432,
-    144, 280, 408, 480,
-    168, 308, 448, 532,
-    180, 338, 504, 588,
-    196, 364, 546, 650,
-    224, 416, 600, 700,
-    224, 442, 644, 750,
-    252, 476, 690, 816,
-    270, 504, 750, 900,
-    300, 560, 810, 960,
-    312, 588, 870, 1050,
-    336, 644, 952, 1110,
-    360, 700, 1020, 1200,
-    390, 728, 1050, 1260,
-    420, 784, 1140, 1350,
-    450, 812, 1200, 1440,
-    480, 868, 1290, 1530,
-    510, 924, 1350, 1620,
-    540, 980, 1440, 1710,
-    570, 1036, 1530, 1800,
-    570, 1064, 1590, 1890,
-    600, 1120, 1680, 1980,
-    630, 1204, 1770, 2100,
-    660, 1260, 1860, 2220,
-    720, 1316, 1950, 2310,
-    750, 1372, 2040, 2430
-  ];
-
-  /**
-   * Returns the number of error correction block that the QR Code should contain
-   * for the specified version and error correction level.
-   *
-   * @param  {Number} version              QR Code version
-   * @param  {Number} errorCorrectionLevel Error correction level
-   * @return {Number}                      Number of error correction blocks
-   */
-  exports.getBlocksCount = function getBlocksCount (version, errorCorrectionLevel) {
-    switch (errorCorrectionLevel) {
-      case ECLevel.L:
-        return EC_BLOCKS_TABLE[(version - 1) * 4 + 0]
-      case ECLevel.M:
-        return EC_BLOCKS_TABLE[(version - 1) * 4 + 1]
-      case ECLevel.Q:
-        return EC_BLOCKS_TABLE[(version - 1) * 4 + 2]
-      case ECLevel.H:
-        return EC_BLOCKS_TABLE[(version - 1) * 4 + 3]
-      default:
-        return undefined
-    }
-  };
-
-  /**
-   * Returns the number of error correction codewords to use for the specified
-   * version and error correction level.
-   *
-   * @param  {Number} version              QR Code version
-   * @param  {Number} errorCorrectionLevel Error correction level
-   * @return {Number}                      Number of error correction codewords
-   */
-  exports.getTotalCodewordsCount = function getTotalCodewordsCount (version, errorCorrectionLevel) {
-    switch (errorCorrectionLevel) {
-      case ECLevel.L:
-        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 0]
-      case ECLevel.M:
-        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 1]
-      case ECLevel.Q:
-        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 2]
-      case ECLevel.H:
-        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 3]
-      default:
-        return undefined
-    }
-  };
-
-  },{"./error-correction-level":7}],7:[function(require,module,exports){
-  exports.L = { bit: 1 };
-  exports.M = { bit: 0 };
-  exports.Q = { bit: 3 };
-  exports.H = { bit: 2 };
-
-  function fromString (string) {
-    if (typeof string !== 'string') {
-      throw new Error('Param is not a string')
-    }
-
-    var lcStr = string.toLowerCase();
-
-    switch (lcStr) {
-      case 'l':
-      case 'low':
-        return exports.L
-
-      case 'm':
-      case 'medium':
-        return exports.M
-
-      case 'q':
-      case 'quartile':
-        return exports.Q
-
-      case 'h':
-      case 'high':
-        return exports.H
-
-      default:
-        throw new Error('Unknown EC Level: ' + string)
-    }
-  }
-
-  exports.isValid = function isValid (level) {
-    return level && typeof level.bit !== 'undefined' &&
-      level.bit >= 0 && level.bit < 4
-  };
-
-  exports.from = function from (value, defaultValue) {
-    if (exports.isValid(value)) {
-      return value
-    }
-
-    try {
-      return fromString(value)
-    } catch (e) {
-      return defaultValue
-    }
-  };
-
-  },{}],8:[function(require,module,exports){
-  var getSymbolSize = require('./utils').getSymbolSize;
+  // node_modules/qrcode/lib/core/finder-pattern.js
+  var getSymbolSize$1 = utils.getSymbolSize;
   var FINDER_PATTERN_SIZE = 7;
 
   /**
@@ -12805,8 +12955,8 @@ var Shop = (function () {
    * @param  {Number} version QR Code version
    * @return {Array}          Array of coordinates
    */
-  exports.getPositions = function getPositions (version) {
-    var size = getSymbolSize(version);
+  var getPositions = function getPositions (version) {
+    var size = getSymbolSize$1(version);
 
     return [
       // top-left
@@ -12818,168 +12968,12 @@ var Shop = (function () {
     ]
   };
 
-  },{"./utils":20}],9:[function(require,module,exports){
-  var Utils = require('./utils');
-
-  var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
-  var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
-  var G15_BCH = Utils.getBCHDigit(G15);
-
-  /**
-   * Returns format information with relative error correction bits
-   *
-   * The format information is a 15-bit sequence containing 5 data bits,
-   * with 10 error correction bits calculated using the (15, 5) BCH code.
-   *
-   * @param  {Number} errorCorrectionLevel Error correction level
-   * @param  {Number} mask                 Mask pattern
-   * @return {Number}                      Encoded format information bits
-   */
-  exports.getEncodedBits = function getEncodedBits (errorCorrectionLevel, mask) {
-    var data = ((errorCorrectionLevel.bit << 3) | mask);
-    var d = data << 10;
-
-    while (Utils.getBCHDigit(d) - G15_BCH >= 0) {
-      d ^= (G15 << (Utils.getBCHDigit(d) - G15_BCH));
-    }
-
-    // xor final data with mask pattern in order to ensure that
-    // no combination of Error Correction Level and data mask pattern
-    // will result in an all-zero data string
-    return ((data << 10) | d) ^ G15_MASK
+  var finderPattern = {
+  	getPositions: getPositions
   };
 
-  },{"./utils":20}],10:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-
-  var EXP_TABLE = new Buffer(512);
-  var LOG_TABLE = new Buffer(256)
-
-  /**
-   * Precompute the log and anti-log tables for faster computation later
-   *
-   * For each possible value in the galois field 2^8, we will pre-compute
-   * the logarithm and anti-logarithm (exponential) of this value
-   *
-   * ref {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders#Introduction_to_mathematical_fields}
-   */
-  ;(function initTables () {
-    var x = 1;
-    for (var i = 0; i < 255; i++) {
-      EXP_TABLE[i] = x;
-      LOG_TABLE[x] = i;
-
-      x <<= 1; // multiply by 2
-
-      // The QR code specification says to use byte-wise modulo 100011101 arithmetic.
-      // This means that when a number is 256 or larger, it should be XORed with 0x11D.
-      if (x & 0x100) { // similar to x >= 256, but a lot faster (because 0x100 == 256)
-        x ^= 0x11D;
-      }
-    }
-
-    // Optimization: double the size of the anti-log table so that we don't need to mod 255 to
-    // stay inside the bounds (because we will mainly use this table for the multiplication of
-    // two GF numbers, no more).
-    // @see {@link mul}
-    for (i = 255; i < 512; i++) {
-      EXP_TABLE[i] = EXP_TABLE[i - 255];
-    }
-  }());
-
-  /**
-   * Returns log value of n inside Galois Field
-   *
-   * @param  {Number} n
-   * @return {Number}
-   */
-  exports.log = function log (n) {
-    if (n < 1) throw new Error('log(' + n + ')')
-    return LOG_TABLE[n]
-  };
-
-  /**
-   * Returns anti-log value of n inside Galois Field
-   *
-   * @param  {Number} n
-   * @return {Number}
-   */
-  exports.exp = function exp (n) {
-    return EXP_TABLE[n]
-  };
-
-  /**
-   * Multiplies two number inside Galois Field
-   *
-   * @param  {Number} x
-   * @param  {Number} y
-   * @return {Number}
-   */
-  exports.mul = function mul (x, y) {
-    if (x === 0 || y === 0) return 0
-
-    // should be EXP_TABLE[(LOG_TABLE[x] + LOG_TABLE[y]) % 255] if EXP_TABLE wasn't oversized
-    // @see {@link initTables}
-    return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]]
-  };
-
-  },{"../utils/buffer":26}],11:[function(require,module,exports){
-  var Mode = require('./mode');
-  var Utils = require('./utils');
-
-  function KanjiData (data) {
-    this.mode = Mode.KANJI;
-    this.data = data;
-  }
-
-  KanjiData.getBitsLength = function getBitsLength (length) {
-    return length * 13
-  };
-
-  KanjiData.prototype.getLength = function getLength () {
-    return this.data.length
-  };
-
-  KanjiData.prototype.getBitsLength = function getBitsLength () {
-    return KanjiData.getBitsLength(this.data.length)
-  };
-
-  KanjiData.prototype.write = function (bitBuffer) {
-    var i;
-
-    // In the Shift JIS system, Kanji characters are represented by a two byte combination.
-    // These byte values are shifted from the JIS X 0208 values.
-    // JIS X 0208 gives details of the shift coded representation.
-    for (i = 0; i < this.data.length; i++) {
-      var value = Utils.toSJIS(this.data[i]);
-
-      // For characters with Shift JIS values from 0x8140 to 0x9FFC:
-      if (value >= 0x8140 && value <= 0x9FFC) {
-        // Subtract 0x8140 from Shift JIS value
-        value -= 0x8140;
-
-      // For characters with Shift JIS values from 0xE040 to 0xEBBF
-      } else if (value >= 0xE040 && value <= 0xEBBF) {
-        // Subtract 0xC140 from Shift JIS value
-        value -= 0xC140;
-      } else {
-        throw new Error(
-          'Invalid SJIS character: ' + this.data[i] + '\n' +
-          'Make sure your charset is UTF-8')
-      }
-
-      // Multiply most significant byte of result by 0xC0
-      // and add least significant byte to product
-      value = (((value >>> 8) & 0xff) * 0xC0) + (value & 0xff);
-
-      // Convert result to a 13-bit binary string
-      bitBuffer.put(value, 13);
-    }
-  };
-
-  module.exports = KanjiData;
-
-  },{"./mode":13,"./utils":20}],12:[function(require,module,exports){
+  var maskPattern = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/mask-pattern.js
   /**
    * Data mask pattern reference
    * @type {Object}
@@ -13214,10 +13208,429 @@ var Shop = (function () {
 
     return bestPattern
   };
+  });
+  var maskPattern_1 = maskPattern.Patterns;
+  var maskPattern_2 = maskPattern.isValid;
+  var maskPattern_3 = maskPattern.from;
+  var maskPattern_4 = maskPattern.getPenaltyN1;
+  var maskPattern_5 = maskPattern.getPenaltyN2;
+  var maskPattern_6 = maskPattern.getPenaltyN3;
+  var maskPattern_7 = maskPattern.getPenaltyN4;
+  var maskPattern_8 = maskPattern.applyMask;
+  var maskPattern_9 = maskPattern.getBestMask;
 
-  },{}],13:[function(require,module,exports){
-  var Version = require('./version');
-  var Regex = require('./regex');
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/error-correction-level.js
+
+  // node_modules/qrcode/lib/core/error-correction-code.js
+
+
+  var EC_BLOCKS_TABLE = [
+  // L  M  Q  H
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 2, 2,
+    1, 2, 2, 4,
+    1, 2, 4, 4,
+    2, 4, 4, 4,
+    2, 4, 6, 5,
+    2, 4, 6, 6,
+    2, 5, 8, 8,
+    4, 5, 8, 8,
+    4, 5, 8, 11,
+    4, 8, 10, 11,
+    4, 9, 12, 16,
+    4, 9, 16, 16,
+    6, 10, 12, 18,
+    6, 10, 17, 16,
+    6, 11, 16, 19,
+    6, 13, 18, 21,
+    7, 14, 21, 25,
+    8, 16, 20, 25,
+    8, 17, 23, 25,
+    9, 17, 23, 34,
+    9, 18, 25, 30,
+    10, 20, 27, 32,
+    12, 21, 29, 35,
+    12, 23, 34, 37,
+    12, 25, 34, 40,
+    13, 26, 35, 42,
+    14, 28, 38, 45,
+    15, 29, 40, 48,
+    16, 31, 43, 51,
+    17, 33, 45, 54,
+    18, 35, 48, 57,
+    19, 37, 51, 60,
+    19, 38, 53, 63,
+    20, 40, 56, 66,
+    21, 43, 59, 70,
+    22, 45, 62, 74,
+    24, 47, 65, 77,
+    25, 49, 68, 81
+  ];
+
+  var EC_CODEWORDS_TABLE = [
+  // L  M  Q  H
+    7, 10, 13, 17,
+    10, 16, 22, 28,
+    15, 26, 36, 44,
+    20, 36, 52, 64,
+    26, 48, 72, 88,
+    36, 64, 96, 112,
+    40, 72, 108, 130,
+    48, 88, 132, 156,
+    60, 110, 160, 192,
+    72, 130, 192, 224,
+    80, 150, 224, 264,
+    96, 176, 260, 308,
+    104, 198, 288, 352,
+    120, 216, 320, 384,
+    132, 240, 360, 432,
+    144, 280, 408, 480,
+    168, 308, 448, 532,
+    180, 338, 504, 588,
+    196, 364, 546, 650,
+    224, 416, 600, 700,
+    224, 442, 644, 750,
+    252, 476, 690, 816,
+    270, 504, 750, 900,
+    300, 560, 810, 960,
+    312, 588, 870, 1050,
+    336, 644, 952, 1110,
+    360, 700, 1020, 1200,
+    390, 728, 1050, 1260,
+    420, 784, 1140, 1350,
+    450, 812, 1200, 1440,
+    480, 868, 1290, 1530,
+    510, 924, 1350, 1620,
+    540, 980, 1440, 1710,
+    570, 1036, 1530, 1800,
+    570, 1064, 1590, 1890,
+    600, 1120, 1680, 1980,
+    630, 1204, 1770, 2100,
+    660, 1260, 1860, 2220,
+    720, 1316, 1950, 2310,
+    750, 1372, 2040, 2430
+  ];
+
+  /**
+   * Returns the number of error correction block that the QR Code should contain
+   * for the specified version and error correction level.
+   *
+   * @param  {Number} version              QR Code version
+   * @param  {Number} errorCorrectionLevel Error correction level
+   * @return {Number}                      Number of error correction blocks
+   */
+  var getBlocksCount = function getBlocksCount (version, errorCorrectionLevel$$1) {
+    switch (errorCorrectionLevel$$1) {
+      case errorCorrectionLevel.L:
+        return EC_BLOCKS_TABLE[(version - 1) * 4 + 0]
+      case errorCorrectionLevel.M:
+        return EC_BLOCKS_TABLE[(version - 1) * 4 + 1]
+      case errorCorrectionLevel.Q:
+        return EC_BLOCKS_TABLE[(version - 1) * 4 + 2]
+      case errorCorrectionLevel.H:
+        return EC_BLOCKS_TABLE[(version - 1) * 4 + 3]
+      default:
+        return undefined
+    }
+  };
+
+  /**
+   * Returns the number of error correction codewords to use for the specified
+   * version and error correction level.
+   *
+   * @param  {Number} version              QR Code version
+   * @param  {Number} errorCorrectionLevel Error correction level
+   * @return {Number}                      Number of error correction codewords
+   */
+  var getTotalCodewordsCount = function getTotalCodewordsCount (version, errorCorrectionLevel$$1) {
+    switch (errorCorrectionLevel$$1) {
+      case errorCorrectionLevel.L:
+        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 0]
+      case errorCorrectionLevel.M:
+        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 1]
+      case errorCorrectionLevel.Q:
+        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 2]
+      case errorCorrectionLevel.H:
+        return EC_CODEWORDS_TABLE[(version - 1) * 4 + 3]
+      default:
+        return undefined
+    }
+  };
+
+  var errorCorrectionCode = {
+  	getBlocksCount: getBlocksCount,
+  	getTotalCodewordsCount: getTotalCodewordsCount
+  };
+
+  // node_modules/qrcode/lib/core/galois-field.js
+
+
+  var EXP_TABLE = new buffer$1(512);
+  var LOG_TABLE = new buffer$1(256)
+
+  /**
+   * Precompute the log and anti-log tables for faster computation later
+   *
+   * For each possible value in the galois field 2^8, we will pre-compute
+   * the logarithm and anti-logarithm (exponential) of this value
+   *
+   * ref {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders#Introduction_to_mathematical_fields}
+   */
+  ;(function initTables () {
+    var x = 1;
+    for (var i = 0; i < 255; i++) {
+      EXP_TABLE[i] = x;
+      LOG_TABLE[x] = i;
+
+      x <<= 1; // multiply by 2
+
+      // The QR code specification says to use byte-wise modulo 100011101 arithmetic.
+      // This means that when a number is 256 or larger, it should be XORed with 0x11D.
+      if (x & 0x100) { // similar to x >= 256, but a lot faster (because 0x100 == 256)
+        x ^= 0x11D;
+      }
+    }
+
+    // Optimization: double the size of the anti-log table so that we don't need to mod 255 to
+    // stay inside the bounds (because we will mainly use this table for the multiplication of
+    // two GF numbers, no more).
+    // @see {@link mul}
+    for (i = 255; i < 512; i++) {
+      EXP_TABLE[i] = EXP_TABLE[i - 255];
+    }
+  }());
+
+  /**
+   * Returns log value of n inside Galois Field
+   *
+   * @param  {Number} n
+   * @return {Number}
+   */
+  var log = function log (n) {
+    if (n < 1) throw new Error('log(' + n + ')')
+    return LOG_TABLE[n]
+  };
+
+  /**
+   * Returns anti-log value of n inside Galois Field
+   *
+   * @param  {Number} n
+   * @return {Number}
+   */
+  var exp = function exp (n) {
+    return EXP_TABLE[n]
+  };
+
+  /**
+   * Multiplies two number inside Galois Field
+   *
+   * @param  {Number} x
+   * @param  {Number} y
+   * @return {Number}
+   */
+  var mul = function mul (x, y) {
+    if (x === 0 || y === 0) return 0
+
+    // should be EXP_TABLE[(LOG_TABLE[x] + LOG_TABLE[y]) % 255] if EXP_TABLE wasn't oversized
+    // @see {@link initTables}
+    return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]]
+  };
+
+  var galoisField = {
+  	log: log,
+  	exp: exp,
+  	mul: mul
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/galois-field.js
+
+  var polynomial = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/polynomial.js
+
+
+
+  /**
+   * Multiplies two polynomials inside Galois Field
+   *
+   * @param  {Buffer} p1 Polynomial
+   * @param  {Buffer} p2 Polynomial
+   * @return {Buffer}    Product of p1 and p2
+   */
+  exports.mul = function mul (p1, p2) {
+    var coeff = new buffer$1(p1.length + p2.length - 1);
+    coeff.fill(0);
+
+    for (var i = 0; i < p1.length; i++) {
+      for (var j = 0; j < p2.length; j++) {
+        coeff[i + j] ^= galoisField.mul(p1[i], p2[j]);
+      }
+    }
+
+    return coeff
+  };
+
+  /**
+   * Calculate the remainder of polynomials division
+   *
+   * @param  {Buffer} divident Polynomial
+   * @param  {Buffer} divisor  Polynomial
+   * @return {Buffer}          Remainder
+   */
+  exports.mod = function mod (divident, divisor) {
+    var result = new buffer$1(divident);
+
+    while ((result.length - divisor.length) >= 0) {
+      var coeff = result[0];
+
+      for (var i = 0; i < divisor.length; i++) {
+        result[i] ^= galoisField.mul(divisor[i], coeff);
+      }
+
+      // remove all zeros from buffer head
+      var offset = 0;
+      while (offset < result.length && result[offset] === 0) offset++;
+      result = result.slice(offset);
+    }
+
+    return result
+  };
+
+  /**
+   * Generate an irreducible generator polynomial of specified degree
+   * (used by Reed-Solomon encoder)
+   *
+   * @param  {Number} degree Degree of the generator polynomial
+   * @return {Buffer}        Buffer containing polynomial coefficients
+   */
+  exports.generateECPolynomial = function generateECPolynomial (degree) {
+    var poly = new buffer$1([1]);
+    for (var i = 0; i < degree; i++) {
+      poly = exports.mul(poly, [1, galoisField.exp(i)]);
+    }
+
+    return poly
+  };
+  });
+  var polynomial_1 = polynomial.mul;
+  var polynomial_2 = polynomial.mod;
+  var polynomial_3 = polynomial.generateECPolynomial;
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/polynomial.js
+
+  // node_modules/qrcode/lib/core/reed-solomon-encoder.js
+
+
+
+  function ReedSolomonEncoder (degree) {
+    this.genPoly = undefined;
+    this.degree = degree;
+
+    if (this.degree) this.initialize(this.degree);
+  }
+
+  /**
+   * Initialize the encoder.
+   * The input param should correspond to the number of error correction codewords.
+   *
+   * @param  {Number} degree
+   */
+  ReedSolomonEncoder.prototype.initialize = function initialize (degree) {
+    // create an irreducible generator polynomial
+    this.degree = degree;
+    this.genPoly = polynomial.generateECPolynomial(this.degree);
+  };
+
+  /**
+   * Encodes a chunk of data
+   *
+   * @param  {Buffer} data Buffer containing input data
+   * @return {Buffer}      Buffer containing encoded data
+   */
+  ReedSolomonEncoder.prototype.encode = function encode (data) {
+    if (!this.genPoly) {
+      throw new Error('Encoder not initialized')
+    }
+
+    // Calculate EC for this data block
+    // extends data size to data+genPoly size
+    var pad = new buffer$1(this.degree);
+    pad.fill(0);
+    var paddedData = buffer$1.concat([data, pad], data.length + this.degree);
+
+    // The error correction codewords are the remainder after dividing the data codewords
+    // by a generator polynomial
+    var remainder = polynomial.mod(paddedData, this.genPoly);
+
+    // return EC data blocks (last n byte, where n is the degree of genPoly)
+    // If coefficients number in remainder are less than genPoly degree,
+    // pad with 0s to the left to reach the needed number of coefficients
+    var start = this.degree - remainder.length;
+    if (start > 0) {
+      var buff = new buffer$1(this.degree);
+      buff.fill(0);
+      remainder.copy(buff, start);
+
+      return buff
+    }
+
+    return remainder
+  };
+
+  var reedSolomonEncoder = ReedSolomonEncoder;
+
+  // node_modules/qrcode/lib/core/regex.js
+  var numeric = '[0-9]+';
+  var alphanumeric = '[A-Z $%*+\\-./:]+';
+  var kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
+    '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
+    '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
+    '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
+  kanji = kanji.replace(/u/g, '\\u');
+
+  var byte = '(?:(?![A-Z0-9 $%*+\\-./:]|' + kanji + ').)+';
+
+  var KANJI = new RegExp(kanji, 'g');
+  var BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+\\-./:]+', 'g');
+  var BYTE = new RegExp(byte, 'g');
+  var NUMERIC = new RegExp(numeric, 'g');
+  var ALPHANUMERIC = new RegExp(alphanumeric, 'g');
+
+  var TEST_KANJI = new RegExp('^' + kanji + '$');
+  var TEST_NUMERIC = new RegExp('^' + numeric + '$');
+  var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+\\-./:]+$');
+
+  var testKanji = function testKanji (str) {
+    return TEST_KANJI.test(str)
+  };
+
+  var testNumeric = function testNumeric (str) {
+    return TEST_NUMERIC.test(str)
+  };
+
+  var testAlphanumeric = function testAlphanumeric (str) {
+    return TEST_ALPHANUMERIC.test(str)
+  };
+
+  var regex = {
+  	KANJI: KANJI,
+  	BYTE_KANJI: BYTE_KANJI,
+  	BYTE: BYTE,
+  	NUMERIC: NUMERIC,
+  	ALPHANUMERIC: ALPHANUMERIC,
+  	testKanji: testKanji,
+  	testNumeric: testNumeric,
+  	testAlphanumeric: testAlphanumeric
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/version.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/regex.js
+
+  var mode = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/mode.js
+
+
 
   /**
    * Numeric mode encodes data from the decimal digit set (0 - 9)
@@ -13294,7 +13707,7 @@ var Shop = (function () {
   exports.getCharCountIndicator = function getCharCountIndicator (mode, version) {
     if (!mode.ccBits) throw new Error('Invalid mode: ' + mode)
 
-    if (!Version.isValid(version)) {
+    if (!version$2.isValid(version)) {
       throw new Error('Invalid version: ' + version)
     }
 
@@ -13310,9 +13723,9 @@ var Shop = (function () {
    * @return {Mode}           Best mode
    */
   exports.getBestModeForData = function getBestModeForData (dataStr) {
-    if (Regex.testNumeric(dataStr)) return exports.NUMERIC
-    else if (Regex.testAlphanumeric(dataStr)) return exports.ALPHANUMERIC
-    else if (Regex.testKanji(dataStr)) return exports.KANJI
+    if (regex.testNumeric(dataStr)) return exports.NUMERIC
+    else if (regex.testAlphanumeric(dataStr)) return exports.ALPHANUMERIC
+    else if (regex.testKanji(dataStr)) return exports.KANJI
     else return exports.BYTE
   };
 
@@ -13383,1124 +13796,45 @@ var Shop = (function () {
       return defaultValue
     }
   };
+  });
+  var mode_1 = mode.NUMERIC;
+  var mode_2 = mode.ALPHANUMERIC;
+  var mode_3 = mode.BYTE;
+  var mode_4 = mode.KANJI;
+  var mode_5 = mode.MIXED;
+  var mode_6 = mode.getCharCountIndicator;
+  var mode_7 = mode.getBestModeForData;
+  var mode_8 = mode.isValid;
+  var mode_9 = mode.from;
 
-  },{"./regex":18,"./version":21}],14:[function(require,module,exports){
-  var Mode = require('./mode');
+  // node_modules/isarray/index.js
+  var toString$1 = {}.toString;
 
-  function NumericData (data) {
-    this.mode = Mode.NUMERIC;
-    this.data = data.toString();
-  }
-
-  NumericData.getBitsLength = function getBitsLength (length) {
-    return 10 * Math.floor(length / 3) + ((length % 3) ? ((length % 3) * 3 + 1) : 0)
+  var isarray = Array.isArray || function (arr) {
+    return toString$1.call(arr) == '[object Array]';
   };
 
-  NumericData.prototype.getLength = function getLength () {
-    return this.data.length
-  };
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/error-correction-code.js
 
-  NumericData.prototype.getBitsLength = function getBitsLength () {
-    return NumericData.getBitsLength(this.data.length)
-  };
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/mode.js
 
-  NumericData.prototype.write = function write (bitBuffer) {
-    var i, group, value;
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/isarray/index.js
 
-    // The input data string is divided into groups of three digits,
-    // and each group is converted to its 10-bit binary equivalent.
-    for (i = 0; i + 3 <= this.data.length; i += 3) {
-      group = this.data.substr(i, 3);
-      value = parseInt(group, 10);
+  var version$2 = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/version.js
 
-      bitBuffer.put(value, 10);
-    }
 
-    // If the number of input digits is not an exact multiple of three,
-    // the final one or two digits are converted to 4 or 7 bits respectively.
-    var remainingNum = this.data.length - i;
-    if (remainingNum > 0) {
-      group = this.data.substr(i);
-      value = parseInt(group, 10);
 
-      bitBuffer.put(value, remainingNum * 3 + 1);
-    }
-  };
 
-  module.exports = NumericData;
 
-  },{"./mode":13}],15:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-  var GF = require('./galois-field');
-
-  /**
-   * Multiplies two polynomials inside Galois Field
-   *
-   * @param  {Buffer} p1 Polynomial
-   * @param  {Buffer} p2 Polynomial
-   * @return {Buffer}    Product of p1 and p2
-   */
-  exports.mul = function mul (p1, p2) {
-    var coeff = new Buffer(p1.length + p2.length - 1);
-    coeff.fill(0);
-
-    for (var i = 0; i < p1.length; i++) {
-      for (var j = 0; j < p2.length; j++) {
-        coeff[i + j] ^= GF.mul(p1[i], p2[j]);
-      }
-    }
-
-    return coeff
-  };
-
-  /**
-   * Calculate the remainder of polynomials division
-   *
-   * @param  {Buffer} divident Polynomial
-   * @param  {Buffer} divisor  Polynomial
-   * @return {Buffer}          Remainder
-   */
-  exports.mod = function mod (divident, divisor) {
-    var result = new Buffer(divident);
-
-    while ((result.length - divisor.length) >= 0) {
-      var coeff = result[0];
-
-      for (var i = 0; i < divisor.length; i++) {
-        result[i] ^= GF.mul(divisor[i], coeff);
-      }
-
-      // remove all zeros from buffer head
-      var offset = 0;
-      while (offset < result.length && result[offset] === 0) offset++;
-      result = result.slice(offset);
-    }
-
-    return result
-  };
-
-  /**
-   * Generate an irreducible generator polynomial of specified degree
-   * (used by Reed-Solomon encoder)
-   *
-   * @param  {Number} degree Degree of the generator polynomial
-   * @return {Buffer}        Buffer containing polynomial coefficients
-   */
-  exports.generateECPolynomial = function generateECPolynomial (degree) {
-    var poly = new Buffer([1]);
-    for (var i = 0; i < degree; i++) {
-      poly = exports.mul(poly, [1, GF.exp(i)]);
-    }
-
-    return poly
-  };
-
-  },{"../utils/buffer":26,"./galois-field":10}],16:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-  var Utils = require('./utils');
-  var ECLevel = require('./error-correction-level');
-  var BitBuffer = require('./bit-buffer');
-  var BitMatrix = require('./bit-matrix');
-  var AlignmentPattern = require('./alignment-pattern');
-  var FinderPattern = require('./finder-pattern');
-  var MaskPattern = require('./mask-pattern');
-  var ECCode = require('./error-correction-code');
-  var ReedSolomonEncoder = require('./reed-solomon-encoder');
-  var Version = require('./version');
-  var FormatInfo = require('./format-info');
-  var Mode = require('./mode');
-  var Segments = require('./segments');
-  var isArray = require('isarray');
-
-  /**
-   * QRCode for JavaScript
-   *
-   * modified by Ryan Day for nodejs support
-   * Copyright (c) 2011 Ryan Day
-   *
-   * Licensed under the MIT license:
-   *   http://www.opensource.org/licenses/mit-license.php
-   *
-  //---------------------------------------------------------------------
-  // QRCode for JavaScript
-  //
-  // Copyright (c) 2009 Kazuhiko Arase
-  //
-  // URL: http://www.d-project.com/
-  //
-  // Licensed under the MIT license:
-  //   http://www.opensource.org/licenses/mit-license.php
-  //
-  // The word "QR Code" is registered trademark of
-  // DENSO WAVE INCORPORATED
-  //   http://www.denso-wave.com/qrcode/faqpatent-e.html
-  //
-  //---------------------------------------------------------------------
-  */
-
-  /**
-   * Add finder patterns bits to matrix
-   *
-   * @param  {BitMatrix} matrix  Modules matrix
-   * @param  {Number}    version QR Code version
-   */
-  function setupFinderPattern (matrix, version) {
-    var size = matrix.size;
-    var pos = FinderPattern.getPositions(version);
-
-    for (var i = 0; i < pos.length; i++) {
-      var row = pos[i][0];
-      var col = pos[i][1];
-
-      for (var r = -1; r <= 7; r++) {
-        if (row + r <= -1 || size <= row + r) continue
-
-        for (var c = -1; c <= 7; c++) {
-          if (col + c <= -1 || size <= col + c) continue
-
-          if ((r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
-            (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
-            (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-            matrix.set(row + r, col + c, true, true);
-          } else {
-            matrix.set(row + r, col + c, false, true);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Add timing pattern bits to matrix
-   *
-   * Note: this function must be called before {@link setupAlignmentPattern}
-   *
-   * @param  {BitMatrix} matrix Modules matrix
-   */
-  function setupTimingPattern (matrix) {
-    var size = matrix.size;
-
-    for (var r = 8; r < size - 8; r++) {
-      var value = r % 2 === 0;
-      matrix.set(r, 6, value, true);
-      matrix.set(6, r, value, true);
-    }
-  }
-
-  /**
-   * Add alignment patterns bits to matrix
-   *
-   * Note: this function must be called after {@link setupTimingPattern}
-   *
-   * @param  {BitMatrix} matrix  Modules matrix
-   * @param  {Number}    version QR Code version
-   */
-  function setupAlignmentPattern (matrix, version) {
-    var pos = AlignmentPattern.getPositions(version);
-
-    for (var i = 0; i < pos.length; i++) {
-      var row = pos[i][0];
-      var col = pos[i][1];
-
-      for (var r = -2; r <= 2; r++) {
-        for (var c = -2; c <= 2; c++) {
-          if (r === -2 || r === 2 || c === -2 || c === 2 ||
-            (r === 0 && c === 0)) {
-            matrix.set(row + r, col + c, true, true);
-          } else {
-            matrix.set(row + r, col + c, false, true);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Add version info bits to matrix
-   *
-   * @param  {BitMatrix} matrix  Modules matrix
-   * @param  {Number}    version QR Code version
-   */
-  function setupVersionInfo (matrix, version) {
-    var size = matrix.size;
-    var bits = Version.getEncodedBits(version);
-    var row, col, mod;
-
-    for (var i = 0; i < 18; i++) {
-      row = Math.floor(i / 3);
-      col = i % 3 + size - 8 - 3;
-      mod = ((bits >> i) & 1) === 1;
-
-      matrix.set(row, col, mod, true);
-      matrix.set(col, row, mod, true);
-    }
-  }
-
-  /**
-   * Add format info bits to matrix
-   *
-   * @param  {BitMatrix} matrix               Modules matrix
-   * @param  {ErrorCorrectionLevel}    errorCorrectionLevel Error correction level
-   * @param  {Number}    maskPattern          Mask pattern reference value
-   */
-  function setupFormatInfo (matrix, errorCorrectionLevel, maskPattern) {
-    var size = matrix.size;
-    var bits = FormatInfo.getEncodedBits(errorCorrectionLevel, maskPattern);
-    var i, mod;
-
-    for (i = 0; i < 15; i++) {
-      mod = ((bits >> i) & 1) === 1;
-
-      // vertical
-      if (i < 6) {
-        matrix.set(i, 8, mod, true);
-      } else if (i < 8) {
-        matrix.set(i + 1, 8, mod, true);
-      } else {
-        matrix.set(size - 15 + i, 8, mod, true);
-      }
-
-      // horizontal
-      if (i < 8) {
-        matrix.set(8, size - i - 1, mod, true);
-      } else if (i < 9) {
-        matrix.set(8, 15 - i - 1 + 1, mod, true);
-      } else {
-        matrix.set(8, 15 - i - 1, mod, true);
-      }
-    }
-
-    // fixed module
-    matrix.set(size - 8, 8, 1, true);
-  }
-
-  /**
-   * Add encoded data bits to matrix
-   *
-   * @param  {BitMatrix} matrix Modules matrix
-   * @param  {Buffer}    data   Data codewords
-   */
-  function setupData (matrix, data) {
-    var size = matrix.size;
-    var inc = -1;
-    var row = size - 1;
-    var bitIndex = 7;
-    var byteIndex = 0;
-
-    for (var col = size - 1; col > 0; col -= 2) {
-      if (col === 6) col--;
-
-      while (true) {
-        for (var c = 0; c < 2; c++) {
-          if (!matrix.isReserved(row, col - c)) {
-            var dark = false;
-
-            if (byteIndex < data.length) {
-              dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
-            }
-
-            matrix.set(row, col - c, dark);
-            bitIndex--;
-
-            if (bitIndex === -1) {
-              byteIndex++;
-              bitIndex = 7;
-            }
-          }
-        }
-
-        row += inc;
-
-        if (row < 0 || size <= row) {
-          row -= inc;
-          inc = -inc;
-          break
-        }
-      }
-    }
-  }
-
-  /**
-   * Create encoded codewords from data input
-   *
-   * @param  {Number}   version              QR Code version
-   * @param  {ErrorCorrectionLevel}   errorCorrectionLevel Error correction level
-   * @param  {ByteData} data                 Data input
-   * @return {Buffer}                        Buffer containing encoded codewords
-   */
-  function createData (version, errorCorrectionLevel, segments) {
-    // Prepare data buffer
-    var buffer = new BitBuffer();
-
-    segments.forEach(function (data) {
-      // prefix data with mode indicator (4 bits)
-      buffer.put(data.mode.bit, 4);
-
-      // Prefix data with character count indicator.
-      // The character count indicator is a string of bits that represents the
-      // number of characters that are being encoded.
-      // The character count indicator must be placed after the mode indicator
-      // and must be a certain number of bits long, depending on the QR version
-      // and data mode
-      // @see {@link Mode.getCharCountIndicator}.
-      buffer.put(data.getLength(), Mode.getCharCountIndicator(data.mode, version));
-
-      // add binary data sequence to buffer
-      data.write(buffer);
-    });
-
-    // Calculate required number of bits
-    var totalCodewords = Utils.getSymbolTotalCodewords(version);
-    var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
-    var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
-
-    // Add a terminator.
-    // If the bit string is shorter than the total number of required bits,
-    // a terminator of up to four 0s must be added to the right side of the string.
-    // If the bit string is more than four bits shorter than the required number of bits,
-    // add four 0s to the end.
-    if (buffer.getLengthInBits() + 4 <= dataTotalCodewordsBits) {
-      buffer.put(0, 4);
-    }
-
-    // If the bit string is fewer than four bits shorter, add only the number of 0s that
-    // are needed to reach the required number of bits.
-
-    // After adding the terminator, if the number of bits in the string is not a multiple of 8,
-    // pad the string on the right with 0s to make the string's length a multiple of 8.
-    while (buffer.getLengthInBits() % 8 !== 0) {
-      buffer.putBit(0);
-    }
-
-    // Add pad bytes if the string is still shorter than the total number of required bits.
-    // Extend the buffer to fill the data capacity of the symbol corresponding to
-    // the Version and Error Correction Level by adding the Pad Codewords 11101100 (0xEC)
-    // and 00010001 (0x11) alternately.
-    var remainingByte = (dataTotalCodewordsBits - buffer.getLengthInBits()) / 8;
-    for (var i = 0; i < remainingByte; i++) {
-      buffer.put(i % 2 ? 0x11 : 0xEC, 8);
-    }
-
-    return createCodewords(buffer, version, errorCorrectionLevel)
-  }
-
-  /**
-   * Encode input data with Reed-Solomon and return codewords with
-   * relative error correction bits
-   *
-   * @param  {BitBuffer} bitBuffer            Data to encode
-   * @param  {Number}    version              QR Code version
-   * @param  {ErrorCorrectionLevel} errorCorrectionLevel Error correction level
-   * @return {Buffer}                         Buffer containing encoded codewords
-   */
-  function createCodewords (bitBuffer, version, errorCorrectionLevel) {
-    // Total codewords for this QR code version (Data + Error correction)
-    var totalCodewords = Utils.getSymbolTotalCodewords(version);
-
-    // Total number of error correction codewords
-    var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
-
-    // Total number of data codewords
-    var dataTotalCodewords = totalCodewords - ecTotalCodewords;
-
-    // Total number of blocks
-    var ecTotalBlocks = ECCode.getBlocksCount(version, errorCorrectionLevel);
-
-    // Calculate how many blocks each group should contain
-    var blocksInGroup2 = totalCodewords % ecTotalBlocks;
-    var blocksInGroup1 = ecTotalBlocks - blocksInGroup2;
-
-    var totalCodewordsInGroup1 = Math.floor(totalCodewords / ecTotalBlocks);
-
-    var dataCodewordsInGroup1 = Math.floor(dataTotalCodewords / ecTotalBlocks);
-    var dataCodewordsInGroup2 = dataCodewordsInGroup1 + 1;
-
-    // Number of EC codewords is the same for both groups
-    var ecCount = totalCodewordsInGroup1 - dataCodewordsInGroup1;
-
-    // Initialize a Reed-Solomon encoder with a generator polynomial of degree ecCount
-    var rs = new ReedSolomonEncoder(ecCount);
-
-    var offset = 0;
-    var dcData = new Array(ecTotalBlocks);
-    var ecData = new Array(ecTotalBlocks);
-    var maxDataSize = 0;
-    var buffer = new Buffer(bitBuffer.buffer);
-
-    // Divide the buffer into the required number of blocks
-    for (var b = 0; b < ecTotalBlocks; b++) {
-      var dataSize = b < blocksInGroup1 ? dataCodewordsInGroup1 : dataCodewordsInGroup2;
-
-      // extract a block of data from buffer
-      dcData[b] = buffer.slice(offset, offset + dataSize);
-
-      // Calculate EC codewords for this data block
-      ecData[b] = rs.encode(dcData[b]);
-
-      offset += dataSize;
-      maxDataSize = Math.max(maxDataSize, dataSize);
-    }
-
-    // Create final data
-    // Interleave the data and error correction codewords from each block
-    var data = new Buffer(totalCodewords);
-    var index = 0;
-    var i, r;
-
-    // Add data codewords
-    for (i = 0; i < maxDataSize; i++) {
-      for (r = 0; r < ecTotalBlocks; r++) {
-        if (i < dcData[r].length) {
-          data[index++] = dcData[r][i];
-        }
-      }
-    }
-
-    // Apped EC codewords
-    for (i = 0; i < ecCount; i++) {
-      for (r = 0; r < ecTotalBlocks; r++) {
-        data[index++] = ecData[r][i];
-      }
-    }
-
-    return data
-  }
-
-  /**
-   * Build QR Code symbol
-   *
-   * @param  {String} data                 Input string
-   * @param  {Number} version              QR Code version
-   * @param  {ErrorCorretionLevel} errorCorrectionLevel Error level
-   * @param  {MaskPattern} maskPattern     Mask pattern
-   * @return {Object}                      Object containing symbol data
-   */
-  function createSymbol (data, version, errorCorrectionLevel, maskPattern) {
-    var segments;
-
-    if (isArray(data)) {
-      segments = Segments.fromArray(data);
-    } else if (typeof data === 'string') {
-      var estimatedVersion = version;
-
-      if (!estimatedVersion) {
-        var rawSegments = Segments.rawSplit(data);
-
-        // Estimate best version that can contain raw splitted segments
-        estimatedVersion = Version.getBestVersionForData(rawSegments,
-          errorCorrectionLevel);
-      }
-
-      // Build optimized segments
-      // If estimated version is undefined, try with the highest version
-      segments = Segments.fromString(data, estimatedVersion || 40);
-    } else {
-      throw new Error('Invalid data')
-    }
-
-    // Get the min version that can contain data
-    var bestVersion = Version.getBestVersionForData(segments,
-        errorCorrectionLevel);
-
-    // If no version is found, data cannot be stored
-    if (!bestVersion) {
-      throw new Error('The amount of data is too big to be stored in a QR Code')
-    }
-
-    // If not specified, use min version as default
-    if (!version) {
-      version = bestVersion;
-
-    // Check if the specified version can contain the data
-    } else if (version < bestVersion) {
-      throw new Error('\n' +
-        'The chosen QR Code version cannot contain this amount of data.\n' +
-        'Minimum version required to store current data is: ' + bestVersion + '.\n'
-      )
-    }
-
-    var dataBits = createData(version, errorCorrectionLevel, segments);
-
-    // Allocate matrix buffer
-    var moduleCount = Utils.getSymbolSize(version);
-    var modules = new BitMatrix(moduleCount);
-
-    // Add function modules
-    setupFinderPattern(modules, version);
-    setupTimingPattern(modules);
-    setupAlignmentPattern(modules, version);
-
-    // Add temporary dummy bits for format info just to set them as reserved.
-    // This is needed to prevent these bits from being masked by {@link MaskPattern.applyMask}
-    // since the masking operation must be performed only on the encoding region.
-    // These blocks will be replaced with correct values later in code.
-    setupFormatInfo(modules, errorCorrectionLevel, 0);
-
-    if (version >= 7) {
-      setupVersionInfo(modules, version);
-    }
-
-    // Add data codewords
-    setupData(modules, dataBits);
-
-    if (!maskPattern) {
-      // Find best mask pattern
-      maskPattern = MaskPattern.getBestMask(modules,
-        setupFormatInfo.bind(null, modules, errorCorrectionLevel));
-    }
-
-    // Apply mask pattern
-    MaskPattern.applyMask(maskPattern, modules);
-
-    // Replace format info bits with correct values
-    setupFormatInfo(modules, errorCorrectionLevel, maskPattern);
-
-    return {
-      modules: modules,
-      version: version,
-      errorCorrectionLevel: errorCorrectionLevel,
-      maskPattern: maskPattern,
-      segments: segments
-    }
-  }
-
-  /**
-   * QR Code
-   *
-   * @param {String | Array} data                 Input data
-   * @param {Object} options                      Optional configurations
-   * @param {Number} options.version              QR Code version
-   * @param {String} options.errorCorrectionLevel Error correction level
-   * @param {Function} options.toSJISFunc         Helper func to convert utf8 to sjis
-   */
-  exports.create = function create (data, options) {
-    if (typeof data === 'undefined' || data === '') {
-      throw new Error('No input text')
-    }
-
-    var errorCorrectionLevel = ECLevel.M;
-    var version;
-    var mask;
-
-    if (typeof options !== 'undefined') {
-      // Use higher error correction level as default
-      errorCorrectionLevel = ECLevel.from(options.errorCorrectionLevel, ECLevel.M);
-      version = Version.from(options.version);
-      mask = MaskPattern.from(options.maskPattern);
-
-      if (options.toSJISFunc) {
-        Utils.setToSJISFunction(options.toSJISFunc);
-      }
-    }
-
-    return createSymbol(data, version, errorCorrectionLevel, mask)
-  };
-
-  },{"../utils/buffer":26,"./alignment-pattern":1,"./bit-buffer":3,"./bit-matrix":4,"./error-correction-code":6,"./error-correction-level":7,"./finder-pattern":8,"./format-info":9,"./mask-pattern":12,"./mode":13,"./reed-solomon-encoder":17,"./segments":19,"./utils":20,"./version":21,"isarray":29}],17:[function(require,module,exports){
-  var Buffer = require('../utils/buffer');
-  var Polynomial = require('./polynomial');
-
-  function ReedSolomonEncoder (degree) {
-    this.genPoly = undefined;
-    this.degree = degree;
-
-    if (this.degree) this.initialize(this.degree);
-  }
-
-  /**
-   * Initialize the encoder.
-   * The input param should correspond to the number of error correction codewords.
-   *
-   * @param  {Number} degree
-   */
-  ReedSolomonEncoder.prototype.initialize = function initialize (degree) {
-    // create an irreducible generator polynomial
-    this.degree = degree;
-    this.genPoly = Polynomial.generateECPolynomial(this.degree);
-  };
-
-  /**
-   * Encodes a chunk of data
-   *
-   * @param  {Buffer} data Buffer containing input data
-   * @return {Buffer}      Buffer containing encoded data
-   */
-  ReedSolomonEncoder.prototype.encode = function encode (data) {
-    if (!this.genPoly) {
-      throw new Error('Encoder not initialized')
-    }
-
-    // Calculate EC for this data block
-    // extends data size to data+genPoly size
-    var pad = new Buffer(this.degree);
-    pad.fill(0);
-    var paddedData = Buffer.concat([data, pad], data.length + this.degree);
-
-    // The error correction codewords are the remainder after dividing the data codewords
-    // by a generator polynomial
-    var remainder = Polynomial.mod(paddedData, this.genPoly);
-
-    // return EC data blocks (last n byte, where n is the degree of genPoly)
-    // If coefficients number in remainder are less than genPoly degree,
-    // pad with 0s to the left to reach the needed number of coefficients
-    var start = this.degree - remainder.length;
-    if (start > 0) {
-      var buff = new Buffer(this.degree);
-      buff.fill(0);
-      remainder.copy(buff, start);
-
-      return buff
-    }
-
-    return remainder
-  };
-
-  module.exports = ReedSolomonEncoder;
-
-  },{"../utils/buffer":26,"./polynomial":15}],18:[function(require,module,exports){
-  var numeric = '[0-9]+';
-  var alphanumeric = '[A-Z $%*+\\-./:]+';
-  var kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
-    '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
-    '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
-    '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
-  kanji = kanji.replace(/u/g, '\\u');
-
-  var byte = '(?:(?![A-Z0-9 $%*+\\-./:]|' + kanji + ').)+';
-
-  exports.KANJI = new RegExp(kanji, 'g');
-  exports.BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+\\-./:]+', 'g');
-  exports.BYTE = new RegExp(byte, 'g');
-  exports.NUMERIC = new RegExp(numeric, 'g');
-  exports.ALPHANUMERIC = new RegExp(alphanumeric, 'g');
-
-  var TEST_KANJI = new RegExp('^' + kanji + '$');
-  var TEST_NUMERIC = new RegExp('^' + numeric + '$');
-  var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+\\-./:]+$');
-
-  exports.testKanji = function testKanji (str) {
-    return TEST_KANJI.test(str)
-  };
-
-  exports.testNumeric = function testNumeric (str) {
-    return TEST_NUMERIC.test(str)
-  };
-
-  exports.testAlphanumeric = function testAlphanumeric (str) {
-    return TEST_ALPHANUMERIC.test(str)
-  };
-
-  },{}],19:[function(require,module,exports){
-  var Mode = require('./mode');
-  var NumericData = require('./numeric-data');
-  var AlphanumericData = require('./alphanumeric-data');
-  var ByteData = require('./byte-data');
-  var KanjiData = require('./kanji-data');
-  var Regex = require('./regex');
-  var Utils = require('./utils');
-  var dijkstra = require('dijkstrajs');
-
-  /**
-   * Returns UTF8 byte length
-   *
-   * @param  {String} str Input string
-   * @return {Number}     Number of byte
-   */
-  function getStringByteLength (str) {
-    return unescape(encodeURIComponent(str)).length
-  }
-
-  /**
-   * Get a list of segments of the specified mode
-   * from a string
-   *
-   * @param  {Mode}   mode Segment mode
-   * @param  {String} str  String to process
-   * @return {Array}       Array of object with segments data
-   */
-  function getSegments (regex, mode, str) {
-    var segments = [];
-    var result;
-
-    while ((result = regex.exec(str)) !== null) {
-      segments.push({
-        data: result[0],
-        index: result.index,
-        mode: mode,
-        length: result[0].length
-      });
-    }
-
-    return segments
-  }
-
-  /**
-   * Extracts a series of segments with the appropriate
-   * modes from a string
-   *
-   * @param  {String} dataStr Input string
-   * @return {Array}          Array of object with segments data
-   */
-  function getSegmentsFromString (dataStr) {
-    var numSegs = getSegments(Regex.NUMERIC, Mode.NUMERIC, dataStr);
-    var alphaNumSegs = getSegments(Regex.ALPHANUMERIC, Mode.ALPHANUMERIC, dataStr);
-    var byteSegs;
-    var kanjiSegs;
-
-    if (Utils.isKanjiModeEnabled()) {
-      byteSegs = getSegments(Regex.BYTE, Mode.BYTE, dataStr);
-      kanjiSegs = getSegments(Regex.KANJI, Mode.KANJI, dataStr);
-    } else {
-      byteSegs = getSegments(Regex.BYTE_KANJI, Mode.BYTE, dataStr);
-      kanjiSegs = [];
-    }
-
-    var segs = numSegs.concat(alphaNumSegs, byteSegs, kanjiSegs);
-
-    return segs
-      .sort(function (s1, s2) {
-        return s1.index - s2.index
-      })
-      .map(function (obj) {
-        return {
-          data: obj.data,
-          mode: obj.mode,
-          length: obj.length
-        }
-      })
-  }
-
-  /**
-   * Returns how many bits are needed to encode a string of
-   * specified length with the specified mode
-   *
-   * @param  {Number} length String length
-   * @param  {Mode} mode     Segment mode
-   * @return {Number}        Bit length
-   */
-  function getSegmentBitsLength (length, mode) {
-    switch (mode) {
-      case Mode.NUMERIC:
-        return NumericData.getBitsLength(length)
-      case Mode.ALPHANUMERIC:
-        return AlphanumericData.getBitsLength(length)
-      case Mode.KANJI:
-        return KanjiData.getBitsLength(length)
-      case Mode.BYTE:
-        return ByteData.getBitsLength(length)
-    }
-  }
-
-  /**
-   * Merges adjacent segments which have the same mode
-   *
-   * @param  {Array} segs Array of object with segments data
-   * @return {Array}      Array of object with segments data
-   */
-  function mergeSegments (segs) {
-    return segs.reduce(function (acc, curr) {
-      var prevSeg = acc.length - 1 >= 0 ? acc[acc.length - 1] : null;
-      if (prevSeg && prevSeg.mode === curr.mode) {
-        acc[acc.length - 1].data += curr.data;
-        return acc
-      }
-
-      acc.push(curr);
-      return acc
-    }, [])
-  }
-
-  /**
-   * Generates a list of all possible nodes combination which
-   * will be used to build a segments graph.
-   *
-   * Nodes are divided by groups. Each group will contain a list of all the modes
-   * in which is possible to encode the given text.
-   *
-   * For example the text '12345' can be encoded as Numeric, Alphanumeric or Byte.
-   * The group for '12345' will contain then 3 objects, one for each
-   * possible encoding mode.
-   *
-   * Each node represents a possible segment.
-   *
-   * @param  {Array} segs Array of object with segments data
-   * @return {Array}      Array of object with segments data
-   */
-  function buildNodes (segs) {
-    var nodes = [];
-    for (var i = 0; i < segs.length; i++) {
-      var seg = segs[i];
-
-      switch (seg.mode) {
-        case Mode.NUMERIC:
-          nodes.push([seg,
-            { data: seg.data, mode: Mode.ALPHANUMERIC, length: seg.length },
-            { data: seg.data, mode: Mode.BYTE, length: seg.length }
-          ]);
-          break
-        case Mode.ALPHANUMERIC:
-          nodes.push([seg,
-            { data: seg.data, mode: Mode.BYTE, length: seg.length }
-          ]);
-          break
-        case Mode.KANJI:
-          nodes.push([seg,
-            { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
-          ]);
-          break
-        case Mode.BYTE:
-          nodes.push([
-            { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
-          ]);
-      }
-    }
-
-    return nodes
-  }
-
-  /**
-   * Builds a graph from a list of nodes.
-   * All segments in each node group will be connected with all the segments of
-   * the next group and so on.
-   *
-   * At each connection will be assigned a weight depending on the
-   * segment's byte length.
-   *
-   * @param  {Array} nodes    Array of object with segments data
-   * @param  {Number} version QR Code version
-   * @return {Object}         Graph of all possible segments
-   */
-  function buildGraph (nodes, version) {
-    var table = {};
-    var graph = {'start': {}};
-    var prevNodeIds = ['start'];
-
-    for (var i = 0; i < nodes.length; i++) {
-      var nodeGroup = nodes[i];
-      var currentNodeIds = [];
-
-      for (var j = 0; j < nodeGroup.length; j++) {
-        var node = nodeGroup[j];
-        var key = '' + i + j;
-
-        currentNodeIds.push(key);
-        table[key] = { node: node, lastCount: 0 };
-        graph[key] = {};
-
-        for (var n = 0; n < prevNodeIds.length; n++) {
-          var prevNodeId = prevNodeIds[n];
-
-          if (table[prevNodeId] && table[prevNodeId].node.mode === node.mode) {
-            graph[prevNodeId][key] =
-              getSegmentBitsLength(table[prevNodeId].lastCount + node.length, node.mode) -
-              getSegmentBitsLength(table[prevNodeId].lastCount, node.mode);
-
-            table[prevNodeId].lastCount += node.length;
-          } else {
-            if (table[prevNodeId]) table[prevNodeId].lastCount = node.length;
-
-            graph[prevNodeId][key] = getSegmentBitsLength(node.length, node.mode) +
-              4 + Mode.getCharCountIndicator(node.mode, version); // switch cost
-          }
-        }
-      }
-
-      prevNodeIds = currentNodeIds;
-    }
-
-    for (n = 0; n < prevNodeIds.length; n++) {
-      graph[prevNodeIds[n]]['end'] = 0;
-    }
-
-    return { map: graph, table: table }
-  }
-
-  /**
-   * Builds a segment from a specified data and mode.
-   * If a mode is not specified, the more suitable will be used.
-   *
-   * @param  {String} data             Input data
-   * @param  {Mode | String} modesHint Data mode
-   * @return {Segment}                 Segment
-   */
-  function buildSingleSegment (data, modesHint) {
-    var mode;
-    var bestMode = Mode.getBestModeForData(data);
-
-    mode = Mode.from(modesHint, bestMode);
-
-    // Make sure data can be encoded
-    if (mode !== Mode.BYTE && mode.bit < bestMode.bit) {
-      throw new Error('"' + data + '"' +
-        ' cannot be encoded with mode ' + Mode.toString(mode) +
-        '.\n Suggested mode is: ' + Mode.toString(bestMode))
-    }
-
-    // Use Mode.BYTE if Kanji support is disabled
-    if (mode === Mode.KANJI && !Utils.isKanjiModeEnabled()) {
-      mode = Mode.BYTE;
-    }
-
-    switch (mode) {
-      case Mode.NUMERIC:
-        return new NumericData(data)
-
-      case Mode.ALPHANUMERIC:
-        return new AlphanumericData(data)
-
-      case Mode.KANJI:
-        return new KanjiData(data)
-
-      case Mode.BYTE:
-        return new ByteData(data)
-    }
-  }
-
-  /**
-   * Builds a list of segments from an array.
-   * Array can contain Strings or Objects with segment's info.
-   *
-   * For each item which is a string, will be generated a segment with the given
-   * string and the more appropriate encoding mode.
-   *
-   * For each item which is an object, will be generated a segment with the given
-   * data and mode.
-   * Objects must contain at least the property "data".
-   * If property "mode" is not present, the more suitable mode will be used.
-   *
-   * @param  {Array} array Array of objects with segments data
-   * @return {Array}       Array of Segments
-   */
-  exports.fromArray = function fromArray (array) {
-    return array.reduce(function (acc, seg) {
-      if (typeof seg === 'string') {
-        acc.push(buildSingleSegment(seg, null));
-      } else if (seg.data) {
-        acc.push(buildSingleSegment(seg.data, seg.mode));
-      }
-
-      return acc
-    }, [])
-  };
-
-  /**
-   * Builds an optimized sequence of segments from a string,
-   * which will produce the shortest possible bitstream.
-   *
-   * @param  {String} data    Input string
-   * @param  {Number} version QR Code version
-   * @return {Array}          Array of segments
-   */
-  exports.fromString = function fromString (data, version) {
-    var segs = getSegmentsFromString(data, Utils.isKanjiModeEnabled());
-
-    var nodes = buildNodes(segs);
-    var graph = buildGraph(nodes, version);
-    var path = dijkstra.find_path(graph.map, 'start', 'end');
-
-    var optimizedSegs = [];
-    for (var i = 1; i < path.length - 1; i++) {
-      optimizedSegs.push(graph.table[path[i]].node);
-    }
-
-    return exports.fromArray(mergeSegments(optimizedSegs))
-  };
-
-  /**
-   * Splits a string in various segments with the modes which
-   * best represent their content.
-   * The produced segments are far from being optimized.
-   * The output of this function is only used to estimate a QR Code version
-   * which may contain the data.
-   *
-   * @param  {string} data Input string
-   * @return {Array}       Array of segments
-   */
-  exports.rawSplit = function rawSplit (data) {
-    return exports.fromArray(
-      getSegmentsFromString(data, Utils.isKanjiModeEnabled())
-    )
-  };
-
-  },{"./alphanumeric-data":2,"./byte-data":5,"./kanji-data":11,"./mode":13,"./numeric-data":14,"./regex":18,"./utils":20,"dijkstrajs":28}],20:[function(require,module,exports){
-  var toSJISFunction;
-  var CODEWORDS_COUNT = [
-    0, // Not used
-    26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
-    404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
-    1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
-    2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
-  ];
-
-  /**
-   * Returns the QR Code size for the specified version
-   *
-   * @param  {Number} version QR Code version
-   * @return {Number}         size of QR code
-   */
-  exports.getSymbolSize = function getSymbolSize (version) {
-    if (!version) throw new Error('"version" cannot be null or undefined')
-    if (version < 1 || version > 40) throw new Error('"version" should be in range from 1 to 40')
-    return version * 4 + 17
-  };
-
-  /**
-   * Returns the total number of codewords used to store data and EC information.
-   *
-   * @param  {Number} version QR Code version
-   * @return {Number}         Data length in bits
-   */
-  exports.getSymbolTotalCodewords = function getSymbolTotalCodewords (version) {
-    return CODEWORDS_COUNT[version]
-  };
-
-  /**
-   * Encode data with Bose-Chaudhuri-Hocquenghem
-   *
-   * @param  {Number} data Value to encode
-   * @return {Number}      Encoded value
-   */
-  exports.getBCHDigit = function (data) {
-    var digit = 0;
-
-    while (data !== 0) {
-      digit++;
-      data >>>= 1;
-    }
-
-    return digit
-  };
-
-  exports.setToSJISFunction = function setToSJISFunction (f) {
-    if (typeof f !== 'function') {
-      throw new Error('"toSJISFunc" is not a valid function.')
-    }
-
-    toSJISFunction = f;
-  };
-
-  exports.isKanjiModeEnabled = function () {
-    return typeof toSJISFunction !== 'undefined'
-  };
-
-  exports.toSJIS = function toSJIS (kanji) {
-    return toSJISFunction(kanji)
-  };
-
-  },{}],21:[function(require,module,exports){
-  var Utils = require('./utils');
-  var ECCode = require('./error-correction-code');
-  var ECLevel = require('./error-correction-level');
-  var Mode = require('./mode');
-  var isArray = require('isarray');
 
   // Generator polynomial used to encode version information
   var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
-  var G18_BCH = Utils.getBCHDigit(G18);
+  var G18_BCH = utils.getBCHDigit(G18);
 
-  function getBestVersionForDataLength (mode, length, errorCorrectionLevel) {
+  function getBestVersionForDataLength (mode$$1, length, errorCorrectionLevel$$1) {
     for (var currentVersion = 1; currentVersion <= 40; currentVersion++) {
-      if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, mode)) {
+      if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel$$1, mode$$1)) {
         return currentVersion
       }
     }
@@ -14508,9 +13842,9 @@ var Shop = (function () {
     return undefined
   }
 
-  function getReservedBitsCount (mode, version) {
+  function getReservedBitsCount (mode$$1, version) {
     // Character count indicator + mode indicator bits
-    return Mode.getCharCountIndicator(mode, version) + 4
+    return mode.getCharCountIndicator(mode$$1, version) + 4
   }
 
   function getTotalBitsFromDataArray (segments, version) {
@@ -14524,10 +13858,10 @@ var Shop = (function () {
     return totalBits
   }
 
-  function getBestVersionForMixedData (segments, errorCorrectionLevel) {
+  function getBestVersionForMixedData (segments, errorCorrectionLevel$$1) {
     for (var currentVersion = 1; currentVersion <= 40; currentVersion++) {
       var length = getTotalBitsFromDataArray(segments, currentVersion);
-      if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, Mode.MIXED)) {
+      if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel$$1, mode.MIXED)) {
         return currentVersion
       }
     }
@@ -14570,39 +13904,39 @@ var Shop = (function () {
    * @param  {Mode}   mode                 Data mode
    * @return {Number}                      Quantity of storable data
    */
-  exports.getCapacity = function getCapacity (version, errorCorrectionLevel, mode) {
+  exports.getCapacity = function getCapacity (version, errorCorrectionLevel$$1, mode$$1) {
     if (!exports.isValid(version)) {
       throw new Error('Invalid QR Code version')
     }
 
     // Use Byte mode as default
-    if (typeof mode === 'undefined') mode = Mode.BYTE;
+    if (typeof mode$$1 === 'undefined') mode$$1 = mode.BYTE;
 
     // Total codewords for this QR code version (Data + Error correction)
-    var totalCodewords = Utils.getSymbolTotalCodewords(version);
+    var totalCodewords = utils.getSymbolTotalCodewords(version);
 
     // Total number of error correction codewords
-    var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+    var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$1);
 
     // Total number of data codewords
     var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
 
-    if (mode === Mode.MIXED) return dataTotalCodewordsBits
+    if (mode$$1 === mode.MIXED) return dataTotalCodewordsBits
 
-    var usableBits = dataTotalCodewordsBits - getReservedBitsCount(mode, version);
+    var usableBits = dataTotalCodewordsBits - getReservedBitsCount(mode$$1, version);
 
     // Return max number of storable codewords
-    switch (mode) {
-      case Mode.NUMERIC:
+    switch (mode$$1) {
+      case mode.NUMERIC:
         return Math.floor((usableBits / 10) * 3)
 
-      case Mode.ALPHANUMERIC:
+      case mode.ALPHANUMERIC:
         return Math.floor((usableBits / 11) * 2)
 
-      case Mode.KANJI:
+      case mode.KANJI:
         return Math.floor(usableBits / 13)
 
-      case Mode.BYTE:
+      case mode.BYTE:
       default:
         return Math.floor(usableBits / 8)
     }
@@ -14616,12 +13950,12 @@ var Shop = (function () {
    * @param  {Mode} mode                       Data mode
    * @return {Number}                          QR Code version
    */
-  exports.getBestVersionForData = function getBestVersionForData (data, errorCorrectionLevel) {
+  exports.getBestVersionForData = function getBestVersionForData (data, errorCorrectionLevel$$1) {
     var seg;
 
-    var ecl = ECLevel.from(errorCorrectionLevel, ECLevel.M);
+    var ecl = errorCorrectionLevel.from(errorCorrectionLevel$$1, errorCorrectionLevel.M);
 
-    if (isArray(data)) {
+    if (isarray(data)) {
       if (data.length > 1) {
         return getBestVersionForMixedData(data, ecl)
       }
@@ -14655,850 +13989,246 @@ var Shop = (function () {
 
     var d = version << 12;
 
-    while (Utils.getBCHDigit(d) - G18_BCH >= 0) {
-      d ^= (G18 << (Utils.getBCHDigit(d) - G18_BCH));
+    while (utils.getBCHDigit(d) - G18_BCH >= 0) {
+      d ^= (G18 << (utils.getBCHDigit(d) - G18_BCH));
     }
 
     return (version << 12) | d
   };
-
-  },{"./error-correction-code":6,"./error-correction-level":7,"./mode":13,"./utils":20,"isarray":29}],22:[function(require,module,exports){
-  var canPromise = require('can-promise');
-  var QRCode = require('./core/qrcode');
-  var CanvasRenderer = require('./renderer/canvas');
-  var SvgRenderer = require('./renderer/svg-tag.js');
-
-  function renderCanvas (renderFunc, canvas, text, opts, cb) {
-    var args = [].slice.call(arguments, 1);
-    var argsNum = args.length;
-    var isLastArgCb = typeof args[argsNum - 1] === 'function';
-
-    if (!isLastArgCb && !canPromise()) {
-      throw new Error('Callback required as last argument')
-    }
-
-    if (isLastArgCb) {
-      if (argsNum < 2) {
-        throw new Error('Too few arguments provided')
-      }
-
-      if (argsNum === 2) {
-        cb = text;
-        text = canvas;
-        canvas = opts = undefined;
-      } else if (argsNum === 3) {
-        if (canvas.getContext && typeof cb === 'undefined') {
-          cb = opts;
-          opts = undefined;
-        } else {
-          cb = opts;
-          opts = text;
-          text = canvas;
-          canvas = undefined;
-        }
-      }
-    } else {
-      if (argsNum < 1) {
-        throw new Error('Too few arguments provided')
-      }
-
-      if (argsNum === 1) {
-        text = canvas;
-        canvas = opts = undefined;
-      } else if (argsNum === 2 && !canvas.getContext) {
-        opts = text;
-        text = canvas;
-        canvas = undefined;
-      }
-
-      return new Promise(function (resolve, reject) {
-        try {
-          var data = QRCode.create(text, opts);
-          resolve(renderFunc(data, canvas, opts));
-        } catch (e) {
-          reject(e);
-        }
-      })
-    }
-
-    try {
-      var data = QRCode.create(text, opts);
-      cb(null, renderFunc(data, canvas, opts));
-    } catch (e) {
-      cb(e);
-    }
-  }
-
-  exports.create = QRCode.create;
-  exports.toCanvas = renderCanvas.bind(null, CanvasRenderer.render);
-  exports.toDataURL = renderCanvas.bind(null, CanvasRenderer.renderToDataURL);
-
-  // only svg for now.
-  exports.toString = renderCanvas.bind(null, function (data, _, opts) {
-    return SvgRenderer.render(data, opts)
   });
+  var version_1 = version$2.isValid;
+  var version_2 = version$2.from;
+  var version_3 = version$2.getCapacity;
+  var version_4 = version$2.getBestVersionForData;
+  var version_5 = version$2.getEncodedBits;
 
-  },{"./core/qrcode":16,"./renderer/canvas":23,"./renderer/svg-tag.js":24,"can-promise":27}],23:[function(require,module,exports){
-  var Utils = require('./utils');
+  // node_modules/qrcode/lib/core/format-info.js
 
-  function clearCanvas (ctx, canvas, size) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!canvas.style) canvas.style = {};
-    canvas.height = size;
-    canvas.width = size;
-    canvas.style.height = size + 'px';
-    canvas.style.width = size + 'px';
-  }
+  var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+  var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+  var G15_BCH = utils.getBCHDigit(G15);
 
-  function getCanvasElement () {
-    try {
-      return document.createElement('canvas')
-    } catch (e) {
-      throw new Error('You need to specify a canvas element')
-    }
-  }
+  /**
+   * Returns format information with relative error correction bits
+   *
+   * The format information is a 15-bit sequence containing 5 data bits,
+   * with 10 error correction bits calculated using the (15, 5) BCH code.
+   *
+   * @param  {Number} errorCorrectionLevel Error correction level
+   * @param  {Number} mask                 Mask pattern
+   * @return {Number}                      Encoded format information bits
+   */
+  var getEncodedBits = function getEncodedBits (errorCorrectionLevel, mask) {
+    var data = ((errorCorrectionLevel.bit << 3) | mask);
+    var d = data << 10;
 
-  exports.render = function render (qrData, canvas, options) {
-    var opts = options;
-    var canvasEl = canvas;
-
-    if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
-      opts = canvas;
-      canvas = undefined;
-    }
-
-    if (!canvas) {
-      canvasEl = getCanvasElement();
+    while (utils.getBCHDigit(d) - G15_BCH >= 0) {
+      d ^= (G15 << (utils.getBCHDigit(d) - G15_BCH));
     }
 
-    opts = Utils.getOptions(opts);
-    var size = Utils.getImageWidth(qrData.modules.size, opts);
-
-    var ctx = canvasEl.getContext('2d');
-    var image = ctx.createImageData(size, size);
-    Utils.qrToImageData(image.data, qrData, opts);
-
-    clearCanvas(ctx, canvasEl, size);
-    ctx.putImageData(image, 0, 0);
-
-    return canvasEl
+    // xor final data with mask pattern in order to ensure that
+    // no combination of Error Correction Level and data mask pattern
+    // will result in an all-zero data string
+    return ((data << 10) | d) ^ G15_MASK
   };
 
-  exports.renderToDataURL = function renderToDataURL (qrData, canvas, options) {
-    var opts = options;
-
-    if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
-      opts = canvas;
-      canvas = undefined;
-    }
-
-    if (!opts) opts = {};
-
-    var canvasEl = exports.render(qrData, canvas, opts);
-
-    var type = opts.type || 'image/png';
-    var rendererOpts = opts.rendererOpts || {};
-
-    return canvasEl.toDataURL(type, rendererOpts.quality)
+  var formatInfo = {
+  	getEncodedBits: getEncodedBits
   };
 
-  },{"./utils":25}],24:[function(require,module,exports){
-  var Utils = require('./utils');
+  // node_modules/qrcode/lib/core/numeric-data.js
 
-  function getColorAttrib (color, attrib) {
-    var alpha = color.a / 255;
-    var str = attrib + '="' + color.hex + '"';
 
-    return alpha < 1
-      ? str + ' ' + attrib + '-opacity="' + alpha.toFixed(2).slice(1) + '"'
-      : str
+  function NumericData (data) {
+    this.mode = mode.NUMERIC;
+    this.data = data.toString();
   }
 
-  function svgCmd (cmd, x, y) {
-    var str = cmd + x;
-    if (typeof y !== 'undefined') str += ' ' + y;
-
-    return str
-  }
-
-  function qrToPath (data, size, margin) {
-    var path = '';
-    var moveBy = 0;
-    var newRow = false;
-    var lineLength = 0;
-
-    for (var i = 0; i < data.length; i++) {
-      var col = Math.floor(i % size);
-      var row = Math.floor(i / size);
-
-      if (!col && !newRow) newRow = true;
-
-      if (data[i]) {
-        lineLength++;
-
-        if (!(i > 0 && col > 0 && data[i - 1])) {
-          path += newRow
-            ? svgCmd('M', col + margin, 0.5 + row + margin)
-            : svgCmd('m', moveBy, 0);
-
-          moveBy = 0;
-          newRow = false;
-        }
-
-        if (!(col + 1 < size && data[i + 1])) {
-          path += svgCmd('h', lineLength);
-          lineLength = 0;
-        }
-      } else {
-        moveBy++;
-      }
-    }
-
-    return path
-  }
-
-  exports.render = function render (qrData, options, cb) {
-    var opts = Utils.getOptions(options);
-    var size = qrData.modules.size;
-    var data = qrData.modules.data;
-    var qrcodesize = size + opts.margin * 2;
-
-    var bg = !opts.color.light.a
-      ? ''
-      : '<path ' + getColorAttrib(opts.color.light, 'fill') +
-        ' d="M0 0h' + qrcodesize + 'v' + qrcodesize + 'H0z"/>';
-
-    var path =
-      '<path ' + getColorAttrib(opts.color.dark, 'stroke') +
-      ' d="' + qrToPath(data, size, opts.margin) + '"/>';
-
-    var viewBox = 'viewBox="' + '0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
-
-    var width = !opts.width ? '' : 'width="' + opts.width + '" height="' + opts.width + '" ';
-
-    var svgTag = '<svg xmlns="http://www.w3.org/2000/svg" ' + width + viewBox + '>' + bg + path + '</svg>';
-
-    if (typeof cb === 'function') {
-      cb(null, svgTag);
-    }
-
-    return svgTag
+  NumericData.getBitsLength = function getBitsLength (length) {
+    return 10 * Math.floor(length / 3) + ((length % 3) ? ((length % 3) * 3 + 1) : 0)
   };
 
-  },{"./utils":25}],25:[function(require,module,exports){
-  function hex2rgba (hex) {
-    if (typeof hex !== 'string') {
-      throw new Error('Color should be defined as hex string')
+  NumericData.prototype.getLength = function getLength () {
+    return this.data.length
+  };
+
+  NumericData.prototype.getBitsLength = function getBitsLength () {
+    return NumericData.getBitsLength(this.data.length)
+  };
+
+  NumericData.prototype.write = function write (bitBuffer) {
+    var i, group, value;
+
+    // The input data string is divided into groups of three digits,
+    // and each group is converted to its 10-bit binary equivalent.
+    for (i = 0; i + 3 <= this.data.length; i += 3) {
+      group = this.data.substr(i, 3);
+      value = parseInt(group, 10);
+
+      bitBuffer.put(value, 10);
     }
 
-    var hexCode = hex.slice().replace('#', '').split('');
-    if (hexCode.length < 3 || hexCode.length === 5 || hexCode.length > 8) {
-      throw new Error('Invalid hex color: ' + hex)
-    }
+    // If the number of input digits is not an exact multiple of three,
+    // the final one or two digits are converted to 4 or 7 bits respectively.
+    var remainingNum = this.data.length - i;
+    if (remainingNum > 0) {
+      group = this.data.substr(i);
+      value = parseInt(group, 10);
 
-    // Convert from short to long form (fff -> ffffff)
-    if (hexCode.length === 3 || hexCode.length === 4) {
-      hexCode = Array.prototype.concat.apply([], hexCode.map(function (c) {
-        return [c, c]
-      }));
-    }
-
-    // Add default alpha value
-    if (hexCode.length === 6) hexCode.push('F', 'F');
-
-    var hexValue = parseInt(hexCode.join(''), 16);
-
-    return {
-      r: (hexValue >> 24) & 255,
-      g: (hexValue >> 16) & 255,
-      b: (hexValue >> 8) & 255,
-      a: hexValue & 255,
-      hex: '#' + hexCode.slice(0, 6).join('')
-    }
-  }
-
-  exports.getOptions = function getOptions (options) {
-    if (!options) options = {};
-    if (!options.color) options.color = {};
-
-    var margin = typeof options.margin === 'undefined' ||
-      options.margin === null ||
-      options.margin < 0 ? 4 : options.margin;
-
-    var width = options.width && options.width >= 21 ? options.width : undefined;
-    var scale = options.scale || 4;
-
-    return {
-      width: width,
-      scale: width ? 4 : scale,
-      margin: margin,
-      color: {
-        dark: hex2rgba(options.color.dark || '#000000ff'),
-        light: hex2rgba(options.color.light || '#ffffffff')
-      },
-      type: options.type,
-      rendererOpts: options.rendererOpts || {}
+      bitBuffer.put(value, remainingNum * 3 + 1);
     }
   };
 
-  exports.getScale = function getScale (qrSize, opts) {
-    return opts.width && opts.width >= qrSize + opts.margin * 2
-      ? opts.width / (qrSize + opts.margin * 2)
-      : opts.scale
+  var numericData = NumericData;
+
+  // node_modules/qrcode/lib/core/alphanumeric-data.js
+
+
+  /**
+   * Array of characters available in alphanumeric mode
+   *
+   * As per QR Code specification, to each character
+   * is assigned a value from 0 to 44 which in this case coincides
+   * with the array index
+   *
+   * @type {Array}
+   */
+  var ALPHA_NUM_CHARS = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    ' ', '$', '%', '*', '+', '-', '.', '/', ':'
+  ];
+
+  function AlphanumericData (data) {
+    this.mode = mode.ALPHANUMERIC;
+    this.data = data;
+  }
+
+  AlphanumericData.getBitsLength = function getBitsLength (length) {
+    return 11 * Math.floor(length / 2) + 6 * (length % 2)
   };
 
-  exports.getImageWidth = function getImageWidth (qrSize, opts) {
-    var scale = exports.getScale(qrSize, opts);
-    return Math.floor((qrSize + opts.margin * 2) * scale)
+  AlphanumericData.prototype.getLength = function getLength () {
+    return this.data.length
   };
 
-  exports.qrToImageData = function qrToImageData (imgData, qr, opts) {
-    var size = qr.modules.size;
-    var data = qr.modules.data;
-    var scale = exports.getScale(size, opts);
-    var symbolSize = Math.floor((size + opts.margin * 2) * scale);
-    var scaledMargin = opts.margin * scale;
-    var palette = [opts.color.light, opts.color.dark];
-
-    for (var i = 0; i < symbolSize; i++) {
-      for (var j = 0; j < symbolSize; j++) {
-        var posDst = (i * symbolSize + j) * 4;
-        var pxColor = opts.color.light;
-
-        if (i >= scaledMargin && j >= scaledMargin &&
-          i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
-          var iSrc = Math.floor((i - scaledMargin) / scale);
-          var jSrc = Math.floor((j - scaledMargin) / scale);
-          pxColor = palette[data[iSrc * size + jSrc] ? 1 : 0];
-        }
-
-        imgData[posDst++] = pxColor.r;
-        imgData[posDst++] = pxColor.g;
-        imgData[posDst++] = pxColor.b;
-        imgData[posDst] = pxColor.a;
-      }
-    }
+  AlphanumericData.prototype.getBitsLength = function getBitsLength () {
+    return AlphanumericData.getBitsLength(this.data.length)
   };
 
-  },{}],26:[function(require,module,exports){
-
-  var isArray = require('isarray');
-
-  function typedArraySupport () {
-    // Can typed array instances be augmented?
-    try {
-      var arr = new Uint8Array(1);
-      arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }};
-      return arr.foo() === 42
-    } catch (e) {
-      return false
-    }
-  }
-
-  Buffer.TYPED_ARRAY_SUPPORT = typedArraySupport();
-
-  var K_MAX_LENGTH = Buffer.TYPED_ARRAY_SUPPORT
-      ? 0x7fffffff
-      : 0x3fffffff;
-
-  function Buffer (arg, offset, length) {
-    if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
-      return new Buffer(arg, offset, length)
-    }
-
-    if (typeof arg === 'number') {
-      return allocUnsafe(this, arg)
-    }
-
-    return from(this, arg, offset, length)
-  }
-
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    Buffer.prototype.__proto__ = Uint8Array.prototype;
-    Buffer.__proto__ = Uint8Array;
-
-    // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
-    if (typeof Symbol !== 'undefined' && Symbol.species &&
-        Buffer[Symbol.species] === Buffer) {
-      Object.defineProperty(Buffer, Symbol.species, {
-        value: null,
-        configurable: true,
-        enumerable: false,
-        writable: false
-      });
-    }
-  }
-
-  function checked (length) {
-    // Note: cannot use `length < K_MAX_LENGTH` here because that fails when
-    // length is NaN (which is otherwise coerced to zero.)
-    if (length >= K_MAX_LENGTH) {
-      throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
-                           'size: 0x' + K_MAX_LENGTH.toString(16) + ' bytes')
-    }
-    return length | 0
-  }
-
-  function isnan (val) {
-    return val !== val // eslint-disable-line no-self-compare
-  }
-
-  function createBuffer (that, length) {
-    var buf;
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      buf = new Uint8Array(length);
-      buf.__proto__ = Buffer.prototype;
-    } else {
-      // Fallback: Return an object instance of the Buffer class
-      buf = that;
-      if (buf === null) {
-        buf = new Buffer(length);
-      }
-      buf.length = length;
-    }
-
-    return buf
-  }
-
-  function allocUnsafe (that, size) {
-    var buf = createBuffer(that, size < 0 ? 0 : checked(size) | 0);
-
-    if (!Buffer.TYPED_ARRAY_SUPPORT) {
-      for (var i = 0; i < size; ++i) {
-        buf[i] = 0;
-      }
-    }
-
-    return buf
-  }
-
-  function fromString (that, string) {
-    var length = byteLength(string) | 0;
-    var buf = createBuffer(that, length);
-
-    var actual = buf.write(string);
-
-    if (actual !== length) {
-      // Writing a hex string, for example, that contains invalid characters will
-      // cause everything after the first invalid character to be ignored. (e.g.
-      // 'abxxcd' will be treated as 'ab')
-      buf = buf.slice(0, actual);
-    }
-
-    return buf
-  }
-
-  function fromArrayLike (that, array) {
-    var length = array.length < 0 ? 0 : checked(array.length) | 0;
-    var buf = createBuffer(that, length);
-    for (var i = 0; i < length; i += 1) {
-      buf[i] = array[i] & 255;
-    }
-    return buf
-  }
-
-  function fromArrayBuffer (that, array, byteOffset, length) {
-    if (byteOffset < 0 || array.byteLength < byteOffset) {
-      throw new RangeError('\'offset\' is out of bounds')
-    }
-
-    if (array.byteLength < byteOffset + (length || 0)) {
-      throw new RangeError('\'length\' is out of bounds')
-    }
-
-    var buf;
-    if (byteOffset === undefined && length === undefined) {
-      buf = new Uint8Array(array);
-    } else if (length === undefined) {
-      buf = new Uint8Array(array, byteOffset);
-    } else {
-      buf = new Uint8Array(array, byteOffset, length);
-    }
-
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      // Return an augmented `Uint8Array` instance, for best performance
-      buf.__proto__ = Buffer.prototype;
-    } else {
-      // Fallback: Return an object instance of the Buffer class
-      buf = fromArrayLike(that, buf);
-    }
-
-    return buf
-  }
-
-  function fromObject (that, obj) {
-    if (Buffer.isBuffer(obj)) {
-      var len = checked(obj.length) | 0;
-      var buf = createBuffer(that, len);
-
-      if (buf.length === 0) {
-        return buf
-      }
-
-      obj.copy(buf, 0, 0, len);
-      return buf
-    }
-
-    if (obj) {
-      if ((typeof ArrayBuffer !== 'undefined' &&
-          obj.buffer instanceof ArrayBuffer) || 'length' in obj) {
-        if (typeof obj.length !== 'number' || isnan(obj.length)) {
-          return createBuffer(that, 0)
-        }
-        return fromArrayLike(that, obj)
-      }
-
-      if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
-        return fromArrayLike(that, obj.data)
-      }
-    }
-
-    throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
-  }
-
-  function utf8ToBytes (string, units) {
-    units = units || Infinity;
-    var codePoint;
-    var length = string.length;
-    var leadSurrogate = null;
-    var bytes = [];
-
-    for (var i = 0; i < length; ++i) {
-      codePoint = string.charCodeAt(i);
-
-      // is surrogate component
-      if (codePoint > 0xD7FF && codePoint < 0xE000) {
-        // last char was a lead
-        if (!leadSurrogate) {
-          // no lead yet
-          if (codePoint > 0xDBFF) {
-            // unexpected trail
-            if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
-            continue
-          } else if (i + 1 === length) {
-            // unpaired lead
-            if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
-            continue
-          }
-
-          // valid lead
-          leadSurrogate = codePoint;
-
-          continue
-        }
-
-        // 2 leads in a row
-        if (codePoint < 0xDC00) {
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
-          leadSurrogate = codePoint;
-          continue
-        }
-
-        // valid surrogate pair
-        codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000;
-      } else if (leadSurrogate) {
-        // valid bmp char, but last char was a lead
-        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
-      }
-
-      leadSurrogate = null;
-
-      // encode utf8
-      if (codePoint < 0x80) {
-        if ((units -= 1) < 0) break
-        bytes.push(codePoint);
-      } else if (codePoint < 0x800) {
-        if ((units -= 2) < 0) break
-        bytes.push(
-          codePoint >> 0x6 | 0xC0,
-          codePoint & 0x3F | 0x80
-        );
-      } else if (codePoint < 0x10000) {
-        if ((units -= 3) < 0) break
-        bytes.push(
-          codePoint >> 0xC | 0xE0,
-          codePoint >> 0x6 & 0x3F | 0x80,
-          codePoint & 0x3F | 0x80
-        );
-      } else if (codePoint < 0x110000) {
-        if ((units -= 4) < 0) break
-        bytes.push(
-          codePoint >> 0x12 | 0xF0,
-          codePoint >> 0xC & 0x3F | 0x80,
-          codePoint >> 0x6 & 0x3F | 0x80,
-          codePoint & 0x3F | 0x80
-        );
-      } else {
-        throw new Error('Invalid code point')
-      }
-    }
-
-    return bytes
-  }
-
-  function byteLength (string) {
-    if (Buffer.isBuffer(string)) {
-      return string.length
-    }
-    if (typeof ArrayBuffer !== 'undefined' && typeof ArrayBuffer.isView === 'function' &&
-        (ArrayBuffer.isView(string) || string instanceof ArrayBuffer)) {
-      return string.byteLength
-    }
-    if (typeof string !== 'string') {
-      string = '' + string;
-    }
-
-    var len = string.length;
-    if (len === 0) return 0
-
-    return utf8ToBytes(string).length
-  }
-
-  function blitBuffer (src, dst, offset, length) {
-    for (var i = 0; i < length; ++i) {
-      if ((i + offset >= dst.length) || (i >= src.length)) break
-      dst[i + offset] = src[i];
-    }
-    return i
-  }
-
-  function utf8Write (buf, string, offset, length) {
-    return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
-  }
-
-  function from (that, value, offset, length) {
-    if (typeof value === 'number') {
-      throw new TypeError('"value" argument must not be a number')
-    }
-
-    if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
-      return fromArrayBuffer(that, value, offset, length)
-    }
-
-    if (typeof value === 'string') {
-      return fromString(that, value, offset)
-    }
-
-    return fromObject(that, value)
-  }
-
-  Buffer.prototype.write = function write (string, offset, length) {
-    // Buffer#write(string)
-    if (offset === undefined) {
-      length = this.length;
-      offset = 0;
-    // Buffer#write(string, encoding)
-    } else if (length === undefined && typeof offset === 'string') {
-      length = this.length;
-      offset = 0;
-    // Buffer#write(string, offset[, length])
-    } else if (isFinite(offset)) {
-      offset = offset | 0;
-      if (isFinite(length)) {
-        length = length | 0;
-      } else {
-        length = undefined;
-      }
-    }
-
-    var remaining = this.length - offset;
-    if (length === undefined || length > remaining) length = remaining;
-
-    if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
-      throw new RangeError('Attempt to write outside buffer bounds')
-    }
-
-    return utf8Write(this, string, offset, length)
-  };
-
-  Buffer.prototype.slice = function slice (start, end) {
-    var len = this.length;
-    start = ~~start;
-    end = end === undefined ? len : ~~end;
-
-    if (start < 0) {
-      start += len;
-      if (start < 0) start = 0;
-    } else if (start > len) {
-      start = len;
-    }
-
-    if (end < 0) {
-      end += len;
-      if (end < 0) end = 0;
-    } else if (end > len) {
-      end = len;
-    }
-
-    if (end < start) end = start;
-
-    var newBuf;
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      newBuf = this.subarray(start, end);
-      // Return an augmented `Uint8Array` instance
-      newBuf.__proto__ = Buffer.prototype;
-    } else {
-      var sliceLen = end - start;
-      newBuf = new Buffer(sliceLen, undefined);
-      for (var i = 0; i < sliceLen; ++i) {
-        newBuf[i] = this[i + start];
-      }
-    }
-
-    return newBuf
-  };
-
-  Buffer.prototype.copy = function copy (target, targetStart, start, end) {
-    if (!start) start = 0;
-    if (!end && end !== 0) end = this.length;
-    if (targetStart >= target.length) targetStart = target.length;
-    if (!targetStart) targetStart = 0;
-    if (end > 0 && end < start) end = start;
-
-    // Copy 0 bytes; we're done
-    if (end === start) return 0
-    if (target.length === 0 || this.length === 0) return 0
-
-    // Fatal error conditions
-    if (targetStart < 0) {
-      throw new RangeError('targetStart out of bounds')
-    }
-    if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
-    if (end < 0) throw new RangeError('sourceEnd out of bounds')
-
-    // Are we oob?
-    if (end > this.length) end = this.length;
-    if (target.length - targetStart < end - start) {
-      end = target.length - targetStart + start;
-    }
-
-    var len = end - start;
+  AlphanumericData.prototype.write = function write (bitBuffer) {
     var i;
 
-    if (this === target && start < targetStart && targetStart < end) {
-      // descending copy from end
-      for (i = len - 1; i >= 0; --i) {
-        target[i + targetStart] = this[i + start];
-      }
-    } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
-      // ascending copy from start
-      for (i = 0; i < len; ++i) {
-        target[i + targetStart] = this[i + start];
-      }
-    } else {
-      Uint8Array.prototype.set.call(
-        target,
-        this.subarray(start, start + len),
-        targetStart
-      );
+    // Input data characters are divided into groups of two characters
+    // and encoded as 11-bit binary codes.
+    for (i = 0; i + 2 <= this.data.length; i += 2) {
+      // The character value of the first character is multiplied by 45
+      var value = ALPHA_NUM_CHARS.indexOf(this.data[i]) * 45;
+
+      // The character value of the second digit is added to the product
+      value += ALPHA_NUM_CHARS.indexOf(this.data[i + 1]);
+
+      // The sum is then stored as 11-bit binary number
+      bitBuffer.put(value, 11);
     }
 
-    return len
+    // If the number of input data characters is not a multiple of two,
+    // the character value of the final character is encoded as a 6-bit binary number.
+    if (this.data.length % 2) {
+      bitBuffer.put(ALPHA_NUM_CHARS.indexOf(this.data[i]), 6);
+    }
   };
 
-  Buffer.prototype.fill = function fill (val, start, end) {
-    // Handle string cases:
-    if (typeof val === 'string') {
-      if (typeof start === 'string') {
-        start = 0;
-        end = this.length;
-      } else if (typeof end === 'string') {
-        end = this.length;
-      }
-      if (val.length === 1) {
-        var code = val.charCodeAt(0);
-        if (code < 256) {
-          val = code;
-        }
-      }
-    } else if (typeof val === 'number') {
-      val = val & 255;
+  var alphanumericData = AlphanumericData;
+
+  // node_modules/qrcode/lib/core/byte-data.js
+
+
+
+  function ByteData (data) {
+    this.mode = mode.BYTE;
+    this.data = new buffer$1(data);
+  }
+
+  ByteData.getBitsLength = function getBitsLength (length) {
+    return length * 8
+  };
+
+  ByteData.prototype.getLength = function getLength () {
+    return this.data.length
+  };
+
+  ByteData.prototype.getBitsLength = function getBitsLength () {
+    return ByteData.getBitsLength(this.data.length)
+  };
+
+  ByteData.prototype.write = function (bitBuffer) {
+    for (var i = 0, l = this.data.length; i < l; i++) {
+      bitBuffer.put(this.data[i], 8);
     }
+  };
 
-    // Invalid ranges are not set to a default, so can range check early.
-    if (start < 0 || this.length < start || this.length < end) {
-      throw new RangeError('Out of range index')
-    }
+  var byteData = ByteData;
 
-    if (end <= start) {
-      return this
-    }
+  // node_modules/qrcode/lib/core/kanji-data.js
 
-    start = start >>> 0;
-    end = end === undefined ? this.length : end >>> 0;
 
-    if (!val) val = 0;
 
+  function KanjiData (data) {
+    this.mode = mode.KANJI;
+    this.data = data;
+  }
+
+  KanjiData.getBitsLength = function getBitsLength (length) {
+    return length * 13
+  };
+
+  KanjiData.prototype.getLength = function getLength () {
+    return this.data.length
+  };
+
+  KanjiData.prototype.getBitsLength = function getBitsLength () {
+    return KanjiData.getBitsLength(this.data.length)
+  };
+
+  KanjiData.prototype.write = function (bitBuffer) {
     var i;
-    if (typeof val === 'number') {
-      for (i = start; i < end; ++i) {
-        this[i] = val;
-      }
-    } else {
-      var bytes = Buffer.isBuffer(val)
-        ? val
-        : new Buffer(val);
-      var len = bytes.length;
-      for (i = 0; i < end - start; ++i) {
-        this[i + start] = bytes[i % len];
-      }
-    }
 
-    return this
+    // In the Shift JIS system, Kanji characters are represented by a two byte combination.
+    // These byte values are shifted from the JIS X 0208 values.
+    // JIS X 0208 gives details of the shift coded representation.
+    for (i = 0; i < this.data.length; i++) {
+      var value = utils.toSJIS(this.data[i]);
+
+      // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+      if (value >= 0x8140 && value <= 0x9FFC) {
+        // Subtract 0x8140 from Shift JIS value
+        value -= 0x8140;
+
+      // For characters with Shift JIS values from 0xE040 to 0xEBBF
+      } else if (value >= 0xE040 && value <= 0xEBBF) {
+        // Subtract 0xC140 from Shift JIS value
+        value -= 0xC140;
+      } else {
+        throw new Error(
+          'Invalid SJIS character: ' + this.data[i] + '\n' +
+          'Make sure your charset is UTF-8')
+      }
+
+      // Multiply most significant byte of result by 0xC0
+      // and add least significant byte to product
+      value = (((value >>> 8) & 0xff) * 0xC0) + (value & 0xff);
+
+      // Convert result to a 13-bit binary string
+      bitBuffer.put(value, 13);
+    }
   };
 
-  Buffer.concat = function concat (list, length) {
-    if (!isArray(list)) {
-      throw new TypeError('"list" argument must be an Array of Buffers')
-    }
+  var kanjiData = KanjiData;
 
-    if (list.length === 0) {
-      return createBuffer(null, 0)
-    }
-
-    var i;
-    if (length === undefined) {
-      length = 0;
-      for (i = 0; i < list.length; ++i) {
-        length += list[i].length;
-      }
-    }
-
-    var buffer = allocUnsafe(null, length);
-    var pos = 0;
-    for (i = 0; i < list.length; ++i) {
-      var buf = list[i];
-      if (!Buffer.isBuffer(buf)) {
-        throw new TypeError('"list" argument must be an Array of Buffers')
-      }
-      buf.copy(buffer, pos);
-      pos += buf.length;
-    }
-    return buffer
-  };
-
-  Buffer.byteLength = byteLength;
-
-  Buffer.prototype._isBuffer = true;
-  Buffer.isBuffer = function isBuffer (b) {
-    return !!(b != null && b._isBuffer)
-  };
-
-  module.exports = Buffer;
-
-  },{"isarray":29}],27:[function(require,module,exports){
-
-  var G = require('window-or-global');
-
-  module.exports = function() {
-    return (
-      typeof G.Promise === 'function' &&
-      typeof G.Promise.prototype.then === 'function'
-    )
-  };
-
-  },{"window-or-global":30}],28:[function(require,module,exports){
+  var dijkstra_1 = createCommonjsModule(function (module) {
 
   /******************************************************************************
    * Created 2008-08-19.
@@ -15660,29 +14390,4054 @@ var Shop = (function () {
 
 
   // node.js module exports
-  if (typeof module !== 'undefined') {
+  {
     module.exports = dijkstra;
   }
+  });
 
-  },{}],29:[function(require,module,exports){
-  var toString = {}.toString;
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/numeric-data.js
 
-  module.exports = Array.isArray || function (arr) {
-    return toString.call(arr) == '[object Array]';
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/alphanumeric-data.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/byte-data.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/kanji-data.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/dijkstrajs/dijkstra.js
+
+  var segments = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/core/segments.js
+
+
+
+
+
+
+
+
+
+  /**
+   * Returns UTF8 byte length
+   *
+   * @param  {String} str Input string
+   * @return {Number}     Number of byte
+   */
+  function getStringByteLength (str) {
+    return unescape(encodeURIComponent(str)).length
+  }
+
+  /**
+   * Get a list of segments of the specified mode
+   * from a string
+   *
+   * @param  {Mode}   mode Segment mode
+   * @param  {String} str  String to process
+   * @return {Array}       Array of object with segments data
+   */
+  function getSegments (regex$$1, mode$$1, str) {
+    var segments = [];
+    var result;
+
+    while ((result = regex$$1.exec(str)) !== null) {
+      segments.push({
+        data: result[0],
+        index: result.index,
+        mode: mode$$1,
+        length: result[0].length
+      });
+    }
+
+    return segments
+  }
+
+  /**
+   * Extracts a series of segments with the appropriate
+   * modes from a string
+   *
+   * @param  {String} dataStr Input string
+   * @return {Array}          Array of object with segments data
+   */
+  function getSegmentsFromString (dataStr) {
+    var numSegs = getSegments(regex.NUMERIC, mode.NUMERIC, dataStr);
+    var alphaNumSegs = getSegments(regex.ALPHANUMERIC, mode.ALPHANUMERIC, dataStr);
+    var byteSegs;
+    var kanjiSegs;
+
+    if (utils.isKanjiModeEnabled()) {
+      byteSegs = getSegments(regex.BYTE, mode.BYTE, dataStr);
+      kanjiSegs = getSegments(regex.KANJI, mode.KANJI, dataStr);
+    } else {
+      byteSegs = getSegments(regex.BYTE_KANJI, mode.BYTE, dataStr);
+      kanjiSegs = [];
+    }
+
+    var segs = numSegs.concat(alphaNumSegs, byteSegs, kanjiSegs);
+
+    return segs
+      .sort(function (s1, s2) {
+        return s1.index - s2.index
+      })
+      .map(function (obj) {
+        return {
+          data: obj.data,
+          mode: obj.mode,
+          length: obj.length
+        }
+      })
+  }
+
+  /**
+   * Returns how many bits are needed to encode a string of
+   * specified length with the specified mode
+   *
+   * @param  {Number} length String length
+   * @param  {Mode} mode     Segment mode
+   * @return {Number}        Bit length
+   */
+  function getSegmentBitsLength (length, mode$$1) {
+    switch (mode$$1) {
+      case mode.NUMERIC:
+        return numericData.getBitsLength(length)
+      case mode.ALPHANUMERIC:
+        return alphanumericData.getBitsLength(length)
+      case mode.KANJI:
+        return kanjiData.getBitsLength(length)
+      case mode.BYTE:
+        return byteData.getBitsLength(length)
+    }
+  }
+
+  /**
+   * Merges adjacent segments which have the same mode
+   *
+   * @param  {Array} segs Array of object with segments data
+   * @return {Array}      Array of object with segments data
+   */
+  function mergeSegments (segs) {
+    return segs.reduce(function (acc, curr) {
+      var prevSeg = acc.length - 1 >= 0 ? acc[acc.length - 1] : null;
+      if (prevSeg && prevSeg.mode === curr.mode) {
+        acc[acc.length - 1].data += curr.data;
+        return acc
+      }
+
+      acc.push(curr);
+      return acc
+    }, [])
+  }
+
+  /**
+   * Generates a list of all possible nodes combination which
+   * will be used to build a segments graph.
+   *
+   * Nodes are divided by groups. Each group will contain a list of all the modes
+   * in which is possible to encode the given text.
+   *
+   * For example the text '12345' can be encoded as Numeric, Alphanumeric or Byte.
+   * The group for '12345' will contain then 3 objects, one for each
+   * possible encoding mode.
+   *
+   * Each node represents a possible segment.
+   *
+   * @param  {Array} segs Array of object with segments data
+   * @return {Array}      Array of object with segments data
+   */
+  function buildNodes (segs) {
+    var nodes = [];
+    for (var i = 0; i < segs.length; i++) {
+      var seg = segs[i];
+
+      switch (seg.mode) {
+        case mode.NUMERIC:
+          nodes.push([seg,
+            { data: seg.data, mode: mode.ALPHANUMERIC, length: seg.length },
+            { data: seg.data, mode: mode.BYTE, length: seg.length }
+          ]);
+          break
+        case mode.ALPHANUMERIC:
+          nodes.push([seg,
+            { data: seg.data, mode: mode.BYTE, length: seg.length }
+          ]);
+          break
+        case mode.KANJI:
+          nodes.push([seg,
+            { data: seg.data, mode: mode.BYTE, length: getStringByteLength(seg.data) }
+          ]);
+          break
+        case mode.BYTE:
+          nodes.push([
+            { data: seg.data, mode: mode.BYTE, length: getStringByteLength(seg.data) }
+          ]);
+      }
+    }
+
+    return nodes
+  }
+
+  /**
+   * Builds a graph from a list of nodes.
+   * All segments in each node group will be connected with all the segments of
+   * the next group and so on.
+   *
+   * At each connection will be assigned a weight depending on the
+   * segment's byte length.
+   *
+   * @param  {Array} nodes    Array of object with segments data
+   * @param  {Number} version QR Code version
+   * @return {Object}         Graph of all possible segments
+   */
+  function buildGraph (nodes, version) {
+    var table = {};
+    var graph = {'start': {}};
+    var prevNodeIds = ['start'];
+
+    for (var i = 0; i < nodes.length; i++) {
+      var nodeGroup = nodes[i];
+      var currentNodeIds = [];
+
+      for (var j = 0; j < nodeGroup.length; j++) {
+        var node = nodeGroup[j];
+        var key = '' + i + j;
+
+        currentNodeIds.push(key);
+        table[key] = { node: node, lastCount: 0 };
+        graph[key] = {};
+
+        for (var n = 0; n < prevNodeIds.length; n++) {
+          var prevNodeId = prevNodeIds[n];
+
+          if (table[prevNodeId] && table[prevNodeId].node.mode === node.mode) {
+            graph[prevNodeId][key] =
+              getSegmentBitsLength(table[prevNodeId].lastCount + node.length, node.mode) -
+              getSegmentBitsLength(table[prevNodeId].lastCount, node.mode);
+
+            table[prevNodeId].lastCount += node.length;
+          } else {
+            if (table[prevNodeId]) table[prevNodeId].lastCount = node.length;
+
+            graph[prevNodeId][key] = getSegmentBitsLength(node.length, node.mode) +
+              4 + mode.getCharCountIndicator(node.mode, version); // switch cost
+          }
+        }
+      }
+
+      prevNodeIds = currentNodeIds;
+    }
+
+    for (n = 0; n < prevNodeIds.length; n++) {
+      graph[prevNodeIds[n]]['end'] = 0;
+    }
+
+    return { map: graph, table: table }
+  }
+
+  /**
+   * Builds a segment from a specified data and mode.
+   * If a mode is not specified, the more suitable will be used.
+   *
+   * @param  {String} data             Input data
+   * @param  {Mode | String} modesHint Data mode
+   * @return {Segment}                 Segment
+   */
+  function buildSingleSegment (data, modesHint) {
+    var mode$$1;
+    var bestMode = mode.getBestModeForData(data);
+
+    mode$$1 = mode.from(modesHint, bestMode);
+
+    // Make sure data can be encoded
+    if (mode$$1 !== mode.BYTE && mode$$1.bit < bestMode.bit) {
+      throw new Error('"' + data + '"' +
+        ' cannot be encoded with mode ' + mode.toString(mode$$1) +
+        '.\n Suggested mode is: ' + mode.toString(bestMode))
+    }
+
+    // Use Mode.BYTE if Kanji support is disabled
+    if (mode$$1 === mode.KANJI && !utils.isKanjiModeEnabled()) {
+      mode$$1 = mode.BYTE;
+    }
+
+    switch (mode$$1) {
+      case mode.NUMERIC:
+        return new numericData(data)
+
+      case mode.ALPHANUMERIC:
+        return new alphanumericData(data)
+
+      case mode.KANJI:
+        return new kanjiData(data)
+
+      case mode.BYTE:
+        return new byteData(data)
+    }
+  }
+
+  /**
+   * Builds a list of segments from an array.
+   * Array can contain Strings or Objects with segment's info.
+   *
+   * For each item which is a string, will be generated a segment with the given
+   * string and the more appropriate encoding mode.
+   *
+   * For each item which is an object, will be generated a segment with the given
+   * data and mode.
+   * Objects must contain at least the property "data".
+   * If property "mode" is not present, the more suitable mode will be used.
+   *
+   * @param  {Array} array Array of objects with segments data
+   * @return {Array}       Array of Segments
+   */
+  exports.fromArray = function fromArray (array) {
+    return array.reduce(function (acc, seg) {
+      if (typeof seg === 'string') {
+        acc.push(buildSingleSegment(seg, null));
+      } else if (seg.data) {
+        acc.push(buildSingleSegment(seg.data, seg.mode));
+      }
+
+      return acc
+    }, [])
   };
 
-  },{}],30:[function(require,module,exports){
-  (function (global){
-  module.exports = (typeof self === 'object' && self.self === self && self) ||
-    (typeof global === 'object' && global.global === global && global) ||
-    this;
+  /**
+   * Builds an optimized sequence of segments from a string,
+   * which will produce the shortest possible bitstream.
+   *
+   * @param  {String} data    Input string
+   * @param  {Number} version QR Code version
+   * @return {Array}          Array of segments
+   */
+  exports.fromString = function fromString (data, version) {
+    var segs = getSegmentsFromString(data, utils.isKanjiModeEnabled());
 
-  }).call(this,typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
+    var nodes = buildNodes(segs);
+    var graph = buildGraph(nodes, version);
+    var path = dijkstra_1.find_path(graph.map, 'start', 'end');
 
-  },{}]},{},[22])(22)
+    var optimizedSegs = [];
+    for (var i = 1; i < path.length - 1; i++) {
+      optimizedSegs.push(graph.table[path[i]].node);
+    }
+
+    return exports.fromArray(mergeSegments(optimizedSegs))
+  };
+
+  /**
+   * Splits a string in various segments with the modes which
+   * best represent their content.
+   * The produced segments are far from being optimized.
+   * The output of this function is only used to estimate a QR Code version
+   * which may contain the data.
+   *
+   * @param  {string} data Input string
+   * @return {Array}       Array of segments
+   */
+  exports.rawSplit = function rawSplit (data) {
+    return exports.fromArray(
+      getSegmentsFromString(data, utils.isKanjiModeEnabled())
+    )
+  };
+  });
+  var segments_1 = segments.fromArray;
+  var segments_2 = segments.fromString;
+  var segments_3 = segments.rawSplit;
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/bit-buffer.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/bit-matrix.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/alignment-pattern.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/finder-pattern.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/mask-pattern.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/reed-solomon-encoder.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/format-info.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/segments.js
+
+  // node_modules/qrcode/lib/core/qrcode.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /**
+   * QRCode for JavaScript
+   *
+   * modified by Ryan Day for nodejs support
+   * Copyright (c) 2011 Ryan Day
+   *
+   * Licensed under the MIT license:
+   *   http://www.opensource.org/licenses/mit-license.php
+   *
+  //---------------------------------------------------------------------
+  // QRCode for JavaScript
+  //
+  // Copyright (c) 2009 Kazuhiko Arase
+  //
+  // URL: http://www.d-project.com/
+  //
+  // Licensed under the MIT license:
+  //   http://www.opensource.org/licenses/mit-license.php
+  //
+  // The word "QR Code" is registered trademark of
+  // DENSO WAVE INCORPORATED
+  //   http://www.denso-wave.com/qrcode/faqpatent-e.html
+  //
+  //---------------------------------------------------------------------
+  */
+
+  /**
+   * Add finder patterns bits to matrix
+   *
+   * @param  {BitMatrix} matrix  Modules matrix
+   * @param  {Number}    version QR Code version
+   */
+  function setupFinderPattern (matrix, version) {
+    var size = matrix.size;
+    var pos = finderPattern.getPositions(version);
+
+    for (var i = 0; i < pos.length; i++) {
+      var row = pos[i][0];
+      var col = pos[i][1];
+
+      for (var r = -1; r <= 7; r++) {
+        if (row + r <= -1 || size <= row + r) continue
+
+        for (var c = -1; c <= 7; c++) {
+          if (col + c <= -1 || size <= col + c) continue
+
+          if ((r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+            (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+            (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+            matrix.set(row + r, col + c, true, true);
+          } else {
+            matrix.set(row + r, col + c, false, true);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Add timing pattern bits to matrix
+   *
+   * Note: this function must be called before {@link setupAlignmentPattern}
+   *
+   * @param  {BitMatrix} matrix Modules matrix
+   */
+  function setupTimingPattern (matrix) {
+    var size = matrix.size;
+
+    for (var r = 8; r < size - 8; r++) {
+      var value = r % 2 === 0;
+      matrix.set(r, 6, value, true);
+      matrix.set(6, r, value, true);
+    }
+  }
+
+  /**
+   * Add alignment patterns bits to matrix
+   *
+   * Note: this function must be called after {@link setupTimingPattern}
+   *
+   * @param  {BitMatrix} matrix  Modules matrix
+   * @param  {Number}    version QR Code version
+   */
+  function setupAlignmentPattern (matrix, version) {
+    var pos = alignmentPattern.getPositions(version);
+
+    for (var i = 0; i < pos.length; i++) {
+      var row = pos[i][0];
+      var col = pos[i][1];
+
+      for (var r = -2; r <= 2; r++) {
+        for (var c = -2; c <= 2; c++) {
+          if (r === -2 || r === 2 || c === -2 || c === 2 ||
+            (r === 0 && c === 0)) {
+            matrix.set(row + r, col + c, true, true);
+          } else {
+            matrix.set(row + r, col + c, false, true);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Add version info bits to matrix
+   *
+   * @param  {BitMatrix} matrix  Modules matrix
+   * @param  {Number}    version QR Code version
+   */
+  function setupVersionInfo (matrix, version) {
+    var size = matrix.size;
+    var bits = version$2.getEncodedBits(version);
+    var row, col, mod;
+
+    for (var i = 0; i < 18; i++) {
+      row = Math.floor(i / 3);
+      col = i % 3 + size - 8 - 3;
+      mod = ((bits >> i) & 1) === 1;
+
+      matrix.set(row, col, mod, true);
+      matrix.set(col, row, mod, true);
+    }
+  }
+
+  /**
+   * Add format info bits to matrix
+   *
+   * @param  {BitMatrix} matrix               Modules matrix
+   * @param  {ErrorCorrectionLevel}    errorCorrectionLevel Error correction level
+   * @param  {Number}    maskPattern          Mask pattern reference value
+   */
+  function setupFormatInfo (matrix, errorCorrectionLevel$$1, maskPattern$$1) {
+    var size = matrix.size;
+    var bits = formatInfo.getEncodedBits(errorCorrectionLevel$$1, maskPattern$$1);
+    var i, mod;
+
+    for (i = 0; i < 15; i++) {
+      mod = ((bits >> i) & 1) === 1;
+
+      // vertical
+      if (i < 6) {
+        matrix.set(i, 8, mod, true);
+      } else if (i < 8) {
+        matrix.set(i + 1, 8, mod, true);
+      } else {
+        matrix.set(size - 15 + i, 8, mod, true);
+      }
+
+      // horizontal
+      if (i < 8) {
+        matrix.set(8, size - i - 1, mod, true);
+      } else if (i < 9) {
+        matrix.set(8, 15 - i - 1 + 1, mod, true);
+      } else {
+        matrix.set(8, 15 - i - 1, mod, true);
+      }
+    }
+
+    // fixed module
+    matrix.set(size - 8, 8, 1, true);
+  }
+
+  /**
+   * Add encoded data bits to matrix
+   *
+   * @param  {BitMatrix} matrix Modules matrix
+   * @param  {Buffer}    data   Data codewords
+   */
+  function setupData (matrix, data) {
+    var size = matrix.size;
+    var inc = -1;
+    var row = size - 1;
+    var bitIndex = 7;
+    var byteIndex = 0;
+
+    for (var col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+
+      while (true) {
+        for (var c = 0; c < 2; c++) {
+          if (!matrix.isReserved(row, col - c)) {
+            var dark = false;
+
+            if (byteIndex < data.length) {
+              dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+            }
+
+            matrix.set(row, col - c, dark);
+            bitIndex--;
+
+            if (bitIndex === -1) {
+              byteIndex++;
+              bitIndex = 7;
+            }
+          }
+        }
+
+        row += inc;
+
+        if (row < 0 || size <= row) {
+          row -= inc;
+          inc = -inc;
+          break
+        }
+      }
+    }
+  }
+
+  /**
+   * Create encoded codewords from data input
+   *
+   * @param  {Number}   version              QR Code version
+   * @param  {ErrorCorrectionLevel}   errorCorrectionLevel Error correction level
+   * @param  {ByteData} data                 Data input
+   * @return {Buffer}                        Buffer containing encoded codewords
+   */
+  function createData (version, errorCorrectionLevel$$1, segments$$1) {
+    // Prepare data buffer
+    var buffer$$1 = new bitBuffer();
+
+    segments$$1.forEach(function (data) {
+      // prefix data with mode indicator (4 bits)
+      buffer$$1.put(data.mode.bit, 4);
+
+      // Prefix data with character count indicator.
+      // The character count indicator is a string of bits that represents the
+      // number of characters that are being encoded.
+      // The character count indicator must be placed after the mode indicator
+      // and must be a certain number of bits long, depending on the QR version
+      // and data mode
+      // @see {@link Mode.getCharCountIndicator}.
+      buffer$$1.put(data.getLength(), mode.getCharCountIndicator(data.mode, version));
+
+      // add binary data sequence to buffer
+      data.write(buffer$$1);
+    });
+
+    // Calculate required number of bits
+    var totalCodewords = utils.getSymbolTotalCodewords(version);
+    var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$1);
+    var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
+
+    // Add a terminator.
+    // If the bit string is shorter than the total number of required bits,
+    // a terminator of up to four 0s must be added to the right side of the string.
+    // If the bit string is more than four bits shorter than the required number of bits,
+    // add four 0s to the end.
+    if (buffer$$1.getLengthInBits() + 4 <= dataTotalCodewordsBits) {
+      buffer$$1.put(0, 4);
+    }
+
+    // If the bit string is fewer than four bits shorter, add only the number of 0s that
+    // are needed to reach the required number of bits.
+
+    // After adding the terminator, if the number of bits in the string is not a multiple of 8,
+    // pad the string on the right with 0s to make the string's length a multiple of 8.
+    while (buffer$$1.getLengthInBits() % 8 !== 0) {
+      buffer$$1.putBit(0);
+    }
+
+    // Add pad bytes if the string is still shorter than the total number of required bits.
+    // Extend the buffer to fill the data capacity of the symbol corresponding to
+    // the Version and Error Correction Level by adding the Pad Codewords 11101100 (0xEC)
+    // and 00010001 (0x11) alternately.
+    var remainingByte = (dataTotalCodewordsBits - buffer$$1.getLengthInBits()) / 8;
+    for (var i = 0; i < remainingByte; i++) {
+      buffer$$1.put(i % 2 ? 0x11 : 0xEC, 8);
+    }
+
+    return createCodewords(buffer$$1, version, errorCorrectionLevel$$1)
+  }
+
+  /**
+   * Encode input data with Reed-Solomon and return codewords with
+   * relative error correction bits
+   *
+   * @param  {BitBuffer} bitBuffer            Data to encode
+   * @param  {Number}    version              QR Code version
+   * @param  {ErrorCorrectionLevel} errorCorrectionLevel Error correction level
+   * @return {Buffer}                         Buffer containing encoded codewords
+   */
+  function createCodewords (bitBuffer$$1, version, errorCorrectionLevel$$1) {
+    // Total codewords for this QR code version (Data + Error correction)
+    var totalCodewords = utils.getSymbolTotalCodewords(version);
+
+    // Total number of error correction codewords
+    var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$1);
+
+    // Total number of data codewords
+    var dataTotalCodewords = totalCodewords - ecTotalCodewords;
+
+    // Total number of blocks
+    var ecTotalBlocks = errorCorrectionCode.getBlocksCount(version, errorCorrectionLevel$$1);
+
+    // Calculate how many blocks each group should contain
+    var blocksInGroup2 = totalCodewords % ecTotalBlocks;
+    var blocksInGroup1 = ecTotalBlocks - blocksInGroup2;
+
+    var totalCodewordsInGroup1 = Math.floor(totalCodewords / ecTotalBlocks);
+
+    var dataCodewordsInGroup1 = Math.floor(dataTotalCodewords / ecTotalBlocks);
+    var dataCodewordsInGroup2 = dataCodewordsInGroup1 + 1;
+
+    // Number of EC codewords is the same for both groups
+    var ecCount = totalCodewordsInGroup1 - dataCodewordsInGroup1;
+
+    // Initialize a Reed-Solomon encoder with a generator polynomial of degree ecCount
+    var rs = new reedSolomonEncoder(ecCount);
+
+    var offset = 0;
+    var dcData = new Array(ecTotalBlocks);
+    var ecData = new Array(ecTotalBlocks);
+    var maxDataSize = 0;
+    var buffer$$1 = new buffer$1(bitBuffer$$1.buffer);
+
+    // Divide the buffer into the required number of blocks
+    for (var b = 0; b < ecTotalBlocks; b++) {
+      var dataSize = b < blocksInGroup1 ? dataCodewordsInGroup1 : dataCodewordsInGroup2;
+
+      // extract a block of data from buffer
+      dcData[b] = buffer$$1.slice(offset, offset + dataSize);
+
+      // Calculate EC codewords for this data block
+      ecData[b] = rs.encode(dcData[b]);
+
+      offset += dataSize;
+      maxDataSize = Math.max(maxDataSize, dataSize);
+    }
+
+    // Create final data
+    // Interleave the data and error correction codewords from each block
+    var data = new buffer$1(totalCodewords);
+    var index = 0;
+    var i, r;
+
+    // Add data codewords
+    for (i = 0; i < maxDataSize; i++) {
+      for (r = 0; r < ecTotalBlocks; r++) {
+        if (i < dcData[r].length) {
+          data[index++] = dcData[r][i];
+        }
+      }
+    }
+
+    // Apped EC codewords
+    for (i = 0; i < ecCount; i++) {
+      for (r = 0; r < ecTotalBlocks; r++) {
+        data[index++] = ecData[r][i];
+      }
+    }
+
+    return data
+  }
+
+  /**
+   * Build QR Code symbol
+   *
+   * @param  {String} data                 Input string
+   * @param  {Number} version              QR Code version
+   * @param  {ErrorCorretionLevel} errorCorrectionLevel Error level
+   * @param  {MaskPattern} maskPattern     Mask pattern
+   * @return {Object}                      Object containing symbol data
+   */
+  function createSymbol (data, version, errorCorrectionLevel$$1, maskPattern$$1) {
+    var segments$$1;
+
+    if (isarray(data)) {
+      segments$$1 = segments.fromArray(data);
+    } else if (typeof data === 'string') {
+      var estimatedVersion = version;
+
+      if (!estimatedVersion) {
+        var rawSegments = segments.rawSplit(data);
+
+        // Estimate best version that can contain raw splitted segments
+        estimatedVersion = version$2.getBestVersionForData(rawSegments,
+          errorCorrectionLevel$$1);
+      }
+
+      // Build optimized segments
+      // If estimated version is undefined, try with the highest version
+      segments$$1 = segments.fromString(data, estimatedVersion || 40);
+    } else {
+      throw new Error('Invalid data')
+    }
+
+    // Get the min version that can contain data
+    var bestVersion = version$2.getBestVersionForData(segments$$1,
+        errorCorrectionLevel$$1);
+
+    // If no version is found, data cannot be stored
+    if (!bestVersion) {
+      throw new Error('The amount of data is too big to be stored in a QR Code')
+    }
+
+    // If not specified, use min version as default
+    if (!version) {
+      version = bestVersion;
+
+    // Check if the specified version can contain the data
+    } else if (version < bestVersion) {
+      throw new Error('\n' +
+        'The chosen QR Code version cannot contain this amount of data.\n' +
+        'Minimum version required to store current data is: ' + bestVersion + '.\n'
+      )
+    }
+
+    var dataBits = createData(version, errorCorrectionLevel$$1, segments$$1);
+
+    // Allocate matrix buffer
+    var moduleCount = utils.getSymbolSize(version);
+    var modules = new bitMatrix(moduleCount);
+
+    // Add function modules
+    setupFinderPattern(modules, version);
+    setupTimingPattern(modules);
+    setupAlignmentPattern(modules, version);
+
+    // Add temporary dummy bits for format info just to set them as reserved.
+    // This is needed to prevent these bits from being masked by {@link MaskPattern.applyMask}
+    // since the masking operation must be performed only on the encoding region.
+    // These blocks will be replaced with correct values later in code.
+    setupFormatInfo(modules, errorCorrectionLevel$$1, 0);
+
+    if (version >= 7) {
+      setupVersionInfo(modules, version);
+    }
+
+    // Add data codewords
+    setupData(modules, dataBits);
+
+    if (!maskPattern$$1) {
+      // Find best mask pattern
+      maskPattern$$1 = maskPattern.getBestMask(modules,
+        setupFormatInfo.bind(null, modules, errorCorrectionLevel$$1));
+    }
+
+    // Apply mask pattern
+    maskPattern.applyMask(maskPattern$$1, modules);
+
+    // Replace format info bits with correct values
+    setupFormatInfo(modules, errorCorrectionLevel$$1, maskPattern$$1);
+
+    return {
+      modules: modules,
+      version: version,
+      errorCorrectionLevel: errorCorrectionLevel$$1,
+      maskPattern: maskPattern$$1,
+      segments: segments$$1
+    }
+  }
+
+  /**
+   * QR Code
+   *
+   * @param {String | Array} data                 Input data
+   * @param {Object} options                      Optional configurations
+   * @param {Number} options.version              QR Code version
+   * @param {String} options.errorCorrectionLevel Error correction level
+   * @param {Function} options.toSJISFunc         Helper func to convert utf8 to sjis
+   */
+  var create$1 = function create (data, options) {
+    if (typeof data === 'undefined' || data === '') {
+      throw new Error('No input text')
+    }
+
+    var errorCorrectionLevel$$1 = errorCorrectionLevel.M;
+    var version;
+    var mask;
+
+    if (typeof options !== 'undefined') {
+      // Use higher error correction level as default
+      errorCorrectionLevel$$1 = errorCorrectionLevel.from(options.errorCorrectionLevel, errorCorrectionLevel.M);
+      version = version$2.from(options.version);
+      mask = maskPattern.from(options.maskPattern);
+
+      if (options.toSJISFunc) {
+        utils.setToSJISFunction(options.toSJISFunc);
+      }
+    }
+
+    return createSymbol(data, version, errorCorrectionLevel$$1, mask)
+  };
+
+  var qrcode = {
+  	create: create$1
+  };
+
+  //  commonjs-external:util
+
+  //  commonjs-external:stream
+
+  var chunkstream = createCommonjsModule(function (module) {
+
+
+
+
+
+
+  var ChunkStream = module.exports = function() {
+    stream.call(this);
+
+    this._buffers = [];
+    this._buffered = 0;
+
+    this._reads = [];
+    this._paused = false;
+
+    this._encoding = 'utf8';
+    this.writable = true;
+  };
+  util.inherits(ChunkStream, stream);
+
+
+  ChunkStream.prototype.read = function(length, callback) {
+
+    this._reads.push({
+      length: Math.abs(length),  // if length < 0 then at most this length
+      allowLess: length < 0,
+      func: callback
+    });
+
+    process.nextTick(function() {
+      this._process();
+
+      // its paused and there is not enought data then ask for more
+      if (this._paused && this._reads.length > 0) {
+        this._paused = false;
+
+        this.emit('drain');
+      }
+    }.bind(this));
+  };
+
+  ChunkStream.prototype.write = function(data, encoding) {
+
+    if (!this.writable) {
+      this.emit('error', new Error('Stream not writable'));
+      return false;
+    }
+
+    var dataBuffer;
+    if (Buffer.isBuffer(data)) {
+      dataBuffer = data;
+    }
+    else {
+      dataBuffer = new Buffer(data, encoding || this._encoding);
+    }
+
+    this._buffers.push(dataBuffer);
+    this._buffered += dataBuffer.length;
+
+    this._process();
+
+    // ok if there are no more read requests
+    if (this._reads && this._reads.length === 0) {
+      this._paused = true;
+    }
+
+    return this.writable && !this._paused;
+  };
+
+  ChunkStream.prototype.end = function(data, encoding) {
+
+    if (data) {
+      this.write(data, encoding);
+    }
+
+    this.writable = false;
+
+    // already destroyed
+    if (!this._buffers) {
+      return;
+    }
+
+    // enqueue or handle end
+    if (this._buffers.length === 0) {
+      this._end();
+    }
+    else {
+      this._buffers.push(null);
+      this._process();
+    }
+  };
+
+  ChunkStream.prototype.destroySoon = ChunkStream.prototype.end;
+
+  ChunkStream.prototype._end = function() {
+
+    if (this._reads.length > 0) {
+      this.emit('error',
+        new Error('There are some read requests waiting on finished stream')
+      );
+    }
+
+    this.destroy();
+  };
+
+  ChunkStream.prototype.destroy = function() {
+
+    if (!this._buffers) {
+      return;
+    }
+
+    this.writable = false;
+    this._reads = null;
+    this._buffers = null;
+
+    this.emit('close');
+  };
+
+  ChunkStream.prototype._processReadAllowingLess = function(read) {
+    // ok there is any data so that we can satisfy this request
+    this._reads.shift(); // == read
+
+    // first we need to peek into first buffer
+    var smallerBuf = this._buffers[0];
+
+    // ok there is more data than we need
+    if (smallerBuf.length > read.length) {
+
+      this._buffered -= read.length;
+      this._buffers[0] = smallerBuf.slice(read.length);
+
+      read.func.call(this, smallerBuf.slice(0, read.length));
+
+    }
+    else {
+      // ok this is less than maximum length so use it all
+      this._buffered -= smallerBuf.length;
+      this._buffers.shift(); // == smallerBuf
+
+      read.func.call(this, smallerBuf);
+    }
+  };
+
+  ChunkStream.prototype._processRead = function(read) {
+    this._reads.shift(); // == read
+
+    var pos = 0;
+    var count = 0;
+    var data = new Buffer(read.length);
+
+    // create buffer for all data
+    while (pos < read.length) {
+
+      var buf = this._buffers[count++];
+      var len = Math.min(buf.length, read.length - pos);
+
+      buf.copy(data, pos, 0, len);
+      pos += len;
+
+      // last buffer wasn't used all so just slice it and leave
+      if (len !== buf.length) {
+        this._buffers[--count] = buf.slice(len);
+      }
+    }
+
+    // remove all used buffers
+    if (count > 0) {
+      this._buffers.splice(0, count);
+    }
+
+    this._buffered -= read.length;
+
+    read.func.call(this, data);
+  };
+
+  ChunkStream.prototype._process = function() {
+
+    try {
+      // as long as there is any data and read requests
+      while (this._buffered > 0 && this._reads && this._reads.length > 0) {
+
+        var read = this._reads[0];
+
+        // read any data (but no more than length)
+        if (read.allowLess) {
+          this._processReadAllowingLess(read);
+
+        }
+        else if (this._buffered >= read.length) {
+          // ok we can meet some expectations
+
+          this._processRead(read);
+        }
+        else {
+          // not enought data to satisfy first request in queue
+          // so we need to wait for more
+          break;
+        }
+      }
+
+      if (this._buffers && this._buffers.length > 0 && this._buffers[0] === null) {
+        this._end();
+      }
+    }
+    catch (ex) {
+      this.emit('error', ex);
+    }
+  };
   });
 
+  // node_modules/pngjs/lib/interlace.js
+
+  // Adam 7
+  //   0 1 2 3 4 5 6 7
+  // 0 x 6 4 6 x 6 4 6
+  // 1 7 7 7 7 7 7 7 7
+  // 2 5 6 5 6 5 6 5 6
+  // 3 7 7 7 7 7 7 7 7
+  // 4 3 6 4 6 3 6 4 6
+  // 5 7 7 7 7 7 7 7 7
+  // 6 5 6 5 6 5 6 5 6
+  // 7 7 7 7 7 7 7 7 7
+
+
+  var imagePasses = [
+    { // pass 1 - 1px
+      x: [0],
+      y: [0]
+    },
+    { // pass 2 - 1px
+      x: [4],
+      y: [0]
+    },
+    { // pass 3 - 2px
+      x: [0, 4],
+      y: [4]
+    },
+    { // pass 4 - 4px
+      x: [2, 6],
+      y: [0, 4]
+    },
+    { // pass 5 - 8px
+      x: [0, 2, 4, 6],
+      y: [2, 6]
+    },
+    { // pass 6 - 16px
+      x: [1, 3, 5, 7],
+      y: [0, 2, 4, 6]
+    },
+    { // pass 7 - 32px
+      x: [0, 1, 2, 3, 4, 5, 6, 7],
+      y: [1, 3, 5, 7]
+    }
+  ];
+
+  var getImagePasses = function(width, height) {
+    var images = [];
+    var xLeftOver = width % 8;
+    var yLeftOver = height % 8;
+    var xRepeats = (width - xLeftOver) / 8;
+    var yRepeats = (height - yLeftOver) / 8;
+    for (var i = 0; i < imagePasses.length; i++) {
+      var pass = imagePasses[i];
+      var passWidth = xRepeats * pass.x.length;
+      var passHeight = yRepeats * pass.y.length;
+      for (var j = 0; j < pass.x.length; j++) {
+        if (pass.x[j] < xLeftOver) {
+          passWidth++;
+        }
+        else {
+          break;
+        }
+      }
+      for (j = 0; j < pass.y.length; j++) {
+        if (pass.y[j] < yLeftOver) {
+          passHeight++;
+        }
+        else {
+          break;
+        }
+      }
+      if (passWidth > 0 && passHeight > 0) {
+        images.push({ width: passWidth, height: passHeight, index: i });
+      }
+    }
+    return images;
+  };
+
+  var getInterlaceIterator = function(width) {
+    return function(x, y, pass) {
+      var outerXLeftOver = x % imagePasses[pass].x.length;
+      var outerX = (((x - outerXLeftOver) / imagePasses[pass].x.length) * 8) + imagePasses[pass].x[outerXLeftOver];
+      var outerYLeftOver = y % imagePasses[pass].y.length;
+      var outerY = (((y - outerYLeftOver) / imagePasses[pass].y.length) * 8) + imagePasses[pass].y[outerYLeftOver];
+      return (outerX * 4) + (outerY * width * 4);
+    };
+  };
+
+  var interlace = {
+  	getImagePasses: getImagePasses,
+  	getInterlaceIterator: getInterlaceIterator
+  };
+
+  // node_modules/pngjs/lib/paeth-predictor.js
+
+  var paethPredictor = function paethPredictor(left, above, upLeft) {
+
+    var paeth = left + above - upLeft;
+    var pLeft = Math.abs(paeth - left);
+    var pAbove = Math.abs(paeth - above);
+    var pUpLeft = Math.abs(paeth - upLeft);
+
+    if (pLeft <= pAbove && pLeft <= pUpLeft) {
+      return left;
+    }
+    if (pAbove <= pUpLeft) {
+      return above;
+    }
+    return upLeft;
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/interlace.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/paeth-predictor.js
+
+  var filterParse = createCommonjsModule(function (module) {
+
+
+
+
+  function getByteWidth(width, bpp, depth) {
+    var byteWidth = width * bpp;
+    if (depth !== 8) {
+      byteWidth = Math.ceil(byteWidth / (8 / depth));
+    }
+    return byteWidth;
+  }
+
+  var Filter = module.exports = function(bitmapInfo, dependencies) {
+
+    var width = bitmapInfo.width;
+    var height = bitmapInfo.height;
+    var interlace$$1 = bitmapInfo.interlace;
+    var bpp = bitmapInfo.bpp;
+    var depth = bitmapInfo.depth;
+
+    this.read = dependencies.read;
+    this.write = dependencies.write;
+    this.complete = dependencies.complete;
+
+    this._imageIndex = 0;
+    this._images = [];
+    if (interlace$$1) {
+      var passes = interlace.getImagePasses(width, height);
+      for (var i = 0; i < passes.length; i++) {
+        this._images.push({
+          byteWidth: getByteWidth(passes[i].width, bpp, depth),
+          height: passes[i].height,
+          lineIndex: 0
+        });
+      }
+    }
+    else {
+      this._images.push({
+        byteWidth: getByteWidth(width, bpp, depth),
+        height: height,
+        lineIndex: 0
+      });
+    }
+
+    // when filtering the line we look at the pixel to the left
+    // the spec also says it is done on a byte level regardless of the number of pixels
+    // so if the depth is byte compatible (8 or 16) we subtract the bpp in order to compare back
+    // a pixel rather than just a different byte part. However if we are sub byte, we ignore.
+    if (depth === 8) {
+      this._xComparison = bpp;
+    }
+    else if (depth === 16) {
+      this._xComparison = bpp * 2;
+    }
+    else {
+      this._xComparison = 1;
+    }
+  };
+
+  Filter.prototype.start = function() {
+    this.read(this._images[this._imageIndex].byteWidth + 1, this._reverseFilterLine.bind(this));
+  };
+
+  Filter.prototype._unFilterType1 = function(rawData, unfilteredLine, byteWidth) {
+
+    var xComparison = this._xComparison;
+    var xBiggerThan = xComparison - 1;
+
+    for (var x = 0; x < byteWidth; x++) {
+      var rawByte = rawData[1 + x];
+      var f1Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+      unfilteredLine[x] = rawByte + f1Left;
+    }
+  };
+
+  Filter.prototype._unFilterType2 = function(rawData, unfilteredLine, byteWidth) {
+
+    var lastLine = this._lastLine;
+
+    for (var x = 0; x < byteWidth; x++) {
+      var rawByte = rawData[1 + x];
+      var f2Up = lastLine ? lastLine[x] : 0;
+      unfilteredLine[x] = rawByte + f2Up;
+    }
+  };
+
+  Filter.prototype._unFilterType3 = function(rawData, unfilteredLine, byteWidth) {
+
+    var xComparison = this._xComparison;
+    var xBiggerThan = xComparison - 1;
+    var lastLine = this._lastLine;
+
+    for (var x = 0; x < byteWidth; x++) {
+      var rawByte = rawData[1 + x];
+      var f3Up = lastLine ? lastLine[x] : 0;
+      var f3Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+      var f3Add = Math.floor((f3Left + f3Up) / 2);
+      unfilteredLine[x] = rawByte + f3Add;
+    }
+  };
+
+  Filter.prototype._unFilterType4 = function(rawData, unfilteredLine, byteWidth) {
+
+    var xComparison = this._xComparison;
+    var xBiggerThan = xComparison - 1;
+    var lastLine = this._lastLine;
+
+    for (var x = 0; x < byteWidth; x++) {
+      var rawByte = rawData[1 + x];
+      var f4Up = lastLine ? lastLine[x] : 0;
+      var f4Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+      var f4UpLeft = x > xBiggerThan && lastLine ? lastLine[x - xComparison] : 0;
+      var f4Add = paethPredictor(f4Left, f4Up, f4UpLeft);
+      unfilteredLine[x] = rawByte + f4Add;
+    }
+  };
+
+  Filter.prototype._reverseFilterLine = function(rawData) {
+
+    var filter = rawData[0];
+    var unfilteredLine;
+    var currentImage = this._images[this._imageIndex];
+    var byteWidth = currentImage.byteWidth;
+
+    if (filter === 0) {
+      unfilteredLine = rawData.slice(1, byteWidth + 1);
+    }
+    else {
+
+      unfilteredLine = new Buffer(byteWidth);
+
+      switch (filter) {
+        case 1:
+          this._unFilterType1(rawData, unfilteredLine, byteWidth);
+          break;
+        case 2:
+          this._unFilterType2(rawData, unfilteredLine, byteWidth);
+          break;
+        case 3:
+          this._unFilterType3(rawData, unfilteredLine, byteWidth);
+          break;
+        case 4:
+          this._unFilterType4(rawData, unfilteredLine, byteWidth);
+          break;
+        default:
+          throw new Error('Unrecognised filter type - ' + filter);
+      }
+    }
+
+    this.write(unfilteredLine);
+
+    currentImage.lineIndex++;
+    if (currentImage.lineIndex >= currentImage.height) {
+      this._lastLine = null;
+      this._imageIndex++;
+      currentImage = this._images[this._imageIndex];
+    }
+    else {
+      this._lastLine = unfilteredLine;
+    }
+
+    if (currentImage) {
+      // read, using the byte width that may be from the new current image
+      this.read(currentImage.byteWidth + 1, this._reverseFilterLine.bind(this));
+    }
+    else {
+      this._lastLine = null;
+      this.complete();
+    }
+  };
   });
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/chunkstream.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/filter-parse.js
+
+  var filterParseAsync = createCommonjsModule(function (module) {
+
+
+
+
+
+
+  var FilterAsync = module.exports = function(bitmapInfo) {
+    chunkstream.call(this);
+
+    var buffers = [];
+    var that = this;
+    this._filter = new filterParse(bitmapInfo, {
+      read: this.read.bind(this),
+      write: function(buffer$$1) {
+        buffers.push(buffer$$1);
+      },
+      complete: function() {
+        that.emit('complete', Buffer.concat(buffers));
+      }
+    });
+
+    this._filter.start();
+  };
+  util.inherits(FilterAsync, chunkstream);
+  });
+
+  // node_modules/pngjs/lib/constants.js
+
+
+  var constants = {
+
+    PNG_SIGNATURE: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+
+    TYPE_IHDR: 0x49484452,
+    TYPE_IEND: 0x49454e44,
+    TYPE_IDAT: 0x49444154,
+    TYPE_PLTE: 0x504c5445,
+    TYPE_tRNS: 0x74524e53, // eslint-disable-line camelcase
+    TYPE_gAMA: 0x67414d41, // eslint-disable-line camelcase
+
+    // color-type bits
+    COLORTYPE_GRAYSCALE: 0,
+    COLORTYPE_PALETTE: 1,
+    COLORTYPE_COLOR: 2,
+    COLORTYPE_ALPHA: 4, // e.g. grayscale and alpha
+
+    // color-type combinations
+    COLORTYPE_PALETTE_COLOR: 3,
+    COLORTYPE_COLOR_ALPHA: 6,
+
+    COLORTYPE_TO_BPP_MAP: {
+      0: 1,
+      2: 3,
+      3: 1,
+      4: 2,
+      6: 4
+    },
+
+    GAMMA_DIVISION: 100000
+  };
+
+  var crc = createCommonjsModule(function (module) {
+
+  var crcTable = [];
+
+  (function() {
+    for (var i = 0; i < 256; i++) {
+      var currentCrc = i;
+      for (var j = 0; j < 8; j++) {
+        if (currentCrc & 1) {
+          currentCrc = 0xedb88320 ^ (currentCrc >>> 1);
+        }
+        else {
+          currentCrc = currentCrc >>> 1;
+        }
+      }
+      crcTable[i] = currentCrc;
+    }
+  }());
+
+  var CrcCalculator = module.exports = function() {
+    this._crc = -1;
+  };
+
+  CrcCalculator.prototype.write = function(data) {
+
+    for (var i = 0; i < data.length; i++) {
+      this._crc = crcTable[(this._crc ^ data[i]) & 0xff] ^ (this._crc >>> 8);
+    }
+    return true;
+  };
+
+  CrcCalculator.prototype.crc32 = function() {
+    return this._crc ^ -1;
+  };
+
+
+  CrcCalculator.crc32 = function(buf) {
+
+    var crc = -1;
+    for (var i = 0; i < buf.length; i++) {
+      crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+    }
+    return crc ^ -1;
+  };
+  });
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/constants.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/crc.js
+
+  var parser = createCommonjsModule(function (module) {
+
+
+
+
+
+  var Parser = module.exports = function(options, dependencies) {
+
+    this._options = options;
+    options.checkCRC = options.checkCRC !== false;
+
+    this._hasIHDR = false;
+    this._hasIEND = false;
+
+    // input flags/metadata
+    this._palette = [];
+    this._colorType = 0;
+
+    this._chunks = {};
+    this._chunks[constants.TYPE_IHDR] = this._handleIHDR.bind(this);
+    this._chunks[constants.TYPE_IEND] = this._handleIEND.bind(this);
+    this._chunks[constants.TYPE_IDAT] = this._handleIDAT.bind(this);
+    this._chunks[constants.TYPE_PLTE] = this._handlePLTE.bind(this);
+    this._chunks[constants.TYPE_tRNS] = this._handleTRNS.bind(this);
+    this._chunks[constants.TYPE_gAMA] = this._handleGAMA.bind(this);
+
+    this.read = dependencies.read;
+    this.error = dependencies.error;
+    this.metadata = dependencies.metadata;
+    this.gamma = dependencies.gamma;
+    this.transColor = dependencies.transColor;
+    this.palette = dependencies.palette;
+    this.parsed = dependencies.parsed;
+    this.inflateData = dependencies.inflateData;
+    this.finished = dependencies.finished;
+  };
+
+  Parser.prototype.start = function() {
+    this.read(constants.PNG_SIGNATURE.length,
+      this._parseSignature.bind(this)
+    );
+  };
+
+  Parser.prototype._parseSignature = function(data) {
+
+    var signature = constants.PNG_SIGNATURE;
+
+    for (var i = 0; i < signature.length; i++) {
+      if (data[i] !== signature[i]) {
+        this.error(new Error('Invalid file signature'));
+        return;
+      }
+    }
+    this.read(8, this._parseChunkBegin.bind(this));
+  };
+
+  Parser.prototype._parseChunkBegin = function(data) {
+
+    // chunk content length
+    var length = data.readUInt32BE(0);
+
+    // chunk type
+    var type = data.readUInt32BE(4);
+    var name = '';
+    for (var i = 4; i < 8; i++) {
+      name += String.fromCharCode(data[i]);
+    }
+
+    //console.log('chunk ', name, length);
+
+    // chunk flags
+    var ancillary = Boolean(data[4] & 0x20); // or critical
+  //    priv = Boolean(data[5] & 0x20), // or public
+  //    safeToCopy = Boolean(data[7] & 0x20); // or unsafe
+
+    if (!this._hasIHDR && type !== constants.TYPE_IHDR) {
+      this.error(new Error('Expected IHDR on beggining'));
+      return;
+    }
+
+    this._crc = new crc();
+    this._crc.write(new Buffer(name));
+
+    if (this._chunks[type]) {
+      return this._chunks[type](length);
+    }
+
+    if (!ancillary) {
+      this.error(new Error('Unsupported critical chunk type ' + name));
+      return;
+    }
+
+    this.read(length + 4, this._skipChunk.bind(this));
+  };
+
+  Parser.prototype._skipChunk = function(/*data*/) {
+    this.read(8, this._parseChunkBegin.bind(this));
+  };
+
+  Parser.prototype._handleChunkEnd = function() {
+    this.read(4, this._parseChunkEnd.bind(this));
+  };
+
+  Parser.prototype._parseChunkEnd = function(data) {
+
+    var fileCrc = data.readInt32BE(0);
+    var calcCrc = this._crc.crc32();
+
+    // check CRC
+    if (this._options.checkCRC && calcCrc !== fileCrc) {
+      this.error(new Error('Crc error - ' + fileCrc + ' - ' + calcCrc));
+      return;
+    }
+
+    if (!this._hasIEND) {
+      this.read(8, this._parseChunkBegin.bind(this));
+    }
+  };
+
+  Parser.prototype._handleIHDR = function(length) {
+    this.read(length, this._parseIHDR.bind(this));
+  };
+  Parser.prototype._parseIHDR = function(data) {
+
+    this._crc.write(data);
+
+    var width = data.readUInt32BE(0);
+    var height = data.readUInt32BE(4);
+    var depth = data[8];
+    var colorType = data[9]; // bits: 1 palette, 2 color, 4 alpha
+    var compr = data[10];
+    var filter = data[11];
+    var interlace = data[12];
+
+    // console.log('    width', width, 'height', height,
+    //     'depth', depth, 'colorType', colorType,
+    //     'compr', compr, 'filter', filter, 'interlace', interlace
+    // );
+
+    if (depth !== 8 && depth !== 4 && depth !== 2 && depth !== 1 && depth !== 16) {
+      this.error(new Error('Unsupported bit depth ' + depth));
+      return;
+    }
+    if (!(colorType in constants.COLORTYPE_TO_BPP_MAP)) {
+      this.error(new Error('Unsupported color type'));
+      return;
+    }
+    if (compr !== 0) {
+      this.error(new Error('Unsupported compression method'));
+      return;
+    }
+    if (filter !== 0) {
+      this.error(new Error('Unsupported filter method'));
+      return;
+    }
+    if (interlace !== 0 && interlace !== 1) {
+      this.error(new Error('Unsupported interlace method'));
+      return;
+    }
+
+    this._colorType = colorType;
+
+    var bpp = constants.COLORTYPE_TO_BPP_MAP[this._colorType];
+
+    this._hasIHDR = true;
+
+    this.metadata({
+      width: width,
+      height: height,
+      depth: depth,
+      interlace: Boolean(interlace),
+      palette: Boolean(colorType & constants.COLORTYPE_PALETTE),
+      color: Boolean(colorType & constants.COLORTYPE_COLOR),
+      alpha: Boolean(colorType & constants.COLORTYPE_ALPHA),
+      bpp: bpp,
+      colorType: colorType
+    });
+
+    this._handleChunkEnd();
+  };
+
+
+  Parser.prototype._handlePLTE = function(length) {
+    this.read(length, this._parsePLTE.bind(this));
+  };
+  Parser.prototype._parsePLTE = function(data) {
+
+    this._crc.write(data);
+
+    var entries = Math.floor(data.length / 3);
+    // console.log('Palette:', entries);
+
+    for (var i = 0; i < entries; i++) {
+      this._palette.push([
+        data[i * 3],
+        data[i * 3 + 1],
+        data[i * 3 + 2],
+        0xff
+      ]);
+    }
+
+    this.palette(this._palette);
+
+    this._handleChunkEnd();
+  };
+
+  Parser.prototype._handleTRNS = function(length) {
+    this.read(length, this._parseTRNS.bind(this));
+  };
+  Parser.prototype._parseTRNS = function(data) {
+
+    this._crc.write(data);
+
+    // palette
+    if (this._colorType === constants.COLORTYPE_PALETTE_COLOR) {
+      if (this._palette.length === 0) {
+        this.error(new Error('Transparency chunk must be after palette'));
+        return;
+      }
+      if (data.length > this._palette.length) {
+        this.error(new Error('More transparent colors than palette size'));
+        return;
+      }
+      for (var i = 0; i < data.length; i++) {
+        this._palette[i][3] = data[i];
+      }
+      this.palette(this._palette);
+    }
+
+    // for colorType 0 (grayscale) and 2 (rgb)
+    // there might be one gray/color defined as transparent
+    if (this._colorType === constants.COLORTYPE_GRAYSCALE) {
+      // grey, 2 bytes
+      this.transColor([data.readUInt16BE(0)]);
+    }
+    if (this._colorType === constants.COLORTYPE_COLOR) {
+      this.transColor([data.readUInt16BE(0), data.readUInt16BE(2), data.readUInt16BE(4)]);
+    }
+
+    this._handleChunkEnd();
+  };
+
+  Parser.prototype._handleGAMA = function(length) {
+    this.read(length, this._parseGAMA.bind(this));
+  };
+  Parser.prototype._parseGAMA = function(data) {
+
+    this._crc.write(data);
+    this.gamma(data.readUInt32BE(0) / constants.GAMMA_DIVISION);
+
+    this._handleChunkEnd();
+  };
+
+  Parser.prototype._handleIDAT = function(length) {
+    this.read(-length, this._parseIDAT.bind(this, length));
+  };
+  Parser.prototype._parseIDAT = function(length, data) {
+
+    this._crc.write(data);
+
+    if (this._colorType === constants.COLORTYPE_PALETTE_COLOR && this._palette.length === 0) {
+      throw new Error('Expected palette not found');
+    }
+
+    this.inflateData(data);
+    var leftOverLength = length - data.length;
+
+    if (leftOverLength > 0) {
+      this._handleIDAT(leftOverLength);
+    }
+    else {
+      this._handleChunkEnd();
+    }
+  };
+
+  Parser.prototype._handleIEND = function(length) {
+    this.read(length, this._parseIEND.bind(this));
+  };
+  Parser.prototype._parseIEND = function(data) {
+
+    this._crc.write(data);
+
+    this._hasIEND = true;
+    this._handleChunkEnd();
+
+    if (this.finished) {
+      this.finished();
+    }
+  };
+  });
+
+  var pixelBppMap = {
+    1: { // L
+      0: 0,
+      1: 0,
+      2: 0,
+      3: 0xff
+    },
+    2: { // LA
+      0: 0,
+      1: 0,
+      2: 0,
+      3: 1
+    },
+    3: { // RGB
+      0: 0,
+      1: 1,
+      2: 2,
+      3: 0xff
+    },
+    4: { // RGBA
+      0: 0,
+      1: 1,
+      2: 2,
+      3: 3
+    }
+  };
+
+  function bitRetriever(data, depth) {
+
+    var leftOver = [];
+    var i = 0;
+
+    function split() {
+      if (i === data.length) {
+        throw new Error('Ran out of data');
+      }
+      var byte = data[i];
+      i++;
+      var byte8, byte7, byte6, byte5, byte4, byte3, byte2, byte1;
+      switch (depth) {
+        default:
+          throw new Error('unrecognised depth');
+        case 16:
+          byte2 = data[i];
+          i++;
+          leftOver.push(((byte << 8) + byte2));
+          break;
+        case 4:
+          byte2 = byte & 0x0f;
+          byte1 = byte >> 4;
+          leftOver.push(byte1, byte2);
+          break;
+        case 2:
+          byte4 = byte & 3;
+          byte3 = byte >> 2 & 3;
+          byte2 = byte >> 4 & 3;
+          byte1 = byte >> 6 & 3;
+          leftOver.push(byte1, byte2, byte3, byte4);
+          break;
+        case 1:
+          byte8 = byte & 1;
+          byte7 = byte >> 1 & 1;
+          byte6 = byte >> 2 & 1;
+          byte5 = byte >> 3 & 1;
+          byte4 = byte >> 4 & 1;
+          byte3 = byte >> 5 & 1;
+          byte2 = byte >> 6 & 1;
+          byte1 = byte >> 7 & 1;
+          leftOver.push(byte1, byte2, byte3, byte4, byte5, byte6, byte7, byte8);
+          break;
+      }
+    }
+
+    return {
+      get: function(count) {
+        while (leftOver.length < count) {
+          split();
+        }
+        var returner = leftOver.slice(0, count);
+        leftOver = leftOver.slice(count);
+        return returner;
+      },
+      resetAfterLine: function() {
+        leftOver.length = 0;
+      },
+      end: function() {
+        if (i !== data.length) {
+          throw new Error('extra data found');
+        }
+      }
+    };
+  }
+
+  function mapImage8Bit(image, pxData, getPxPos, bpp, data, rawPos) { // eslint-disable-line max-params
+    var imageWidth = image.width;
+    var imageHeight = image.height;
+    var imagePass = image.index;
+    for (var y = 0; y < imageHeight; y++) {
+      for (var x = 0; x < imageWidth; x++) {
+        var pxPos = getPxPos(x, y, imagePass);
+
+        for (var i = 0; i < 4; i++) {
+          var idx = pixelBppMap[bpp][i];
+          if (idx === 0xff) {
+            pxData[pxPos + i] = 0xff;
+          } else {
+            var dataPos = idx + rawPos;
+            if (dataPos === data.length) {
+              throw new Error('Ran out of data');
+            }
+            pxData[pxPos + i] = data[dataPos];
+          }
+        }
+        rawPos += bpp; //eslint-disable-line no-param-reassign
+      }
+    }
+    return rawPos;
+  }
+
+  function mapImageCustomBit(image, pxData, getPxPos, bpp, bits, maxBit) { // eslint-disable-line max-params
+    var imageWidth = image.width;
+    var imageHeight = image.height;
+    var imagePass = image.index;
+    for (var y = 0; y < imageHeight; y++) {
+      for (var x = 0; x < imageWidth; x++) {
+        var pixelData = bits.get(bpp);
+        var pxPos = getPxPos(x, y, imagePass);
+
+        for (var i = 0; i < 4; i++) {
+          var idx = pixelBppMap[bpp][i];
+          pxData[pxPos + i] = idx !== 0xff ? pixelData[idx] : maxBit;
+        }
+      }
+      bits.resetAfterLine();
+    }
+  }
+
+  var dataToBitMap = function(data, bitmapInfo) {
+
+    var width = bitmapInfo.width;
+    var height = bitmapInfo.height;
+    var depth = bitmapInfo.depth;
+    var bpp = bitmapInfo.bpp;
+    var interlace$$1 = bitmapInfo.interlace;
+
+    if (depth !== 8) {
+      var bits = bitRetriever(data, depth);
+    }
+    var pxData;
+    if (depth <= 8) {
+      pxData = new Buffer(width * height * 4);
+    }
+    else {
+      pxData = new Uint16Array(width * height * 4);
+    }
+    var maxBit = Math.pow(2, depth) - 1;
+    var rawPos = 0;
+    var images;
+    var getPxPos;
+
+    if (interlace$$1) {
+      images = interlace.getImagePasses(width, height);
+      getPxPos = interlace.getInterlaceIterator(width, height);
+    }
+    else {
+      var nonInterlacedPxPos = 0;
+      getPxPos = function() {
+        var returner = nonInterlacedPxPos;
+        nonInterlacedPxPos += 4;
+        return returner;
+      };
+      images = [{ width: width, height: height }];
+    }
+
+    for (var imageIndex = 0; imageIndex < images.length; imageIndex++) {
+      if (depth === 8) {
+        rawPos = mapImage8Bit(images[imageIndex], pxData, getPxPos, bpp, data, rawPos);
+      }
+      else {
+        mapImageCustomBit(images[imageIndex], pxData, getPxPos, bpp, bits, maxBit);
+      }
+    }
+    if (depth === 8) {
+      if (rawPos !== data.length) {
+        throw new Error('extra data found');
+      }
+    }
+    else {
+      bits.end();
+    }
+
+    return pxData;
+  };
+
+  var bitmapper = {
+  	dataToBitMap: dataToBitMap
+  };
+
+  // node_modules/pngjs/lib/format-normaliser.js
+
+  function dePalette(indata, outdata, width, height, palette) {
+    var pxPos = 0;
+    // use values from palette
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var color = palette[indata[pxPos]];
+
+        if (!color) {
+          throw new Error('index ' + indata[pxPos] + ' not in palette');
+        }
+
+        for (var i = 0; i < 4; i++) {
+          outdata[pxPos + i] = color[i];
+        }
+        pxPos += 4;
+      }
+    }
+  }
+
+  function replaceTransparentColor(indata, outdata, width, height, transColor) {
+    var pxPos = 0;
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var makeTrans = false;
+
+        if (transColor.length === 1) {
+          if (transColor[0] === indata[pxPos]) {
+            makeTrans = true;
+          }
+        }
+        else if (transColor[0] === indata[pxPos] && transColor[1] === indata[pxPos + 1] && transColor[2] === indata[pxPos + 2]) {
+          makeTrans = true;
+        }
+        if (makeTrans) {
+          for (var i = 0; i < 4; i++) {
+            outdata[pxPos + i] = 0;
+          }
+        }
+        pxPos += 4;
+      }
+    }
+  }
+
+  function scaleDepth(indata, outdata, width, height, depth) {
+    var maxOutSample = 255;
+    var maxInSample = Math.pow(2, depth) - 1;
+    var pxPos = 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        for (var i = 0; i < 4; i++) {
+          outdata[pxPos + i] = Math.floor((indata[pxPos + i] * maxOutSample) / maxInSample + 0.5);
+        }
+        pxPos += 4;
+      }
+    }
+  }
+
+  var formatNormaliser = function(indata, imageData) {
+
+    var depth = imageData.depth;
+    var width = imageData.width;
+    var height = imageData.height;
+    var colorType = imageData.colorType;
+    var transColor = imageData.transColor;
+    var palette = imageData.palette;
+
+    var outdata = indata; // only different for 16 bits
+
+    if (colorType === 3) { // paletted
+      dePalette(indata, outdata, width, height, palette);
+    }
+    else {
+      if (transColor) {
+        replaceTransparentColor(indata, outdata, width, height, transColor);
+      }
+      // if it needs scaling
+      if (depth !== 8) {
+        // if we need to change the buffer size
+        if (depth === 16) {
+          outdata = new Buffer(width * height * 4);
+        }
+        scaleDepth(indata, outdata, width, height, depth);
+      }
+    }
+    return outdata;
+  };
+
+  //  commonjs-external:zlib
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/filter-parse-async.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/parser.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/bitmapper.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/format-normaliser.js
+
+  var parserAsync = createCommonjsModule(function (module) {
+
+
+
+
+
+
+
+
+
+  var ParserAsync = module.exports = function(options) {
+    chunkstream.call(this);
+
+    this._parser = new parser(options, {
+      read: this.read.bind(this),
+      error: this._handleError.bind(this),
+      metadata: this._handleMetaData.bind(this),
+      gamma: this.emit.bind(this, 'gamma'),
+      palette: this._handlePalette.bind(this),
+      transColor: this._handleTransColor.bind(this),
+      finished: this._finished.bind(this),
+      inflateData: this._inflateData.bind(this)
+    });
+    this._options = options;
+    this.writable = true;
+
+    this._parser.start();
+  };
+  util.inherits(ParserAsync, chunkstream);
+
+
+  ParserAsync.prototype._handleError = function(err) {
+
+    this.emit('error', err);
+
+    this.writable = false;
+
+    this.destroy();
+
+    if (this._inflate && this._inflate.destroy) {
+      this._inflate.destroy();
+    }
+
+    if (this._filter) {
+      this._filter.destroy();
+      // For backward compatibility with Node 7 and below.
+      // Suppress errors due to _inflate calling write() even after
+      // it's destroy()'ed.
+      this._filter.on('error', function() {});
+    }
+
+    this.errord = true;
+  };
+
+  ParserAsync.prototype._inflateData = function(data) {
+    if (!this._inflate) {
+      if (this._bitmapInfo.interlace) {
+        this._inflate = zlib.createInflate();
+
+        this._inflate.on('error', this.emit.bind(this, 'error'));
+        this._filter.on('complete', this._complete.bind(this));
+
+        this._inflate.pipe(this._filter);
+      } else {
+        var rowSize = ((this._bitmapInfo.width * this._bitmapInfo.bpp * this._bitmapInfo.depth + 7) >> 3) + 1;
+        var imageSize = rowSize * this._bitmapInfo.height;
+        var chunkSize = Math.max(imageSize, zlib.Z_MIN_CHUNK);
+        
+        this._inflate = zlib.createInflate({ chunkSize: chunkSize });
+        var leftToInflate = imageSize;
+
+        var emitError = this.emit.bind(this, 'error');
+        this._inflate.on('error', function(err) {
+          if (!leftToInflate) {
+            return;
+          }
+
+          emitError(err);
+        });
+        this._filter.on('complete', this._complete.bind(this));
+
+        var filterWrite = this._filter.write.bind(this._filter);
+        this._inflate.on('data', function(chunk) {
+          if (!leftToInflate) {
+            return;
+          }
+
+          if (chunk.length > leftToInflate) {
+            chunk = chunk.slice(0, leftToInflate);
+          }
+
+          leftToInflate -= chunk.length;
+
+          filterWrite(chunk);
+        });
+
+        this._inflate.on('end', this._filter.end.bind(this._filter));
+      }
+    }
+    this._inflate.write(data);
+  };
+
+  ParserAsync.prototype._handleMetaData = function(metaData) {
+
+    this.emit('metadata', metaData);
+
+    this._bitmapInfo = Object.create(metaData);
+
+    this._filter = new filterParseAsync(this._bitmapInfo);
+  };
+
+  ParserAsync.prototype._handleTransColor = function(transColor) {
+    this._bitmapInfo.transColor = transColor;
+  };
+
+  ParserAsync.prototype._handlePalette = function(palette) {
+    this._bitmapInfo.palette = palette;
+  };
+
+
+  ParserAsync.prototype._finished = function() {
+    if (this.errord) {
+      return;
+    }
+
+    if (!this._inflate) {
+      this.emit('error', 'No Inflate block');
+    }
+    else {
+      // no more data to inflate
+      this._inflate.end();
+    }
+    this.destroySoon();
+  };
+
+  ParserAsync.prototype._complete = function(filteredData) {
+
+    if (this.errord) {
+      return;
+    }
+
+    try {
+      var bitmapData = bitmapper.dataToBitMap(filteredData, this._bitmapInfo);
+
+      var normalisedBitmapData = formatNormaliser(bitmapData, this._bitmapInfo);
+      bitmapData = null;
+    }
+    catch (ex) {
+      this._handleError(ex);
+      return;
+    }
+
+    this.emit('parsed', normalisedBitmapData);
+  };
+  });
+
+  var bitpacker = function(dataIn, width, height, options) {
+    var outHasAlpha = [constants.COLORTYPE_COLOR_ALPHA, constants.COLORTYPE_ALPHA].indexOf(options.colorType) !== -1;
+    if (options.colorType === options.inputColorType) {
+      var bigEndian = (function() {
+        var buffer$$1 = new ArrayBuffer(2);
+        new DataView(buffer$$1).setInt16(0, 256, true /* littleEndian */);
+        // Int16Array uses the platform's endianness.
+        return new Int16Array(buffer$$1)[0] !== 256;
+      })();
+      // If no need to convert to grayscale and alpha is present/absent in both, take a fast route
+       if (options.bitDepth === 8 || (options.bitDepth === 16 && bigEndian)){
+           return dataIn;
+      }
+    }
+
+    // map to a UInt16 array if data is 16bit, fix endianness below
+    var data = options.bitDepth !== 16 ? dataIn : new Uint16Array(dataIn.buffer);
+
+    var maxValue = 255;
+    var inBpp = constants.COLORTYPE_TO_BPP_MAP[options.inputColorType];
+    if (inBpp == 4 && !options.inputHasAlpha) inBpp = 3;
+    var outBpp = constants.COLORTYPE_TO_BPP_MAP[options.colorType];
+    if (options.bitDepth === 16) {
+      maxValue = 65535;
+      outBpp *= 2;
+    }
+    var outData = new Buffer(width * height * outBpp);
+
+    var inIndex = 0;
+    var outIndex = 0;
+
+    var bgColor = options.bgColor || {};
+    if (bgColor.red === undefined) {
+      bgColor.red = maxValue;
+    }
+    if (bgColor.green === undefined) {
+      bgColor.green = maxValue;
+    }
+    if (bgColor.blue === undefined) {
+      bgColor.blue = maxValue;
+    }
+
+    function getRGBA(data, inIndex) {
+      var red, green, blue, alpha = maxValue;
+      switch (options.inputColorType) {
+        case constants.COLORTYPE_COLOR_ALPHA:
+          alpha = data[inIndex + 3];
+          red = data[inIndex];
+          green = data[inIndex+1];
+          blue = data[inIndex+2];
+          break;
+        case constants.COLORTYPE_COLOR:
+          red = data[inIndex];
+          green = data[inIndex+1];
+          blue = data[inIndex+2];
+          break;
+        case constants.COLORTYPE_ALPHA:
+          alpha = data[inIndex + 1];
+          red = data[inIndex];
+          green = red;
+          blue = red;
+          break;
+        case constants.COLORTYPE_GRAYSCALE:
+          red = data[inIndex];
+          green = red;
+          blue = red;
+          break;
+        default:
+          throw new Error('input color type:' + options.inputColorType + ' is not supported at present');
+      }
+
+      if (options.inputHasAlpha) {
+        if (!outHasAlpha) {
+          alpha /= maxValue;
+          red = Math.min(Math.max(Math.round((1 - alpha) * bgColor.red + alpha * red), 0), maxValue);
+          green = Math.min(Math.max(Math.round((1 - alpha) * bgColor.green + alpha * green), 0), maxValue);
+          blue = Math.min(Math.max(Math.round((1 - alpha) * bgColor.blue + alpha * blue), 0), maxValue);
+        }
+      }
+      return {red: red, green: green, blue: blue, alpha: alpha};
+    }
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var rgba = getRGBA(data, inIndex);
+
+        switch (options.colorType) {
+          case constants.COLORTYPE_COLOR_ALPHA:
+          case constants.COLORTYPE_COLOR:
+            if (options.bitDepth === 8) {
+              outData[outIndex] = rgba.red;
+              outData[outIndex + 1] = rgba.green;
+              outData[outIndex + 2] = rgba.blue;
+              if (outHasAlpha) {
+                outData[outIndex + 3] = rgba.alpha;
+              }
+            } else {
+              outData.writeUInt16BE(rgba.red, outIndex);
+              outData.writeUInt16BE(rgba.green, outIndex + 2);
+              outData.writeUInt16BE(rgba.blue, outIndex + 4);
+              if (outHasAlpha) {
+                outData.writeUInt16BE(rgba.alpha, outIndex + 6);
+              }
+            }
+            break;
+          case constants.COLORTYPE_ALPHA:
+          case constants.COLORTYPE_GRAYSCALE:
+            // Convert to grayscale and alpha
+            var grayscale = (rgba.red + rgba.green + rgba.blue) / 3;
+            if (options.bitDepth === 8) {
+              outData[outIndex] = grayscale;
+              if (outHasAlpha) {
+                outData[outIndex + 1] = rgba.alpha;
+              }
+            } else {
+              outData.writeUInt16BE(grayscale, outIndex);
+              if (outHasAlpha) {
+                outData.writeUInt16BE(rgba.alpha, outIndex + 2);
+              }
+            }
+            break;
+        }
+
+        inIndex += inBpp;
+        outIndex += outBpp;
+      }
+    }
+
+    return outData;
+  };
+
+  function filterNone(pxData, pxPos, byteWidth, rawData, rawPos) {
+
+    for (var x = 0; x < byteWidth; x++) {    
+      rawData[rawPos + x] = pxData[pxPos + x];
+    }
+  }
+
+  function filterSumNone(pxData, pxPos, byteWidth) {
+
+    var sum = 0;
+    var length = pxPos + byteWidth;
+
+    for (var i = pxPos; i < length; i++) {
+      sum += Math.abs(pxData[i]);
+    }
+    return sum;
+  }
+
+  function filterSub(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
+
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var val = pxData[pxPos + x] - left;
+
+      rawData[rawPos + x] = val;
+    }
+  }
+
+  function filterSumSub(pxData, pxPos, byteWidth, bpp) {
+
+    var sum = 0;
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var val = pxData[pxPos + x] - left;
+
+      sum += Math.abs(val);
+    }
+
+    return sum;
+  }
+
+  function filterUp(pxData, pxPos, byteWidth, rawData, rawPos) {
+
+    for (var x = 0; x < byteWidth; x++) {
+
+      var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+      var val = pxData[pxPos + x] - up;
+
+      rawData[rawPos + x] = val;
+    }
+  }
+
+  function filterSumUp(pxData, pxPos, byteWidth) {
+
+    var sum = 0;
+    var length = pxPos + byteWidth;
+    for (var x = pxPos; x < length; x++) {
+
+      var up = pxPos > 0 ? pxData[x - byteWidth] : 0;
+      var val = pxData[x] - up;
+
+      sum += Math.abs(val);
+    }
+
+    return sum;
+  }
+
+  function filterAvg(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
+
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+      var val = pxData[pxPos + x] - ((left + up) >> 1);
+
+      rawData[rawPos + x] = val;
+    }
+  }
+
+  function filterSumAvg(pxData, pxPos, byteWidth, bpp) {
+
+    var sum = 0;
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+      var val = pxData[pxPos + x] - ((left + up) >> 1);
+
+      sum += Math.abs(val);
+    }
+
+    return sum;
+  }
+
+  function filterPaeth(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
+
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+      var upleft = pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
+      var val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
+
+      rawData[rawPos + x] = val;
+    }
+  }
+
+  function filterSumPaeth(pxData, pxPos, byteWidth, bpp) {
+    var sum = 0;
+    for (var x = 0; x < byteWidth; x++) {
+
+      var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+      var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+      var upleft = pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
+      var val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
+
+      sum += Math.abs(val);
+    }
+
+    return sum;
+  }
+
+  var filters = {
+    0: filterNone,
+    1: filterSub,
+    2: filterUp,
+    3: filterAvg,
+    4: filterPaeth
+  };
+
+  var filterSums = {
+    0: filterSumNone,
+    1: filterSumSub,
+    2: filterSumUp,
+    3: filterSumAvg,
+    4: filterSumPaeth
+  };
+
+  var filterPack = function(pxData, width, height, options, bpp) {
+
+    var filterTypes;
+    if (!('filterType' in options) || options.filterType === -1) {
+      filterTypes = [0, 1, 2, 3, 4];
+    }
+    else if (typeof options.filterType === 'number') {
+      filterTypes = [options.filterType];
+    }
+    else {
+      throw new Error('unrecognised filter types');
+    }
+
+    if (options.bitDepth === 16) bpp *= 2;
+    var byteWidth = width * bpp;
+    var rawPos = 0;
+    var pxPos = 0;
+    var rawData = new Buffer((byteWidth + 1) * height);
+
+    var sel = filterTypes[0];
+
+    for (var y = 0; y < height; y++) {
+
+      if (filterTypes.length > 1) {
+        // find best filter for this line (with lowest sum of values)
+        var min = Infinity;
+
+        for (var i = 0; i < filterTypes.length; i++) {
+          var sum = filterSums[filterTypes[i]](pxData, pxPos, byteWidth, bpp);
+          if (sum < min) {
+            sel = filterTypes[i];
+            min = sum;
+          }
+        }
+      }
+
+      rawData[rawPos] = sel;
+      rawPos++;
+      filters[sel](pxData, pxPos, byteWidth, rawData, rawPos, bpp);
+      rawPos += byteWidth;
+      pxPos += byteWidth;
+    }
+    return rawData;
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/bitpacker.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/filter-pack.js
+
+  var packer = createCommonjsModule(function (module) {
+
+
+
+
+
+
+
+  var Packer = module.exports = function(options) {
+    this._options = options;
+
+    options.deflateChunkSize = options.deflateChunkSize || 32 * 1024;
+    options.deflateLevel = options.deflateLevel != null ? options.deflateLevel : 9;
+    options.deflateStrategy = options.deflateStrategy != null ? options.deflateStrategy : 3;
+    options.inputHasAlpha = options.inputHasAlpha != null ? options.inputHasAlpha : true;
+    options.deflateFactory = options.deflateFactory || zlib.createDeflate;
+    options.bitDepth = options.bitDepth || 8;
+    // This is outputColorType
+    options.colorType = (typeof options.colorType === 'number') ? options.colorType : constants.COLORTYPE_COLOR_ALPHA;
+    options.inputColorType = (typeof options.inputColorType === 'number') ? options.inputColorType : constants.COLORTYPE_COLOR_ALPHA;
+
+    if ([
+      constants.COLORTYPE_GRAYSCALE,
+      constants.COLORTYPE_COLOR,
+      constants.COLORTYPE_COLOR_ALPHA,
+      constants.COLORTYPE_ALPHA
+    ].indexOf(options.colorType) === -1) {
+      throw new Error('option color type:' + options.colorType + ' is not supported at present');
+    }
+    if ([
+      constants.COLORTYPE_GRAYSCALE,
+      constants.COLORTYPE_COLOR,
+      constants.COLORTYPE_COLOR_ALPHA,
+      constants.COLORTYPE_ALPHA
+    ].indexOf(options.inputColorType) === -1) {
+      throw new Error('option input color type:' + options.inputColorType + ' is not supported at present');
+    }
+    if (options.bitDepth !== 8 && options.bitDepth !== 16) {
+      throw new Error('option bit depth:' + options.bitDepth + ' is not supported at present');
+    }
+  };
+
+  Packer.prototype.getDeflateOptions = function() {
+    return {
+      chunkSize: this._options.deflateChunkSize,
+      level: this._options.deflateLevel,
+      strategy: this._options.deflateStrategy
+    };
+  };
+
+  Packer.prototype.createDeflate = function() {
+    return this._options.deflateFactory(this.getDeflateOptions());
+  };
+
+  Packer.prototype.filterData = function(data, width, height) {
+    // convert to correct format for filtering (e.g. right bpp and bit depth)
+    var packedData = bitpacker(data, width, height, this._options);
+
+    // filter pixel data
+    var bpp = constants.COLORTYPE_TO_BPP_MAP[this._options.colorType];
+    var filteredData = filterPack(packedData, width, height, this._options, bpp);
+    return filteredData;
+  };
+
+  Packer.prototype._packChunk = function(type, data) {
+
+    var len = (data ? data.length : 0);
+    var buf = new Buffer(len + 12);
+
+    buf.writeUInt32BE(len, 0);
+    buf.writeUInt32BE(type, 4);
+
+    if (data) {
+      data.copy(buf, 8);
+    }
+
+    buf.writeInt32BE(crc.crc32(buf.slice(4, buf.length - 4)), buf.length - 4);
+    return buf;
+  };
+
+  Packer.prototype.packGAMA = function(gamma) {
+    var buf = new Buffer(4);
+    buf.writeUInt32BE(Math.floor(gamma * constants.GAMMA_DIVISION), 0);
+    return this._packChunk(constants.TYPE_gAMA, buf);
+  };
+
+  Packer.prototype.packIHDR = function(width, height) {
+
+    var buf = new Buffer(13);
+    buf.writeUInt32BE(width, 0);
+    buf.writeUInt32BE(height, 4);
+    buf[8] = this._options.bitDepth; // Bit depth
+    buf[9] = this._options.colorType; // colorType
+    buf[10] = 0; // compression
+    buf[11] = 0; // filter
+    buf[12] = 0; // interlace
+
+    return this._packChunk(constants.TYPE_IHDR, buf);
+  };
+
+  Packer.prototype.packIDAT = function(data) {
+    return this._packChunk(constants.TYPE_IDAT, data);
+  };
+
+  Packer.prototype.packIEND = function() {
+    return this._packChunk(constants.TYPE_IEND, null);
+  };
+  });
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/packer.js
+
+  var packerAsync = createCommonjsModule(function (module) {
+
+
+
+
+
+
+  var PackerAsync = module.exports = function(opt) {
+    stream.call(this);
+
+    var options = opt || {};
+
+    this._packer = new packer(options);
+    this._deflate = this._packer.createDeflate();
+
+    this.readable = true;
+  };
+  util.inherits(PackerAsync, stream);
+
+
+  PackerAsync.prototype.pack = function(data, width, height, gamma) {
+    // Signature
+    this.emit('data', new Buffer(constants.PNG_SIGNATURE));
+    this.emit('data', this._packer.packIHDR(width, height));
+
+    if (gamma) {
+      this.emit('data', this._packer.packGAMA(gamma));
+    }
+
+    var filteredData = this._packer.filterData(data, width, height);
+
+    // compress it
+    this._deflate.on('error', this.emit.bind(this, 'error'));
+
+    this._deflate.on('data', function(compressedData) {
+      this.emit('data', this._packer.packIDAT(compressedData));
+    }.bind(this));
+
+    this._deflate.on('end', function() {
+      this.emit('data', this._packer.packIEND());
+      this.emit('end');
+    }.bind(this));
+
+    this._deflate.end(filteredData);
+  };
+  });
+
+  //  commonjs-external:assert
+
+  var syncInflate = createCommonjsModule(function (module, exports) {
+
+  var assert$$1 = assert.ok;
+
+
+
+  var kMaxLength = buffer.kMaxLength;
+
+  function Inflate(opts) {
+    if (!(this instanceof Inflate)) {
+      return new Inflate(opts);
+    }
+
+    if (opts && opts.chunkSize < zlib.Z_MIN_CHUNK) {
+      opts.chunkSize = zlib.Z_MIN_CHUNK;
+    }
+
+    zlib.Inflate.call(this, opts);
+
+    // Node 8 --> 9 compatibility check
+    this._offset = this._offset === undefined ? this._outOffset : this._offset;
+    this._buffer = this._buffer || this._outBuffer;
+
+    if (opts && opts.maxLength != null) {
+      this._maxLength = opts.maxLength;
+    }
+  }
+
+  function createInflate(opts) {
+    return new Inflate(opts);
+  }
+
+  function _close(engine, callback) {
+    if (callback) {
+      process.nextTick(callback);
+    }
+
+    // Caller may invoke .close after a zlib error (which will null _handle).
+    if (!engine._handle) {
+      return;
+    }
+
+    engine._handle.close();
+    engine._handle = null;
+  }
+
+  Inflate.prototype._processChunk = function(chunk, flushFlag, asyncCb) {
+    if (typeof asyncCb === 'function') {
+      return zlib.Inflate._processChunk.call(this, chunk, flushFlag, asyncCb);
+    }
+
+    var self = this;
+
+    var availInBefore = chunk && chunk.length;
+    var availOutBefore = this._chunkSize - this._offset;
+    var leftToInflate = this._maxLength;
+    var inOff = 0;
+
+    var buffers = [];
+    var nread = 0;
+
+    var error;
+    this.on('error', function(err) {
+      error = err;
+    });
+
+    function handleChunk(availInAfter, availOutAfter) {
+      if (self._hadError) {
+        return;
+      }
+
+      var have = availOutBefore - availOutAfter;
+      assert$$1(have >= 0, 'have should not go down');
+
+      if (have > 0) {
+        var out = self._buffer.slice(self._offset, self._offset + have);
+        self._offset += have;
+
+        if (out.length > leftToInflate) {
+          out = out.slice(0, leftToInflate);
+        }
+
+        buffers.push(out);
+        nread += out.length;
+        leftToInflate -= out.length;
+
+        if (leftToInflate === 0) {
+          return false;
+        }
+      }
+
+      if (availOutAfter === 0 || self._offset >= self._chunkSize) {
+        availOutBefore = self._chunkSize;
+        self._offset = 0;
+        self._buffer = Buffer.allocUnsafe(self._chunkSize);
+      }
+
+      if (availOutAfter === 0) {
+        inOff += (availInBefore - availInAfter);
+        availInBefore = availInAfter;
+
+        return true;
+      }
+
+      return false;
+    }
+
+    assert$$1(this._handle, 'zlib binding closed');
+    do {
+      var res = this._handle.writeSync(flushFlag,
+                                       chunk, // in
+                                       inOff, // in_off
+                                       availInBefore, // in_len
+                                       this._buffer, // out
+                                       this._offset, //out_off
+                                       availOutBefore); // out_len
+      // Node 8 --> 9 compatibility check
+      res = res || this._writeState;
+    } while (!this._hadError && handleChunk(res[0], res[1]));
+
+    if (this._hadError) {
+      throw error;
+    }
+
+    if (nread >= kMaxLength) {
+      _close(this);
+      throw new RangeError('Cannot create final Buffer. It would be larger than 0x' + kMaxLength.toString(16) + ' bytes');
+    }
+
+    var buf = Buffer.concat(buffers, nread);
+    _close(this);
+
+    return buf;
+  };
+
+  util.inherits(Inflate, zlib.Inflate);
+
+  function zlibBufferSync(engine, buffer$$1) {
+    if (typeof buffer$$1 === 'string') {
+      buffer$$1 = Buffer.from(buffer$$1);
+    }
+    if (!(buffer$$1 instanceof Buffer)) {
+      throw new TypeError('Not a string or buffer');
+    }
+
+    var flushFlag = engine._finishFlushFlag;
+    if (flushFlag == null) {
+      flushFlag = zlib.Z_FINISH;
+    }
+
+    return engine._processChunk(buffer$$1, flushFlag);
+  }
+
+  function inflateSync(buffer$$1, opts) {
+    return zlibBufferSync(new Inflate(opts), buffer$$1);
+  }
+
+  module.exports = exports = inflateSync;
+  exports.Inflate = Inflate;
+  exports.createInflate = createInflate;
+  exports.inflateSync = inflateSync;
+  });
+  var syncInflate_1 = syncInflate.Inflate;
+  var syncInflate_2 = syncInflate.createInflate;
+  var syncInflate_3 = syncInflate.inflateSync;
+
+  var syncReader = createCommonjsModule(function (module) {
+
+  var SyncReader = module.exports = function(buffer$$1) {
+
+    this._buffer = buffer$$1;
+    this._reads = [];
+  };
+
+  SyncReader.prototype.read = function(length, callback) {
+
+    this._reads.push({
+      length: Math.abs(length),  // if length < 0 then at most this length
+      allowLess: length < 0,
+      func: callback
+    });
+  };
+
+  SyncReader.prototype.process = function() {
+
+    // as long as there is any data and read requests
+    while (this._reads.length > 0 && this._buffer.length) {
+
+      var read = this._reads[0];
+
+      if (this._buffer.length && (this._buffer.length >= read.length || read.allowLess)) {
+
+        // ok there is any data so that we can satisfy this request
+        this._reads.shift(); // == read
+
+        var buf = this._buffer;
+
+        this._buffer = buf.slice(read.length);
+
+        read.func.call(this, buf.slice(0, read.length));
+
+      }
+      else {
+        break;
+      }
+
+    }
+
+    if (this._reads.length > 0) {
+      return new Error('There are some read requests waitng on finished stream');
+    }
+
+    if (this._buffer.length > 0) {
+      return new Error('unrecognised content at end of stream');
+    }
+
+  };
+  });
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/sync-reader.js
+
+  var process$1 = function(inBuffer, bitmapInfo) {
+
+    var outBuffers = [];
+    var reader = new syncReader(inBuffer);
+    var filter = new filterParse(bitmapInfo, {
+      read: reader.read.bind(reader),
+      write: function(bufferPart) {
+        outBuffers.push(bufferPart);
+      },
+      complete: function() {
+      }
+    });
+
+    filter.start();
+    reader.process();
+
+    return Buffer.concat(outBuffers);
+  };
+
+  var filterParseSync = {
+  	process: process$1
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/sync-inflate.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/filter-parse-sync.js
+
+  var hasSyncZlib = true;
+
+
+  if (!zlib.deflateSync) {
+    hasSyncZlib = false;
+  }
+
+
+
+
+
+
+
+  var parserSync = function(buffer$$1, options) {
+
+    if (!hasSyncZlib) {
+      throw new Error('To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0');
+    }
+
+    var err;
+    function handleError(_err_) {
+      err = _err_;
+    }
+
+    var metaData;
+    function handleMetaData(_metaData_) {
+      metaData = _metaData_;
+    }
+
+    function handleTransColor(transColor) {
+      metaData.transColor = transColor;
+    }
+
+    function handlePalette(palette) {
+      metaData.palette = palette;
+    }
+
+    var gamma;
+    function handleGamma(_gamma_) {
+      gamma = _gamma_;
+    }
+
+    var inflateDataList = [];
+    function handleInflateData(inflatedData) {
+      inflateDataList.push(inflatedData);
+    }
+
+    var reader = new syncReader(buffer$$1);
+
+    var parser$$1 = new parser(options, {
+      read: reader.read.bind(reader),
+      error: handleError,
+      metadata: handleMetaData,
+      gamma: handleGamma,
+      palette: handlePalette,
+      transColor: handleTransColor,
+      inflateData: handleInflateData
+    });
+
+    parser$$1.start();
+    reader.process();
+
+    if (err) {
+      throw err;
+    }
+
+    //join together the inflate datas
+    var inflateData = Buffer.concat(inflateDataList);
+    inflateDataList.length = 0;
+
+    var inflatedData;
+    if (metaData.interlace) {
+      inflatedData = zlib.inflateSync(inflateData);
+    } else {
+      var rowSize = ((metaData.width * metaData.bpp * metaData.depth + 7) >> 3) + 1;
+      var imageSize = rowSize * metaData.height;
+      inflatedData = syncInflate(inflateData, { chunkSize: imageSize, maxLength: imageSize });
+    }
+    inflateData = null;
+
+    if (!inflatedData || !inflatedData.length) {
+      throw new Error('bad png - invalid inflate data response');
+    }
+
+    var unfilteredData = filterParseSync.process(inflatedData, metaData);
+    inflateData = null;
+
+    var bitmapData = bitmapper.dataToBitMap(unfilteredData, metaData);
+    unfilteredData = null;
+
+    var normalisedBitmapData = formatNormaliser(bitmapData, metaData);
+
+    metaData.data = normalisedBitmapData;
+    metaData.gamma = gamma || 0;
+
+    return metaData;
+  };
+
+  var hasSyncZlib$1 = true;
+
+  if (!zlib.deflateSync) {
+    hasSyncZlib$1 = false;
+  }
+
+
+
+  var packerSync = function(metaData, opt) {
+
+    if (!hasSyncZlib$1) {
+      throw new Error('To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0');
+    }
+
+    var options = opt || {};
+
+    var packer$$1 = new packer(options);
+
+    var chunks = [];
+
+    // Signature
+    chunks.push(new Buffer(constants.PNG_SIGNATURE));
+
+    // Header
+    chunks.push(packer$$1.packIHDR(metaData.width, metaData.height));
+
+    if (metaData.gamma) {
+      chunks.push(packer$$1.packGAMA(metaData.gamma));
+    }
+
+    var filteredData = packer$$1.filterData(metaData.data, metaData.width, metaData.height);
+
+    // compress it
+    var compressedData = zlib.deflateSync(filteredData, packer$$1.getDeflateOptions());
+    filteredData = null;
+
+    if (!compressedData || !compressedData.length) {
+      throw new Error('bad png - invalid compressed data response');
+    }
+    chunks.push(packer$$1.packIDAT(compressedData));
+
+    // End
+    chunks.push(packer$$1.packIEND());
+
+    return Buffer.concat(chunks);
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/parser-sync.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/packer-sync.js
+
+  var read = function(buffer$$1, options) {
+
+    return parserSync(buffer$$1, options || {});
+  };
+
+  var write = function(png, options) {
+
+    return packerSync(png, options);
+  };
+
+  var pngSync = {
+  	read: read,
+  	write: write
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/parser-async.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/packer-async.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/png-sync.js
+
+  var png = createCommonjsModule(function (module, exports) {
+
+
+
+
+
+
+
+
+  var PNG = exports.PNG = function(options) {
+    stream.call(this);
+
+    options = options || {}; // eslint-disable-line no-param-reassign
+
+    // coerce pixel dimensions to integers (also coerces undefined -> 0):
+    this.width = options.width | 0;
+    this.height = options.height | 0;
+
+    this.data = this.width > 0 && this.height > 0 ?
+      new Buffer(4 * this.width * this.height) : null;
+
+    if (options.fill && this.data) {
+      this.data.fill(0);
+    }
+
+    this.gamma = 0;
+    this.readable = this.writable = true;
+
+    this._parser = new parserAsync(options);
+
+    this._parser.on('error', this.emit.bind(this, 'error'));
+    this._parser.on('close', this._handleClose.bind(this));
+    this._parser.on('metadata', this._metadata.bind(this));
+    this._parser.on('gamma', this._gamma.bind(this));
+    this._parser.on('parsed', function(data) {
+      this.data = data;
+      this.emit('parsed', data);
+    }.bind(this));
+
+    this._packer = new packerAsync(options);
+    this._packer.on('data', this.emit.bind(this, 'data'));
+    this._packer.on('end', this.emit.bind(this, 'end'));
+    this._parser.on('close', this._handleClose.bind(this));
+    this._packer.on('error', this.emit.bind(this, 'error'));
+
+  };
+  util.inherits(PNG, stream);
+
+  PNG.sync = pngSync;
+
+  PNG.prototype.pack = function() {
+
+    if (!this.data || !this.data.length) {
+      this.emit('error', 'No data provided');
+      return this;
+    }
+
+    process.nextTick(function() {
+      this._packer.pack(this.data, this.width, this.height, this.gamma);
+    }.bind(this));
+
+    return this;
+  };
+
+
+  PNG.prototype.parse = function(data, callback) {
+
+    if (callback) {
+      var onParsed, onError;
+
+      onParsed = function(parsedData) {
+        this.removeListener('error', onError);
+
+        this.data = parsedData;
+        callback(null, this);
+      }.bind(this);
+
+      onError = function(err) {
+        this.removeListener('parsed', onParsed);
+
+        callback(err, null);
+      }.bind(this);
+
+      this.once('parsed', onParsed);
+      this.once('error', onError);
+    }
+
+    this.end(data);
+    return this;
+  };
+
+  PNG.prototype.write = function(data) {
+    this._parser.write(data);
+    return true;
+  };
+
+  PNG.prototype.end = function(data) {
+    this._parser.end(data);
+  };
+
+  PNG.prototype._metadata = function(metadata) {
+    this.width = metadata.width;
+    this.height = metadata.height;
+
+    this.emit('metadata', metadata);
+  };
+
+  PNG.prototype._gamma = function(gamma) {
+    this.gamma = gamma;
+  };
+
+  PNG.prototype._handleClose = function() {
+    if (!this._parser.writable && !this._packer.readable) {
+      this.emit('close');
+    }
+  };
+
+
+  PNG.bitblt = function(src, dst, srcX, srcY, width, height, deltaX, deltaY) { // eslint-disable-line max-params
+    // coerce pixel dimensions to integers (also coerces undefined -> 0):
+    /* eslint-disable no-param-reassign */
+    srcX |= 0;
+    srcY |= 0;
+    width |= 0;
+    height |= 0;
+    deltaX |= 0;
+    deltaY |= 0;
+    /* eslint-enable no-param-reassign */
+
+    if (srcX > src.width || srcY > src.height || srcX + width > src.width || srcY + height > src.height) {
+      throw new Error('bitblt reading outside image');
+    }
+
+    if (deltaX > dst.width || deltaY > dst.height || deltaX + width > dst.width || deltaY + height > dst.height) {
+      throw new Error('bitblt writing outside image');
+    }
+
+    for (var y = 0; y < height; y++) {
+      src.data.copy(dst.data,
+        ((deltaY + y) * dst.width + deltaX) << 2,
+        ((srcY + y) * src.width + srcX) << 2,
+        ((srcY + y) * src.width + srcX + width) << 2
+      );
+    }
+  };
+
+
+  PNG.prototype.bitblt = function(dst, srcX, srcY, width, height, deltaX, deltaY) { // eslint-disable-line max-params
+
+    PNG.bitblt(this, dst, srcX, srcY, width, height, deltaX, deltaY);
+    return this;
+  };
+
+  PNG.adjustGamma = function(src) {
+    if (src.gamma) {
+      for (var y = 0; y < src.height; y++) {
+        for (var x = 0; x < src.width; x++) {
+          var idx = (src.width * y + x) << 2;
+
+          for (var i = 0; i < 3; i++) {
+            var sample = src.data[idx + i] / 255;
+            sample = Math.pow(sample, 1 / 2.2 / src.gamma);
+            src.data[idx + i] = Math.round(sample * 255);
+          }
+        }
+      }
+      src.gamma = 0;
+    }
+  };
+
+  PNG.prototype.adjustGamma = function() {
+    PNG.adjustGamma(this);
+  };
+  });
+  var png_1 = png.PNG;
+
+  var utils$1 = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/renderer/utils.js
+  function hex2rgba (hex) {
+    if (typeof hex !== 'string') {
+      throw new Error('Color should be defined as hex string')
+    }
+
+    var hexCode = hex.slice().replace('#', '').split('');
+    if (hexCode.length < 3 || hexCode.length === 5 || hexCode.length > 8) {
+      throw new Error('Invalid hex color: ' + hex)
+    }
+
+    // Convert from short to long form (fff -> ffffff)
+    if (hexCode.length === 3 || hexCode.length === 4) {
+      hexCode = Array.prototype.concat.apply([], hexCode.map(function (c) {
+        return [c, c]
+      }));
+    }
+
+    // Add default alpha value
+    if (hexCode.length === 6) hexCode.push('F', 'F');
+
+    var hexValue = parseInt(hexCode.join(''), 16);
+
+    return {
+      r: (hexValue >> 24) & 255,
+      g: (hexValue >> 16) & 255,
+      b: (hexValue >> 8) & 255,
+      a: hexValue & 255,
+      hex: '#' + hexCode.slice(0, 6).join('')
+    }
+  }
+
+  exports.getOptions = function getOptions (options) {
+    if (!options) options = {};
+    if (!options.color) options.color = {};
+
+    var margin = typeof options.margin === 'undefined' ||
+      options.margin === null ||
+      options.margin < 0 ? 4 : options.margin;
+
+    var width = options.width && options.width >= 21 ? options.width : undefined;
+    var scale = options.scale || 4;
+
+    return {
+      width: width,
+      scale: width ? 4 : scale,
+      margin: margin,
+      color: {
+        dark: hex2rgba(options.color.dark || '#000000ff'),
+        light: hex2rgba(options.color.light || '#ffffffff')
+      },
+      type: options.type,
+      rendererOpts: options.rendererOpts || {}
+    }
+  };
+
+  exports.getScale = function getScale (qrSize, opts) {
+    return opts.width && opts.width >= qrSize + opts.margin * 2
+      ? opts.width / (qrSize + opts.margin * 2)
+      : opts.scale
+  };
+
+  exports.getImageWidth = function getImageWidth (qrSize, opts) {
+    var scale = exports.getScale(qrSize, opts);
+    return Math.floor((qrSize + opts.margin * 2) * scale)
+  };
+
+  exports.qrToImageData = function qrToImageData (imgData, qr, opts) {
+    var size = qr.modules.size;
+    var data = qr.modules.data;
+    var scale = exports.getScale(size, opts);
+    var symbolSize = Math.floor((size + opts.margin * 2) * scale);
+    var scaledMargin = opts.margin * scale;
+    var palette = [opts.color.light, opts.color.dark];
+
+    for (var i = 0; i < symbolSize; i++) {
+      for (var j = 0; j < symbolSize; j++) {
+        var posDst = (i * symbolSize + j) * 4;
+        var pxColor = opts.color.light;
+
+        if (i >= scaledMargin && j >= scaledMargin &&
+          i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
+          var iSrc = Math.floor((i - scaledMargin) / scale);
+          var jSrc = Math.floor((j - scaledMargin) / scale);
+          pxColor = palette[data[iSrc * size + jSrc] ? 1 : 0];
+        }
+
+        imgData[posDst++] = pxColor.r;
+        imgData[posDst++] = pxColor.g;
+        imgData[posDst++] = pxColor.b;
+        imgData[posDst] = pxColor.a;
+      }
+    }
+  };
+  });
+  var utils_1 = utils$1.getOptions;
+  var utils_2 = utils$1.getScale;
+  var utils_3 = utils$1.getImageWidth;
+  var utils_4 = utils$1.qrToImageData;
+
+  //  commonjs-external:fs
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/pngjs/lib/png.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/utils.js
+
+  var png$1 = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/renderer/png.js
+
+  var PNG = png.PNG;
+
+
+  exports.render = function render (qrData, options) {
+    var opts = utils$1.getOptions(options);
+    var pngOpts = opts.rendererOpts;
+    var size = utils$1.getImageWidth(qrData.modules.size, opts);
+
+    pngOpts.width = size;
+    pngOpts.height = size;
+
+    var pngImage = new PNG(pngOpts);
+    utils$1.qrToImageData(pngImage.data, qrData, opts);
+
+    return pngImage
+  };
+
+  exports.renderToDataURL = function renderToDataURL (qrData, options, cb) {
+    if (typeof cb === 'undefined') {
+      cb = options;
+      options = undefined;
+    }
+
+    var png$$1 = exports.render(qrData, options);
+    var buffer$$1 = [];
+
+    png$$1.on('error', cb);
+
+    png$$1.on('data', function (data) {
+      buffer$$1.push(data);
+    });
+
+    png$$1.on('end', function () {
+      var url = 'data:image/png;base64,';
+      url += Buffer.concat(buffer$$1).toString('base64');
+      cb(null, url);
+    });
+
+    png$$1.pack();
+  };
+
+  exports.renderToFile = function renderToFile (path, qrData, options, cb) {
+    if (typeof cb === 'undefined') {
+      cb = options;
+      options = undefined;
+    }
+
+    var stream$$1 = fs.createWriteStream(path);
+    stream$$1.on('error', cb);
+    stream$$1.on('close', cb);
+
+    exports.renderToFileStream(stream$$1, qrData, options);
+  };
+
+  exports.renderToFileStream = function renderToFileStream (stream$$1, qrData, options) {
+    var png$$1 = exports.render(qrData, options);
+    png$$1.pack().pipe(stream$$1);
+  };
+  });
+  var png_1$1 = png$1.render;
+  var png_2 = png$1.renderToDataURL;
+  var png_3 = png$1.renderToFile;
+  var png_4 = png$1.renderToFileStream;
+
+  var utf8 = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/renderer/utf8.js
+
+
+  var BLOCK_CHAR = {
+    WW: ' ',
+    WB: '▄',
+    BB: '█',
+    BW: '▀'
+  };
+
+  function getBlockChar (top, bottom) {
+    if (top && bottom) return BLOCK_CHAR.BB
+    if (top && !bottom) return BLOCK_CHAR.BW
+    if (!top && bottom) return BLOCK_CHAR.WB
+    return BLOCK_CHAR.WW
+  }
+
+  exports.render = function (qrData, options, cb) {
+    var size = qrData.modules.size;
+    var data = qrData.modules.data;
+
+    var opts = utils$1.getOptions(options);
+
+    var output = '';
+    var hMargin = Array(size + (opts.margin * 2) + 1).join(BLOCK_CHAR.WW);
+    hMargin = Array((opts.margin / 2) + 1).join(hMargin + '\n');
+
+    var vMargin = Array(opts.margin + 1).join(BLOCK_CHAR.WW);
+
+    output += hMargin;
+    for (var i = 0; i < size; i += 2) {
+      output += vMargin;
+      for (var j = 0; j < size; j++) {
+        var topModule = data[i * size + j];
+        var bottomModule = data[(i + 1) * size + j];
+
+        output += getBlockChar(topModule, bottomModule);
+      }
+
+      output += vMargin + '\n';
+    }
+
+    output += hMargin.slice(0, -1);
+
+    if (typeof cb === 'function') {
+      cb(null, output);
+    }
+
+    return output
+  };
+
+  exports.renderToFile = function renderToFile (path, qrData, options, cb) {
+    if (typeof cb === 'undefined') {
+      cb = options;
+      options = undefined;
+    }
+
+    var fs$$1 = fs;
+    var utf8 = exports.render(qrData, options);
+    fs$$1.writeFile(path, utf8, cb);
+  };
+  });
+  var utf8_1 = utf8.render;
+  var utf8_2 = utf8.renderToFile;
+
+  // node_modules/qrcode/lib/renderer/terminal.js
+  // var Utils = require('./utils')
+
+  var render = function (qrData, options, cb) {
+    var size = qrData.modules.size;
+    var data = qrData.modules.data;
+
+    // var opts = Utils.getOptions(options)
+
+    // use same scheme as https://github.com/gtanner/qrcode-terminal because it actually works! =)
+    var black = '\x1b[40m  \x1b[0m';
+    var white = '\x1b[47m  \x1b[0m';
+
+    var output = '';
+    var hMargin = Array(size + 3).join(white);
+    var vMargin = Array(2).join(white);
+
+    output += hMargin + '\n';
+    for (var i = 0; i < size; ++i) {
+      output += white;
+      for (var j = 0; j < size; j++) {
+        // var topModule = data[i * size + j]
+        // var bottomModule = data[(i + 1) * size + j]
+
+        output += data[i * size + j] ? black : white;// getBlockChar(topModule, bottomModule)
+      }
+      // output += white+'\n'
+      output += vMargin + '\n';
+    }
+
+    output += hMargin + '\n';
+
+    if (typeof cb === 'function') {
+      cb(null, output);
+    }
+
+    return output
+  };
+  /*
+  exports.renderToFile = function renderToFile (path, qrData, options, cb) {
+    if (typeof cb === 'undefined') {
+      cb = options
+      options = undefined
+    }
+
+    var fs = require('fs')
+    var utf8 = exports.render(qrData, options)
+    fs.writeFile(path, utf8, cb)
+  }
+  */
+
+  var terminal = {
+  	render: render
+  };
+
+  // node_modules/qrcode/lib/renderer/svg-tag.js
+
+
+  function getColorAttrib (color, attrib) {
+    var alpha = color.a / 255;
+    var str = attrib + '="' + color.hex + '"';
+
+    return alpha < 1
+      ? str + ' ' + attrib + '-opacity="' + alpha.toFixed(2).slice(1) + '"'
+      : str
+  }
+
+  function svgCmd (cmd, x, y) {
+    var str = cmd + x;
+    if (typeof y !== 'undefined') str += ' ' + y;
+
+    return str
+  }
+
+  function qrToPath (data, size, margin) {
+    var path = '';
+    var moveBy = 0;
+    var newRow = false;
+    var lineLength = 0;
+
+    for (var i = 0; i < data.length; i++) {
+      var col = Math.floor(i % size);
+      var row = Math.floor(i / size);
+
+      if (!col && !newRow) newRow = true;
+
+      if (data[i]) {
+        lineLength++;
+
+        if (!(i > 0 && col > 0 && data[i - 1])) {
+          path += newRow
+            ? svgCmd('M', col + margin, 0.5 + row + margin)
+            : svgCmd('m', moveBy, 0);
+
+          moveBy = 0;
+          newRow = false;
+        }
+
+        if (!(col + 1 < size && data[i + 1])) {
+          path += svgCmd('h', lineLength);
+          lineLength = 0;
+        }
+      } else {
+        moveBy++;
+      }
+    }
+
+    return path
+  }
+
+  var render$1 = function render (qrData, options, cb) {
+    var opts = utils$1.getOptions(options);
+    var size = qrData.modules.size;
+    var data = qrData.modules.data;
+    var qrcodesize = size + opts.margin * 2;
+
+    var bg = !opts.color.light.a
+      ? ''
+      : '<path ' + getColorAttrib(opts.color.light, 'fill') +
+        ' d="M0 0h' + qrcodesize + 'v' + qrcodesize + 'H0z"/>';
+
+    var path =
+      '<path ' + getColorAttrib(opts.color.dark, 'stroke') +
+      ' d="' + qrToPath(data, size, opts.margin) + '"/>';
+
+    var viewBox = 'viewBox="' + '0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
+
+    var width = !opts.width ? '' : 'width="' + opts.width + '" height="' + opts.width + '" ';
+
+    var svgTag = '<svg xmlns="http://www.w3.org/2000/svg" ' + width + viewBox + '>' + bg + path + '</svg>';
+
+    if (typeof cb === 'function') {
+      cb(null, svgTag);
+    }
+
+    return svgTag
+  };
+
+  var svgTag = {
+  	render: render$1
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/svg-tag.js
+
+  var svg = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/renderer/svg.js
+
+
+  exports.render = svgTag.render;
+
+  exports.renderToFile = function renderToFile (path, qrData, options, cb) {
+    if (typeof cb === 'undefined') {
+      cb = options;
+      options = undefined;
+    }
+
+    var fs$$1 = fs;
+    var svgTag$$1 = exports.render(qrData, options);
+
+    var xmlStr = '<?xml version="1.0" encoding="utf-8"?>' +
+      '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' +
+      svgTag$$1;
+
+    fs$$1.writeFile(path, xmlStr, cb);
+  };
+  });
+  var svg_1 = svg.render;
+  var svg_2 = svg.renderToFile;
+
+  var canvas = createCommonjsModule(function (module, exports) {
+  // node_modules/qrcode/lib/renderer/canvas.js
+
+
+  function clearCanvas (ctx, canvas, size) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!canvas.style) canvas.style = {};
+    canvas.height = size;
+    canvas.width = size;
+    canvas.style.height = size + 'px';
+    canvas.style.width = size + 'px';
+  }
+
+  function getCanvasElement () {
+    try {
+      return document.createElement('canvas')
+    } catch (e) {
+      throw new Error('You need to specify a canvas element')
+    }
+  }
+
+  exports.render = function render (qrData, canvas, options) {
+    var opts = options;
+    var canvasEl = canvas;
+
+    if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+      opts = canvas;
+      canvas = undefined;
+    }
+
+    if (!canvas) {
+      canvasEl = getCanvasElement();
+    }
+
+    opts = utils$1.getOptions(opts);
+    var size = utils$1.getImageWidth(qrData.modules.size, opts);
+
+    var ctx = canvasEl.getContext('2d');
+    var image = ctx.createImageData(size, size);
+    utils$1.qrToImageData(image.data, qrData, opts);
+
+    clearCanvas(ctx, canvasEl, size);
+    ctx.putImageData(image, 0, 0);
+
+    return canvasEl
+  };
+
+  exports.renderToDataURL = function renderToDataURL (qrData, canvas, options) {
+    var opts = options;
+
+    if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+      opts = canvas;
+      canvas = undefined;
+    }
+
+    if (!opts) opts = {};
+
+    var canvasEl = exports.render(qrData, canvas, opts);
+
+    var type = opts.type || 'image/png';
+    var rendererOpts = opts.rendererOpts || {};
+
+    return canvasEl.toDataURL(type, rendererOpts.quality)
+  };
+  });
+  var canvas_1 = canvas.render;
+  var canvas_2 = canvas.renderToDataURL;
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/can-promise/index.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/core/qrcode.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/canvas.js
+
+  // node_modules/qrcode/lib/browser.js
+
+
+
+
+
+  function renderCanvas (renderFunc, canvas$$1, text, opts, cb) {
+    var args = [].slice.call(arguments, 1);
+    var argsNum = args.length;
+    var isLastArgCb = typeof args[argsNum - 1] === 'function';
+
+    if (!isLastArgCb && !canPromise()) {
+      throw new Error('Callback required as last argument')
+    }
+
+    if (isLastArgCb) {
+      if (argsNum < 2) {
+        throw new Error('Too few arguments provided')
+      }
+
+      if (argsNum === 2) {
+        cb = text;
+        text = canvas$$1;
+        canvas$$1 = opts = undefined;
+      } else if (argsNum === 3) {
+        if (canvas$$1.getContext && typeof cb === 'undefined') {
+          cb = opts;
+          opts = undefined;
+        } else {
+          cb = opts;
+          opts = text;
+          text = canvas$$1;
+          canvas$$1 = undefined;
+        }
+      }
+    } else {
+      if (argsNum < 1) {
+        throw new Error('Too few arguments provided')
+      }
+
+      if (argsNum === 1) {
+        text = canvas$$1;
+        canvas$$1 = opts = undefined;
+      } else if (argsNum === 2 && !canvas$$1.getContext) {
+        opts = text;
+        text = canvas$$1;
+        canvas$$1 = undefined;
+      }
+
+      return new Promise(function (resolve, reject) {
+        try {
+          var data = qrcode.create(text, opts);
+          resolve(renderFunc(data, canvas$$1, opts));
+        } catch (e) {
+          reject(e);
+        }
+      })
+    }
+
+    try {
+      var data = qrcode.create(text, opts);
+      cb(null, renderFunc(data, canvas$$1, opts));
+    } catch (e) {
+      cb(e);
+    }
+  }
+
+  var create$2 = qrcode.create;
+  var toCanvas = renderCanvas.bind(null, canvas.render);
+  var toDataURL = renderCanvas.bind(null, canvas.renderToDataURL);
+
+  // only svg for now.
+  var toString_1 = renderCanvas.bind(null, function (data, _, opts) {
+    return svgTag.render(data, opts)
+  });
+
+  var browser$1 = {
+  	create: create$2,
+  	toCanvas: toCanvas,
+  	toDataURL: toDataURL,
+  	toString: toString_1
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/png.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/utf8.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/terminal.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/renderer/svg.js
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/browser.js
+
+  // node_modules/qrcode/lib/server.js
+
+
+
+
+
+
+
+  function checkParams (text, opts, cb) {
+    if (typeof text === 'undefined') {
+      throw new Error('String required as first argument')
+    }
+
+    if (typeof cb === 'undefined') {
+      cb = opts;
+      opts = {};
+    }
+
+    if (typeof cb !== 'function') {
+      if (!canPromise()) {
+        throw new Error('Callback required as last argument')
+      } else {
+        opts = cb || {};
+        cb = null;
+      }
+    }
+
+    return {
+      opts: opts,
+      cb: cb
+    }
+  }
+
+  function getTypeFromFilename (path) {
+    return path.slice((path.lastIndexOf('.') - 1 >>> 0) + 2).toLowerCase()
+  }
+
+  function getRendererFromType (type) {
+    switch (type) {
+      case 'svg':
+        return svg
+
+      case 'txt':
+      case 'utf8':
+        return utf8
+
+      case 'png':
+      case 'image/png':
+      default:
+        return png$1
+    }
+  }
+
+  function getStringRendererFromType (type) {
+    switch (type) {
+      case 'svg':
+        return svg
+
+      case 'terminal':
+        return terminal
+
+      case 'utf8':
+      default:
+        return utf8
+    }
+  }
+
+  function render$2 (renderFunc, text, params) {
+    if (!params.cb) {
+      return new Promise(function (resolve, reject) {
+        try {
+          var data = qrcode.create(text, params.opts);
+          return renderFunc(data, params.opts, function (err, data) {
+            return err ? reject(err) : resolve(data)
+          })
+        } catch (e) {
+          reject(e);
+        }
+      })
+    }
+
+    try {
+      var data = qrcode.create(text, params.opts);
+      return renderFunc(data, params.opts, params.cb)
+    } catch (e) {
+      params.cb(e);
+    }
+  }
+
+  var create$3 = qrcode.create;
+
+  var toCanvas$1 = browser$1.toCanvas;
+
+  var toString_1$1 = function toString (text, opts, cb) {
+    var params = checkParams(text, opts, cb);
+    var renderer = getStringRendererFromType(params.opts.type);
+    return render$2(renderer.render, text, params)
+  };
+
+  var toDataURL$1 = function toDataURL (text, opts, cb) {
+    var params = checkParams(text, opts, cb);
+    var renderer = getRendererFromType(params.opts.type);
+    return render$2(renderer.renderToDataURL, text, params)
+  };
+
+  var toFile = function toFile (path, text, opts, cb) {
+    if (typeof path !== 'string' || typeof text !== 'string') {
+      throw new Error('Invalid argument')
+    }
+
+    if ((arguments.length < 3) && !canPromise()) {
+      throw new Error('Too few arguments provided')
+    }
+
+    var params = checkParams(text, opts, cb);
+    var type = params.opts.type || getTypeFromFilename(path);
+    var renderer = getRendererFromType(type);
+    var renderToFile = renderer.renderToFile.bind(null, path);
+
+    return render$2(renderToFile, text, params)
+  };
+
+  var toFileStream = function toFileStream (stream$$1, text, opts) {
+    if (arguments.length < 2) {
+      throw new Error('Too few arguments provided')
+    }
+
+    var params = checkParams(text, opts, stream$$1.emit.bind(stream$$1, 'error'));
+    var renderer = getRendererFromType('png'); // Only png support for now
+    var renderToFileStream = renderer.renderToFileStream.bind(null, stream$$1);
+    render$2(renderToFileStream, text, params);
+  };
+
+  var server = {
+  	create: create$3,
+  	toCanvas: toCanvas$1,
+  	toString: toString_1$1,
+  	toDataURL: toDataURL$1,
+  	toFile: toFile,
+  	toFileStream: toFileStream
+  };
+
+  //  commonjs-proxy:/Users/dtai/work/hanzo/shop.js/node_modules/qrcode/lib/server.js
+
+  // node_modules/qrcode/lib/index.js
+  /*
+  *copyright Ryan Day 2012
+  *
+  * Licensed under the MIT license:
+  *   http://www.opensource.org/licenses/mit-license.php
+  *
+  * this is the main server side application file for node-qrcode.
+  * these exports use serverside canvas api methods for file IO and buffers
+  *
+  */
+
+  var lib$1 = server;
+
+  // node_modules/el-controls/templates/controls/qrcode.pug
+  var html$6 = "\n<canvas></canvas>";
 
   // node_modules/el-controls/src/controls/qrcode.coffee
   var QRCode,
@@ -15720,13 +18475,13 @@ var Shop = (function () {
     };
 
     QRCode.prototype.init = function() {
-      return QRCode.__super__.init.apply(this, arguments);
+      return QRCode.__super__.init.call(this);
     };
 
     QRCode.prototype.onUpdated = function() {
       var canvas;
       canvas = this.root.children[0];
-      return qrcode.toCanvas(canvas, this.getText(), {
+      return lib$1.toCanvas(canvas, this.getText(), {
         version: parseInt(this.version, 10),
         errorCorrectionLevel: this.errorCorrectionLevel,
         scale: parseInt(this.scale, 10),
@@ -15747,9 +18502,9 @@ var Shop = (function () {
   // src/controls/index.coffee
 
   // src/events.coffee
-  var Events$1;
+  var Events$2;
 
-  var Events$2 = Events$1 = {
+  var Events$3 = Events$2 = {
     Started: 'started',
     Ready: 'ready',
     AsyncReady: 'async-ready',
@@ -15757,9 +18512,9 @@ var Shop = (function () {
     TryUpdateItem: 'try-update-item',
     UpdateItem: 'update-item',
     UpdateItems: 'update-items',
-    Change: ControlEvents.Change,
-    ChangeSuccess: ControlEvents.ChangeSuccess,
-    ChangeFailed: ControlEvents.ChangeFailed,
+    Change: Events$1.Change,
+    ChangeSuccess: Events$1.ChangeSuccess,
+    ChangeFailed: Events$1.ChangeFailed,
     Checkout: 'checkout',
     ContinueShopping: 'continue-shopping',
     Submit: 'submit',
@@ -16615,7 +19370,7 @@ var Shop = (function () {
         return;
       }
       this.loading = true;
-      this.mediator.trigger(Events$2.Submit, this.tag);
+      this.mediator.trigger(Events$3.Submit, this.tag);
       this.errorMessage = '';
       El$1$1.scheduleUpdate();
       email = '';
@@ -16649,7 +19404,7 @@ var Shop = (function () {
                   return El$1$1.scheduleUpdate();
                 }
               }, 200);
-              _this.mediator.trigger(Events$2.SubmitSuccess, order);
+              _this.mediator.trigger(Events$3.SubmitSuccess, order);
               return order;
             })["catch"](function(err) {
               var ref;
@@ -16661,7 +19416,7 @@ var Shop = (function () {
               _this.loading = false;
               console.log("checkout submit Error: " + err);
               _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
-              _this.mediator.trigger(Events$2.SubmitFailed, err);
+              _this.mediator.trigger(Events$3.SubmitFailed, err);
               return El$1$1.scheduleUpdate();
             });
           })["catch"](function(err) {
@@ -16678,7 +19433,7 @@ var Shop = (function () {
               }
               _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
             }
-            _this.mediator.trigger(Events$2.SubmitFailed, err);
+            _this.mediator.trigger(Events$3.SubmitFailed, err);
             return El$1$1.scheduleUpdate();
           });
         };
@@ -16697,7 +19452,7 @@ var Shop = (function () {
             }
             _this.errorMessage = 'Unable to complete your transaction. Please try again later.';
           }
-          _this.mediator.trigger(Events$2.SubmitFailed, err);
+          _this.mediator.trigger(Events$3.SubmitFailed, err);
           return El$1$1.scheduleUpdate();
         };
       })(this));
@@ -16744,7 +19499,7 @@ var Shop = (function () {
     };
 
     CheckoutCardForm.prototype._submit = function() {
-      this.mediator.trigger(Events$2.SubmitCard);
+      this.mediator.trigger(Events$3.SubmitCard);
       if (this.paged) {
         index$3.set('checkout-user', this.data.get('user'));
         index$3.set('checkout-payment', this.data.get('order.payment'));
@@ -16806,7 +19561,7 @@ var Shop = (function () {
     };
 
     CheckoutShippingAddressForm.prototype._submit = function() {
-      m.trigger(Events$2.SubmitShippingAddress);
+      m.trigger(Events$3.SubmitShippingAddress);
       if (this.paged) {
         index$3.set('checkout-user', this.data.get('user'));
         index$3.set('checkout-shippingAddress', this.data.get('order.shippingAddress'));
@@ -16849,7 +19604,7 @@ var Shop = (function () {
         this.data.set('order.promoCode', promoCode);
         this.applyPromoCode();
       }
-      this.mediator.on(Events$2.ForceApplyPromoCode, (function(_this) {
+      this.mediator.on(Events$3.ForceApplyPromoCode, (function(_this) {
         return function() {
           return _this.applyPromoCode();
         };
@@ -16898,7 +19653,7 @@ var Shop = (function () {
       this.failed = false;
       this.data.set('order.coupon', {});
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.ApplyPromoCode, promoCode);
+      this.mediator.trigger(Events$3.ApplyPromoCode, promoCode);
       return this.cart.promoCode(promoCode).then((function(_this) {
         return function() {
           var coupon;
@@ -16911,7 +19666,7 @@ var Shop = (function () {
           } else {
             _this.promoMessage = promoCode + ' Applied!';
           }
-          _this.mediator.trigger(Events$2.ApplyPromoCodeSuccess, coupon);
+          _this.mediator.trigger(Events$3.ApplyPromoCodeSuccess, coupon);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
@@ -16927,18 +19682,18 @@ var Shop = (function () {
           } else {
             _this.promoMessage = 'This code is invalid.';
           }
-          _this.mediator.trigger(Events$2.ApplyPromoCodeFailed, err);
+          _this.mediator.trigger(Events$3.ApplyPromoCodeFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
     };
 
     CartForm.prototype.checkout = function() {
-      return this.mediator.trigger(Events$2.Checkout);
+      return this.mediator.trigger(Events$3.Checkout);
     };
 
     CartForm.prototype.continueShopping = function() {
-      return this.mediator.trigger(Events$2.ContinueShopping);
+      return this.mediator.trigger(Events$3.ContinueShopping);
     };
 
     return CartForm;
@@ -17008,7 +19763,7 @@ var Shop = (function () {
     };
 
     LineItemForm.prototype["delete"] = function(event) {
-      return this.mediator.trigger(Events$2.DeleteLineItem, this.data);
+      return this.mediator.trigger(Events$3.DeleteLineItem, this.data);
     };
 
     return LineItemForm;
@@ -17094,16 +19849,16 @@ var Shop = (function () {
       };
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.Login);
+      this.mediator.trigger(Events$3.Login);
       return this.client.account.login(opts).then((function(_this) {
         return function(res) {
-          _this.mediator.trigger(Events$2.LoginSuccess, res);
+          _this.mediator.trigger(Events$3.LoginSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.LoginFailed, err);
+          _this.mediator.trigger(Events$3.LoginFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17162,7 +19917,7 @@ var Shop = (function () {
     };
 
     OrderForm.prototype["delete"] = function(event) {
-      return this.mediator.trigger(Events$2.DeleteLineItem, this.data);
+      return this.mediator.trigger(Events$3.DeleteLineItem, this.data);
     };
 
     return OrderForm;
@@ -17240,7 +19995,7 @@ var Shop = (function () {
     };
 
     ProfileForm.prototype.init = function() {
-      this.mediator.trigger(Events$2.ProfileLoad);
+      this.mediator.trigger(Events$3.ProfileLoad);
       this.client.account.get().then((function(_this) {
         return function(res) {
           var firstName, lastName;
@@ -17250,7 +20005,7 @@ var Shop = (function () {
           _this.data.set('user.name', firstName + ' ' + lastName);
           if (_this.data.get('referralProgram') && ((res.referrers == null) || res.referrers.length === 0)) {
             return raf(function() {
-              _this.mediator.trigger(Events$2.CreateReferralProgram);
+              _this.mediator.trigger(Events$3.CreateReferralProgram);
               return _this.client.referrer.create({
                 program: _this.data.get('referralProgram'),
                 programId: _this.data.get('referralProgram.id'),
@@ -17259,25 +20014,25 @@ var Shop = (function () {
                 var refrs;
                 refrs = [res2];
                 _this.data.set('user.referrers', refrs);
-                _this.mediator.trigger(Events$2.CreateReferralProgramSuccess, refrs);
-                _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
+                _this.mediator.trigger(Events$3.CreateReferralProgramSuccess, refrs);
+                _this.mediator.trigger(Events$3.ProfileLoadSuccess, res);
                 return El$1$1.scheduleUpdate();
               })["catch"](function(err) {
                 _this.errorMessage = err.message;
-                _this.mediator.trigger(Events$2.CreateReferralProgramFailed, err);
-                _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
+                _this.mediator.trigger(Events$3.CreateReferralProgramFailed, err);
+                _this.mediator.trigger(Events$3.ProfileLoadSuccess, res);
                 return El$1$1.scheduleUpdate();
               });
             });
           } else {
-            _this.mediator.trigger(Events$2.ProfileLoadSuccess, res);
+            _this.mediator.trigger(Events$3.ProfileLoadSuccess, res);
             return El$1$1.scheduleUpdate();
           }
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.ProfileLoadFailed, err);
+          _this.mediator.trigger(Events$3.ProfileLoadFailed, err);
           return El$1$1.scheduleUpdate();
         };
       })(this));
@@ -17296,19 +20051,19 @@ var Shop = (function () {
       };
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.ProfileUpdate);
+      this.mediator.trigger(Events$3.ProfileUpdate);
       return this.client.account.update(opts).then((function(_this) {
         return function(res) {
           _this.data.set('user.currentPassword', null);
           _this.data.set('user.password', null);
           _this.data.set('user.passwordConfirm', null);
-          _this.mediator.trigger(Events$2.ProfileUpdateSuccess, res);
+          _this.mediator.trigger(Events$3.ProfileUpdateSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.ProfileUpdateFailed, err);
+          _this.mediator.trigger(Events$3.ProfileUpdateFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17384,19 +20139,19 @@ var Shop = (function () {
       }
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.Register);
+      this.mediator.trigger(Events$3.Register);
       return this.client.account.create(opts).then((function(_this) {
         return function(res) {
           var latency;
-          _this.mediator.trigger(Events$2.RegisterSuccess, res);
+          _this.mediator.trigger(Events$3.RegisterSuccess, res);
           _this.scheduleUpdate();
           if (_this.immediateLogin && res.token) {
             _this.client.setCustomerToken(res.token);
             latency = _this.immediateLoginLatency / 2;
             return setTimeout(function() {
-              _this.mediator.trigger(Events$2.Login);
+              _this.mediator.trigger(Events$3.Login);
               return setTimeout(function() {
-                _this.mediator.trigger(Events$2.LoginSuccess, res);
+                _this.mediator.trigger(Events$3.LoginSuccess, res);
                 return _this.scheduleUpdate();
               }, latency);
             }, latency);
@@ -17405,7 +20160,7 @@ var Shop = (function () {
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.RegisterFailed, err);
+          _this.mediator.trigger(Events$3.RegisterFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17469,19 +20224,19 @@ var Shop = (function () {
       }
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.RegisterComplete);
+      this.mediator.trigger(Events$3.RegisterComplete);
       return this.client.account.enable(opts).then((function(_this) {
         return function(res) {
           if (res.token) {
             _this.client.setCustomerToken(res.token);
           }
-          _this.mediator.trigger(Events$2.RegisterCompleteSuccess, res);
+          _this.mediator.trigger(Events$3.RegisterCompleteSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.RegisterCompleteFailed, err);
+          _this.mediator.trigger(Events$3.RegisterCompleteFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17531,16 +20286,16 @@ var Shop = (function () {
       };
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.ResetPassword);
+      this.mediator.trigger(Events$3.ResetPassword);
       return this.client.account.reset(opts).then((function(_this) {
         return function(res) {
-          _this.mediator.trigger(Events$2.ResetPasswordSuccess, res);
+          _this.mediator.trigger(Events$3.ResetPasswordSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.ResetPasswordFailed, err);
+          _this.mediator.trigger(Events$3.ResetPasswordFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17593,19 +20348,19 @@ var Shop = (function () {
       };
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.ResetPasswordComplete);
+      this.mediator.trigger(Events$3.ResetPasswordComplete);
       return this.client.account.confirm(opts).then((function(_this) {
         return function(res) {
           if (res.token) {
             _this.client.setCustomerToken(res.token);
           }
-          _this.mediator.trigger(Events$2.ResetPasswordCompleteSuccess, res);
+          _this.mediator.trigger(Events$3.ResetPasswordCompleteSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message.replace('Token', 'Link');
-          _this.mediator.trigger(Events$2.ResetPasswordCompleteFailed, err);
+          _this.mediator.trigger(Events$3.ResetPasswordCompleteFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17669,16 +20424,16 @@ var Shop = (function () {
       };
       this.errorMessage = '';
       this.scheduleUpdate();
-      this.mediator.trigger(Events$2.ShippingAddressUpdate);
+      this.mediator.trigger(Events$3.ShippingAddressUpdate);
       return this.client.account.updateOrder(opts).then((function(_this) {
         return function(res) {
-          _this.mediator.trigger(Events$2.ShippingAddressUpdateSuccess, res);
+          _this.mediator.trigger(Events$3.ShippingAddressUpdateSuccess, res);
           return _this.scheduleUpdate();
         };
       })(this))["catch"]((function(_this) {
         return function(err) {
           _this.errorMessage = err.message;
-          _this.mediator.trigger(Events$2.ShippingAddressUpdateFailed, err);
+          _this.mediator.trigger(Events$3.ShippingAddressUpdateFailed, err);
           return _this.scheduleUpdate();
         };
       })(this));
@@ -17805,16 +20560,16 @@ var Shop = (function () {
       if (this.loading) {
         return;
       }
-      this.mediator.trigger(Events$2.PayWithMetamask);
+      this.mediator.trigger(Events$3.PayWithMetamask);
       this.errorMessage = '';
       El$1$1.scheduleUpdate();
       if (!this.isMetamaskInstalled()) {
-        this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Metamask not installed'));
+        this.mediator.trigger(Events$3.PayWithMetamaskFailed, new Error('Metamask not installed'));
         this.errorMessage = 'Metamask not installed';
         return;
       }
       if (this.getCurrency() !== 'eth') {
-        this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Metamask only supports ETH transactions'));
+        this.mediator.trigger(Events$3.PayWithMetamaskFailed, new Error('Metamask only supports ETH transactions'));
         this.errorMessage = 'Metamask only supports ETH transactions';
         return;
       }
@@ -17830,22 +20585,22 @@ var Shop = (function () {
             _this.loading = false;
             El$1$1.scheduleUpdate();
             if (err) {
-              _this.mediator.trigger(Events$2.PayWithMetamaskFailed, err);
+              _this.mediator.trigger(Events$3.PayWithMetamaskFailed, err);
               _this.errorMessage = err;
               return;
             }
             _this.checkedOut = true;
-            return _this.mediator.trigger(Events$2.PayWithMetamaskSuccess, transactionHash);
+            return _this.mediator.trigger(Events$3.PayWithMetamaskSuccess, transactionHash);
           };
         })(this));
       } catch (error) {
         this.loading = false;
         El$1$1.scheduleUpdate();
         if (this.test) {
-          this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode'));
+          this.mediator.trigger(Events$3.PayWithMetamaskFailed, new Error('Error: <thankyou> is in test mode'));
           return this.errorMessage = 'Error: <thankyou> is in test mode';
         } else {
-          this.mediator.trigger(Events$2.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?'));
+          this.mediator.trigger(Events$3.PayWithMetamaskFailed, new Error('Invalid sender address, are you logged into Metamask?'));
           return this.errorMessage = 'Invalid sender address, are you logged into Metamask?';
         }
       }
@@ -18045,7 +20800,7 @@ var Shop = (function () {
         this.names = ['Payment Info', 'Shipping Info', 'Done'];
       }
       CheckoutModal.__super__.init.apply(this, arguments);
-      m$1.on(Events$2.CheckoutOpen, (function(_this) {
+      m$1.on(Events$3.CheckoutOpen, (function(_this) {
         return function(id) {
           if (!id || id === _this.id) {
             _this.toggle(true);
@@ -18061,14 +20816,14 @@ var Shop = (function () {
           }
         };
       })(this));
-      m$1.on(Events$2.CheckoutClose, (function(_this) {
+      m$1.on(Events$3.CheckoutClose, (function(_this) {
         return function(id) {
           if (!id || id === _this.id) {
             return _this.toggle(false);
           }
         };
       })(this));
-      m$1.on(Events$2.SubmitCard, (function(_this) {
+      m$1.on(Events$3.SubmitCard, (function(_this) {
         return function() {
           _this.step = 1;
           El$1$1.scheduleUpdate();
@@ -18080,7 +20835,7 @@ var Shop = (function () {
           });
         };
       })(this));
-      return m$1.on(Events$2.SubmitSuccess, (function(_this) {
+      return m$1.on(Events$3.SubmitSuccess, (function(_this) {
         return function() {
           _this.step = 2;
           El$1$1.scheduleUpdate();
@@ -18121,10 +20876,10 @@ var Shop = (function () {
       $container = $(this.root).find('.checkout-container');
       if (this.opened) {
         $container.css('top', $(window).scrollTop());
-        m$1.trigger(Events$2.CheckoutOpened);
+        m$1.trigger(Events$3.CheckoutOpened);
       } else {
         $container.css('top', -2000);
-        m$1.trigger(Events$2.CheckoutClosed);
+        m$1.trigger(Events$3.CheckoutClosed);
       }
       return this.scheduleUpdate();
     };
@@ -18162,14 +20917,14 @@ var Shop = (function () {
 
     SidePane.prototype.init = function() {
       SidePane.__super__.init.apply(this, arguments);
-      m$1.on(Events$2.SidePaneOpen, (function(_this) {
+      m$1.on(Events$3.SidePaneOpen, (function(_this) {
         return function(id) {
           if (!id || id === _this.id) {
             return _this.toggle(true);
           }
         };
       })(this));
-      return m$1.on(Events$2.SidePaneClose, (function(_this) {
+      return m$1.on(Events$3.SidePaneClose, (function(_this) {
         return function(id) {
           if (!id || id === _this.id) {
             return _this.toggle(false);
@@ -18193,9 +20948,9 @@ var Shop = (function () {
         this.opened = !this.opened;
       }
       if (this.opened) {
-        m$1.trigger(Events$2.SidePaneOpened);
+        m$1.trigger(Events$3.SidePaneOpened);
       } else {
-        m$1.trigger(Events$2.SidePaneClosed);
+        m$1.trigger(Events$3.SidePaneClosed);
       }
       return this.scheduleUpdate();
     };
@@ -20055,7 +22810,7 @@ var Shop = (function () {
   // MOMENTS
 
   // Setting the hour should keep the time, because the user explicitly
-  // specified which hour he wants. So trying to maintain the same hour (in
+  // specified which hour they want. So trying to maintain the same hour (in
   // a new timezone) makes sense. Adding/subtracting hours does not follow
   // this rule.
   var getSetHour = makeGetSet('Hours', true);
@@ -21635,7 +24390,7 @@ var Shop = (function () {
   hooks.defaultFormat = 'YYYY-MM-DDTHH:mm:ssZ';
   hooks.defaultFormatUtc = 'YYYY-MM-DDTHH:mm:ss[Z]';
 
-  function toString$1 () {
+  function toString$2 () {
       return this.clone().locale('en').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ');
   }
 
@@ -22014,7 +24769,7 @@ var Shop = (function () {
 
   addUnitAlias('date', 'D');
 
-  // PRIOROITY
+  // PRIORITY
   addUnitPriority('date', 9);
 
   // PARSING
@@ -22233,7 +24988,7 @@ var Shop = (function () {
   proto.toISOString       = toISOString;
   proto.inspect           = inspect;
   proto.toJSON            = toJSON;
-  proto.toString          = toString$1;
+  proto.toString          = toString$2;
   proto.unix              = unix;
   proto.valueOf           = valueOf;
   proto.creationData      = creationData;
@@ -22852,7 +25607,7 @@ var Shop = (function () {
 
   // node_modules/moment/src/moment.js
 
-  hooks.version = '2.21.0';
+  hooks.version = '2.22.1';
 
   setHookCallback(createLocal);
 
@@ -22907,7 +25662,7 @@ var Shop = (function () {
   var momentTimezone = createCommonjsModule(function (module) {
   // node_modules/moment-timezone/moment-timezone.js
   //! moment-timezone.js
-  //! version : 0.5.14
+  //! version : 0.5.16
   //! Copyright (c) JS Foundation and other contributors
   //! license : MIT
   //! github.com/moment/moment-timezone
@@ -22917,7 +25672,7 @@ var Shop = (function () {
   	/*global define*/
   	if (typeof undefined === 'function' && undefined.amd) {
   		undefined(['moment'], factory);                 // AMD
-  	} else if ('object' === 'object' && module.exports) {
+  	} else if (module.exports) {
   		module.exports = factory(require$$0); // Node
   	} else {
   		factory(root.moment);                        // Browser
@@ -22930,7 +25685,7 @@ var Shop = (function () {
   	// 	return moment;
   	// }
 
-  	var VERSION = "0.5.14",
+  	var VERSION = "0.5.16",
   		zones = {},
   		links = {},
   		names = {},
@@ -23512,17 +26267,17 @@ var Shop = (function () {
   });
 
   // node_modules/moment-timezone/data/packed/latest.json
-  var version$2 = "2017c";
-  var zones = ["Africa/Abidjan|LMT GMT|g.8 0|01|-2ldXH.Q|48e5","Africa/Accra|LMT GMT +0020|.Q 0 -k|012121212121212121212121212121212121212121212121|-26BbX.8 6tzX.8 MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE|41e5","Africa/Nairobi|LMT EAT +0230 +0245|-2r.g -30 -2u -2J|01231|-1F3Cr.g 3Dzr.g okMu MFXJ|47e5","Africa/Algiers|PMT WET WEST CET CEST|-9.l 0 -10 -10 -20|0121212121212121343431312123431213|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 DA0 Imo0 rd0 De0 9Xz0 1fb0 1ap0 16K0 2yo0 mEp0 hwL0 jxA0 11A0 dDd0 17b0 11B0 1cN0 2Dy0 1cN0 1fB0 1cL0|26e5","Africa/Lagos|LMT WAT|-d.A -10|01|-22y0d.A|17e6","Africa/Bissau|LMT -01 GMT|12.k 10 0|012|-2ldWV.E 2xonV.E|39e4","Africa/Maputo|LMT CAT|-2a.k -20|01|-2GJea.k|26e5","Africa/Cairo|EET EEST|-20 -30|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1bIO0 vb0 1ip0 11z0 1iN0 1nz0 12p0 1pz0 10N0 1pz0 16p0 1jz0 s3d0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1WL0 rd0 1Rz0 wp0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1qL0 Xd0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1ny0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 WL0 1qN0 Rb0 1wp0 On0 1zd0 Lz0 1EN0 Fb0 c10 8n0 8Nd0 gL0 e10 mn0|15e6","Africa/Casablanca|LMT WET WEST CET|u.k 0 -10 -10|0121212121212121213121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2gMnt.E 130Lt.E rb0 Dd0 dVb0 b6p0 TX0 EoB0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4mn0 SyN0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|32e5","Africa/Ceuta|WET WEST CET CEST|0 -10 -10 -20|010101010101010101010232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-25KN0 11z0 drd0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1y7o0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4VB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|85e3","Africa/El_Aaiun|LMT -01 WET WEST|Q.M 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1rDz7.c 1GVA7.c 6L0 AL0 1Nd0 XX0 1Cp0 pz0 1cBB0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|20e4","Africa/Johannesburg|SAST SAST SAST|-1u -20 -30|012121|-2GJdu 1Ajdu 1cL0 1cN0 1cL0|84e5","Africa/Juba|LMT CAT CAST EAT|-26.s -20 -30 -30|01212121212121212121212121212121213|-1yW26.s 1zK06.s 16L0 1iN0 17b0 1jd0 17b0 1ip0 17z0 1i10 17X0 1hB0 18n0 1hd0 19b0 1gp0 19z0 1iN0 17b0 1ip0 17z0 1i10 18n0 1hd0 18L0 1gN0 19b0 1gp0 19z0 1iN0 17z0 1i10 17X0 yGd0","Africa/Khartoum|LMT CAT CAST EAT|-2a.8 -20 -30 -30|012121212121212121212121212121212131|-1yW2a.8 1zK0a.8 16L0 1iN0 17b0 1jd0 17b0 1ip0 17z0 1i10 17X0 1hB0 18n0 1hd0 19b0 1gp0 19z0 1iN0 17b0 1ip0 17z0 1i10 18n0 1hd0 18L0 1gN0 19b0 1gp0 19z0 1iN0 17z0 1i10 17X0 yGd0 HjL0|51e5","Africa/Monrovia|MMT MMT GMT|H.8 I.u 0|012|-23Lzg.Q 28G01.m|11e5","Africa/Ndjamena|LMT WAT WAST|-10.c -10 -20|0121|-2le10.c 2J3c0.c Wn0|13e5","Africa/Tripoli|LMT CET CEST EET|-Q.I -10 -20 -20|012121213121212121212121213123123|-21JcQ.I 1hnBQ.I vx0 4iP0 xx0 4eN0 Bb0 7ip0 U0n0 A10 1db0 1cN0 1db0 1dd0 1db0 1eN0 1bb0 1e10 1cL0 1c10 1db0 1dd0 1db0 1cN0 1db0 1q10 fAn0 1ep0 1db0 AKq0 TA0 1o00|11e5","Africa/Tunis|PMT CET CEST|-9.l -10 -20|0121212121212121212121212121212121|-2nco9.l 18pa9.l 1qM0 DA0 3Tc0 11B0 1ze0 WM0 7z0 3d0 14L0 1cN0 1f90 1ar0 16J0 1gXB0 WM0 1rA0 11c0 nwo0 Ko0 1cM0 1cM0 1rA0 10M0 zuM0 10N0 1aN0 1qM0 WM0 1qM0 11A0 1o00|20e5","Africa/Windhoek|+0130 SAST SAST CAT WAT WAST|-1u -20 -30 -20 -10 -20|01213454545454545454545454545454545454545454545454543|-2GJdu 1Ajdu 1cL0 1SqL0 9Io0 16P0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0|32e4","America/Adak|NST NWT NPT BST BDT AHST HST HDT|b0 a0 a0 b0 a0 a0 a0 90|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|326","America/Anchorage|AST AWT APT AHST AHDT YST AKST AKDT|a0 90 90 a0 90 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T00 8wX0 iA0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|30e4","America/Port_of_Spain|LMT AST|46.4 40|01|-2kNvR.U|43e3","America/Araguaina|LMT -03 -02|3c.M 30 20|0121212121212121212121212121212121212121212121212121|-2glwL.c HdKL.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 ny10 Lz0|14e4","America/Argentina/Buenos_Aires|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Catamarca|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Cordoba|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Jujuy|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1ze0 TX0 1ld0 WK0 1wp0 TX0 A4p0 uL0","America/Argentina/La_Rioja|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Mendoza|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232312121321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1u20 SL0 1vd0 Tb0 1wp0 TW0 ri10 Op0 7TX0 uL0","America/Argentina/Rio_Gallegos|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Salta|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0","America/Argentina/San_Juan|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rld0 m10 8lb0 uL0","America/Argentina/San_Luis|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121212321212|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 XX0 1q20 SL0 AN0 vDb0 m10 8lb0 8L0 jd0 1qN0 WL0 1qN0","America/Argentina/Tucuman|CMT -04 -03 -02|4g.M 40 30 20|0121212121212121212121212121212121212121212323232313232123232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 4N0 8BX0 uL0 1qN0 WL0","America/Argentina/Ushuaia|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rkN0 8p0 8zb0 uL0","America/Curacao|LMT -0430 AST|4z.L 4u 40|012|-2kV7o.d 28KLS.d|15e4","America/Asuncion|AMT -04 -03|3O.E 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-1x589.k 1DKM9.k 3CL0 3Dd0 10L0 1pB0 10n0 1pB0 10n0 1pB0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1lB0 14n0 1dd0 1cL0 1fd0 WL0 1rd0 1aL0 1dB0 Xz0 1qp0 Xb0 1qN0 10L0 1rB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 WN0 1qL0 11B0 1nX0 1ip0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 TX0 1tB0 19X0 1a10 1fz0 1a10 1fz0 1cN0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0|28e5","America/Atikokan|CST CDT CWT CPT EST|60 50 50 50 50|0101234|-25TQ0 1in0 Rnb0 3je0 8x30 iw0|28e2","America/Bahia|LMT -03 -02|2y.4 30 20|01212121212121212121212121212121212121212121212121212121212121|-2glxp.U HdLp.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 l5B0 Rb0|27e5","America/Bahia_Banderas|LMT MST CST PST MDT CDT|71 70 60 80 60 50|0121212131414141414141414141414141414152525252525252525252525252525252525252525252525252525252|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nW0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|84e3","America/Barbados|LMT BMT AST ADT|3W.t 3W.t 40 30|01232323232|-1Q0I1.v jsM0 1ODC1.v IL0 1ip0 17b0 1ip0 17b0 1ld0 13b0|28e4","America/Belem|LMT -03 -02|3d.U 30 20|012121212121212121212121212121|-2glwK.4 HdKK.4 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|20e5","America/Belize|LMT CST -0530 CDT|5Q.M 60 5u 50|01212121212121212121212121212121212121212121212121213131|-2kBu7.c fPA7.c Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1f0Mu qn0 lxB0 mn0|57e3","America/Blanc-Sablon|AST ADT AWT APT|40 30 30 30|010230|-25TS0 1in0 UGp0 8x50 iu0|11e2","America/Boa_Vista|LMT -04 -03|42.E 40 30|0121212121212121212121212121212121|-2glvV.k HdKV.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 smp0 WL0 1tB0 2L0|62e2","America/Bogota|BMT -05 -04|4U.g 50 40|0121|-2eb73.I 38yo3.I 2en0|90e5","America/Boise|PST PDT MST MWT MPT MDT|80 70 70 60 60 60|0101023425252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-261q0 1nX0 11B0 1nX0 8C10 JCL0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 Dd0 1Kn0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e4","America/Cambridge_Bay|-00 MST MWT MPT MDDT MDT CST CDT EST|0 70 60 60 50 60 60 50 50|0123141515151515151515151515151515151515151515678651515151515151515151515151515151515151515151515151515151515151515151515151|-21Jc0 RO90 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11A0 1nX0 2K0 WQ0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e2","America/Campo_Grande|LMT -04 -03|3C.s 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwl.w HdLl.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|77e4","America/Cancun|LMT CST EST EDT CDT|5L.4 60 50 40 50|0123232341414141414141414141414141414141412|-1UQG0 2q2o0 yLB0 1lb0 14p0 1lb0 14p0 Lz0 xB0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 Dd0|63e4","America/Caracas|CMT -0430 -04|4r.E 4u 40|01212|-2kV7w.k 28KM2.k 1IwOu kqo0|29e5","America/Cayenne|LMT -04 -03|3t.k 40 30|012|-2mrwu.E 2gWou.E|58e3","America/Panama|CMT EST|5j.A 50|01|-2uduE.o|15e5","America/Chicago|CST CDT EST CWT CPT|60 50 50 50 50|01010101010101010101010101010101010102010101010103401010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 1wp0 TX0 WN0 1qL0 1cN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 11B0 1Hz0 14p0 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|92e5","America/Chihuahua|LMT MST CST CDT MDT|74.k 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|81e4","America/Costa_Rica|SJMT CST CDT|5A.d 60 50|0121212121|-1Xd6n.L 2lu0n.L Db0 1Kp0 Db0 pRB0 15b0 1kp0 mL0|12e5","America/Creston|MST PST|70 80|010|-29DR0 43B0|53e2","America/Cuiaba|LMT -04 -03|3I.k 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwf.E HdLf.E 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 4a10 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|54e4","America/Danmarkshavn|LMT -03 -02 GMT|1e.E 30 20 0|01212121212121212121212121212121213|-2a5WJ.k 2z5fJ.k 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 DC0|8","America/Dawson|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 jrA0 fNd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|13e2","America/Dawson_Creek|PST PDT PWT PPT MST|80 70 70 70 70|0102301010101010101010101010101010101010101010101010101014|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 ML0|12e3","America/Denver|MST MDT MWT MPT|70 60 60 60|01010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 11B0 1qL0 WN0 mn0 Ord0 8x20 ix0 LCN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e5","America/Detroit|LMT CST EST EWT EPT EDT|5w.b 60 50 40 40 40|012342525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2Cgir.N peqr.N 156L0 8x40 iv0 6fd0 11z0 XQp0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e5","America/Edmonton|LMT MST MDT MWT MPT|7x.Q 70 60 60 60|01212121212121341212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2yd4q.8 shdq.8 1in0 17d0 hz0 2dB0 1fz0 1a10 11z0 1qN0 WL0 1qN0 11z0 IGN0 8x20 ix0 3NB0 11z0 LFB0 1cL0 3Cp0 1cL0 66N0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|10e5","America/Eirunepe|LMT -05 -04|4D.s 50 40|0121212121212121212121212121212121|-2glvk.w HdLk.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0 yTd0 d5X0|31e3","America/El_Salvador|LMT CST CDT|5U.M 60 50|012121|-1XiG3.c 2Fvc3.c WL0 1qN0 WL0|11e5","America/Tijuana|LMT MST PST PDT PWT PPT|7M.4 70 80 70 70 70|012123245232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQE0 4PX0 8mM0 8lc0 SN0 1cL0 pHB0 83r0 zI0 5O10 1Rz0 cOO0 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 BUp0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|20e5","America/Fort_Nelson|PST PDT PWT PPT MST|80 70 70 70 70|01023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010104|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0|39e2","America/Fort_Wayne|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010101023010101010101010101040454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 QI10 Db0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 5Tz0 1o10 qLb0 1cL0 1cN0 1cL0 1qhd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Fortaleza|LMT -03 -02|2y 30 20|0121212121212121212121212121212121212121|-2glxq HdLq 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 5z0 2mN0 On0|34e5","America/Glace_Bay|LMT AST ADT AWT APT|3X.M 40 30 30 30|012134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsI0.c CwO0.c 1in0 UGp0 8x50 iu0 iq10 11z0 Jg10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","America/Godthab|LMT -03 -02|3q.U 30 20|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5Ux.4 2z5dx.4 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e3","America/Goose_Bay|NST NDT NST NDT NWT NPT AST ADT ADDT|3u.Q 2u.Q 3u 2u 2u 2u 40 30 20|010232323232323245232323232323232323232323232323232323232326767676767676767676767676767676767676767676768676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-25TSt.8 1in0 DXb0 2HbX.8 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 S10 g0u 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|76e2","America/Grand_Turk|KMT EST EDT AST|57.b 50 40 40|01212121212121212121212121212121212121212121212121212121212121212121212121232121212121212121212121212121212121212121|-2l1uQ.N 2HHBQ.N 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 5Ip0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e2","America/Guatemala|LMT CST CDT|62.4 60 50|0121212121|-24KhV.U 2efXV.U An0 mtd0 Nz0 ifB0 17b0 zDB0 11z0|13e5","America/Guayaquil|QMT -05 -04|5e 50 40|0121|-1yVSK 2uILK rz0|27e5","America/Guyana|LMT -0345 -03 -04|3Q.E 3J 30 40|0123|-2dvU7.k 2r6LQ.k Bxbf|80e4","America/Halifax|LMT AST ADT AWT APT|4e.o 40 30 30 30|0121212121212121212121212121212121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsHJ.A xzzJ.A 1db0 3I30 1in0 3HX0 IL0 1E10 ML0 1yN0 Pb0 1Bd0 Mn0 1Bd0 Rz0 1w10 Xb0 1w10 LX0 1w10 Xb0 1w10 Lz0 1C10 Jz0 1E10 OL0 1yN0 Un0 1qp0 Xb0 1qp0 11X0 1w10 Lz0 1HB0 LX0 1C10 FX0 1w10 Xb0 1qp0 Xb0 1BB0 LX0 1td0 Xb0 1qp0 Xb0 Rf0 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 6i10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|39e4","America/Havana|HMT CST CDT|5t.A 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Meuu.o 72zu.o ML0 sld0 An0 1Nd0 Db0 1Nd0 An0 6Ep0 An0 1Nd0 An0 JDd0 Mn0 1Ap0 On0 1fd0 11X0 1qN0 WL0 1wp0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 14n0 1ld0 14L0 1kN0 15b0 1kp0 1cL0 1cN0 1fz0 1a10 1fz0 1fB0 11z0 14p0 1nX0 11B0 1nX0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 1a10 1in0 1a10 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 17c0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 11A0 6i00 Rc0 1wo0 U00 1tA0 Rc0 1wo0 U00 1wo0 U00 1zc0 U00 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0|21e5","America/Hermosillo|LMT MST CST PST MDT|7n.Q 70 60 80 60|0121212131414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0|64e4","America/Indiana/Knox|CST CDT CWT CPT EST|60 50 50 50 50|0101023010101010101010101010101010101040101010101010101010101010101010101010101010101010141010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 3Cn0 8wp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 z8o0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Marengo|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010104545454545414545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 dyN0 11z0 6fd0 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1e6p0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Petersburg|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010104010101010101010101010141014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 njX0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 3Fb0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 19co0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Tell_City|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vevay|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010102304545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 kPB0 Awn0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1lnd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vincennes|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Winamac|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010101010454541054545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1za0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Inuvik|-00 PST PDDT MST MDT|0 80 60 70 60|0121343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-FnA0 tWU0 1fA0 wPe0 2pz0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|35e2","America/Iqaluit|-00 EWT EPT EST EDDT EDT CST CDT|0 40 40 50 30 40 60 50|01234353535353535353535353535353535353535353567353535353535353535353535353535353535353535353535353535353535353535353535353|-16K00 7nX0 iv0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|67e2","America/Jamaica|KMT EST EDT|57.b 50 40|0121212121212121212121|-2l1uQ.N 2uM1Q.N 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0|94e4","America/Juneau|PST PWT PPT PDT YDT YST AKST AKDT|80 70 70 70 80 90 90 80|01203030303030303030303030403030356767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cM0 1cM0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|33e3","America/Kentucky/Louisville|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101010102301010101010101010101010101454545454545414545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 3Fd0 Nb0 LPd0 11z0 RB0 8x30 iw0 Bb0 10N0 2bB0 8in0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 xz0 gso0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Kentucky/Monticello|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 SWp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/La_Paz|CMT BOST -04|4w.A 3w.A 40|012|-1x37r.o 13b0|19e5","America/Lima|LMT -05 -04|58.A 50 40|0121212121212121|-2tyGP.o 1bDzP.o zX0 1aN0 1cL0 1cN0 1cL0 1PrB0 zX0 1O10 zX0 6Gp0 zX0 98p0 zX0|11e6","America/Los_Angeles|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 5Wp1 1VaX 3dA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e6","America/Maceio|LMT -03 -02|2m.Q 30 20|012121212121212121212121212121212121212121|-2glxB.8 HdLB.8 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 8Q10 WL0 1tB0 5z0 2mN0 On0|93e4","America/Managua|MMT CST EST CDT|5J.c 60 50 50|0121313121213131|-1quie.M 1yAMe.M 4mn0 9Up0 Dz0 1K10 Dz0 s3F0 1KH0 DB0 9In0 k8p0 19X0 1o30 11y0|22e5","America/Manaus|LMT -04 -03|40.4 40 30|01212121212121212121212121212121|-2glvX.U HdKX.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0|19e5","America/Martinique|FFMT AST ADT|44.k 40 30|0121|-2mPTT.E 2LPbT.E 19X0|39e4","America/Matamoros|LMT CST CDT|6E 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|45e4","America/Mazatlan|LMT MST CST PST MDT|75.E 70 60 80 60|0121212131414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|44e4","America/Menominee|CST CDT CWT CPT EST|60 50 50 50 50|01010230101041010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 LCN0 1fz0 6410 9Jb0 1cM0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|85e2","America/Merida|LMT CST EST CDT|5W.s 60 50 50|0121313131313131313131313131313131313131313131313131313131313131313131313131313131313131|-1UQG0 2q2o0 2hz0 wu30 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|11e5","America/Metlakatla|PST PWT PPT PDT AKST AKDT|80 70 70 70 90 80|0120303030303030303030303030303030454545454545454545454545454545454545454545454|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1hU10 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Mexico_City|LMT MST CST CDT CWT|6A.A 70 60 50 50|012121232324232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 gEn0 TX0 3xd0 Jb0 6zB0 SL0 e5d0 17b0 1Pff0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|20e6","America/Miquelon|LMT AST -03 -02|3I.E 40 30 20|012323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2mKkf.k 2LTAf.k gQ10 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|61e2","America/Moncton|EST AST ADT AWT APT|50 40 30 30 30|012121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsH0 CwN0 1in0 zAo0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1K10 Lz0 1zB0 NX0 1u10 Wn0 S20 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14n1 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 ReX 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|64e3","America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5","America/Montevideo|MMT -0330 -03 -02 -0230|3I.I 3u 30 20 2u|012121212121212121212121213232323232324242423243232323232323232323232323232323232323232|-20UIf.g 8jzJ.g 1cLu 1dcu 1cLu 1dcu 1cLu ircu 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu WLu 1qMu WLu 1qMu 11zu 1o0u 11zu NAu 11bu 2iMu zWu Dq10 19X0 pd0 jz0 cm10 19X0 1fB0 1on0 11d0 1oL0 1nB0 1fzu 1aou 1fzu 1aou 1fzu 3nAu Jb0 3MN0 1SLu 4jzu 2PB0 Lb0 3Dd0 1pb0 ixd0 An0 1MN0 An0 1wp0 On0 1wp0 Rb0 1zd0 On0 1wp0 Rb0 s8p0 1fB0 1ip0 11z0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 11z0|17e5","America/Toronto|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101012301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 11Wu 1nzu 1fD0 WJ0 1wr0 Nb0 1Ap0 On0 1zd0 On0 1wp0 TX0 1tB0 TX0 1tB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 4kM0 8x40 iv0 1o10 11z0 1nX0 11z0 1o10 11z0 1o10 1qL0 11D0 1nX0 11B0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e5","America/Nassau|LMT EST EDT|59.u 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2kNuO.u 26XdO.u 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|24e4","America/New_York|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 11B0 1qL0 1a10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x40 iv0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e6","America/Nipigon|EST EDT EWT EPT|50 40 40 40|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 Rnb0 3je0 8x40 iv0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|16e2","America/Nome|NST NWT NPT BST BDT YST AKST AKDT|b0 a0 a0 b0 a0 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cl0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|38e2","America/Noronha|LMT -02 -01|29.E 20 10|0121212121212121212121212121212121212121|-2glxO.k HdKO.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|30e2","America/North_Dakota/Beulah|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/Center|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/New_Salem|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Ojinaga|LMT MST CST CDT MDT|6V.E 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Pangnirtung|-00 AST AWT APT ADDT ADT EDT EST CST CDT|0 40 30 30 20 30 40 50 60 50|012314151515151515151515151515151515167676767689767676767676767676767676767676767676767676767676767676767676767676767676767|-1XiM0 PnG0 8x50 iu0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1o00 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Paramaribo|LMT PMT PMT -0330 -03|3E.E 3E.Q 3E.A 3u 30|01234|-2nDUj.k Wqo0.c qanX.I 1yVXN.o|24e4","America/Phoenix|MST MDT MWT|70 60 60|01010202010|-261r0 1nX0 11B0 1nX0 SgN0 4Al1 Ap0 1db0 SWqX 1cL0|42e5","America/Port-au-Prince|PPMT EST EDT|4N 50 40|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-28RHb 2FnMb 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14q0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 i6n0 1nX0 11B0 1nX0 d430 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 3iN0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Rio_Branco|LMT -05 -04|4v.c 50 40|01212121212121212121212121212121|-2glvs.M HdLs.M 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0 d5X0|31e4","America/Porto_Velho|LMT -04 -03|4f.A 40 30|012121212121212121212121212121|-2glvI.o HdKI.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|37e4","America/Puerto_Rico|AST AWT APT|40 30 30|0120|-17lU0 7XT0 iu0|24e5","America/Punta_Arenas|SMT -05 -04 -03|4G.K 50 40 30|0102021212121212121232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 blz0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0","America/Rainy_River|CST CDT CWT CPT|60 50 50 50|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TQ0 1in0 Rnb0 3je0 8x30 iw0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|842","America/Rankin_Inlet|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313131313131313131313131313131313131313131313131313131313131313131|-vDc0 keu0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e2","America/Recife|LMT -03 -02|2j.A 30 20|0121212121212121212121212121212121212121|-2glxE.o HdLE.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|33e5","America/Regina|LMT MST MDT MWT MPT CST|6W.A 70 60 60 60 60|012121212121212121212121341212121212121212121212121215|-2AD51.o uHe1.o 1in0 s2L0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 66N0 1cL0 1cN0 19X0 1fB0 1cL0 1fB0 1cL0 1cN0 1cL0 M30 8x20 ix0 1ip0 1cL0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 3NB0 1cL0 1cN0|19e4","America/Resolute|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313431313131313131313131313131313131313131313131313131313131313131|-SnA0 GWS0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|229","America/Santarem|LMT -04 -03|3C.M 40 30|0121212121212121212121212121212|-2glwl.c HdLl.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0|21e4","America/Santiago|SMT -05 -04 -03|4G.K 50 40 30|010202121212121212321232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 9Bz0 jb0 1oN0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|62e5","America/Santo_Domingo|SDMT EST EDT -0430 AST|4E 50 40 4u 40|01213131313131414|-1ttjk 1lJMk Mn0 6sp0 Lbu 1Cou yLu 1RAu wLu 1QMu xzu 1Q0u xXu 1PAu 13jB0 e00|29e5","America/Sao_Paulo|LMT -03 -02|36.s 30 20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwR.w HdKR.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 pTd0 PX0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1C10 Lz0 1C10 Lz0 1C10 Lz0 1C10 On0 1zd0 Rb0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0|20e6","America/Scoresbysund|LMT -02 -01 +00|1r.Q 20 10 0|0121323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2a5Ww.8 2z5ew.8 1a00 1cK0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|452","America/Sitka|PST PWT PPT PDT YST AKST AKDT|80 70 70 70 90 90 80|01203030303030303030303030303030345656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|90e2","America/St_Johns|NST NDT NST NDT NWT NPT NDDT|3u.Q 2u.Q 3u 2u 2u 2u 1u|01010101010101010101010101010101010102323232323232324523232323232323232323232323232323232323232323232323232323232323232323232323232323232326232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-28oit.8 14L0 1nB0 1in0 1gm0 Dz0 1JB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1fB0 19X0 1fB0 19X0 10O0 eKX.8 19X0 1iq0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Swift_Current|LMT MST MDT MWT MPT CST|7b.k 70 60 60 60 60|012134121212121212121215|-2AD4M.E uHdM.E 1in0 UGp0 8x20 ix0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 isN0 1cL0 3Cp0 1cL0 1cN0 11z0 1qN0 WL0 pMp0|16e3","America/Tegucigalpa|LMT CST CDT|5M.Q 60 50|01212121|-1WGGb.8 2ETcb.8 WL0 1qN0 WL0 GRd0 AL0|11e5","America/Thule|LMT AST ADT|4z.8 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5To.Q 31NBo.Q 1cL0 1cN0 1cL0 1fB0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|656","America/Thunder_Bay|CST EST EWT EPT EDT|60 50 40 40 40|0123141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-2q5S0 1iaN0 8x40 iv0 XNB0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Vancouver|PST PDT PWT PPT|80 70 70 70|0102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TO0 1in0 UGp0 8x10 iy0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Whitehorse|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 3NA0 vrd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Winnipeg|CST CDT CWT CPT|60 50 50 50|010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aIi0 WL0 3ND0 1in0 Jap0 Rb0 aCN0 8x30 iw0 1tB0 11z0 1ip0 11z0 1o10 11z0 1o10 11z0 1rd0 10L0 1op0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 1cL0 1cN0 11z0 6i10 WL0 6i10 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|66e4","America/Yakutat|YST YWT YPT YDT AKST AKDT|90 80 80 80 90 80|01203030303030303030303030303030304545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-17T10 8x00 iz0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cn0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|642","America/Yellowknife|-00 MST MWT MPT MDDT MDT|0 70 60 60 50 60|012314151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151|-1pdA0 hix0 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","Antarctica/Casey|-00 +08 +11|0 -80 -b0|0121212|-2q00 1DjS0 T90 40P0 KL0 blz0|10","Antarctica/Davis|-00 +07 +05|0 -70 -50|01012121|-vyo0 iXt0 alj0 1D7v0 VB0 3Wn0 KN0|70","Antarctica/DumontDUrville|-00 +10|0 -a0|0101|-U0o0 cfq0 bFm0|80","Antarctica/Macquarie|AEST AEDT -00 +11|-a0 -b0 0 -b0|0102010101010101010101010101010101010101010101010101010101010101010101010101010101010101013|-29E80 19X0 4SL0 1ayy0 Lvs0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0|1","Antarctica/Mawson|-00 +06 +05|0 -60 -50|012|-CEo0 2fyk0|60","Pacific/Auckland|NZMT NZST NZST NZDT|-bu -cu -c0 -d0|01020202020202020202020202023232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1GCVu Lz0 1tB0 11zu 1o0u 11zu 1o0u 11zu 1o0u 14nu 1lcu 14nu 1lcu 1lbu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1qLu WMu 1qLu 11Au 1n1bu IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|14e5","Antarctica/Palmer|-00 -03 -04 -02|0 30 40 20|0121212121213121212121212121212121212121212121212121212121212121212121212121212121|-cao0 nD0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 jsN0 14N0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0|40","Antarctica/Rothera|-00 -03|0 30|01|gOo0|130","Antarctica/Syowa|-00 +03|0 -30|01|-vs00|20","Antarctica/Troll|-00 +00 +02|0 0 -20|01212121212121212121212121212121212121212121212121212121212121212121|1puo0 hd0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|40","Antarctica/Vostok|-00 +06|0 -60|01|-tjA0|25","Europe/Oslo|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2awM0 Qm0 W6o0 5pf0 WM0 1fA0 1cM0 1cM0 1cM0 1cM0 wJc0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1qM0 WM0 zpc0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e4","Asia/Riyadh|LMT +03|-36.Q -30|01|-TvD6.Q|57e5","Asia/Almaty|LMT +05 +06 +07|-57.M -50 -60 -70|012323232323232323232321232323232323232323232323232|-1Pc57.M eUo7.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|15e5","Asia/Amman|LMT EET EEST|-2n.I -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1yW2n.I 1HiMn.I KL0 1oN0 11b0 1oN0 11b0 1pd0 1dz0 1cp0 11b0 1op0 11b0 fO10 1db0 1e10 1cL0 1cN0 1cL0 1cN0 1fz0 1pd0 10n0 1ld0 14n0 1hB0 15b0 1ip0 19X0 1cN0 1cL0 1cN0 17b0 1ld0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1So0 y00 1fc0 1dc0 1co0 1dc0 1cM0 1cM0 1cM0 1o00 11A0 1lc0 17c0 1cM0 1cM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 4bX0 Dd0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|25e5","Asia/Anadyr|LMT +12 +13 +14 +11|-bN.U -c0 -d0 -e0 -b0|01232121212121212121214121212121212121212121212121212121212141|-1PcbN.U eUnN.U 23CL0 1db0 2q10 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|13e3","Asia/Aqtau|LMT +04 +05 +06|-3l.4 -40 -50 -60|012323232323232323232123232312121212121212121212|-1Pc3l.4 eUnl.4 24PX0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|15e4","Asia/Aqtobe|LMT +04 +05 +06|-3M.E -40 -50 -60|0123232323232323232321232323232323232323232323232|-1Pc3M.E eUnM.E 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|27e4","Asia/Ashgabat|LMT +04 +05 +06|-3R.w -40 -50 -60|0123232323232323232323212|-1Pc3R.w eUnR.w 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0|41e4","Asia/Atyrau|LMT +03 +05 +06 +04|-3r.I -30 -50 -60 -40|01232323232323232323242323232323232324242424242|-1Pc3r.I eUor.I 24PW0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 2sp0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0","Asia/Baghdad|BMT +03 +04|-2V.A -30 -40|012121212121212121212121212121212121212121212121212121|-26BeV.A 2ACnV.A 11b0 1cp0 1dz0 1dd0 1db0 1cN0 1cp0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1de0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0|66e5","Asia/Qatar|LMT +04 +03|-3q.8 -40 -30|012|-21Jfq.8 27BXq.8|96e4","Asia/Baku|LMT +03 +04 +05|-3j.o -30 -40 -50|01232323232323232323232123232323232323232323232323232323232323232|-1Pc3j.o 1jUoj.o WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 9Je0 1o00 11z0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00|27e5","Asia/Bangkok|BMT +07|-6G.4 -70|01|-218SG.4|15e6","Asia/Barnaul|LMT +06 +07 +08|-5z -60 -70 -80|0123232323232323232323212323232321212121212121212121212121212121212|-21S5z pCnz 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 p90 LE0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Asia/Beirut|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-21aq0 1on0 1410 1db0 19B0 1in0 1ip0 WL0 1lQp0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 q6N0 En0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1op0 11b0 dA10 17b0 1iN0 17b0 1iN0 17b0 1iN0 17b0 1vB0 SL0 1mp0 13z0 1iN0 17b0 1iN0 17b0 1jd0 12n0 1a10 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0|22e5","Asia/Bishkek|LMT +05 +06 +07|-4W.o -50 -60 -70|012323232323232323232321212121212121212121212121212|-1Pc4W.o eUnW.o 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2e00 1tX0 17b0 1ip0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1cPu 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0|87e4","Asia/Brunei|LMT +0730 +08|-7D.E -7u -80|012|-1KITD.E gDc9.E|42e4","Asia/Kolkata|MMT IST +0630|-5l.a -5u -6u|012121|-2zOtl.a 1r2LP.a 1un0 HB0 7zX0|15e6","Asia/Chita|LMT +08 +09 +10|-7x.Q -80 -90 -a0|012323232323232323232321232323232323232323232323232323232323232312|-21Q7x.Q pAnx.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3re0|33e4","Asia/Choibalsan|LMT +07 +08 +10 +09|-7C -70 -80 -a0 -90|0123434343434343434343434343434343434343434343424242|-2APHC 2UkoC cKn0 1da0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 3Db0 h1f0 1cJ0 1cP0 1cJ0|38e3","Asia/Shanghai|CST CDT|-80 -90|01010101010101010|-1c1I0 LX0 16p0 1jz0 1Myp0 Rb0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0|23e6","Asia/Colombo|MMT +0530 +06 +0630|-5j.w -5u -60 -6u|01231321|-2zOtj.w 1rFbN.w 1zzu 7Apu 23dz0 11zu n3cu|22e5","Asia/Dhaka|HMT +0630 +0530 +06 +07|-5R.k -6u -5u -60 -70|0121343|-18LFR.k 1unn.k HB0 m6n0 2kxbu 1i00|16e6","Asia/Damascus|LMT EET EEST|-2p.c -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-21Jep.c Hep.c 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1xRB0 11X0 1oN0 10L0 1pB0 11b0 1oN0 10L0 1mp0 13X0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 Nb0 1AN0 Nb0 bcp0 19X0 1gp0 19X0 3ld0 1xX0 Vd0 1Bz0 Sp0 1vX0 10p0 1dz0 1cN0 1cL0 1db0 1db0 1g10 1an0 1ap0 1db0 1fd0 1db0 1cN0 1db0 1dd0 1db0 1cp0 1dz0 1c10 1dX0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 19z0 1fB0 1qL0 11B0 1on0 Wp0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0|26e5","Asia/Dili|LMT +08 +09|-8m.k -80 -90|01212|-2le8m.k 1dnXm.k 1nfA0 Xld0|19e4","Asia/Dubai|LMT +04|-3F.c -40|01|-21JfF.c|39e5","Asia/Dushanbe|LMT +05 +06 +07|-4z.c -50 -60 -70|012323232323232323232321|-1Pc4z.c eUnz.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2hB0|76e4","Asia/Famagusta|LMT EET EEST +03|-2f.M -20 -30 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212312121212121212121212121212121212121212121|-1Vc2f.M 2a3cf.M 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 15U0 2Ks0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","Asia/Gaza|EET EEST IST IDT|-20 -30 -20 -30|010101010101010101010101010101012323232323232323232323232320101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 11z0 1o10 14o0 1lA1 SKX 1xd1 MKX 1AN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0|18e5","Asia/Hebron|EET EEST IST IDT|-20 -30 -20 -30|01010101010101010101010101010101232323232323232323232323232010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 12L0 1mN0 14o0 1lc0 Tb0 1xd1 MKX bB0 cn0 1cN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0|25e4","Asia/Ho_Chi_Minh|LMT PLMT +07 +08 +09|-76.E -76.u -70 -80 -90|0123423232|-2yC76.E bK00.a 1h7b6.u 5lz0 18o0 3Oq0 k5b0 aW00 BAM0|90e5","Asia/Hong_Kong|LMT HKT HKST JST|-7A.G -80 -90 -90|0121312121212121212121212121212121212121212121212121212121212121212121|-2CFHA.G 1sEP6.G 1cL0 ylu 93X0 1qQu 1tX0 Rd0 1In0 NB0 1cL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1kL0 14N0 1nX0 U10 1tz0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 Rd0 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 17d0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1cL0 6fd0 14n0|73e5","Asia/Hovd|LMT +06 +07 +08|-66.A -60 -70 -80|012323232323232323232323232323232323232323232323232|-2APG6.A 2Uko6.A cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|81e3","Asia/Irkutsk|IMT +07 +08 +09|-6V.5 -70 -80 -90|01232323232323232323232123232323232323232323232323232323232323232|-21zGV.5 pjXV.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Europe/Istanbul|IMT EET EEST +04 +03|-1U.U -20 -30 -40 -30|012121212121212121212121212121212121212121212121212121234343434342121212121212121212121212121212121212121212121212121212121212124|-2ogNU.U dzzU.U 11b0 8tB0 1on0 1410 1db0 19B0 1in0 3Rd0 Un0 1oN0 11b0 zSp0 CL0 mN0 1Vz0 1gN0 1pz0 5Rd0 1fz0 1yp0 ML0 1kp0 17b0 1ip0 17b0 1fB0 19X0 1jB0 18L0 1ip0 17z0 qdd0 xX0 3S10 Tz0 dA10 11z0 1o10 11z0 1qN0 11z0 1ze0 11B0 WM0 1qO0 WI0 1nX0 1rB0 10L0 11B0 1in0 17d0 1in0 2pX0 19E0 1fU0 16Q0 1iI0 16Q0 1iI0 1Vd0 pb0 3Kp0 14o0 1de0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1a00 1fA0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WO0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 Xc0 1qo0 WM0 1qM0 11A0 1o00 1200 1nA0 11A0 1tA0 U00 15w0|13e6","Asia/Jakarta|BMT +0720 +0730 +09 +08 WIB|-77.c -7k -7u -90 -80 -70|01232425|-1Q0Tk luM0 mPzO 8vWu 6kpu 4PXu xhcu|31e6","Asia/Jayapura|LMT +09 +0930 WIT|-9m.M -90 -9u -90|0123|-1uu9m.M sMMm.M L4nu|26e4","Asia/Jerusalem|JMT IST IDT IDDT|-2k.E -20 -30 -40|01212121212132121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-26Bek.E SyMk.E 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 3LB0 Em0 or0 1cn0 1dB0 16n0 10O0 1ja0 1tC0 14o0 1cM0 1a00 11A0 1Na0 An0 1MP0 AJ0 1Kp0 LC0 1oo0 Wl0 EQN0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 1hB0 1dX0 1ep0 1aL0 1eN0 17X0 1nf0 11z0 1tB0 19W0 1e10 17b0 1ep0 1gL0 18N0 1fz0 1eN0 17b0 1gq0 1gn0 19d0 1dz0 1c10 17X0 1hB0 1gn0 19d0 1dz0 1c10 17X0 1kp0 1dz0 1c10 1aL0 1eN0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0|81e4","Asia/Kabul|+04 +0430|-40 -4u|01|-10Qs0|46e5","Asia/Kamchatka|LMT +11 +12 +13|-ay.A -b0 -c0 -d0|012323232323232323232321232323232323232323232323232323232323212|-1SLKy.A ivXy.A 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|18e4","Asia/Karachi|LMT +0530 +0630 +05 PKT PKST|-4s.c -5u -6u -50 -50 -60|012134545454|-2xoss.c 1qOKW.c 7zX0 eup0 LqMu 1fy00 1cL0 dK10 11b0 1610 1jX0|24e6","Asia/Urumqi|LMT +06|-5O.k -60|01|-1GgtO.k|32e5","Asia/Kathmandu|LMT +0530 +0545|-5F.g -5u -5J|012|-21JhF.g 2EGMb.g|12e5","Asia/Khandyga|LMT +08 +09 +10 +11|-92.d -80 -90 -a0 -b0|0123232323232323232323212323232323232323232323232343434343434343432|-21Q92.d pAp2.d 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 qK0 yN0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|66e2","Asia/Krasnoyarsk|LMT +06 +07 +08|-6b.q -60 -70 -80|01232323232323232323232123232323232323232323232323232323232323232|-21Hib.q prAb.q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Asia/Kuala_Lumpur|SMT +07 +0720 +0730 +09 +08|-6T.p -70 -7k -7u -90 -80|0123435|-2Bg6T.p 17anT.p l5XE 17bO 8Fyu 1so1u|71e5","Asia/Kuching|LMT +0730 +08 +0820 +09|-7l.k -7u -80 -8k -90|0123232323232323242|-1KITl.k gDbP.k 6ynu AnE 1O0k AnE 1NAk AnE 1NAk AnE 1NAk AnE 1O0k AnE 1NAk AnE pAk 8Fz0|13e4","Asia/Macau|LMT CST CDT|-7y.k -80 -90|012121212121212121212121212121212121212121|-2le7y.k 1XO34.k 1wn0 Rd0 1wn0 R9u 1wqu U10 1tz0 TVu 1tz0 17gu 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cOu 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cL0|57e4","Asia/Magadan|LMT +10 +11 +12|-a3.c -a0 -b0 -c0|012323232323232323232321232323232323232323232323232323232323232312|-1Pca3.c eUo3.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Cq0|95e3","Asia/Makassar|LMT MMT +08 +09 WITA|-7V.A -7V.A -80 -90 -80|01234|-21JjV.A vfc0 myLV.A 8ML0|15e5","Asia/Manila|+08 +09|-80 -90|010101010|-1kJI0 AL0 cK10 65X0 mXB0 vX0 VK10 1db0|24e6","Asia/Nicosia|LMT EET EEST|-2d.s -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Vc2d.s 2a3cd.s 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|32e4","Asia/Novokuznetsk|LMT +06 +07 +08|-5M.M -60 -70 -80|012323232323232323232321232323232323232323232323232323232323212|-1PctM.M eULM.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|55e4","Asia/Novosibirsk|LMT +06 +07 +08|-5v.E -60 -70 -80|0123232323232323232323212323212121212121212121212121212121212121212|-21Qnv.E pAFv.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 ml0 Os0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 4eN0|15e5","Asia/Omsk|LMT +05 +06 +07|-4R.u -50 -60 -70|01232323232323232323232123232323232323232323232323232323232323232|-224sR.u pMLR.u 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|12e5","Asia/Oral|LMT +03 +05 +06 +04|-3p.o -30 -50 -60 -40|01232323232323232424242424242424242424242424242|-1Pc3p.o eUop.o 23CK0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 1cM0 IM0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|27e4","Asia/Pontianak|LMT PMT +0730 +09 +08 WITA WIB|-7h.k -7h.k -7u -90 -80 -80 -70|012324256|-2ua7h.k XE00 munL.k 8Rau 6kpu 4PXu xhcu Wqnu|23e4","Asia/Pyongyang|LMT KST JST KST|-8n -8u -90 -90|01231|-2um8n 97XR 1lTzu 2Onc0|29e5","Asia/Qyzylorda|LMT +04 +05 +06|-4l.Q -40 -50 -60|0123232323232323232323232323232323232323232323|-1Pc4l.Q eUol.Q 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 3ao0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|73e4","Asia/Rangoon|RMT +0630 +09|-6o.L -6u -90|0121|-21Jio.L SmnS.L 7j9u|48e5","Asia/Sakhalin|LMT +09 +11 +12 +10|-9u.M -90 -b0 -c0 -a0|01232323232323232323232423232323232424242424242424242424242424242|-2AGVu.M 1BoMu.M 1qFa0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 2pB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0|58e4","Asia/Samarkand|LMT +04 +05 +06|-4r.R -40 -50 -60|01232323232323232323232|-1Pc4r.R eUor.R 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0|36e4","Asia/Seoul|LMT KST JST KST KDT KDT|-8r.Q -8u -90 -90 -9u -a0|0123141414141414135353|-2um8r.Q 97XV.Q 1m1zu kKo0 2I0u OL0 1FB0 Rb0 1qN0 TX0 1tB0 TX0 1tB0 TX0 1tB0 TX0 2ap0 12FBu 11A0 1o00 11A0|23e6","Asia/Srednekolymsk|LMT +10 +11 +12|-ae.Q -a0 -b0 -c0|01232323232323232323232123232323232323232323232323232323232323232|-1Pcae.Q eUoe.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|35e2","Asia/Taipei|CST JST CDT|-80 -90 -90|01020202020202020202020202020202020202020|-1iw80 joM0 1yo0 Tz0 1ip0 1jX0 1cN0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 10N0 1BX0 10p0 1pz0 10p0 1pz0 10p0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1BB0 ML0 1Bd0 ML0 uq10 1db0 1cN0 1db0 97B0 AL0|74e5","Asia/Tashkent|LMT +05 +06 +07|-4B.b -50 -60 -70|012323232323232323232321|-1Pc4B.b eUnB.b 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0|23e5","Asia/Tbilisi|TBMT +03 +04 +05|-2X.b -30 -40 -50|0123232323232323232323212121232323232323232323212|-1Pc2X.b 1jUnX.b WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cK0 1cL0 1cN0 1cL0 1cN0 2pz0 1cL0 1fB0 3Nz0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 An0 Os0 WM0|11e5","Asia/Tehran|LMT TMT +0330 +04 +05 +0430|-3p.I -3p.I -3u -40 -50 -4u|01234325252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2btDp.I 1d3c0 1huLT.I TXu 1pz0 sN0 vAu 1cL0 1dB0 1en0 pNB0 UL0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 64p0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0|14e6","Asia/Thimphu|LMT +0530 +06|-5W.A -5u -60|012|-Su5W.A 1BGMs.A|79e3","Asia/Tokyo|JST JDT|-90 -a0|010101010|-QJH0 QL0 1lB0 13X0 1zB0 NX0 1zB0 NX0|38e6","Asia/Tomsk|LMT +06 +07 +08|-5D.P -60 -70 -80|0123232323232323232323212323232323232323232323212121212121212121212|-21NhD.P pxzD.P 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 co0 1bB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Qp0|10e5","Asia/Ulaanbaatar|LMT +07 +08 +09|-77.w -70 -80 -90|012323232323232323232323232323232323232323232323232|-2APH7.w 2Uko7.w cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|12e5","Asia/Ust-Nera|LMT +08 +09 +12 +11 +10|-9w.S -80 -90 -c0 -b0 -a0|012343434343434343434345434343434343434343434343434343434343434345|-21Q9w.S pApw.S 23CL0 1d90 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|65e2","Asia/Vladivostok|LMT +09 +10 +11|-8L.v -90 -a0 -b0|01232323232323232323232123232323232323232323232323232323232323232|-1SJIL.v itXL.v 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Asia/Yakutsk|LMT +08 +09 +10|-8C.W -80 -90 -a0|01232323232323232323232123232323232323232323232323232323232323232|-21Q8C.W pAoC.W 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|28e4","Asia/Yekaterinburg|LMT PMT +04 +05 +06|-42.x -3J.5 -40 -50 -60|012343434343434343434343234343434343434343434343434343434343434343|-2ag42.x 7mQh.s qBvJ.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|14e5","Asia/Yerevan|LMT +03 +04 +05|-2W -30 -40 -50|0123232323232323232323212121212323232323232323232323232323232|-1Pc2W 1jUnW WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 4RX0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|13e5","Atlantic/Azores|HMT -02 -01 +00 WET|1S.w 20 10 0 0|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121232323232323232323232323232323234323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2ldW5.s aPX5.s Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|25e4","Atlantic/Bermuda|LMT AST ADT|4j.i 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1BnRE.G 1LTbE.G 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e3","Atlantic/Canary|LMT -01 WET WEST|11.A 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UtaW.o XPAW.o 1lAK0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Atlantic/Cape_Verde|LMT -02 -01|1y.4 20 10|01212|-2xomp.U 1qOMp.U 7zX0 1djf0|50e4","Atlantic/Faroe|LMT WET WEST|r.4 0 -10|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2uSnw.U 2Wgow.U 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|49e3","Atlantic/Madeira|FMT -01 +00 +01 WET WEST|17.A 10 0 -10 0 -10|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2ldWQ.o aPWQ.o Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e4","Atlantic/Reykjavik|LMT -01 +00 GMT|1s 10 0 0|012121212121212121212121212121212121212121212121212121212121212121213|-2uWmw mfaw 1Bd0 ML0 1LB0 Cn0 1LB0 3fX0 C10 HrX0 1cO0 LB0 1EL0 LA0 1C00 Oo0 1wo0 Rc0 1wo0 Rc0 1wo0 Rc0 1zc0 Oo0 1zc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0|12e4","Atlantic/South_Georgia|-02|20|0||30","Atlantic/Stanley|SMT -04 -03 -02|3P.o 40 30 20|012121212121212323212121212121212121212121212121212121212121212121212|-2kJw8.A 12bA8.A 19X0 1fB0 19X0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 Cn0 1Cc10 WL0 1qL0 U10 1tz0 2mN0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 U10 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qN0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 U10 1tz0 U10 1tz0 U10|21e2","Australia/Sydney|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|40e5","Australia/Adelaide|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 WM0 1qM0 Rc0 1zc0 U00 1tA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|11e5","Australia/Brisbane|AEST AEDT|-a0 -b0|01010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0|20e5","Australia/Broken_Hill|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|18e3","Australia/Currie|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|746","Australia/Darwin|ACST ACDT|-9u -au|010101010|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0|12e4","Australia/Eucla|+0845 +0945|-8J -9J|0101010101010101010|-293kI xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|368","Australia/Hobart|AEST AEDT|-a0 -b0|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 VfB0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|21e4","Australia/Lord_Howe|AEST +1030 +1130 +11|-a0 -au -bu -b0|0121212121313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313|raC0 1zdu Rb0 1zd0 On0 1zd0 On0 1zd0 On0 1zd0 TXu 1qMu WLu 1tAu WLu 1tAu TXu 1tAu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu 11zu 1o0u 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 11Au 1nXu 1qMu 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu 11zu 1o0u WLu 1qMu 14nu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1fzu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu|347","Australia/Lindeman|AEST AEDT|-a0 -b0|010101010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0|10","Australia/Melbourne|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1qM0 11A0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|39e5","Australia/Perth|AWST AWDT|-80 -90|0101010101010101010|-293jX xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|18e5","CET|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","CST6CDT|CST CDT CWT CPT|60 50 50 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Easter|EMT -07 -06 -05|7h.s 70 60 50|012121212121212121212121212123232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1uSgG.w 1s4IG.w WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 2pA0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|30e2","EET|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","EST|EST|50|0|","EST5EDT|EST EDT EWT EPT|50 40 40 40|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 SgN0 8x40 iv0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Europe/Dublin|DMT IST GMT BST IST|p.l -y.D 0 -10 -10|01232323232324242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242|-2ax9y.D Rc0 1fzy.D 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 g600 14o0 1wo0 17c0 1io0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Etc/GMT+0|GMT|0|0|","Etc/GMT+1|-01|10|0|","Etc/GMT+10|-10|a0|0|","Etc/GMT+11|-11|b0|0|","Etc/GMT+12|-12|c0|0|","Etc/GMT+3|-03|30|0|","Etc/GMT+4|-04|40|0|","Etc/GMT+5|-05|50|0|","Etc/GMT+6|-06|60|0|","Etc/GMT+7|-07|70|0|","Etc/GMT+8|-08|80|0|","Etc/GMT+9|-09|90|0|","Etc/GMT-1|+01|-10|0|","Pacific/Port_Moresby|+10|-a0|0||25e4","Pacific/Pohnpei|+11|-b0|0||34e3","Pacific/Tarawa|+12|-c0|0||29e3","Etc/GMT-13|+13|-d0|0|","Etc/GMT-14|+14|-e0|0|","Etc/GMT-2|+02|-20|0|","Etc/GMT-3|+03|-30|0|","Etc/GMT-4|+04|-40|0|","Etc/GMT-5|+05|-50|0|","Etc/GMT-6|+06|-60|0|","Indian/Christmas|+07|-70|0||21e2","Etc/GMT-8|+08|-80|0|","Pacific/Palau|+09|-90|0||21e3","Etc/UCT|UCT|0|0|","Etc/UTC|UTC|0|0|","Europe/Amsterdam|AMT NST +0120 +0020 CEST CET|-j.w -1j.w -1k -k -20 -10|010101010101010101010101010101010101010101012323234545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545|-2aFcj.w 11b0 1iP0 11A0 1io0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1co0 1io0 1yo0 Pc0 1a00 1fA0 1Bc0 Mo0 1tc0 Uo0 1tA0 U00 1uo0 W00 1s00 VA0 1so0 Vc0 1sM0 UM0 1wo0 Rc0 1u00 Wo0 1rA0 W00 1s00 VA0 1sM0 UM0 1w00 fV0 BCX.w 1tA0 U00 1u00 Wo0 1sm0 601k WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|16e5","Europe/Andorra|WET CET CEST|0 -10 -20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-UBA0 1xIN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|79e3","Europe/Astrakhan|LMT +03 +04 +05|-3c.c -30 -40 -50|012323232323232323212121212121212121212121212121212121212121212|-1Pcrc.c eUMc.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Athens|AMT EET EEST CEST CET|-1y.Q -20 -30 -20 -10|012123434121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a61x.Q CNbx.Q mn0 kU10 9b0 3Es0 Xa0 1fb0 1dd0 k3X0 Nz0 SCp0 1vc0 SO0 1cM0 1a00 1ao0 1fc0 1a10 1fG0 1cg0 1dX0 1bX0 1cQ0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|35e5","Europe/London|GMT BST BDST|0 -10 -20|0101010101010101010101010101010101010101010101010121212121210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|10e6","Europe/Belgrade|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19RC0 3IP0 WM0 1fA0 1cM0 1cM0 1rc0 Qo0 1vmo0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Berlin|CET CEST CEMT|-10 -20 -30|01010101010101210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 kL0 Nc0 m10 WM0 1ao0 1cp0 dX0 jz0 Dd0 1io0 17c0 1fA0 1a00 1ehA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e5","Europe/Prague|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 16M0 1lc0 1tA0 17A0 11c0 1io0 17c0 1io0 17c0 1fc0 1ao0 1bNc0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|13e5","Europe/Brussels|WET CET CEST WEST|0 -10 -20 -10|0121212103030303030303030303030303030303030303030303212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ehc0 3zX0 11c0 1iO0 11A0 1o00 11A0 my0 Ic0 1qM0 Rc0 1EM0 UM0 1u00 10o0 1io0 1io0 17c0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a30 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 y00 5Wn0 WM0 1fA0 1cM0 16M0 1iM0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|21e5","Europe/Bucharest|BMT EET EEST|-1I.o -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1xApI.o 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Axc0 On0 1fA0 1a10 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|19e5","Europe/Budapest|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1ip0 17b0 1op0 1tb0 Q2m0 3Ne0 WM0 1fA0 1cM0 1cM0 1oJ0 1dc0 1030 1fA0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1iM0 1fA0 8Ha0 Rb0 1wN0 Rb0 1BB0 Lz0 1C20 LB0 SNX0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zurich|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19Lc0 11A0 1o00 11A0 1xG10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e4","Europe/Chisinau|CMT BMT EET EEST CEST CET MSK MSD|-1T -1I.o -20 -30 -20 -10 -30 -40|012323232323232323234545467676767676767676767323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-26jdT wGMa.A 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 27A0 2en0 39g0 WM0 1fA0 1cM0 V90 1t7z0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 gL0 WO0 1cM0 1cM0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11D0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|67e4","Europe/Copenhagen|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 Tz0 VuO0 60q0 WM0 1fA0 1cM0 1cM0 1cM0 S00 1HA0 Nc0 1C00 Dc0 1Nc0 Ao0 1h5A0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Gibraltar|GMT BST BDST CET CEST|0 -10 -20 -10 -20|010101010101010101010101010101010101010101010101012121212121010121010101010101010101034343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 10Jz0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|30e3","Europe/Helsinki|HMT EET EEST|-1D.N -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1WuND.N OULD.N 1dA0 1xGq0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Kaliningrad|CET CEST CET CEST MSK MSD EEST EET +03|-10 -20 -20 -30 -30 -40 -30 -20 -30|0101010101010232454545454545454546767676767676767676767676767676767676767676787|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 Am0 Lb0 1en0 op0 1pNz0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|44e4","Europe/Kiev|KMT EET MSK CEST CET MSD EEST|-22.4 -20 -30 -20 -10 -40 -30|0123434252525252525252525256161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc22.4 eUo2.4 rnz0 2Hg0 WM0 1fA0 da0 1v4m0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 Db0 3220 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|34e5","Europe/Kirov|LMT +03 +04 +05|-3i.M -30 -40 -50|01232323232323232321212121212121212121212121212121212121212121|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|48e4","Europe/Lisbon|LMT WET WEST WEMT CET CEST|A.J 0 -10 -20 -10 -20|012121212121212121212121212121212121212121212321232123212321212121212121212121212121212121212121214121212121212121212121212121212124545454212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ldXn.f aPWn.f Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 pvy0 1cM0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e5","Europe/Luxembourg|LMT CET CEST WET WEST WEST WET|-o.A -10 -20 0 -10 -20 -10|0121212134343434343434343434343434343434343434343434565651212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2DG0o.A t6mo.A TB0 1nX0 Up0 1o20 11A0 rW0 CM0 1qP0 R90 1EO0 UK0 1u20 10m0 1ip0 1in0 17e0 19W0 1fB0 1db0 1cp0 1in0 17d0 1fz0 1a10 1in0 1a10 1in0 17f0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 vA0 60L0 WM0 1fA0 1cM0 17c0 1io0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Madrid|WET WEST WEMT CET CEST|0 -10 -20 -10 -20|010101010101010101210343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-25Td0 19B0 1cL0 1dd0 b1z0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1in0 17d0 iIn0 Hd0 1cL0 bb0 1200 2s20 14n0 5aL0 Mp0 1vz0 17d0 1in0 17d0 1in0 17d0 1in0 17d0 6hX0 11B0 XHX0 1a10 1fz0 1a10 19X0 1cN0 1fz0 1a10 1fC0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e5","Europe/Malta|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1co0 17c0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1co0 1cM0 1lA0 Xc0 1qq0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1iN0 19z0 1fB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Minsk|MMT EET MSK CEST CET MSD EEST +03|-1O -20 -30 -20 -10 -40 -30 -30|01234343252525252525252525261616161616161616161616161616161616161617|-1Pc1O eUnO qNX0 3gQ0 WM0 1fA0 1cM0 Al0 1tsn0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 3Fc0 1cN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0|19e5","Europe/Monaco|PMT WET WEST WEMT CET CEST|-9.l 0 -10 -20 -10 -20|01212121212121212121212121212121212121212121212121232323232345454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 2RV0 11z0 11B0 1ze0 WM0 1fA0 1cM0 1fa0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e3","Europe/Moscow|MMT MMT MST MDST MSD MSK +05 EET EEST MSK|-2u.h -2v.j -3v.j -4v.j -40 -30 -50 -20 -30 -40|012132345464575454545454545454545458754545454545454545454545454545454545454595|-2ag2u.h 2pyW.W 1bA0 11X0 GN0 1Hb0 c4v.j ik0 3DA0 dz0 15A0 c10 2q10 iM10 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|16e6","Europe/Paris|PMT WET WEST CEST CET WEMT|-9.l 0 -10 -20 -10 -20|0121212121212121212121212121212121212121212121212123434352543434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434|-2nco8.l cNb8.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 Ik0 5M30 WM0 1fA0 1cM0 Vx0 hB0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e6","Europe/Riga|RMT LST EET MSK CEST CET MSD EEST|-1A.y -2A.y -20 -30 -20 -10 -40 -30|010102345454536363636363636363727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272|-25TzA.y 11A0 1iM0 ko0 gWm0 yDXA.y 2bX0 3fE0 WM0 1fA0 1cM0 1cM0 4m0 1sLy0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 1o00 11A0 1o00 11A0 1qM0 3oo0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|64e4","Europe/Rome|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1cM0 16M0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1C00 LA0 1zc0 Oo0 1C00 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1zc0 Oo0 1fC0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|39e5","Europe/Samara|LMT +03 +04 +05|-3k.k -30 -40 -50|0123232323232323232121232323232323232323232323232323232323212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2y10 14m0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|12e5","Europe/Saratov|LMT +03 +04 +05|-34.i -30 -40 -50|012323232323232321212121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 5810","Europe/Simferopol|SMT EET MSK CEST CET MSD EEST MSK|-2g -20 -30 -20 -10 -40 -30 -40|012343432525252525252525252161616525252616161616161616161616161616161616172|-1Pc2g eUog rEn0 2qs0 WM0 1fA0 1cM0 3V0 1u0L0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 4eL0 1cL0 1cN0 1cL0 1cN0 dX0 WL0 1cN0 1cL0 1fB0 1o30 11B0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11z0 1nW0|33e4","Europe/Sofia|EET CET CEST EEST|-20 -10 -20 -30|01212103030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030|-168L0 WM0 1fA0 1cM0 1cM0 1cN0 1mKH0 1dd0 1fb0 1ap0 1fb0 1a20 1fy0 1a30 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Stockholm|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 TB0 2yDe0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|15e5","Europe/Tallinn|TMT CET CEST EET MSK MSD EEST|-1D -10 -20 -20 -30 -40 -30|012103421212454545454545454546363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363|-26oND teD 11A0 1Ta0 4rXl KSLD 2FX0 2Jg0 WM0 1fA0 1cM0 18J0 1sTX0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o10 11A0 1qM0 5QM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e4","Europe/Tirane|LMT CET CEST|-1j.k -10 -20|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2glBj.k 14pcj.k 5LC0 WM0 4M0 1fCK0 10n0 1op0 11z0 1pd0 11z0 1qN0 WL0 1qp0 Xb0 1qp0 Xb0 1qp0 11z0 1lB0 11z0 1qN0 11z0 1iN0 16n0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Ulyanovsk|LMT +03 +04 +05 +02|-3d.A -30 -40 -50 -20|01232323232323232321214121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Uzhgorod|CET CEST MSK MSD EET EEST|-10 -20 -30 -40 -20 -30|010101023232323232323232320454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-1cqL0 6i00 WM0 1fA0 1cM0 1ml0 1Cp0 1r3W0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 1Nf0 2pw0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e4","Europe/Vienna|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 3KM0 14o0 LA00 6i00 WM0 1fA0 1cM0 1cM0 1cM0 400 2qM0 1a00 1cM0 1cM0 1io0 17c0 1gHa0 19X0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|18e5","Europe/Vilnius|WMT KMT CET EET MSK CEST MSD EEST|-1o -1z.A -10 -20 -30 -20 -40 -30|012324525254646464646464646473737373737373737352537373737373737373737373737373737373737373737373737373737373737373737373|-293do 6ILM.o 1Ooz.A zz0 Mfd0 29W0 3is0 WM0 1fA0 1cM0 LV0 1tgL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11B0 1o00 11A0 1qM0 8io0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Volgograd|LMT +03 +04 +05|-2V.E -30 -40 -50|01232323232323232121212121212121212121212121212121212121212121|-21IqV.E psLV.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Europe/Warsaw|WMT CET CEST EET EEST|-1o -10 -20 -20 -30|012121234312121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ctdo 1LXo 11d0 1iO0 11A0 1o00 11A0 1on0 11A0 6zy0 HWP0 5IM0 WM0 1fA0 1cM0 1dz0 1mL0 1en0 15B0 1aq0 1nA0 11A0 1io0 17c0 1fA0 1a00 iDX0 LA0 1cM0 1cM0 1C00 Oo0 1cM0 1cM0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1C00 LA0 uso0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zaporozhye|+0220 EET MSK CEST CET MSD EEST|-2k -20 -30 -20 -10 -40 -30|01234342525252525252525252526161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc2k eUok rdb0 2RE0 WM0 1fA0 8m0 1v9a0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cK0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|77e4","HST|HST|a0|0|","Indian/Chagos|LMT +05 +06|-4N.E -50 -60|012|-2xosN.E 3AGLN.E|30e2","Indian/Cocos|+0630|-6u|0||596","Indian/Kerguelen|-00 +05|0 -50|01|-MG00|130","Indian/Mahe|LMT +04|-3F.M -40|01|-2yO3F.M|79e3","Indian/Maldives|MMT +05|-4S -50|01|-olgS|35e4","Indian/Mauritius|LMT +04 +05|-3O -40 -50|012121|-2xorO 34unO 14L0 12kr0 11z0|15e4","Indian/Reunion|LMT +04|-3F.Q -40|01|-2mDDF.Q|84e4","Pacific/Kwajalein|+11 -12 +12|-b0 c0 -c0|012|-AX0 W9X0|14e3","MET|MET MEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","MST|MST|70|0|","MST7MDT|MST MDT MWT MPT|70 60 60 60|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Chatham|+1215 +1245 +1345|-cf -cJ -dJ|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-WqAf 1adef IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|600","PST8PDT|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Apia|LMT -1130 -11 -10 +14 +13|bq.U bu b0 a0 -e0 -d0|01232345454545454545454545454545454545454545454545454545454|-2nDMx.4 1yW03.4 2rRbu 1ff0 1a00 CI0 AQ0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|37e3","Pacific/Bougainville|+10 +09 +11|-a0 -90 -b0|0102|-16Wy0 7CN0 2MQp0|18e4","Pacific/Efate|LMT +11 +12|-bd.g -b0 -c0|0121212121212121212121|-2l9nd.g 2Szcd.g 1cL0 1oN0 10L0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 Lz0 1Nd0 An0|66e3","Pacific/Enderbury|-12 -11 +13|c0 b0 -d0|012|nIc0 B8n0|1","Pacific/Fakaofo|-11 +13|b0 -d0|01|1Gfn0|483","Pacific/Fiji|LMT +12 +13|-bT.I -c0 -d0|0121212121212121212121212121212121212121212121212121212121212121|-2bUzT.I 3m8NT.I LA0 1EM0 IM0 nJc0 LA0 1o00 Rc0 1wo0 Ao0 1Nc0 Ao0 1Q00 xz0 1SN0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0|88e4","Pacific/Galapagos|LMT -05 -06|5W.o 50 60|01212|-1yVS1.A 2dTz1.A gNd0 rz0|25e3","Pacific/Gambier|LMT -09|8X.M 90|01|-2jof0.c|125","Pacific/Guadalcanal|LMT +11|-aD.M -b0|01|-2joyD.M|11e4","Pacific/Guam|GST ChST|-a0 -a0|01|1fpq0|17e4","Pacific/Honolulu|HST HDT HST|au 9u a0|010102|-1thLu 8x0 lef0 8Pz0 46p0|37e4","Pacific/Kiritimati|-1040 -10 +14|aE a0 -e0|012|nIaE B8nk|51e2","Pacific/Kosrae|+11 +12|-b0 -c0|010|-AX0 1bdz0|66e2","Pacific/Majuro|+11 +12|-b0 -c0|01|-AX0|28e3","Pacific/Marquesas|LMT -0930|9i 9u|01|-2joeG|86e2","Pacific/Pago_Pago|LMT SST|bm.M b0|01|-2nDMB.c|37e2","Pacific/Nauru|LMT +1130 +09 +12|-b7.E -bu -90 -c0|01213|-1Xdn7.E PvzB.E 5RCu 1ouJu|10e3","Pacific/Niue|-1120 -1130 -11|bk bu b0|012|-KfME 17y0a|12e2","Pacific/Norfolk|+1112 +1130 +1230 +11|-bc -bu -cu -b0|01213|-Kgbc W01G On0 1COp0|25e4","Pacific/Noumea|LMT +11 +12|-b5.M -b0 -c0|01212121|-2l9n5.M 2EqM5.M xX0 1PB0 yn0 HeP0 Ao0|98e3","Pacific/Pitcairn|-0830 -08|8u 80|01|18Vku|56","Pacific/Rarotonga|-1030 -0930 -10|au 9u a0|012121212121212121212121212|lyWu IL0 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu|13e3","Pacific/Tahiti|LMT -10|9W.g a0|01|-2joe1.I|18e4","Pacific/Tongatapu|+1220 +13 +14|-ck -d0 -e0|0121212121|-1aB0k 2n5dk 15A0 1wo0 xz0 1Q10 xz0 zWN0 s00|75e3","WET|WET WEST|0 -10|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00"];
-  var links = ["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abidjan|Africa/Conakry","Africa/Abidjan|Africa/Dakar","Africa/Abidjan|Africa/Freetown","Africa/Abidjan|Africa/Lome","Africa/Abidjan|Africa/Nouakchott","Africa/Abidjan|Africa/Ouagadougou","Africa/Abidjan|Africa/Sao_Tome","Africa/Abidjan|Africa/Timbuktu","Africa/Abidjan|Atlantic/St_Helena","Africa/Cairo|Egypt","Africa/Johannesburg|Africa/Maseru","Africa/Johannesburg|Africa/Mbabane","Africa/Lagos|Africa/Bangui","Africa/Lagos|Africa/Brazzaville","Africa/Lagos|Africa/Douala","Africa/Lagos|Africa/Kinshasa","Africa/Lagos|Africa/Libreville","Africa/Lagos|Africa/Luanda","Africa/Lagos|Africa/Malabo","Africa/Lagos|Africa/Niamey","Africa/Lagos|Africa/Porto-Novo","Africa/Maputo|Africa/Blantyre","Africa/Maputo|Africa/Bujumbura","Africa/Maputo|Africa/Gaborone","Africa/Maputo|Africa/Harare","Africa/Maputo|Africa/Kigali","Africa/Maputo|Africa/Lubumbashi","Africa/Maputo|Africa/Lusaka","Africa/Nairobi|Africa/Addis_Ababa","Africa/Nairobi|Africa/Asmara","Africa/Nairobi|Africa/Asmera","Africa/Nairobi|Africa/Dar_es_Salaam","Africa/Nairobi|Africa/Djibouti","Africa/Nairobi|Africa/Kampala","Africa/Nairobi|Africa/Mogadishu","Africa/Nairobi|Indian/Antananarivo","Africa/Nairobi|Indian/Comoro","Africa/Nairobi|Indian/Mayotte","Africa/Tripoli|Libya","America/Adak|America/Atka","America/Adak|US/Aleutian","America/Anchorage|US/Alaska","America/Argentina/Buenos_Aires|America/Buenos_Aires","America/Argentina/Catamarca|America/Argentina/ComodRivadavia","America/Argentina/Catamarca|America/Catamarca","America/Argentina/Cordoba|America/Cordoba","America/Argentina/Cordoba|America/Rosario","America/Argentina/Jujuy|America/Jujuy","America/Argentina/Mendoza|America/Mendoza","America/Atikokan|America/Coral_Harbour","America/Chicago|US/Central","America/Curacao|America/Aruba","America/Curacao|America/Kralendijk","America/Curacao|America/Lower_Princes","America/Denver|America/Shiprock","America/Denver|Navajo","America/Denver|US/Mountain","America/Detroit|US/Michigan","America/Edmonton|Canada/Mountain","America/Fort_Wayne|America/Indiana/Indianapolis","America/Fort_Wayne|America/Indianapolis","America/Fort_Wayne|US/East-Indiana","America/Halifax|Canada/Atlantic","America/Havana|Cuba","America/Indiana/Knox|America/Knox_IN","America/Indiana/Knox|US/Indiana-Starke","America/Jamaica|Jamaica","America/Kentucky/Louisville|America/Louisville","America/Los_Angeles|US/Pacific","America/Los_Angeles|US/Pacific-New","America/Manaus|Brazil/West","America/Mazatlan|Mexico/BajaSur","America/Mexico_City|Mexico/General","America/New_York|US/Eastern","America/Noronha|Brazil/DeNoronha","America/Panama|America/Cayman","America/Phoenix|US/Arizona","America/Port_of_Spain|America/Anguilla","America/Port_of_Spain|America/Antigua","America/Port_of_Spain|America/Dominica","America/Port_of_Spain|America/Grenada","America/Port_of_Spain|America/Guadeloupe","America/Port_of_Spain|America/Marigot","America/Port_of_Spain|America/Montserrat","America/Port_of_Spain|America/St_Barthelemy","America/Port_of_Spain|America/St_Kitts","America/Port_of_Spain|America/St_Lucia","America/Port_of_Spain|America/St_Thomas","America/Port_of_Spain|America/St_Vincent","America/Port_of_Spain|America/Tortola","America/Port_of_Spain|America/Virgin","America/Regina|Canada/Saskatchewan","America/Rio_Branco|America/Porto_Acre","America/Rio_Branco|Brazil/Acre","America/Santiago|Chile/Continental","America/Sao_Paulo|Brazil/East","America/St_Johns|Canada/Newfoundland","America/Tijuana|America/Ensenada","America/Tijuana|America/Santa_Isabel","America/Tijuana|Mexico/BajaNorte","America/Toronto|America/Montreal","America/Toronto|Canada/Eastern","America/Vancouver|Canada/Pacific","America/Whitehorse|Canada/Yukon","America/Winnipeg|Canada/Central","Asia/Ashgabat|Asia/Ashkhabad","Asia/Bangkok|Asia/Phnom_Penh","Asia/Bangkok|Asia/Vientiane","Asia/Dhaka|Asia/Dacca","Asia/Dubai|Asia/Muscat","Asia/Ho_Chi_Minh|Asia/Saigon","Asia/Hong_Kong|Hongkong","Asia/Jerusalem|Asia/Tel_Aviv","Asia/Jerusalem|Israel","Asia/Kathmandu|Asia/Katmandu","Asia/Kolkata|Asia/Calcutta","Asia/Kuala_Lumpur|Asia/Singapore","Asia/Kuala_Lumpur|Singapore","Asia/Macau|Asia/Macao","Asia/Makassar|Asia/Ujung_Pandang","Asia/Nicosia|Europe/Nicosia","Asia/Qatar|Asia/Bahrain","Asia/Rangoon|Asia/Yangon","Asia/Riyadh|Asia/Aden","Asia/Riyadh|Asia/Kuwait","Asia/Seoul|ROK","Asia/Shanghai|Asia/Chongqing","Asia/Shanghai|Asia/Chungking","Asia/Shanghai|Asia/Harbin","Asia/Shanghai|PRC","Asia/Taipei|ROC","Asia/Tehran|Iran","Asia/Thimphu|Asia/Thimbu","Asia/Tokyo|Japan","Asia/Ulaanbaatar|Asia/Ulan_Bator","Asia/Urumqi|Asia/Kashgar","Atlantic/Faroe|Atlantic/Faeroe","Atlantic/Reykjavik|Iceland","Atlantic/South_Georgia|Etc/GMT+2","Australia/Adelaide|Australia/South","Australia/Brisbane|Australia/Queensland","Australia/Broken_Hill|Australia/Yancowinna","Australia/Darwin|Australia/North","Australia/Hobart|Australia/Tasmania","Australia/Lord_Howe|Australia/LHI","Australia/Melbourne|Australia/Victoria","Australia/Perth|Australia/West","Australia/Sydney|Australia/ACT","Australia/Sydney|Australia/Canberra","Australia/Sydney|Australia/NSW","Etc/GMT+0|Etc/GMT","Etc/GMT+0|Etc/GMT-0","Etc/GMT+0|Etc/GMT0","Etc/GMT+0|Etc/Greenwich","Etc/GMT+0|GMT","Etc/GMT+0|GMT+0","Etc/GMT+0|GMT-0","Etc/GMT+0|GMT0","Etc/GMT+0|Greenwich","Etc/UCT|UCT","Etc/UTC|Etc/Universal","Etc/UTC|Etc/Zulu","Etc/UTC|UTC","Etc/UTC|Universal","Etc/UTC|Zulu","Europe/Belgrade|Europe/Ljubljana","Europe/Belgrade|Europe/Podgorica","Europe/Belgrade|Europe/Sarajevo","Europe/Belgrade|Europe/Skopje","Europe/Belgrade|Europe/Zagreb","Europe/Chisinau|Europe/Tiraspol","Europe/Dublin|Eire","Europe/Helsinki|Europe/Mariehamn","Europe/Istanbul|Asia/Istanbul","Europe/Istanbul|Turkey","Europe/Lisbon|Portugal","Europe/London|Europe/Belfast","Europe/London|Europe/Guernsey","Europe/London|Europe/Isle_of_Man","Europe/London|Europe/Jersey","Europe/London|GB","Europe/London|GB-Eire","Europe/Moscow|W-SU","Europe/Oslo|Arctic/Longyearbyen","Europe/Oslo|Atlantic/Jan_Mayen","Europe/Prague|Europe/Bratislava","Europe/Rome|Europe/San_Marino","Europe/Rome|Europe/Vatican","Europe/Warsaw|Poland","Europe/Zurich|Europe/Busingen","Europe/Zurich|Europe/Vaduz","Indian/Christmas|Etc/GMT-7","Pacific/Auckland|Antarctica/McMurdo","Pacific/Auckland|Antarctica/South_Pole","Pacific/Auckland|NZ","Pacific/Chatham|NZ-CHAT","Pacific/Easter|Chile/EasterIsland","Pacific/Guam|Pacific/Saipan","Pacific/Honolulu|Pacific/Johnston","Pacific/Honolulu|US/Hawaii","Pacific/Kwajalein|Kwajalein","Pacific/Pago_Pago|Pacific/Midway","Pacific/Pago_Pago|Pacific/Samoa","Pacific/Pago_Pago|US/Samoa","Pacific/Palau|Etc/GMT-9","Pacific/Pohnpei|Etc/GMT-11","Pacific/Pohnpei|Pacific/Ponape","Pacific/Port_Moresby|Etc/GMT-10","Pacific/Port_Moresby|Pacific/Chuuk","Pacific/Port_Moresby|Pacific/Truk","Pacific/Port_Moresby|Pacific/Yap","Pacific/Tarawa|Etc/GMT-12","Pacific/Tarawa|Pacific/Funafuti","Pacific/Tarawa|Pacific/Wake","Pacific/Tarawa|Pacific/Wallis"];
+  var version$3 = "2018d";
+  var zones = ["Africa/Abidjan|LMT GMT|g.8 0|01|-2ldXH.Q|48e5","Africa/Accra|LMT GMT +0020|.Q 0 -k|012121212121212121212121212121212121212121212121|-26BbX.8 6tzX.8 MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE 1BAk MnE 1C0k MnE 1BAk MnE 1BAk MnE|41e5","Africa/Nairobi|LMT EAT +0230 +0245|-2r.g -30 -2u -2J|01231|-1F3Cr.g 3Dzr.g okMu MFXJ|47e5","Africa/Algiers|PMT WET WEST CET CEST|-9.l 0 -10 -10 -20|0121212121212121343431312123431213|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 DA0 Imo0 rd0 De0 9Xz0 1fb0 1ap0 16K0 2yo0 mEp0 hwL0 jxA0 11A0 dDd0 17b0 11B0 1cN0 2Dy0 1cN0 1fB0 1cL0|26e5","Africa/Lagos|LMT WAT|-d.A -10|01|-22y0d.A|17e6","Africa/Bissau|LMT -01 GMT|12.k 10 0|012|-2ldX0 2xoo0|39e4","Africa/Maputo|LMT CAT|-2a.k -20|01|-2GJea.k|26e5","Africa/Cairo|EET EEST|-20 -30|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1bIO0 vb0 1ip0 11z0 1iN0 1nz0 12p0 1pz0 10N0 1pz0 16p0 1jz0 s3d0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1WL0 rd0 1Rz0 wp0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1qL0 Xd0 1oL0 11d0 1oL0 11d0 1pb0 11d0 1oL0 11d0 1oL0 11d0 1ny0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 WL0 1qN0 Rb0 1wp0 On0 1zd0 Lz0 1EN0 Fb0 c10 8n0 8Nd0 gL0 e10 mn0|15e6","Africa/Casablanca|LMT WET WEST CET|u.k 0 -10 -10|0121212121212121213121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2gMnt.E 130Lt.E rb0 Dd0 dVb0 b6p0 TX0 EoB0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4mn0 SyN0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|32e5","Africa/Ceuta|WET WEST CET CEST|0 -10 -10 -20|010101010101010101010232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-25KN0 11z0 drd0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1y7o0 LL0 gnd0 rz0 43d0 AL0 1Nd0 XX0 1Cp0 pz0 dEp0 4VB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|85e3","Africa/El_Aaiun|LMT -01 WET WEST|Q.M 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1rDz7.c 1GVA7.c 6L0 AL0 1Nd0 XX0 1Cp0 pz0 1cBB0 AL0 1Nd0 wn0 1FB0 Db0 1zd0 Lz0 1Nf0 wM0 co0 go0 1o00 s00 dA0 vc0 11A0 A00 e00 y00 11A0 uM0 e00 Dc0 11A0 s00 e00 IM0 WM0 mo0 gM0 LA0 WM0 jA0 e00 Rc0 11A0 e00 e00 U00 11A0 8o0 e00 11A0 11A0 5A0 e00 17c0 1fA0 1a00 1a00 1fA0 17c0 1io0 14o0 1lc0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1lc0 14o0 1fA0|20e4","Africa/Johannesburg|SAST SAST SAST|-1u -20 -30|012121|-2GJdu 1Ajdu 1cL0 1cN0 1cL0|84e5","Africa/Juba|LMT CAT CAST EAT|-26.s -20 -30 -30|01212121212121212121212121212121213|-1yW26.s 1zK06.s 16L0 1iN0 17b0 1jd0 17b0 1ip0 17z0 1i10 17X0 1hB0 18n0 1hd0 19b0 1gp0 19z0 1iN0 17b0 1ip0 17z0 1i10 18n0 1hd0 18L0 1gN0 19b0 1gp0 19z0 1iN0 17z0 1i10 17X0 yGd0","Africa/Khartoum|LMT CAT CAST EAT|-2a.8 -20 -30 -30|012121212121212121212121212121212131|-1yW2a.8 1zK0a.8 16L0 1iN0 17b0 1jd0 17b0 1ip0 17z0 1i10 17X0 1hB0 18n0 1hd0 19b0 1gp0 19z0 1iN0 17b0 1ip0 17z0 1i10 18n0 1hd0 18L0 1gN0 19b0 1gp0 19z0 1iN0 17z0 1i10 17X0 yGd0 HjL0|51e5","Africa/Monrovia|MMT MMT GMT|H.8 I.u 0|012|-23Lzg.Q 28G01.m|11e5","Africa/Ndjamena|LMT WAT WAST|-10.c -10 -20|0121|-2le10.c 2J3c0.c Wn0|13e5","Africa/Sao_Tome|LMT GMT WAT|A.J 0 -10|012|-2le00 4i6N0","Africa/Tripoli|LMT CET CEST EET|-Q.I -10 -20 -20|012121213121212121212121213123123|-21JcQ.I 1hnBQ.I vx0 4iP0 xx0 4eN0 Bb0 7ip0 U0n0 A10 1db0 1cN0 1db0 1dd0 1db0 1eN0 1bb0 1e10 1cL0 1c10 1db0 1dd0 1db0 1cN0 1db0 1q10 fAn0 1ep0 1db0 AKq0 TA0 1o00|11e5","Africa/Tunis|PMT CET CEST|-9.l -10 -20|0121212121212121212121212121212121|-2nco9.l 18pa9.l 1qM0 DA0 3Tc0 11B0 1ze0 WM0 7z0 3d0 14L0 1cN0 1f90 1ar0 16J0 1gXB0 WM0 1rA0 11c0 nwo0 Ko0 1cM0 1cM0 1rA0 10M0 zuM0 10N0 1aN0 1qM0 WM0 1qM0 11A0 1o00|20e5","Africa/Windhoek|+0130 SAST SAST CAT WAT WAST|-1u -20 -30 -20 -10 -20|01213454545454545454545454545454545454545454545454543|-2GJdu 1Ajdu 1cL0 1SqL0 9Io0 16P0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0|32e4","America/Adak|NST NWT NPT BST BDT AHST HST HDT|b0 a0 a0 b0 a0 a0 a0 90|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|326","America/Anchorage|AST AWT APT AHST AHDT YST AKST AKDT|a0 90 90 a0 90 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T00 8wX0 iA0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cm0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|30e4","America/Port_of_Spain|LMT AST|46.4 40|01|-2kNvR.U|43e3","America/Araguaina|LMT -03 -02|3c.M 30 20|0121212121212121212121212121212121212121212121212121|-2glwL.c HdKL.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 ny10 Lz0|14e4","America/Argentina/Buenos_Aires|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Catamarca|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Cordoba|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323132323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0 1qN0 WL0","America/Argentina/Jujuy|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1ze0 TX0 1ld0 WK0 1wp0 TX0 A4p0 uL0","America/Argentina/La_Rioja|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Mendoza|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232312121321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1u20 SL0 1vd0 Tb0 1wp0 TW0 ri10 Op0 7TX0 uL0","America/Argentina/Rio_Gallegos|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rlB0 7B0 8zb0 uL0","America/Argentina/Salta|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231323232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 A4p0 uL0","America/Argentina/San_Juan|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323231232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Qn0 qO0 16n0 Rb0 1wp0 TX0 rld0 m10 8lb0 uL0","America/Argentina/San_Luis|CMT -04 -03 -02|4g.M 40 30 20|012121212121212121212121212121212121212121232323121212321212|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 XX0 1q20 SL0 AN0 vDb0 m10 8lb0 8L0 jd0 1qN0 WL0 1qN0","America/Argentina/Tucuman|CMT -04 -03 -02|4g.M 40 30 20|0121212121212121212121212121212121212121212323232313232123232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wq0 Ra0 1wp0 TX0 rlB0 4N0 8BX0 uL0 1qN0 WL0","America/Argentina/Ushuaia|CMT -04 -03 -02|4g.M 40 30 20|01212121212121212121212121212121212121212123232323232321232|-20UHH.c pKnH.c Mn0 1iN0 Tb0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 1C10 LX0 1C10 LX0 1C10 LX0 1C10 Mn0 MN0 2jz0 MN0 4lX0 u10 5Lb0 1pB0 Fnz0 u10 uL0 1vd0 SL0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 zvd0 Bz0 1tB0 TX0 1wp0 Rb0 1wp0 Rb0 1wp0 TX0 rkN0 8p0 8zb0 uL0","America/Curacao|LMT -0430 AST|4z.L 4u 40|012|-2kV7o.d 28KLS.d|15e4","America/Asuncion|AMT -04 -03|3O.E 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-1x589.k 1DKM9.k 3CL0 3Dd0 10L0 1pB0 10n0 1pB0 10n0 1pB0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1dd0 1cL0 1dd0 1cL0 1dd0 1db0 1dd0 1cL0 1lB0 14n0 1dd0 1cL0 1fd0 WL0 1rd0 1aL0 1dB0 Xz0 1qp0 Xb0 1qN0 10L0 1rB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 WN0 1qL0 11B0 1nX0 1ip0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 TX0 1tB0 19X0 1a10 1fz0 1a10 1fz0 1cN0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1ip0 17b0 1ip0 17b0 1ip0|28e5","America/Atikokan|CST CDT CWT CPT EST|60 50 50 50 50|0101234|-25TQ0 1in0 Rnb0 3je0 8x30 iw0|28e2","America/Bahia_Banderas|LMT MST CST PST MDT CDT|71 70 60 80 60 50|0121212131414141414141414141414141414152525252525252525252525252525252525252525252525252525252|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nW0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|84e3","America/Bahia|LMT -03 -02|2y.4 30 20|01212121212121212121212121212121212121212121212121212121212121|-2glxp.U HdLp.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 l5B0 Rb0|27e5","America/Barbados|LMT BMT AST ADT|3W.t 3W.t 40 30|01232323232|-1Q0I1.v jsM0 1ODC1.v IL0 1ip0 17b0 1ip0 17b0 1ld0 13b0|28e4","America/Belem|LMT -03 -02|3d.U 30 20|012121212121212121212121212121|-2glwK.4 HdKK.4 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|20e5","America/Belize|LMT CST -0530 CDT|5Q.M 60 5u 50|01212121212121212121212121212121212121212121212121213131|-2kBu7.c fPA7.c Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1wou Rbu 1zcu Onu 1zcu Onu 1zcu Rbu 1wou Rbu 1f0Mu qn0 lxB0 mn0|57e3","America/Blanc-Sablon|AST ADT AWT APT|40 30 30 30|010230|-25TS0 1in0 UGp0 8x50 iu0|11e2","America/Boa_Vista|LMT -04 -03|42.E 40 30|0121212121212121212121212121212121|-2glvV.k HdKV.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 smp0 WL0 1tB0 2L0|62e2","America/Bogota|BMT -05 -04|4U.g 50 40|0121|-2eb73.I 38yo3.I 2en0|90e5","America/Boise|PST PDT MST MWT MPT MDT|80 70 70 60 60 60|0101023425252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-261q0 1nX0 11B0 1nX0 8C10 JCL0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 Dd0 1Kn0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e4","America/Cambridge_Bay|-00 MST MWT MPT MDDT MDT CST CDT EST|0 70 60 60 50 60 60 50 50|0123141515151515151515151515151515151515151515678651515151515151515151515151515151515151515151515151515151515151515151515151|-21Jc0 RO90 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11A0 1nX0 2K0 WQ0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e2","America/Campo_Grande|LMT -04 -03|3C.s 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwl.w HdLl.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1HB0 FX0 1HB0 FX0 1HB0 IL0 1HB0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0 IL0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1Kp0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0|77e4","America/Cancun|LMT CST EST EDT CDT|5L.4 60 50 40 50|0123232341414141414141414141414141414141412|-1UQG0 2q2o0 yLB0 1lb0 14p0 1lb0 14p0 Lz0 xB0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 Dd0|63e4","America/Caracas|CMT -0430 -04|4r.E 4u 40|01212|-2kV7w.k 28KM2.k 1IwOu kqo0|29e5","America/Cayenne|LMT -04 -03|3t.k 40 30|012|-2mrwu.E 2gWou.E|58e3","America/Panama|CMT EST|5j.A 50|01|-2uduE.o|15e5","America/Chicago|CST CDT EST CWT CPT|60 50 50 50 50|01010101010101010101010101010101010102010101010103401010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 1wp0 TX0 WN0 1qL0 1cN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 11B0 1Hz0 14p0 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|92e5","America/Chihuahua|LMT MST CST CDT MDT|74.k 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|81e4","America/Costa_Rica|SJMT CST CDT|5A.d 60 50|0121212121|-1Xd6n.L 2lu0n.L Db0 1Kp0 Db0 pRB0 15b0 1kp0 mL0|12e5","America/Creston|MST PST|70 80|010|-29DR0 43B0|53e2","America/Cuiaba|LMT -04 -03|3I.k 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwf.E HdLf.E 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 4a10 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1HB0 FX0 1HB0 FX0 1HB0 IL0 1HB0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0 IL0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1Kp0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0|54e4","America/Danmarkshavn|LMT -03 -02 GMT|1e.E 30 20 0|01212121212121212121212121212121213|-2a5WJ.k 2z5fJ.k 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 DC0|8","America/Dawson_Creek|PST PDT PWT PPT MST|80 70 70 70 70|0102301010101010101010101010101010101010101010101010101014|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 ML0|12e3","America/Dawson|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 jrA0 fNd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|13e2","America/Denver|MST MDT MWT MPT|70 60 60 60|01010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 11B0 1qL0 WN0 mn0 Ord0 8x20 ix0 LCN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e5","America/Detroit|LMT CST EST EWT EPT EDT|5w.b 60 50 40 40 40|012342525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2Cgir.N peqr.N 156L0 8x40 iv0 6fd0 11z0 XQp0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e5","America/Edmonton|LMT MST MDT MWT MPT|7x.Q 70 60 60 60|01212121212121341212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2yd4q.8 shdq.8 1in0 17d0 hz0 2dB0 1fz0 1a10 11z0 1qN0 WL0 1qN0 11z0 IGN0 8x20 ix0 3NB0 11z0 LFB0 1cL0 3Cp0 1cL0 66N0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|10e5","America/Eirunepe|LMT -05 -04|4D.s 50 40|0121212121212121212121212121212121|-2glvk.w HdLk.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0 yTd0 d5X0|31e3","America/El_Salvador|LMT CST CDT|5U.M 60 50|012121|-1XiG3.c 2Fvc3.c WL0 1qN0 WL0|11e5","America/Tijuana|LMT MST PST PDT PWT PPT|7M.4 70 80 70 70 70|012123245232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQE0 4PX0 8mM0 8lc0 SN0 1cL0 pHB0 83r0 zI0 5O10 1Rz0 cOO0 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 BUp0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|20e5","America/Fort_Nelson|PST PDT PWT PPT MST|80 70 70 70 70|01023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010104|-25TO0 1in0 UGp0 8x10 iy0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0|39e2","America/Fort_Wayne|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010101023010101010101010101040454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 QI10 Db0 RB0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 5Tz0 1o10 qLb0 1cL0 1cN0 1cL0 1qhd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Fortaleza|LMT -03 -02|2y 30 20|0121212121212121212121212121212121212121|-2glxq HdLq 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 5z0 2mN0 On0|34e5","America/Glace_Bay|LMT AST ADT AWT APT|3X.M 40 30 30 30|012134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsI0.c CwO0.c 1in0 UGp0 8x50 iu0 iq10 11z0 Jg10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","America/Godthab|LMT -03 -02|3q.U 30 20|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5Ux.4 2z5dx.4 19U0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e3","America/Goose_Bay|NST NDT NST NDT NWT NPT AST ADT ADDT|3u.Q 2u.Q 3u 2u 2u 2u 40 30 20|010232323232323245232323232323232323232323232323232323232326767676767676767676767676767676767676767676768676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-25TSt.8 1in0 DXb0 2HbX.8 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 S10 g0u 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|76e2","America/Grand_Turk|KMT EST EDT AST|57.a 50 40 40|01212121212121212121212121212121212121212121212121212121212121212121212121232121212121212121212121212121212121212121|-2l1uQ.O 2HHBQ.O 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 5Ip0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|37e2","America/Guatemala|LMT CST CDT|62.4 60 50|0121212121|-24KhV.U 2efXV.U An0 mtd0 Nz0 ifB0 17b0 zDB0 11z0|13e5","America/Guayaquil|QMT -05 -04|5e 50 40|0121|-1yVSK 2uILK rz0|27e5","America/Guyana|LMT -0345 -03 -04|3Q.E 3J 30 40|0123|-2dvU7.k 2r6LQ.k Bxbf|80e4","America/Halifax|LMT AST ADT AWT APT|4e.o 40 30 30 30|0121212121212121212121212121212121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsHJ.A xzzJ.A 1db0 3I30 1in0 3HX0 IL0 1E10 ML0 1yN0 Pb0 1Bd0 Mn0 1Bd0 Rz0 1w10 Xb0 1w10 LX0 1w10 Xb0 1w10 Lz0 1C10 Jz0 1E10 OL0 1yN0 Un0 1qp0 Xb0 1qp0 11X0 1w10 Lz0 1HB0 LX0 1C10 FX0 1w10 Xb0 1qp0 Xb0 1BB0 LX0 1td0 Xb0 1qp0 Xb0 Rf0 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 3Qp0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 6i10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|39e4","America/Havana|HMT CST CDT|5t.A 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Meuu.o 72zu.o ML0 sld0 An0 1Nd0 Db0 1Nd0 An0 6Ep0 An0 1Nd0 An0 JDd0 Mn0 1Ap0 On0 1fd0 11X0 1qN0 WL0 1wp0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 14n0 1ld0 14L0 1kN0 15b0 1kp0 1cL0 1cN0 1fz0 1a10 1fz0 1fB0 11z0 14p0 1nX0 11B0 1nX0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 1a10 1in0 1a10 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 17c0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 11A0 6i00 Rc0 1wo0 U00 1tA0 Rc0 1wo0 U00 1wo0 U00 1zc0 U00 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0|21e5","America/Hermosillo|LMT MST CST PST MDT|7n.Q 70 60 80 60|0121212131414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0|64e4","America/Indiana/Knox|CST CDT CWT CPT EST|60 50 50 50 50|0101023010101010101010101010101010101040101010101010101010101010101010101010101010101010141010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 3NB0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 3Cn0 8wp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 z8o0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Marengo|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010104545454545414545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 dyN0 11z0 6fd0 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1e6p0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Petersburg|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010104010101010101010101010141014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 njX0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 3Fb0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 19co0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Tell_City|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vevay|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|010102304545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 kPB0 Awn0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1lnd0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Vincennes|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010454541014545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 g0p0 11z0 1o10 11z0 1qL0 WN0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 caL0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Indiana/Winamac|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|01010230101010101010101010101010101010454541054545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 jrz0 1cL0 1cN0 1cL0 1qhd0 1o00 Rd0 1za0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Inuvik|-00 PST PDDT MST MDT|0 80 60 70 60|0121343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-FnA0 tWU0 1fA0 wPe0 2pz0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|35e2","America/Iqaluit|-00 EWT EPT EST EDDT EDT CST CDT|0 40 40 50 30 40 60 50|01234353535353535353535353535353535353535353567353535353535353535353535353535353535353535353535353535353535353535353535353|-16K00 7nX0 iv0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|67e2","America/Jamaica|KMT EST EDT|57.a 50 40|0121212121212121212121|-2l1uQ.O 2uM1Q.O 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0|94e4","America/Juneau|PST PWT PPT PDT YDT YST AKST AKDT|80 70 70 70 80 90 90 80|01203030303030303030303030403030356767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cM0 1cM0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|33e3","America/Kentucky/Louisville|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101010102301010101010101010101010101454545454545414545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 3Fd0 Nb0 LPd0 11z0 RB0 8x30 iw0 Bb0 10N0 2bB0 8in0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 xz0 gso0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1VA0 LA0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Kentucky/Monticello|CST CDT CWT CPT EST EDT|60 50 50 50 50 40|0101023010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454545454|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 SWp0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/La_Paz|CMT BST -04|4w.A 3w.A 40|012|-1x37r.o 13b0|19e5","America/Lima|LMT -05 -04|58.A 50 40|0121212121212121|-2tyGP.o 1bDzP.o zX0 1aN0 1cL0 1cN0 1cL0 1PrB0 zX0 1O10 zX0 6Gp0 zX0 98p0 zX0|11e6","America/Los_Angeles|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 5Wp1 1VaX 3dA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|15e6","America/Maceio|LMT -03 -02|2m.Q 30 20|012121212121212121212121212121212121212121|-2glxB.8 HdLB.8 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 dMN0 Lz0 8Q10 WL0 1tB0 5z0 2mN0 On0|93e4","America/Managua|MMT CST EST CDT|5J.c 60 50 50|0121313121213131|-1quie.M 1yAMe.M 4mn0 9Up0 Dz0 1K10 Dz0 s3F0 1KH0 DB0 9In0 k8p0 19X0 1o30 11y0|22e5","America/Manaus|LMT -04 -03|40.4 40 30|01212121212121212121212121212121|-2glvX.U HdKX.U 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 dPB0 On0|19e5","America/Martinique|FFMT AST ADT|44.k 40 30|0121|-2mPTT.E 2LPbT.E 19X0|39e4","America/Matamoros|LMT CST CDT|6E 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|45e4","America/Mazatlan|LMT MST CST PST MDT|75.E 70 60 80 60|0121212131414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 otX0 gmN0 P2N0 13Vd0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|44e4","America/Menominee|CST CDT CWT CPT EST|60 50 50 50 50|01010230101041010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 1o10 11z0 LCN0 1fz0 6410 9Jb0 1cM0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|85e2","America/Merida|LMT CST EST CDT|5W.s 60 50 50|0121313131313131313131313131313131313131313131313131313131313131313131313131313131313131|-1UQG0 2q2o0 2hz0 wu30 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|11e5","America/Metlakatla|PST PWT PPT PDT AKST AKDT|80 70 70 70 90 80|0120303030303030303030303030303030454545454545454545454545454545454545454545454|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1hU10 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Mexico_City|LMT MST CST CDT CWT|6A.A 70 60 50 50|012121232324232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 gEn0 TX0 3xd0 Jb0 6zB0 SL0 e5d0 17b0 1Pff0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|20e6","America/Miquelon|LMT AST -03 -02|3I.E 40 30 20|012323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2mKkf.k 2LTAf.k gQ10 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|61e2","America/Moncton|EST AST ADT AWT APT|50 40 30 30 30|012121212121212121212134121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2IsH0 CwN0 1in0 zAo0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1Nd0 An0 1K10 Lz0 1zB0 NX0 1u10 Wn0 S20 8x50 iu0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14n1 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 ReX 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|64e3","America/Monterrey|LMT CST CDT|6F.g 60 50|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1UQG0 2FjC0 1nX0 i6p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0|41e5","America/Montevideo|LMT MMT -04 -03 -0330 -0230 -02 -0130|3I.P 3I.P 40 30 3u 2u 20 1u|012343434343434343434343435353636353636375363636363636363636363636363636363636363636363|-2tRUf.9 sVc0 8jcf.9 1db0 1dcu 1cLu 1dcu 1cLu ircu 11zu 1o0u 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu WLu 1fAu 1cLu 1o0u 11zu NAu 3jXu zXu Dq0u 19Xu pcu jz0 cm10 19X0 6tB0 1fbu 3o0u jX0 4vB0 xz0 3Cp0 mmu 1a10 IMu Db0 4c10 uL0 1Nd0 An0 1SN0 uL0 mp0 28L0 iPB0 un0 1SN0 xz0 1zd0 Lz0 1zd0 Rb0 1zd0 On0 1wp0 Rb0 s8p0 1fB0 1ip0 11z0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 14n0 1ld0 14n0 1ld0 14n0 1o10 11z0 1o10 11z0 1o10 11z0|17e5","America/Toronto|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101012301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 11Wu 1nzu 1fD0 WJ0 1wr0 Nb0 1Ap0 On0 1zd0 On0 1wp0 TX0 1tB0 TX0 1tB0 TX0 1tB0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 4kM0 8x40 iv0 1o10 11z0 1nX0 11z0 1o10 11z0 1o10 1qL0 11D0 1nX0 11B0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e5","America/Nassau|LMT EST EDT|59.u 50 40|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2kNuO.u 26XdO.u 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|24e4","America/New_York|EST EDT EWT EPT|50 40 40 40|01010101010101010101010101010101010101010101010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 11B0 1qL0 1a10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 RB0 8x40 iv0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|21e6","America/Nipigon|EST EDT EWT EPT|50 40 40 40|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TR0 1in0 Rnb0 3je0 8x40 iv0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|16e2","America/Nome|NST NWT NPT BST BDT YST AKST AKDT|b0 a0 a0 b0 a0 90 90 80|012034343434343434343434343434343456767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676767676|-17SX0 8wW0 iB0 Qlb0 52O0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cl0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|38e2","America/Noronha|LMT -02 -01|29.E 20 10|0121212121212121212121212121212121212121|-2glxO.k HdKO.k 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|30e2","America/North_Dakota/Beulah|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Oo0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/Center|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101014545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/North_Dakota/New_Salem|MST MDT MWT MPT CST CDT|70 60 60 60 60 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101454545454545454545454545454545454545454545454545454545454545454545454|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14o0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","America/Ojinaga|LMT MST CST CDT MDT|6V.E 70 60 50 60|0121212323241414141414141414141414141414141414141414141414141414141414141414141414141414141|-1UQF0 deL0 8lc0 17c0 10M0 1dd0 2zQN0 1lb0 14p0 1lb0 14q0 1lb0 14p0 1nX0 11B0 1nX0 1fB0 WL0 1fB0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 U10 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Pangnirtung|-00 AST AWT APT ADDT ADT EDT EST CST CDT|0 40 30 30 20 30 40 50 60 50|012314151515151515151515151515151515167676767689767676767676767676767676767676767676767676767676767676767676767676767676767|-1XiM0 PnG0 8x50 iu0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1o00 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11C0 1nX0 11A0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|14e2","America/Paramaribo|LMT PMT PMT -0330 -03|3E.E 3E.Q 3E.A 3u 30|01234|-2nDUj.k Wqo0.c qanX.I 1yVXN.o|24e4","America/Phoenix|MST MDT MWT|70 60 60|01010202010|-261r0 1nX0 11B0 1nX0 SgN0 4Al1 Ap0 1db0 SWqX 1cL0|42e5","America/Port-au-Prince|PPMT EST EDT|4N 50 40|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-28RHb 2FnMb 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14q0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 i6n0 1nX0 11B0 1nX0 d430 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 3iN0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Rio_Branco|LMT -05 -04|4v.c 50 40|01212121212121212121212121212121|-2glvs.M HdLs.M 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0 d5X0|31e4","America/Porto_Velho|LMT -04 -03|4f.A 40 30|012121212121212121212121212121|-2glvI.o HdKI.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0|37e4","America/Puerto_Rico|AST AWT APT|40 30 30|0120|-17lU0 7XT0 iu0|24e5","America/Punta_Arenas|SMT -05 -04 -03|4G.K 50 40 30|0102021212121212121232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 blz0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0","America/Rainy_River|CST CDT CWT CPT|60 50 50 50|010123010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TQ0 1in0 Rnb0 3je0 8x30 iw0 19yN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|842","America/Rankin_Inlet|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313131313131313131313131313131313131313131313131313131313131313131|-vDc0 keu0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|26e2","America/Recife|LMT -03 -02|2j.A 30 20|0121212121212121212121212121212121212121|-2glxE.o HdLE.o 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 nsp0 WL0 1tB0 2L0 2pB0 On0|33e5","America/Regina|LMT MST MDT MWT MPT CST|6W.A 70 60 60 60 60|012121212121212121212121341212121212121212121212121215|-2AD51.o uHe1.o 1in0 s2L0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 66N0 1cL0 1cN0 19X0 1fB0 1cL0 1fB0 1cL0 1cN0 1cL0 M30 8x20 ix0 1ip0 1cL0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 3NB0 1cL0 1cN0|19e4","America/Resolute|-00 CST CDDT CDT EST|0 60 40 50 50|012131313131313131313131313131313131313131313431313131313431313131313131313131313131313131313131313131313131313131313131|-SnA0 GWS0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|229","America/Santarem|LMT -04 -03|3C.M 40 30|0121212121212121212121212121212|-2glwl.c HdLl.c 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 qe10 xb0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 NBd0|21e4","America/Santiago|SMT -05 -04 -03|4G.K 50 40 30|010202121212121212321232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-2q2jh.e fJAh.e 5knG.K 1Vzh.e jRAG.K 1pbh.e 11d0 1oL0 11d0 1oL0 11d0 1oL0 11d0 1pb0 11d0 nHX0 op0 9Bz0 jb0 1oN0 ko0 Qeo0 WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|62e5","America/Santo_Domingo|SDMT EST EDT -0430 AST|4E 50 40 4u 40|01213131313131414|-1ttjk 1lJMk Mn0 6sp0 Lbu 1Cou yLu 1RAu wLu 1QMu xzu 1Q0u xXu 1PAu 13jB0 e00|29e5","America/Sao_Paulo|LMT -03 -02|36.s 30 20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-2glwR.w HdKR.w 1cc0 1e10 1bX0 Ezd0 So0 1vA0 Mn0 1BB0 ML0 1BB0 zX0 pTd0 PX0 2ep0 nz0 1C10 zX0 1C10 LX0 1C10 Mn0 H210 Rb0 1tB0 IL0 1Fd0 FX0 1EN0 FX0 1HB0 Lz0 1EN0 Lz0 1C10 IL0 1HB0 Db0 1HB0 On0 1zd0 On0 1zd0 Lz0 1zd0 Rb0 1wN0 Wn0 1tB0 Rb0 1tB0 WL0 1tB0 Rb0 1zd0 On0 1HB0 FX0 1C10 Lz0 1Ip0 HX0 1zd0 On0 1HB0 IL0 1wp0 On0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 Rb0 1zd0 Lz0 1C10 Lz0 1C10 On0 1zd0 On0 1zd0 On0 1zd0 On0 1HB0 FX0 1HB0 FX0 1HB0 IL0 1HB0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0 IL0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1HB0 FX0 1Kp0 FX0 1HB0 IL0 1EN0 FX0 1HB0 FX0 1HB0 IL0 1EN0|20e6","America/Scoresbysund|LMT -02 -01 +00|1r.Q 20 10 0|0121323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2a5Ww.8 2z5ew.8 1a00 1cK0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|452","America/Sitka|PST PWT PPT PDT YST AKST AKDT|80 70 70 70 90 90 80|01203030303030303030303030303030345656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-17T20 8x10 iy0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 co0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|90e2","America/St_Johns|NST NDT NST NDT NWT NPT NDDT|3u.Q 2u.Q 3u 2u 2u 2u 1u|01010101010101010101010101010101010102323232323232324523232323232323232323232323232323232323232323232323232323232323232323232323232323232326232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-28oit.8 14L0 1nB0 1in0 1gm0 Dz0 1JB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 19X0 1fB0 1cL0 1fB0 19X0 1fB0 19X0 10O0 eKX.8 19X0 1iq0 WL0 1qN0 WL0 1qN0 WL0 1tB0 TX0 1tB0 WL0 1qN0 WL0 1qN0 7UHu itu 1tB0 WL0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1tB0 WL0 1ld0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14n1 1lb0 14p0 1nW0 11C0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zcX Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Swift_Current|LMT MST MDT MWT MPT CST|7b.k 70 60 60 60 60|012134121212121212121215|-2AD4M.E uHdM.E 1in0 UGp0 8x20 ix0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 isN0 1cL0 3Cp0 1cL0 1cN0 11z0 1qN0 WL0 pMp0|16e3","America/Tegucigalpa|LMT CST CDT|5M.Q 60 50|01212121|-1WGGb.8 2ETcb.8 WL0 1qN0 WL0 GRd0 AL0|11e5","America/Thule|LMT AST ADT|4z.8 40 30|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a5To.Q 31NBo.Q 1cL0 1cN0 1cL0 1fB0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|656","America/Thunder_Bay|CST EST EWT EPT EDT|60 50 40 40 40|0123141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141|-2q5S0 1iaN0 8x40 iv0 XNB0 1cL0 1cN0 1fz0 1cN0 1cL0 3Cp0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|11e4","America/Vancouver|PST PDT PWT PPT|80 70 70 70|0102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-25TO0 1in0 UGp0 8x10 iy0 1o10 17b0 1ip0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e5","America/Whitehorse|YST YDT YWT YPT YDDT PST PDT|90 80 80 80 70 80 70|0101023040565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565656565|-25TN0 1in0 1o10 13V0 Ser0 8x00 iz0 LCL0 1fA0 3NA0 vrd0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|23e3","America/Winnipeg|CST CDT CWT CPT|60 50 50 50|010101023010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aIi0 WL0 3ND0 1in0 Jap0 Rb0 aCN0 8x30 iw0 1tB0 11z0 1ip0 11z0 1o10 11z0 1o10 11z0 1rd0 10L0 1op0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 1cL0 1cN0 11z0 6i10 WL0 6i10 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1o00 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1o00 11A0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|66e4","America/Yakutat|YST YWT YPT YDT AKST AKDT|90 80 80 80 90 80|01203030303030303030303030303030304545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-17T10 8x00 iz0 Vo10 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 cn0 10q0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|642","America/Yellowknife|-00 MST MWT MPT MDDT MDT|0 70 60 60 50 60|012314151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151515151|-1pdA0 hix0 8x20 ix0 LCL0 1fA0 zgO0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|19e3","Antarctica/Casey|-00 +08 +11|0 -80 -b0|01212121|-2q00 1DjS0 T90 40P0 KL0 blz0 3m10|10","Antarctica/Davis|-00 +07 +05|0 -70 -50|01012121|-vyo0 iXt0 alj0 1D7v0 VB0 3Wn0 KN0|70","Antarctica/DumontDUrville|-00 +10|0 -a0|0101|-U0o0 cfq0 bFm0|80","Antarctica/Macquarie|AEST AEDT -00 +11|-a0 -b0 0 -b0|0102010101010101010101010101010101010101010101010101010101010101010101010101010101010101013|-29E80 19X0 4SL0 1ayy0 Lvs0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0|1","Antarctica/Mawson|-00 +06 +05|0 -60 -50|012|-CEo0 2fyk0|60","Pacific/Auckland|NZMT NZST NZST NZDT|-bu -cu -c0 -d0|01020202020202020202020202023232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1GCVu Lz0 1tB0 11zu 1o0u 11zu 1o0u 11zu 1o0u 14nu 1lcu 14nu 1lcu 1lbu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1nXu 11Au 1qLu WMu 1qLu 11Au 1n1bu IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|14e5","Antarctica/Palmer|-00 -03 -04 -02|0 30 40 20|0121212121213121212121212121212121212121212121212121212121212121212121212121212121|-cao0 nD0 1vd0 SL0 1vd0 17z0 1cN0 1fz0 1cN0 1cL0 1cN0 asn0 Db0 jsN0 14N0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0|40","Antarctica/Rothera|-00 -03|0 30|01|gOo0|130","Antarctica/Syowa|-00 +03|0 -30|01|-vs00|20","Antarctica/Troll|-00 +00 +02|0 0 -20|01212121212121212121212121212121212121212121212121212121212121212121|1puo0 hd0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|40","Antarctica/Vostok|-00 +06|0 -60|01|-tjA0|25","Europe/Oslo|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2awM0 Qm0 W6o0 5pf0 WM0 1fA0 1cM0 1cM0 1cM0 1cM0 wJc0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1qM0 WM0 zpc0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e4","Asia/Riyadh|LMT +03|-36.Q -30|01|-TvD6.Q|57e5","Asia/Almaty|LMT +05 +06 +07|-57.M -50 -60 -70|012323232323232323232321232323232323232323232323232|-1Pc57.M eUo7.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|15e5","Asia/Amman|LMT EET EEST|-2n.I -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1yW2n.I 1HiMn.I KL0 1oN0 11b0 1oN0 11b0 1pd0 1dz0 1cp0 11b0 1op0 11b0 fO10 1db0 1e10 1cL0 1cN0 1cL0 1cN0 1fz0 1pd0 10n0 1ld0 14n0 1hB0 15b0 1ip0 19X0 1cN0 1cL0 1cN0 17b0 1ld0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1So0 y00 1fc0 1dc0 1co0 1dc0 1cM0 1cM0 1cM0 1o00 11A0 1lc0 17c0 1cM0 1cM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 4bX0 Dd0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|25e5","Asia/Anadyr|LMT +12 +13 +14 +11|-bN.U -c0 -d0 -e0 -b0|01232121212121212121214121212121212121212121212121212121212141|-1PcbN.U eUnN.U 23CL0 1db0 2q10 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|13e3","Asia/Aqtau|LMT +04 +05 +06|-3l.4 -40 -50 -60|012323232323232323232123232312121212121212121212|-1Pc3l.4 eUnl.4 24PX0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|15e4","Asia/Aqtobe|LMT +04 +05 +06|-3M.E -40 -50 -60|0123232323232323232321232323232323232323232323232|-1Pc3M.E eUnM.E 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0|27e4","Asia/Ashgabat|LMT +04 +05 +06|-3R.w -40 -50 -60|0123232323232323232323212|-1Pc3R.w eUnR.w 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0|41e4","Asia/Atyrau|LMT +03 +05 +06 +04|-3r.I -30 -50 -60 -40|01232323232323232323242323232323232324242424242|-1Pc3r.I eUor.I 24PW0 2pX0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 2sp0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0","Asia/Baghdad|BMT +03 +04|-2V.A -30 -40|012121212121212121212121212121212121212121212121212121|-26BeV.A 2ACnV.A 11b0 1cp0 1dz0 1dd0 1db0 1cN0 1cp0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1de0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0 1dc0 1dc0 1cM0 1dc0 1cM0 1dc0 1cM0 1dc0|66e5","Asia/Qatar|LMT +04 +03|-3q.8 -40 -30|012|-21Jfq.8 27BXq.8|96e4","Asia/Baku|LMT +03 +04 +05|-3j.o -30 -40 -50|01232323232323232323232123232323232323232323232323232323232323232|-1Pc3j.o 1jUoj.o WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 9Je0 1o00 11z0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00|27e5","Asia/Bangkok|BMT +07|-6G.4 -70|01|-218SG.4|15e6","Asia/Barnaul|LMT +06 +07 +08|-5z -60 -70 -80|0123232323232323232323212323232321212121212121212121212121212121212|-21S5z pCnz 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 p90 LE0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Asia/Beirut|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-21aq0 1on0 1410 1db0 19B0 1in0 1ip0 WL0 1lQp0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 q6N0 En0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1op0 11b0 dA10 17b0 1iN0 17b0 1iN0 17b0 1iN0 17b0 1vB0 SL0 1mp0 13z0 1iN0 17b0 1iN0 17b0 1jd0 12n0 1a10 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0|22e5","Asia/Bishkek|LMT +05 +06 +07|-4W.o -50 -60 -70|012323232323232323232321212121212121212121212121212|-1Pc4W.o eUnW.o 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2e00 1tX0 17b0 1ip0 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1cPu 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0|87e4","Asia/Brunei|LMT +0730 +08|-7D.E -7u -80|012|-1KITD.E gDc9.E|42e4","Asia/Kolkata|MMT IST +0630|-5l.a -5u -6u|012121|-2zOtl.a 1r2LP.a 1un0 HB0 7zX0|15e6","Asia/Chita|LMT +08 +09 +10|-7x.Q -80 -90 -a0|012323232323232323232321232323232323232323232323232323232323232312|-21Q7x.Q pAnx.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3re0|33e4","Asia/Choibalsan|LMT +07 +08 +10 +09|-7C -70 -80 -a0 -90|0123434343434343434343434343434343434343434343424242|-2APHC 2UkoC cKn0 1da0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 3Db0 h1f0 1cJ0 1cP0 1cJ0|38e3","Asia/Shanghai|CST CDT|-80 -90|01010101010101010|-1c1I0 LX0 16p0 1jz0 1Myp0 Rb0 1o10 11z0 1o10 11z0 1qN0 11z0 1o10 11z0 1o10 11z0|23e6","Asia/Colombo|MMT +0530 +06 +0630|-5j.w -5u -60 -6u|01231321|-2zOtj.w 1rFbN.w 1zzu 7Apu 23dz0 11zu n3cu|22e5","Asia/Dhaka|HMT +0630 +0530 +06 +07|-5R.k -6u -5u -60 -70|0121343|-18LFR.k 1unn.k HB0 m6n0 2kxbu 1i00|16e6","Asia/Damascus|LMT EET EEST|-2p.c -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-21Jep.c Hep.c 17b0 1ip0 17b0 1ip0 17b0 1ip0 19X0 1xRB0 11X0 1oN0 10L0 1pB0 11b0 1oN0 10L0 1mp0 13X0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 1pd0 11b0 1oN0 Nb0 1AN0 Nb0 bcp0 19X0 1gp0 19X0 3ld0 1xX0 Vd0 1Bz0 Sp0 1vX0 10p0 1dz0 1cN0 1cL0 1db0 1db0 1g10 1an0 1ap0 1db0 1fd0 1db0 1cN0 1db0 1dd0 1db0 1cp0 1dz0 1c10 1dX0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1db0 1cN0 1db0 1cN0 19z0 1fB0 1qL0 11B0 1on0 Wp0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 1qL0 WN0 1qL0|26e5","Asia/Dili|LMT +08 +09|-8m.k -80 -90|01212|-2le8m.k 1dnXm.k 1nfA0 Xld0|19e4","Asia/Dubai|LMT +04|-3F.c -40|01|-21JfF.c|39e5","Asia/Dushanbe|LMT +05 +06 +07|-4z.c -50 -60 -70|012323232323232323232321|-1Pc4z.c eUnz.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2hB0|76e4","Asia/Famagusta|LMT EET EEST +03|-2f.M -20 -30 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212312121212121212121212121212121212121212121|-1Vc2f.M 2a3cf.M 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 15U0 2Ks0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","Asia/Gaza|EET EEST IST IDT|-20 -30 -20 -30|010101010101010101010101010101012323232323232323232323232320101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 11z0 1o10 14o0 1lA1 SKX 1xd1 MKX 1AN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0|18e5","Asia/Hebron|EET EEST IST IDT|-20 -30 -20 -30|01010101010101010101010101010101232323232323232323232323232010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-1c2q0 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 pBd0 Vz0 1oN0 11b0 1oO0 10N0 1pz0 10N0 1pb0 10N0 1pb0 10N0 1pb0 10N0 1pz0 10N0 1pb0 10N0 1pb0 11d0 1oL0 dW0 hfB0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 M10 C00 17c0 1io0 17c0 1io0 17c0 1o00 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 17c0 1io0 18N0 1bz0 19z0 1gp0 1610 1iL0 12L0 1mN0 14o0 1lc0 Tb0 1xd1 MKX bB0 cn0 1cN0 1a00 1fA0 1cL0 1cN0 1nX0 1210 1nz0 1220 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1qL0|25e4","Asia/Ho_Chi_Minh|LMT PLMT +07 +08 +09|-76.E -76.u -70 -80 -90|0123423232|-2yC76.E bK00.a 1h7b6.u 5lz0 18o0 3Oq0 k5b0 aW00 BAM0|90e5","Asia/Hong_Kong|LMT HKT HKST JST|-7A.G -80 -90 -90|0121312121212121212121212121212121212121212121212121212121212121212121|-2CFHA.G 1sEP6.G 1cL0 ylu 93X0 1qQu 1tX0 Rd0 1In0 NB0 1cL0 11B0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1kL0 14N0 1nX0 U10 1tz0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 Rd0 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 17d0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 s10 1Vz0 1cN0 1cL0 1cN0 1cL0 6fd0 14n0|73e5","Asia/Hovd|LMT +06 +07 +08|-66.A -60 -70 -80|012323232323232323232323232323232323232323232323232|-2APG6.A 2Uko6.A cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|81e3","Asia/Irkutsk|IMT +07 +08 +09|-6V.5 -70 -80 -90|01232323232323232323232123232323232323232323232323232323232323232|-21zGV.5 pjXV.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Europe/Istanbul|IMT EET EEST +04 +03|-1U.U -20 -30 -40 -30|012121212121212121212121212121212121212121212121212121234343434342121212121212121212121212121212121212121212121212121212121212124|-2ogNU.U dzzU.U 11b0 8tB0 1on0 1410 1db0 19B0 1in0 3Rd0 Un0 1oN0 11b0 zSp0 CL0 mN0 1Vz0 1gN0 1pz0 5Rd0 1fz0 1yp0 ML0 1kp0 17b0 1ip0 17b0 1fB0 19X0 1jB0 18L0 1ip0 17z0 qdd0 xX0 3S10 Tz0 dA10 11z0 1o10 11z0 1qN0 11z0 1ze0 11B0 WM0 1qO0 WI0 1nX0 1rB0 10L0 11B0 1in0 17d0 1in0 2pX0 19E0 1fU0 16Q0 1iI0 16Q0 1iI0 1Vd0 pb0 3Kp0 14o0 1de0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1a00 1fA0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WO0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 Xc0 1qo0 WM0 1qM0 11A0 1o00 1200 1nA0 11A0 1tA0 U00 15w0|13e6","Asia/Jakarta|BMT +0720 +0730 +09 +08 WIB|-77.c -7k -7u -90 -80 -70|01232425|-1Q0Tk luM0 mPzO 8vWu 6kpu 4PXu xhcu|31e6","Asia/Jayapura|LMT +09 +0930 WIT|-9m.M -90 -9u -90|0123|-1uu9m.M sMMm.M L4nu|26e4","Asia/Jerusalem|JMT IST IDT IDDT|-2k.E -20 -30 -40|01212121212132121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-26Bek.E SyMk.E 5Rb0 10r0 1px0 10N0 1pz0 16p0 1jB0 16p0 1jx0 3LB0 Em0 or0 1cn0 1dB0 16n0 10O0 1ja0 1tC0 14o0 1cM0 1a00 11A0 1Na0 An0 1MP0 AJ0 1Kp0 LC0 1oo0 Wl0 EQN0 Db0 1fB0 Rb0 npB0 11z0 1C10 IL0 1s10 10n0 1o10 WL0 1zd0 On0 1ld0 11z0 1o10 14n0 1o10 14n0 1nd0 12n0 1nd0 Xz0 1q10 12n0 1hB0 1dX0 1ep0 1aL0 1eN0 17X0 1nf0 11z0 1tB0 19W0 1e10 17b0 1ep0 1gL0 18N0 1fz0 1eN0 17b0 1gq0 1gn0 19d0 1dz0 1c10 17X0 1hB0 1gn0 19d0 1dz0 1c10 17X0 1kp0 1dz0 1c10 1aL0 1eN0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0 10N0 1rz0 W10 1rz0 W10 1rz0 W10 1rz0 10N0 1oL0 10N0 1oL0|81e4","Asia/Kabul|+04 +0430|-40 -4u|01|-10Qs0|46e5","Asia/Kamchatka|LMT +11 +12 +13|-ay.A -b0 -c0 -d0|012323232323232323232321232323232323232323232323232323232323212|-1SLKy.A ivXy.A 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|18e4","Asia/Karachi|LMT +0530 +0630 +05 PKT PKST|-4s.c -5u -6u -50 -50 -60|012134545454|-2xoss.c 1qOKW.c 7zX0 eup0 LqMu 1fy00 1cL0 dK10 11b0 1610 1jX0|24e6","Asia/Urumqi|LMT +06|-5O.k -60|01|-1GgtO.k|32e5","Asia/Kathmandu|LMT +0530 +0545|-5F.g -5u -5J|012|-21JhF.g 2EGMb.g|12e5","Asia/Khandyga|LMT +08 +09 +10 +11|-92.d -80 -90 -a0 -b0|0123232323232323232323212323232323232323232323232343434343434343432|-21Q92.d pAp2.d 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 qK0 yN0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|66e2","Asia/Krasnoyarsk|LMT +06 +07 +08|-6b.q -60 -70 -80|01232323232323232323232123232323232323232323232323232323232323232|-21Hib.q prAb.q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Asia/Kuala_Lumpur|SMT +07 +0720 +0730 +09 +08|-6T.p -70 -7k -7u -90 -80|0123435|-2Bg6T.p 17anT.p l5XE 17bO 8Fyu 1so1u|71e5","Asia/Kuching|LMT +0730 +08 +0820 +09|-7l.k -7u -80 -8k -90|0123232323232323242|-1KITl.k gDbP.k 6ynu AnE 1O0k AnE 1NAk AnE 1NAk AnE 1NAk AnE 1O0k AnE 1NAk AnE pAk 8Fz0|13e4","Asia/Macau|LMT CST CDT|-7y.k -80 -90|012121212121212121212121212121212121212121|-2le80 1XO3u 1wn0 Rd0 1wn0 R9u 1wqu U10 1tz0 TVu 1tz0 17gu 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cOu 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cJu 1cL0 1cN0 1fz0 1cN0 1cL0|57e4","Asia/Magadan|LMT +10 +11 +12|-a3.c -a0 -b0 -c0|012323232323232323232321232323232323232323232323232323232323232312|-1Pca3.c eUo3.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Cq0|95e3","Asia/Makassar|LMT MMT +08 +09 WITA|-7V.A -7V.A -80 -90 -80|01234|-21JjV.A vfc0 myLV.A 8ML0|15e5","Asia/Manila|+08 +09|-80 -90|010101010|-1kJI0 AL0 cK10 65X0 mXB0 vX0 VK10 1db0|24e6","Asia/Nicosia|LMT EET EEST|-2d.s -20 -30|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1Vc2d.s 2a3cd.s 1cL0 1qp0 Xz0 19B0 19X0 1fB0 1db0 1cp0 1cL0 1fB0 19X0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1o30 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|32e4","Asia/Novokuznetsk|LMT +06 +07 +08|-5M.M -60 -70 -80|012323232323232323232321232323232323232323232323232323232323212|-1PctM.M eULM.M 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|55e4","Asia/Novosibirsk|LMT +06 +07 +08|-5v.E -60 -70 -80|0123232323232323232323212323212121212121212121212121212121212121212|-21Qnv.E pAFv.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 ml0 Os0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 4eN0|15e5","Asia/Omsk|LMT +05 +06 +07|-4R.u -50 -60 -70|01232323232323232323232123232323232323232323232323232323232323232|-224sR.u pMLR.u 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|12e5","Asia/Oral|LMT +03 +05 +06 +04|-3p.o -30 -50 -60 -40|01232323232323232424242424242424242424242424242|-1Pc3p.o eUop.o 23CK0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 1cM0 IM0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|27e4","Asia/Pontianak|LMT PMT +0730 +09 +08 WITA WIB|-7h.k -7h.k -7u -90 -80 -80 -70|012324256|-2ua7h.k XE00 munL.k 8Rau 6kpu 4PXu xhcu Wqnu|23e4","Asia/Pyongyang|LMT KST JST KST|-8n -8u -90 -90|01231|-2um8n 97XR 1lTzu 2Onc0|29e5","Asia/Qyzylorda|LMT +04 +05 +06|-4l.Q -40 -50 -60|0123232323232323232323232323232323232323232323|-1Pc4l.Q eUol.Q 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 3ao0 1EM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0|73e4","Asia/Rangoon|RMT +0630 +09|-6o.L -6u -90|0121|-21Jio.L SmnS.L 7j9u|48e5","Asia/Sakhalin|LMT +09 +11 +12 +10|-9u.M -90 -b0 -c0 -a0|01232323232323232323232423232323232424242424242424242424242424242|-2AGVu.M 1BoMu.M 1qFa0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 2pB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0|58e4","Asia/Samarkand|LMT +04 +05 +06|-4r.R -40 -50 -60|01232323232323232323232|-1Pc4r.R eUor.R 23CL0 3Db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0|36e4","Asia/Seoul|LMT KST JST KST KDT KDT|-8r.Q -8u -90 -90 -9u -a0|0123141414141414135353|-2um8r.Q 97XV.Q 1m1zu kKo0 2I0u OL0 1FB0 Rb0 1qN0 TX0 1tB0 TX0 1tB0 TX0 1tB0 TX0 2ap0 12FBu 11A0 1o00 11A0|23e6","Asia/Srednekolymsk|LMT +10 +11 +12|-ae.Q -a0 -b0 -c0|01232323232323232323232123232323232323232323232323232323232323232|-1Pcae.Q eUoe.Q 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|35e2","Asia/Taipei|CST JST CDT|-80 -90 -90|01020202020202020202020202020202020202020|-1iw80 joM0 1yo0 Tz0 1ip0 1jX0 1cN0 11b0 1oN0 11b0 1oN0 11b0 1oN0 11b0 10N0 1BX0 10p0 1pz0 10p0 1pz0 10p0 1db0 1dd0 1db0 1cN0 1db0 1cN0 1db0 1cN0 1db0 1BB0 ML0 1Bd0 ML0 uq10 1db0 1cN0 1db0 97B0 AL0|74e5","Asia/Tashkent|LMT +05 +06 +07|-4B.b -50 -60 -70|012323232323232323232321|-1Pc4B.b eUnB.b 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0|23e5","Asia/Tbilisi|TBMT +03 +04 +05|-2X.b -30 -40 -50|0123232323232323232323212121232323232323232323212|-1Pc2X.b 1jUnX.b WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cK0 1cL0 1cN0 1cL0 1cN0 2pz0 1cL0 1fB0 3Nz0 11B0 1nX0 11B0 1qL0 WN0 1qL0 WN0 1qL0 11B0 1nX0 11B0 1nX0 11B0 An0 Os0 WM0|11e5","Asia/Tehran|LMT TMT +0330 +04 +05 +0430|-3p.I -3p.I -3u -40 -50 -4u|01234325252525252525252525252525252525252525252525252525252525252525252525252525252525252525252525252|-2btDp.I 1d3c0 1huLT.I TXu 1pz0 sN0 vAu 1cL0 1dB0 1en0 pNB0 UL0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 64p0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0 1cN0 1dz0 1cp0 1dz0 1cp0 1dz0 1cp0 1dz0|14e6","Asia/Thimphu|LMT +0530 +06|-5W.A -5u -60|012|-Su5W.A 1BGMs.A|79e3","Asia/Tokyo|JST JDT|-90 -a0|010101010|-QJJ0 Rb0 1ld0 14n0 1zd0 On0 1zd0 On0|38e6","Asia/Tomsk|LMT +06 +07 +08|-5D.P -60 -70 -80|0123232323232323232323212323232323232323232323212121212121212121212|-21NhD.P pxzD.P 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 co0 1bB0 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3Qp0|10e5","Asia/Ulaanbaatar|LMT +07 +08 +09|-77.w -70 -80 -90|012323232323232323232323232323232323232323232323232|-2APH7.w 2Uko7.w cKn0 1db0 1dd0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 6hD0 11z0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 kEp0 1cJ0 1cP0 1cJ0|12e5","Asia/Ust-Nera|LMT +08 +09 +12 +11 +10|-9w.S -80 -90 -c0 -b0 -a0|012343434343434343434345434343434343434343434343434343434343434345|-21Q9w.S pApw.S 23CL0 1d90 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 17V0 7zD0|65e2","Asia/Vladivostok|LMT +09 +10 +11|-8L.v -90 -a0 -b0|01232323232323232323232123232323232323232323232323232323232323232|-1SJIL.v itXL.v 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|60e4","Asia/Yakutsk|LMT +08 +09 +10|-8C.W -80 -90 -a0|01232323232323232323232123232323232323232323232323232323232323232|-21Q8C.W pAoC.W 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|28e4","Asia/Yekaterinburg|LMT PMT +04 +05 +06|-42.x -3J.5 -40 -50 -60|012343434343434343434343234343434343434343434343434343434343434343|-2ag42.x 7mQh.s qBvJ.5 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|14e5","Asia/Yerevan|LMT +03 +04 +05|-2W -30 -40 -50|0123232323232323232323212121212323232323232323232323232323232|-1Pc2W 1jUnW WCL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 2pB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 4RX0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0|13e5","Atlantic/Azores|HMT -02 -01 +00 WET|1S.w 20 10 0 0|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121232323232323232323232323232323234323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-2ldW0 aPX0 Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cL0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|25e4","Atlantic/Bermuda|LMT AST ADT|4j.i 40 30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1BnRE.G 1LTbE.G 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0|65e3","Atlantic/Canary|LMT -01 WET WEST|11.A 10 0 -10|01232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-1UtaW.o XPAW.o 1lAK0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Atlantic/Cape_Verde|LMT -02 -01|1y.4 20 10|01212|-2ldW0 1eEo0 7zX0 1djf0|50e4","Atlantic/Faroe|LMT WET WEST|r.4 0 -10|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2uSnw.U 2Wgow.U 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|49e3","Atlantic/Madeira|FMT -01 +00 +01 WET WEST|17.A 10 0 -10 0 -10|01212121212121212121212121212121212121212121232123212321232121212121212121212121212121212121212121454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2ldX0 aPX0 Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 qIl0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e4","Atlantic/Reykjavik|LMT -01 +00 GMT|1s 10 0 0|012121212121212121212121212121212121212121212121212121212121212121213|-2uWmw mfaw 1Bd0 ML0 1LB0 Cn0 1LB0 3fX0 C10 HrX0 1cO0 LB0 1EL0 LA0 1C00 Oo0 1wo0 Rc0 1wo0 Rc0 1wo0 Rc0 1zc0 Oo0 1zc0 14o0 1lc0 14o0 1lc0 14o0 1o00 11A0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1lc0 14o0 1o00 14o0|12e4","Atlantic/South_Georgia|-02|20|0||30","Atlantic/Stanley|SMT -04 -03 -02|3P.o 40 30 20|012121212121212323212121212121212121212121212121212121212121212121212|-2kJw8.A 12bA8.A 19X0 1fB0 19X0 1ip0 19X0 1fB0 19X0 1fB0 19X0 1fB0 Cn0 1Cc10 WL0 1qL0 U10 1tz0 2mN0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 U10 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1tz0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qL0 WN0 1qN0 U10 1wn0 Rd0 1wn0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1tz0 U10 1wn0 U10 1tz0 U10 1tz0 U10|21e2","Australia/Sydney|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|40e5","Australia/Adelaide|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 WM0 1qM0 Rc0 1zc0 U00 1tA0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|11e5","Australia/Brisbane|AEST AEDT|-a0 -b0|01010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0|20e5","Australia/Broken_Hill|ACST ACDT|-9u -au|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 14o0 1o00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1tA0 WM0 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|18e3","Australia/Currie|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|746","Australia/Darwin|ACST ACDT|-9u -au|010101010|-293lt xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0|12e4","Australia/Eucla|+0845 +0945|-8J -9J|0101010101010101010|-293kI xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|368","Australia/Hobart|AEST AEDT|-a0 -b0|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-29E80 19X0 10jd0 yL0 1cN0 1cL0 1fB0 19X0 VfB0 1cM0 1o00 Rc0 1wo0 Rc0 1wo0 U00 1wo0 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 11A0 1qM0 WM0 1qM0 Oo0 1zc0 Oo0 1zc0 Oo0 1wo0 WM0 1tA0 WM0 1tA0 U00 1tA0 U00 1tA0 11A0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 11A0 1o00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|21e4","Australia/Lord_Howe|AEST +1030 +1130 +11|-a0 -au -bu -b0|0121212121313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313|raC0 1zdu Rb0 1zd0 On0 1zd0 On0 1zd0 On0 1zd0 TXu 1qMu WLu 1tAu WLu 1tAu TXu 1tAu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu 11zu 1o0u 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 11Au 1nXu 1qMu 11zu 1o0u 11zu 1o0u 11zu 1qMu WLu 1qMu 11zu 1o0u WLu 1qMu 14nu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1fzu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1cMu 1cLu 1fAu 1cLu 1cMu 1cLu 1cMu|347","Australia/Lindeman|AEST AEDT|-a0 -b0|010101010101010101010|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 H1A0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0|10","Australia/Melbourne|AEST AEDT|-a0 -b0|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101|-293lX xcX 10jd0 yL0 1cN0 1cL0 1fB0 19X0 17c10 LA0 1C00 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 U00 1qM0 WM0 1qM0 11A0 1tA0 U00 1tA0 U00 1tA0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 11A0 1o00 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 14o0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0|39e5","Australia/Perth|AWST AWDT|-80 -90|0101010101010101010|-293jX xcX 10jd0 yL0 1cN0 1cL0 1gSp0 Oo0 l5A0 Oo0 iJA0 G00 zU00 IM0 1qM0 11A0 1o00 11A0|18e5","CET|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","Pacific/Easter|EMT -07 -06 -05|7h.s 70 60 50|012121212121212121212121212123232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323|-1uSgG.w 1s4IG.w WL0 1zd0 On0 1ip0 11z0 1o10 11z0 1qN0 WL0 1ld0 14n0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 2pA0 11z0 1o10 11z0 1qN0 WL0 1qN0 WL0 1qN0 1cL0 1cN0 11z0 1o10 11z0 1qN0 WL0 1fB0 19X0 1qN0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1ip0 1fz0 1fB0 11z0 1qN0 WL0 1qN0 WL0 1qN0 WL0 1qN0 11z0 1o10 11z0 1o10 11z0 1qN0 WL0 1qN0 17b0 1ip0 11z0 1o10 19X0 1fB0 1nX0 G10 1EL0 Op0 1zb0 Rd0 1wn0 Rd0 46n0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Dd0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0 1Nb0 Ap0|30e2","CST6CDT|CST CDT CWT CPT|60 50 50 50|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261s0 1nX0 11B0 1nX0 SgN0 8x30 iw0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","EET|EET EEST|-20 -30|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","Europe/Dublin|DMT IST GMT BST IST|p.l -y.D 0 -10 -10|01232323232324242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242|-2ax9y.D Rc0 1fzy.D 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 g600 14o0 1wo0 17c0 1io0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","EST|EST|50|0|","EST5EDT|EST EDT EWT EPT|50 40 40 40|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261t0 1nX0 11B0 1nX0 SgN0 8x40 iv0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Etc/GMT-0|GMT|0|0|","Etc/GMT-1|+01|-10|0|","Pacific/Port_Moresby|+10|-a0|0||25e4","Pacific/Pohnpei|+11|-b0|0||34e3","Pacific/Tarawa|+12|-c0|0||29e3","Etc/GMT-13|+13|-d0|0|","Etc/GMT-14|+14|-e0|0|","Etc/GMT-2|+02|-20|0|","Etc/GMT-3|+03|-30|0|","Etc/GMT-4|+04|-40|0|","Etc/GMT-5|+05|-50|0|","Etc/GMT-6|+06|-60|0|","Indian/Christmas|+07|-70|0||21e2","Etc/GMT-8|+08|-80|0|","Pacific/Palau|+09|-90|0||21e3","Etc/GMT+1|-01|10|0|","Etc/GMT+10|-10|a0|0|","Etc/GMT+11|-11|b0|0|","Etc/GMT+12|-12|c0|0|","Etc/GMT+3|-03|30|0|","Etc/GMT+4|-04|40|0|","Etc/GMT+5|-05|50|0|","Etc/GMT+6|-06|60|0|","Etc/GMT+7|-07|70|0|","Etc/GMT+8|-08|80|0|","Etc/GMT+9|-09|90|0|","Etc/UCT|UCT|0|0|","Etc/UTC|UTC|0|0|","Europe/Amsterdam|AMT NST +0120 +0020 CEST CET|-j.w -1j.w -1k -k -20 -10|010101010101010101010101010101010101010101012323234545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545|-2aFcj.w 11b0 1iP0 11A0 1io0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1co0 1io0 1yo0 Pc0 1a00 1fA0 1Bc0 Mo0 1tc0 Uo0 1tA0 U00 1uo0 W00 1s00 VA0 1so0 Vc0 1sM0 UM0 1wo0 Rc0 1u00 Wo0 1rA0 W00 1s00 VA0 1sM0 UM0 1w00 fV0 BCX.w 1tA0 U00 1u00 Wo0 1sm0 601k WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|16e5","Europe/Andorra|WET CET CEST|0 -10 -20|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-UBA0 1xIN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|79e3","Europe/Astrakhan|LMT +03 +04 +05|-3c.c -30 -40 -50|012323232323232323212121212121212121212121212121212121212121212|-1Pcrc.c eUMc.c 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Athens|AMT EET EEST CEST CET|-1y.Q -20 -30 -20 -10|012123434121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2a61x.Q CNbx.Q mn0 kU10 9b0 3Es0 Xa0 1fb0 1dd0 k3X0 Nz0 SCp0 1vc0 SO0 1cM0 1a00 1ao0 1fc0 1a10 1fG0 1cg0 1dX0 1bX0 1cQ0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|35e5","Europe/London|GMT BST BDST|0 -10 -20|0101010101010101010101010101010101010101010101010121212121210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1a00 1qM0 WM0 1qM0 11A0 1o00 WM0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1tA0 IM0 90o0 U00 1tA0 U00 1tA0 U00 1tA0 U00 1tA0 WM0 1qM0 WM0 1qM0 WM0 1tA0 U00 1tA0 U00 1tA0 11z0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1o00 14o0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|10e6","Europe/Belgrade|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19RC0 3IP0 WM0 1fA0 1cM0 1cM0 1rc0 Qo0 1vmo0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Berlin|CET CEST CEMT|-10 -20 -30|01010101010101210101210101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 kL0 Nc0 m10 WM0 1ao0 1cp0 dX0 jz0 Dd0 1io0 17c0 1fA0 1a00 1ehA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e5","Europe/Prague|CET CEST|-10 -20|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 16M0 1lc0 1tA0 17A0 11c0 1io0 17c0 1io0 17c0 1fc0 1ao0 1bNc0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|13e5","Europe/Brussels|WET CET CEST WEST|0 -10 -20 -10|0121212103030303030303030303030303030303030303030303212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ehc0 3zX0 11c0 1iO0 11A0 1o00 11A0 my0 Ic0 1qM0 Rc0 1EM0 UM0 1u00 10o0 1io0 1io0 17c0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a30 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 y00 5Wn0 WM0 1fA0 1cM0 16M0 1iM0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|21e5","Europe/Bucharest|BMT EET EEST|-1I.o -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1xApI.o 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Axc0 On0 1fA0 1a10 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|19e5","Europe/Budapest|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1ip0 17b0 1op0 1tb0 Q2m0 3Ne0 WM0 1fA0 1cM0 1cM0 1oJ0 1dc0 1030 1fA0 1cM0 1cM0 1cM0 1cM0 1fA0 1a00 1iM0 1fA0 8Ha0 Rb0 1wN0 Rb0 1BB0 Lz0 1C20 LB0 SNX0 1a10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zurich|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-19Lc0 11A0 1o00 11A0 1xG10 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e4","Europe/Chisinau|CMT BMT EET EEST CEST CET MSK MSD|-1T -1I.o -20 -30 -20 -10 -30 -40|012323232323232323234545467676767676767676767323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232|-26jdT wGMa.A 20LI.o RA0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 27A0 2en0 39g0 WM0 1fA0 1cM0 V90 1t7z0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 gL0 WO0 1cM0 1cM0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11D0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|67e4","Europe/Copenhagen|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 Tz0 VuO0 60q0 WM0 1fA0 1cM0 1cM0 1cM0 S00 1HA0 Nc0 1C00 Dc0 1Nc0 Ao0 1h5A0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Gibraltar|GMT BST BDST CET CEST|0 -10 -20 -10 -20|010101010101010101010101010101010101010101010101012121212121010121010101010101010101034343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-2axa0 Rc0 1fA0 14M0 1fc0 1g00 1co0 1dc0 1co0 1oo0 1400 1dc0 19A0 1io0 1io0 WM0 1o00 14o0 1o00 17c0 1io0 17c0 1fA0 1a00 1lc0 17c0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1cM0 1io0 17c0 1fA0 1a00 1io0 17c0 1io0 17c0 1fA0 1a00 1io0 1qM0 Dc0 2Rz0 Dc0 1zc0 Oo0 1zc0 Rc0 1wo0 17c0 1iM0 FA0 xB0 1fA0 1a00 14o0 bb0 LA0 xB0 Rc0 1wo0 11A0 1o00 17c0 1fA0 1a00 1fA0 1cM0 1fA0 1a00 17c0 1fA0 1a00 1io0 17c0 1lc0 17c0 1fA0 10Jz0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|30e3","Europe/Helsinki|HMT EET EEST|-1D.N -20 -30|0121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-1WuND.N OULD.N 1dA0 1xGq0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Kaliningrad|CET CEST CET CEST MSK MSD EEST EET +03|-10 -20 -20 -30 -30 -40 -30 -20 -30|0101010101010232454545454545454546767676767676767676767676767676767676767676787|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 Am0 Lb0 1en0 op0 1pNz0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|44e4","Europe/Kiev|KMT EET MSK CEST CET MSD EEST|-22.4 -20 -30 -20 -10 -40 -30|0123434252525252525252525256161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc22.4 eUo2.4 rnz0 2Hg0 WM0 1fA0 da0 1v4m0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 Db0 3220 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|34e5","Europe/Kirov|LMT +03 +04 +05|-3i.M -30 -40 -50|01232323232323232321212121212121212121212121212121212121212121|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|48e4","Europe/Lisbon|LMT WET WEST WEMT CET CEST|A.J 0 -10 -20 -10 -20|012121212121212121212121212121212121212121212321232123212321212121212121212121212121212121212121214121212121212121212121212121212124545454212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2le00 aPX0 Sp0 LX0 1vc0 Tc0 1uM0 SM0 1vc0 Tc0 1vc0 SM0 1vc0 6600 1co0 3E00 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 3I00 17c0 1cM0 1cM0 3Fc0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 1tA0 1cM0 1dc0 1400 gL0 IM0 s10 U00 dX0 Rc0 pd0 Rc0 gL0 Oo0 pd0 Rc0 gL0 Oo0 pd0 14o0 1cM0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 3Co0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 pvy0 1cM0 1cM0 1fA0 1cM0 1cM0 1cN0 1cL0 1cN0 1cM0 1cM0 1cM0 1cM0 1cN0 1cL0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|27e5","Europe/Luxembourg|LMT CET CEST WET WEST WEST WET|-o.A -10 -20 0 -10 -20 -10|0121212134343434343434343434343434343434343434343434565651212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2DG0o.A t6mo.A TB0 1nX0 Up0 1o20 11A0 rW0 CM0 1qP0 R90 1EO0 UK0 1u20 10m0 1ip0 1in0 17e0 19W0 1fB0 1db0 1cp0 1in0 17d0 1fz0 1a10 1in0 1a10 1in0 17f0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Dc0 vA0 60L0 WM0 1fA0 1cM0 17c0 1io0 16M0 1C00 Uo0 1eeo0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Madrid|WET WEST WEMT CET CEST|0 -10 -20 -10 -20|010101010101010101210343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343|-25Td0 19B0 1cL0 1dd0 b1z0 18p0 3HX0 17d0 1fz0 1a10 1io0 1a00 1in0 17d0 iIn0 Hd0 1cL0 bb0 1200 2s20 14n0 5aL0 Mp0 1vz0 17d0 1in0 17d0 1in0 17d0 1in0 17d0 6hX0 11B0 XHX0 1a10 1fz0 1a10 19X0 1cN0 1fz0 1a10 1fC0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|62e5","Europe/Malta|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1co0 17c0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1co0 1cM0 1lA0 Xc0 1qq0 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1o10 11z0 1iN0 19z0 1fB0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Minsk|MMT EET MSK CEST CET MSD EEST +03|-1O -20 -30 -20 -10 -40 -30 -30|01234343252525252525252525261616161616161616161616161616161616161617|-1Pc1O eUnO qNX0 3gQ0 WM0 1fA0 1cM0 Al0 1tsn0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 3Fc0 1cN0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0|19e5","Europe/Monaco|PMT WET WEST WEMT CET CEST|-9.l 0 -10 -20 -10 -20|01212121212121212121212121212121212121212121212121232323232345454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-2nco9.l cNb9.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 2RV0 11z0 11B0 1ze0 WM0 1fA0 1cM0 1fa0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|38e3","Europe/Moscow|MMT MMT MST MDST MSD MSK +05 EET EEST MSK|-2u.h -2v.j -3v.j -4v.j -40 -30 -50 -20 -30 -40|012132345464575454545454545454545458754545454545454545454545454545454545454595|-2ag2u.h 2pyW.W 1bA0 11X0 GN0 1Hb0 c4v.j ik0 3DA0 dz0 15A0 c10 2q10 iM10 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|16e6","Europe/Paris|PMT WET WEST CEST CET WEMT|-9.l 0 -10 -20 -10 -20|0121212121212121212121212121212121212121212121212123434352543434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434|-2nco8.l cNb8.l HA0 19A0 1iM0 11c0 1oo0 Wo0 1rc0 QM0 1EM0 UM0 1u00 10o0 1io0 1wo0 Rc0 1a00 1fA0 1cM0 1cM0 1io0 17c0 1fA0 1a00 1io0 1a00 1io0 17c0 1fA0 1a00 1io0 17c0 1cM0 1cM0 1a00 1io0 1cM0 1cM0 1a00 1fA0 1io0 17c0 1cM0 1cM0 1a00 1fA0 1io0 1qM0 Df0 Ik0 5M30 WM0 1fA0 1cM0 Vx0 hB0 1aq0 16M0 1ekn0 1cL0 1fC0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e6","Europe/Riga|RMT LST EET MSK CEST CET MSD EEST|-1A.y -2A.y -20 -30 -20 -10 -40 -30|010102345454536363636363636363727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272727272|-25TzA.y 11A0 1iM0 ko0 gWm0 yDXA.y 2bX0 3fE0 WM0 1fA0 1cM0 1cM0 4m0 1sLy0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cN0 1o00 11A0 1o00 11A0 1qM0 3oo0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|64e4","Europe/Rome|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2arB0 Lz0 1cN0 1db0 1410 1on0 Wp0 1qL0 17d0 1cL0 M3B0 5M20 WM0 1fA0 1cM0 16M0 1iM0 16m0 1de0 1lc0 14m0 1lc0 WO0 1qM0 GTW0 On0 1C10 LA0 1C00 LA0 1EM0 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1C00 LA0 1zc0 Oo0 1C00 LA0 1C00 LA0 1zc0 Oo0 1C00 Oo0 1zc0 Oo0 1fC0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|39e5","Europe/Samara|LMT +03 +04 +05|-3k.k -30 -40 -50|0123232323232323232121232323232323232323232323232323232323212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2y10 14m0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 2sp0 WM0|12e5","Europe/Saratov|LMT +03 +04 +05|-34.i -30 -40 -50|012323232323232321212121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 5810","Europe/Simferopol|SMT EET MSK CEST CET MSD EEST MSK|-2g -20 -30 -20 -10 -40 -30 -40|012343432525252525252525252161616525252616161616161616161616161616161616172|-1Pc2g eUog rEn0 2qs0 WM0 1fA0 1cM0 3V0 1u0L0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 4eL0 1cL0 1cN0 1cL0 1cN0 dX0 WL0 1cN0 1cL0 1fB0 1o30 11B0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11z0 1nW0|33e4","Europe/Sofia|EET CET CEST EEST|-20 -10 -20 -30|01212103030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030|-168L0 WM0 1fA0 1cM0 1cM0 1cN0 1mKH0 1dd0 1fb0 1ap0 1fb0 1a20 1fy0 1a30 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cK0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 1nX0 11E0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|12e5","Europe/Stockholm|CET CEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2azC0 TB0 2yDe0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|15e5","Europe/Tallinn|TMT CET CEST EET MSK MSD EEST|-1D -10 -20 -20 -30 -40 -30|012103421212454545454545454546363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363|-26oND teD 11A0 1Ta0 4rXl KSLD 2FX0 2Jg0 WM0 1fA0 1cM0 18J0 1sTX0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o10 11A0 1qM0 5QM0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|41e4","Europe/Tirane|LMT CET CEST|-1j.k -10 -20|01212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2glBj.k 14pcj.k 5LC0 WM0 4M0 1fCK0 10n0 1op0 11z0 1pd0 11z0 1qN0 WL0 1qp0 Xb0 1qp0 Xb0 1qp0 11z0 1lB0 11z0 1qN0 11z0 1iN0 16n0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|42e4","Europe/Ulyanovsk|LMT +03 +04 +05 +02|-3d.A -30 -40 -50 -20|01232323232323232321214121212121212121212121212121212121212121212|-22WM0 qH90 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1fA0 2pB0 IM0 rX0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0 3rd0","Europe/Uzhgorod|CET CEST MSK MSD EET EEST|-10 -20 -30 -40 -20 -30|010101023232323232323232320454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454|-1cqL0 6i00 WM0 1fA0 1cM0 1ml0 1Cp0 1r3W0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1Q00 1Nf0 2pw0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|11e4","Europe/Vienna|CET CEST|-10 -20|0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 3KM0 14o0 LA00 6i00 WM0 1fA0 1cM0 1cM0 1cM0 400 2qM0 1a00 1cM0 1cM0 1io0 17c0 1gHa0 19X0 1cP0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|18e5","Europe/Vilnius|WMT KMT CET EET MSK CEST MSD EEST|-1o -1z.A -10 -20 -30 -20 -40 -30|012324525254646464646464646473737373737373737352537373737373737373737373737373737373737373737373737373737373737373737373|-293do 6ILM.o 1Ooz.A zz0 Mfd0 29W0 3is0 WM0 1fA0 1cM0 LV0 1tgL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11B0 1o00 11A0 1qM0 8io0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|54e4","Europe/Volgograd|LMT +03 +04 +05|-2V.E -30 -40 -50|01232323232323232121212121212121212121212121212121212121212121|-21IqV.E psLV.E 23CL0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 2pB0 1cM0 1cM0 1cM0 1fA0 1cM0 3Co0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 8Hz0|10e5","Europe/Warsaw|WMT CET CEST EET EEST|-1o -10 -20 -20 -30|012121234312121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121|-2ctdo 1LXo 11d0 1iO0 11A0 1o00 11A0 1on0 11A0 6zy0 HWP0 5IM0 WM0 1fA0 1cM0 1dz0 1mL0 1en0 15B0 1aq0 1nA0 11A0 1io0 17c0 1fA0 1a00 iDX0 LA0 1cM0 1cM0 1C00 Oo0 1cM0 1cM0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1C00 LA0 uso0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cN0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|17e5","Europe/Zaporozhye|+0220 EET MSK CEST CET MSD EEST|-2k -20 -30 -20 -10 -40 -30|01234342525252525252525252526161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161|-1Pc2k eUok rdb0 2RE0 WM0 1fA0 8m0 1v9a0 1db0 1cN0 1db0 1cN0 1db0 1dd0 1cO0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cK0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cQ0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00|77e4","HST|HST|a0|0|","Indian/Chagos|LMT +05 +06|-4N.E -50 -60|012|-2xosN.E 3AGLN.E|30e2","Indian/Cocos|+0630|-6u|0||596","Indian/Kerguelen|-00 +05|0 -50|01|-MG00|130","Indian/Mahe|LMT +04|-3F.M -40|01|-2yO3F.M|79e3","Indian/Maldives|MMT +05|-4S -50|01|-olgS|35e4","Indian/Mauritius|LMT +04 +05|-3O -40 -50|012121|-2xorO 34unO 14L0 12kr0 11z0|15e4","Indian/Reunion|LMT +04|-3F.Q -40|01|-2mDDF.Q|84e4","Pacific/Kwajalein|+11 -12 +12|-b0 c0 -c0|012|-AX0 W9X0|14e3","MET|MET MEST|-10 -20|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-2aFe0 11d0 1iO0 11A0 1o00 11A0 Qrc0 6i00 WM0 1fA0 1cM0 1cM0 1cM0 16M0 1gMM0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00","MST|MST|70|0|","MST7MDT|MST MDT MWT MPT|70 60 60 60|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261r0 1nX0 11B0 1nX0 SgN0 8x20 ix0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","Pacific/Chatham|+1215 +1245 +1345|-cf -cJ -dJ|012121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212|-WqAf 1adef IM0 1C00 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Oo0 1zc0 Rc0 1zc0 Oo0 1qM0 14o0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1lc0 14o0 1lc0 14o0 1lc0 17c0 1io0 17c0 1io0 17c0 1io0 17c0 1io0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|600","Pacific/Apia|LMT -1130 -11 -10 +14 +13|bq.U bu b0 a0 -e0 -d0|01232345454545454545454545454545454545454545454545454545454|-2nDMx.4 1yW03.4 2rRbu 1ff0 1a00 CI0 AQ0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1io0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1a00 1fA0 1cM0 1fA0 1a00 1fA0 1a00|37e3","Pacific/Bougainville|+10 +09 +11|-a0 -90 -b0|0102|-16Wy0 7CN0 2MQp0|18e4","Pacific/Efate|LMT +11 +12|-bd.g -b0 -c0|0121212121212121212121|-2l9nd.g 2Szcd.g 1cL0 1oN0 10L0 1fB0 19X0 1fB0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1fB0 Lz0 1Nd0 An0|66e3","Pacific/Enderbury|-12 -11 +13|c0 b0 -d0|012|nIc0 B7X0|1","Pacific/Fakaofo|-11 +13|b0 -d0|01|1Gfn0|483","Pacific/Fiji|LMT +12 +13|-bT.I -c0 -d0|0121212121212121212121212121212121212121212121212121212121212121|-2bUzT.I 3m8NT.I LA0 1EM0 IM0 nJc0 LA0 1o00 Rc0 1wo0 Ao0 1Nc0 Ao0 1Q00 xz0 1SN0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0 1VA0 s00 1VA0 s00 1VA0 s00 1VA0 uM0 1SM0 uM0 1SM0 uM0|88e4","Pacific/Galapagos|LMT -05 -06|5W.o 50 60|01212|-1yVS1.A 2dTz1.A gNd0 rz0|25e3","Pacific/Gambier|LMT -09|8X.M 90|01|-2jof0.c|125","Pacific/Guadalcanal|LMT +11|-aD.M -b0|01|-2joyD.M|11e4","Pacific/Guam|GST ChST|-a0 -a0|01|1fpq0|17e4","Pacific/Honolulu|HST HDT HST|au 9u a0|010102|-1thLu 8x0 lef0 8Pz0 46p0|37e4","Pacific/Kiritimati|-1040 -10 +14|aE a0 -e0|012|nIaE B7Xk|51e2","Pacific/Kosrae|+11 +12|-b0 -c0|010|-AX0 1bdz0|66e2","Pacific/Majuro|+11 +12|-b0 -c0|01|-AX0|28e3","Pacific/Marquesas|LMT -0930|9i 9u|01|-2joeG|86e2","Pacific/Pago_Pago|LMT SST|bm.M b0|01|-2nDMB.c|37e2","Pacific/Nauru|LMT +1130 +09 +12|-b7.E -bu -90 -c0|01213|-1Xdn7.E PvzB.E 5RCu 1ouJu|10e3","Pacific/Niue|-1120 -1130 -11|bk bu b0|012|-KfME 17y0a|12e2","Pacific/Norfolk|+1112 +1130 +1230 +11|-bc -bu -cu -b0|01213|-Kgbc W01G On0 1COp0|25e4","Pacific/Noumea|LMT +11 +12|-b5.M -b0 -c0|01212121|-2l9n5.M 2EqM5.M xX0 1PB0 yn0 HeP0 Ao0|98e3","Pacific/Pitcairn|-0830 -08|8u 80|01|18Vku|56","Pacific/Rarotonga|-1030 -0930 -10|au 9u a0|012121212121212121212121212|lyWu IL0 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Onu 1zcu Rbu 1zcu Onu 1zcu Onu 1zcu Onu|13e3","Pacific/Tahiti|LMT -10|9W.g a0|01|-2joe1.I|18e4","Pacific/Tongatapu|+1220 +13 +14|-ck -d0 -e0|0121212121|-1aB0k 2n5dk 15A0 1wo0 xz0 1Q10 xz0 zWN0 s00|75e3","PST8PDT|PST PDT PWT PPT|80 70 70 70|010102301010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|-261q0 1nX0 11B0 1nX0 SgN0 8x10 iy0 QwN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1cN0 1cL0 1cN0 1cL0 s10 1Vz0 LB0 1BX0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 1cN0 1fz0 1a10 1fz0 1cN0 1cL0 1cN0 1cL0 1cN0 1cL0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 14p0 1lb0 14p0 1lb0 14p0 1nX0 11B0 1nX0 11B0 1nX0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Rd0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0 Op0 1zb0","WET|WET WEST|0 -10|010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|hDB0 1a00 1fA0 1cM0 1cM0 1cM0 1fA0 1a00 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1cM0 1fA0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00 11A0 1qM0 WM0 1qM0 WM0 1qM0 WM0 1qM0 11A0 1o00 11A0 1o00"];
+  var links = ["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abidjan|Africa/Conakry","Africa/Abidjan|Africa/Dakar","Africa/Abidjan|Africa/Freetown","Africa/Abidjan|Africa/Lome","Africa/Abidjan|Africa/Nouakchott","Africa/Abidjan|Africa/Ouagadougou","Africa/Abidjan|Africa/Timbuktu","Africa/Abidjan|Atlantic/St_Helena","Africa/Cairo|Egypt","Africa/Johannesburg|Africa/Maseru","Africa/Johannesburg|Africa/Mbabane","Africa/Lagos|Africa/Bangui","Africa/Lagos|Africa/Brazzaville","Africa/Lagos|Africa/Douala","Africa/Lagos|Africa/Kinshasa","Africa/Lagos|Africa/Libreville","Africa/Lagos|Africa/Luanda","Africa/Lagos|Africa/Malabo","Africa/Lagos|Africa/Niamey","Africa/Lagos|Africa/Porto-Novo","Africa/Maputo|Africa/Blantyre","Africa/Maputo|Africa/Bujumbura","Africa/Maputo|Africa/Gaborone","Africa/Maputo|Africa/Harare","Africa/Maputo|Africa/Kigali","Africa/Maputo|Africa/Lubumbashi","Africa/Maputo|Africa/Lusaka","Africa/Nairobi|Africa/Addis_Ababa","Africa/Nairobi|Africa/Asmara","Africa/Nairobi|Africa/Asmera","Africa/Nairobi|Africa/Dar_es_Salaam","Africa/Nairobi|Africa/Djibouti","Africa/Nairobi|Africa/Kampala","Africa/Nairobi|Africa/Mogadishu","Africa/Nairobi|Indian/Antananarivo","Africa/Nairobi|Indian/Comoro","Africa/Nairobi|Indian/Mayotte","Africa/Tripoli|Libya","America/Adak|America/Atka","America/Adak|US/Aleutian","America/Anchorage|US/Alaska","America/Argentina/Buenos_Aires|America/Buenos_Aires","America/Argentina/Catamarca|America/Argentina/ComodRivadavia","America/Argentina/Catamarca|America/Catamarca","America/Argentina/Cordoba|America/Cordoba","America/Argentina/Cordoba|America/Rosario","America/Argentina/Jujuy|America/Jujuy","America/Argentina/Mendoza|America/Mendoza","America/Atikokan|America/Coral_Harbour","America/Chicago|US/Central","America/Curacao|America/Aruba","America/Curacao|America/Kralendijk","America/Curacao|America/Lower_Princes","America/Denver|America/Shiprock","America/Denver|Navajo","America/Denver|US/Mountain","America/Detroit|US/Michigan","America/Edmonton|Canada/Mountain","America/Fort_Wayne|America/Indiana/Indianapolis","America/Fort_Wayne|America/Indianapolis","America/Fort_Wayne|US/East-Indiana","America/Halifax|Canada/Atlantic","America/Havana|Cuba","America/Indiana/Knox|America/Knox_IN","America/Indiana/Knox|US/Indiana-Starke","America/Jamaica|Jamaica","America/Kentucky/Louisville|America/Louisville","America/Los_Angeles|US/Pacific","America/Los_Angeles|US/Pacific-New","America/Manaus|Brazil/West","America/Mazatlan|Mexico/BajaSur","America/Mexico_City|Mexico/General","America/New_York|US/Eastern","America/Noronha|Brazil/DeNoronha","America/Panama|America/Cayman","America/Phoenix|US/Arizona","America/Port_of_Spain|America/Anguilla","America/Port_of_Spain|America/Antigua","America/Port_of_Spain|America/Dominica","America/Port_of_Spain|America/Grenada","America/Port_of_Spain|America/Guadeloupe","America/Port_of_Spain|America/Marigot","America/Port_of_Spain|America/Montserrat","America/Port_of_Spain|America/St_Barthelemy","America/Port_of_Spain|America/St_Kitts","America/Port_of_Spain|America/St_Lucia","America/Port_of_Spain|America/St_Thomas","America/Port_of_Spain|America/St_Vincent","America/Port_of_Spain|America/Tortola","America/Port_of_Spain|America/Virgin","America/Regina|Canada/Saskatchewan","America/Rio_Branco|America/Porto_Acre","America/Rio_Branco|Brazil/Acre","America/Santiago|Chile/Continental","America/Sao_Paulo|Brazil/East","America/St_Johns|Canada/Newfoundland","America/Tijuana|America/Ensenada","America/Tijuana|America/Santa_Isabel","America/Tijuana|Mexico/BajaNorte","America/Toronto|America/Montreal","America/Toronto|Canada/Eastern","America/Vancouver|Canada/Pacific","America/Whitehorse|Canada/Yukon","America/Winnipeg|Canada/Central","Asia/Ashgabat|Asia/Ashkhabad","Asia/Bangkok|Asia/Phnom_Penh","Asia/Bangkok|Asia/Vientiane","Asia/Dhaka|Asia/Dacca","Asia/Dubai|Asia/Muscat","Asia/Ho_Chi_Minh|Asia/Saigon","Asia/Hong_Kong|Hongkong","Asia/Jerusalem|Asia/Tel_Aviv","Asia/Jerusalem|Israel","Asia/Kathmandu|Asia/Katmandu","Asia/Kolkata|Asia/Calcutta","Asia/Kuala_Lumpur|Asia/Singapore","Asia/Kuala_Lumpur|Singapore","Asia/Macau|Asia/Macao","Asia/Makassar|Asia/Ujung_Pandang","Asia/Nicosia|Europe/Nicosia","Asia/Qatar|Asia/Bahrain","Asia/Rangoon|Asia/Yangon","Asia/Riyadh|Asia/Aden","Asia/Riyadh|Asia/Kuwait","Asia/Seoul|ROK","Asia/Shanghai|Asia/Chongqing","Asia/Shanghai|Asia/Chungking","Asia/Shanghai|Asia/Harbin","Asia/Shanghai|PRC","Asia/Taipei|ROC","Asia/Tehran|Iran","Asia/Thimphu|Asia/Thimbu","Asia/Tokyo|Japan","Asia/Ulaanbaatar|Asia/Ulan_Bator","Asia/Urumqi|Asia/Kashgar","Atlantic/Faroe|Atlantic/Faeroe","Atlantic/Reykjavik|Iceland","Atlantic/South_Georgia|Etc/GMT+2","Australia/Adelaide|Australia/South","Australia/Brisbane|Australia/Queensland","Australia/Broken_Hill|Australia/Yancowinna","Australia/Darwin|Australia/North","Australia/Hobart|Australia/Tasmania","Australia/Lord_Howe|Australia/LHI","Australia/Melbourne|Australia/Victoria","Australia/Perth|Australia/West","Australia/Sydney|Australia/ACT","Australia/Sydney|Australia/Canberra","Australia/Sydney|Australia/NSW","Etc/GMT-0|Etc/GMT","Etc/GMT-0|Etc/GMT+0","Etc/GMT-0|Etc/GMT0","Etc/GMT-0|Etc/Greenwich","Etc/GMT-0|GMT","Etc/GMT-0|GMT+0","Etc/GMT-0|GMT-0","Etc/GMT-0|GMT0","Etc/GMT-0|Greenwich","Etc/UCT|UCT","Etc/UTC|Etc/Universal","Etc/UTC|Etc/Zulu","Etc/UTC|UTC","Etc/UTC|Universal","Etc/UTC|Zulu","Europe/Belgrade|Europe/Ljubljana","Europe/Belgrade|Europe/Podgorica","Europe/Belgrade|Europe/Sarajevo","Europe/Belgrade|Europe/Skopje","Europe/Belgrade|Europe/Zagreb","Europe/Chisinau|Europe/Tiraspol","Europe/Dublin|Eire","Europe/Helsinki|Europe/Mariehamn","Europe/Istanbul|Asia/Istanbul","Europe/Istanbul|Turkey","Europe/Lisbon|Portugal","Europe/London|Europe/Belfast","Europe/London|Europe/Guernsey","Europe/London|Europe/Isle_of_Man","Europe/London|Europe/Jersey","Europe/London|GB","Europe/London|GB-Eire","Europe/Moscow|W-SU","Europe/Oslo|Arctic/Longyearbyen","Europe/Oslo|Atlantic/Jan_Mayen","Europe/Prague|Europe/Bratislava","Europe/Rome|Europe/San_Marino","Europe/Rome|Europe/Vatican","Europe/Warsaw|Poland","Europe/Zurich|Europe/Busingen","Europe/Zurich|Europe/Vaduz","Indian/Christmas|Etc/GMT-7","Pacific/Auckland|Antarctica/McMurdo","Pacific/Auckland|Antarctica/South_Pole","Pacific/Auckland|NZ","Pacific/Chatham|NZ-CHAT","Pacific/Easter|Chile/EasterIsland","Pacific/Guam|Pacific/Saipan","Pacific/Honolulu|Pacific/Johnston","Pacific/Honolulu|US/Hawaii","Pacific/Kwajalein|Kwajalein","Pacific/Pago_Pago|Pacific/Midway","Pacific/Pago_Pago|Pacific/Samoa","Pacific/Pago_Pago|US/Samoa","Pacific/Palau|Etc/GMT-9","Pacific/Pohnpei|Etc/GMT-11","Pacific/Pohnpei|Pacific/Ponape","Pacific/Port_Moresby|Etc/GMT-10","Pacific/Port_Moresby|Pacific/Chuuk","Pacific/Port_Moresby|Pacific/Truk","Pacific/Port_Moresby|Pacific/Yap","Pacific/Tarawa|Etc/GMT-12","Pacific/Tarawa|Pacific/Funafuti","Pacific/Tarawa|Pacific/Wake","Pacific/Tarawa|Pacific/Wallis"];
   var latest = {
-  	version: version$2,
+  	version: version$3,
   	zones: zones,
   	links: links
   };
 
   var latest$1 = /*#__PURE__*/Object.freeze({
-    version: version$2,
+    version: version$3,
     zones: zones,
     links: links,
     default: latest
@@ -23605,7 +26360,7 @@ var Shop = (function () {
 
   Shop$1.Controls = Controls;
 
-  Shop$1.Events = Events$2;
+  Shop$1.Events = Events$3;
 
   Shop$1.Containers = Containers;
 
@@ -23745,7 +26500,7 @@ var Shop = (function () {
                     data.set('order.shippingAddress.state', state);
                   }
                 }
-                return m$1.trigger(Events$2.GeoReady, {
+                return m$1.trigger(Events$3.GeoReady, {
                   status: 'success',
                   geolocation: position,
                   gmaps: results
@@ -23756,7 +26511,7 @@ var Shop = (function () {
         })(this));
       } else {
         requestAnimationFrame(function() {
-          return m$1.trigger(Events$2.GeoReady, {
+          return m$1.trigger(Events$3.GeoReady, {
             status: 'disabled'
           });
         });
@@ -23819,7 +26574,7 @@ var Shop = (function () {
       cart.taxRates((ref7 = res.taxRates) != null ? ref7 : taxRates);
       cart.shippingRates((ref8 = res.shippingRates) != null ? ref8 : shippingRates);
       cart.invoice();
-      m$1.trigger(Events$2.AsyncReady, res);
+      m$1.trigger(Events$3.AsyncReady, res);
       return El$1.scheduleUpdate();
     });
     cart.onCart = function() {
@@ -23851,7 +26606,7 @@ var Shop = (function () {
         total: data.get('order.total')
       });
       if (item != null) {
-        m$1.trigger(Events$2.UpdateItem, item);
+        m$1.trigger(Events$3.UpdateItem, item);
       }
       meta = data.get('order.metadata');
       index$3.set('order.metadata', meta);
@@ -23873,11 +26628,11 @@ var Shop = (function () {
   };
 
   initMediator = function(data, cart) {
-    m$1.on(Events$2.Started, function(data) {
+    m$1.on(Events$3.Started, function(data) {
       cart.invoice();
       return El$1.scheduleUpdate();
     });
-    m$1.on(Events$2.DeleteLineItem, function(item) {
+    m$1.on(Events$3.DeleteLineItem, function(item) {
       var id;
       id = item.get('id');
       if (!id) {
@@ -23917,12 +26672,12 @@ var Shop = (function () {
           var promoCode;
           promoCode = res.affiliate.couponId;
           _this.data.set('order.promoCode', promocode);
-          return m$1.trigger(Events$2.ForceApplyPromoCode);
+          return m$1.trigger(Events$3.ForceApplyPromoCode);
         };
       })(this))["catch"](function() {});
     } else if (promo !== '') {
       this.data.set('order.promoCode', promo);
-      m$1.trigger(Events$2.ForceApplyPromoCode);
+      m$1.trigger(Events$3.ForceApplyPromoCode);
     }
     searchQueue = [document.body];
     elementsToMount = [];
@@ -23969,14 +26724,14 @@ var Shop = (function () {
           tag = tags[j];
           $(tag.root).addClass('ready').find(tagSelectors).addClass('ready');
         }
-        return m$1.trigger(Events$2.Ready);
+        return m$1.trigger(Events$3.Ready);
       });
       return El$1.scheduleUpdate();
     })["catch"](function(err) {
       var ref5;
       return typeof window !== "undefined" && window !== null ? (ref5 = window.Raven) != null ? ref5.captureException(err) : void 0 : void 0;
     });
-    m$1.trigger(Events$2.Started, this.data);
+    m$1.trigger(Events$3.Started, this.data);
     return m$1;
   };
 
@@ -24018,14 +26773,14 @@ var Shop = (function () {
     if (locked == null) {
       locked = false;
     }
-    m$1.trigger(Events$2.TryUpdateItem, id);
+    m$1.trigger(Events$3.TryUpdateItem, id);
     p = this.cart.set(id, quantity, locked);
     if (this.promise !== p) {
       this.promise = p;
       return this.promise.then((function(_this) {
         return function() {
           El$1.scheduleUpdate();
-          return m$1.trigger(Events$2.UpdateItems, _this.data.get('order.items'));
+          return m$1.trigger(Events$3.UpdateItems, _this.data.get('order.items'));
         };
       })(this))["catch"](function(err) {
         var ref2;
@@ -24076,5 +26831,5 @@ var Shop = (function () {
 
   return Shop$2;
 
-}());
+}(buffer,util,stream,zlib,assert,fs));
 //# sourceMappingURL=shop.js.map
