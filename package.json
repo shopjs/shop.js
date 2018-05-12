@@ -45,14 +45,14 @@
     "akasha": "0.1.10",
     "broken": "^0.1.13",
     "commerce.js": "1.1.22",
-    "el-controls": "1.2.27",
+    "el-controls": "1.2.28",
     "el.js": "^2.1.32",
     "es-keyboardevent-key-polyfill": "1.0.2",
     "es-md5": "^2.7.2",
     "es-raf": "^3.3.1",
     "gmaps": "0.4.24",
     "hanzo.js": "2.5.0",
-    "moment-timezone": "0.5.16",
+    "moment-timezone": "0.5.17",
     "shop.js-util": "0.0.7"
   },
   "devDependencies": {
