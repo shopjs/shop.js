@@ -731,7 +731,7 @@ reset-password .input select.labeled ~ .select-indicator,
 reset-password-complete .input select.labeled ~ .select-indicator,
 shippingaddress .input select.labeled ~ .select-indicator,
 thankyou .input select.labeled ~ .select-indicator{
-  top:1.75rem;
+  top:2.25rem;
 }
 cart .input select:disabled ~ .select-indicator,
 checkout .input select:disabled ~ .select-indicator,
@@ -1855,7 +1855,7 @@ view .input select ~ .select-indicator{
   display:block;
 }
 view .input select.labeled ~ .select-indicator{
-  top:1.75rem;
+  top:2.25rem;
 }
 view .input select:disabled ~ .select-indicator{
   opacity:0.5;
