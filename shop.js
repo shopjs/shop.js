@@ -8980,7 +8980,7 @@ var Shop = (function () {
     return [getQueries().mc_eid, getQueries().mc_cid];
   };
 
-  // node_modules/el-controls/src/events.coffee
+  // ../el-controls/src/events.coffee
   var Events;
 
   var Events$1 = Events = {
@@ -8989,7 +8989,7 @@ var Shop = (function () {
     ChangeFailed: 'change-failed'
   };
 
-  // node_modules/el-controls/src/utils/valueOrCall.coffee
+  // ../el-controls/src/utils/valueOrCall.coffee
   var valueOrCall;
 
   var valueOrCall$1 = valueOrCall = function(valueOrFunc) {
@@ -10870,7 +10870,7 @@ var Shop = (function () {
 
   // node_modules/es6-tween/src/index.js
 
-  // node_modules/el-controls/src/controls/control.coffee
+  // ../el-controls/src/controls/control.coffee
   var Control, _controlId, scrolling,
     extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$3 = {}.hasOwnProperty;
@@ -10956,7 +10956,7 @@ var Shop = (function () {
 
   })(El$1.Input);
 
-  // node_modules/el-controls/src/utils/placeholder.coffee
+  // ../el-controls/src/utils/placeholder.coffee
   var exports$1, hidePlaceholderOnFocus, unfocusOnAnElement;
 
   hidePlaceholderOnFocus = function(event) {
@@ -11003,10 +11003,10 @@ var Shop = (function () {
 
   var placeholder = exports$1;
 
-  // node_modules/el-controls/templates/controls/text.pug
-  var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  // ../el-controls/templates/controls/text.pug
+  var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: getText() || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // node_modules/el-controls/src/controls/text.coffee
+  // ../el-controls/src/controls/text.coffee
   var Text,
     extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$4 = {}.hasOwnProperty;
@@ -11053,6 +11053,13 @@ var Shop = (function () {
           }
         };
       })(this));
+    };
+
+    Text.prototype.getText = function() {
+      if (this.input == null) {
+        return '';
+      }
+      return this.input.ref.get(this.input.name);
     };
 
     return Text;
@@ -11472,10 +11479,10 @@ var Shop = (function () {
 
   PromoCode.register();
 
-  // node_modules/el-controls/templates/controls/selection.pug
+  // ../el-controls/templates/controls/selection.pug
   var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // node_modules/el-controls/src/controls/selection.coffee
+  // ../el-controls/src/controls/selection.coffee
   var Select,
     extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$10 = {}.hasOwnProperty;
@@ -11616,7 +11623,7 @@ var Shop = (function () {
 
   ShippingAddressCity.register();
 
-  // node_modules/el-controls/src/controls/country-select.coffee
+  // ../el-controls/src/controls/country-select.coffee
   var CountrySelect,
     extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$13 = {}.hasOwnProperty;
@@ -11793,7 +11800,7 @@ var Shop = (function () {
 
   ShippingAddressPostalCode.register();
 
-  // node_modules/el-controls/src/controls/state-select.coffee
+  // ../el-controls/src/controls/state-select.coffee
   var StateSelect,
     extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$19 = {}.hasOwnProperty;
@@ -11908,10 +11915,10 @@ var Shop = (function () {
 
   ShippingAddressState.register();
 
-  // node_modules/el-controls/templates/controls/checkbox.pug
+  // ../el-controls/templates/controls/checkbox.pug
   var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
-  // node_modules/el-controls/src/controls/checkbox.coffee
+  // ../el-controls/src/controls/checkbox.coffee
   var CheckBox,
     extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$21 = {}.hasOwnProperty;
@@ -12133,10 +12140,10 @@ var Shop = (function () {
 
   GiftEmail.register();
 
-  // node_modules/el-controls/templates/controls/textarea.pug
-  var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  // ../el-controls/templates/controls/textarea.pug
+  var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ getText() }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // node_modules/el-controls/src/controls/textbox.coffee
+  // ../el-controls/src/controls/textbox.coffee
   var TextBox,
     extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$30 = {}.hasOwnProperty;
@@ -12242,7 +12249,7 @@ var Shop = (function () {
 
   var GiftType$1 = GiftType;
 
-  // node_modules/el-controls/src/controls/readonly.coffee
+  // ../el-controls/src/controls/readonly.coffee
   var ReadOnly,
     extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$34 = {}.hasOwnProperty;
@@ -12267,7 +12274,8 @@ var Shop = (function () {
     };
 
     ReadOnly.prototype.getText = function() {
-      return valueOrCall$1(this.text) || this.input.ref.get(input.name);
+      var ref;
+      return valueOrCall$1(this.text) || ((ref = this.input) != null ? ref.ref.get(this.input.name) : void 0) || '';
     };
 
     ReadOnly.prototype.change = function() {};
@@ -12282,10 +12290,10 @@ var Shop = (function () {
 
   ReadOnly.register();
 
-  // node_modules/el-controls/templates/controls/copy.pug
+  // ../el-controls/templates/controls/copy.pug
   var html$4 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
-  // node_modules/el-controls/src/controls/copy.coffee
+  // ../el-controls/src/controls/copy.coffee
   var Copy,
     extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$35 = {}.hasOwnProperty;
@@ -12347,7 +12355,7 @@ var Shop = (function () {
 
   Copy.register();
 
-  // node_modules/el-controls/templates/controls/currency.pug
+  // ../el-controls/templates/controls/currency.pug
   var html$5 = "\n<yield from=\"input\">\n  <div class=\"currency-container { invalid: errorMessage, valid: valid }\">\n    <input class=\"currency-amount right-aligned {invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n    <div class=\"currency-code\">\n      <div class=\"currency-code-text\">{ getCurrency().toUpperCase() }</div>\n    </div>\n  </div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // node_modules/shop.js-util/src/data/currencies.coffee
@@ -12543,7 +12551,7 @@ var Shop = (function () {
     return parseInt(parseFloat(parts[0].replace(digitsOnlyRe, '')) * 100 + parseFloat(parts[1].replace(digitsOnlyRe, '')), 10);
   };
 
-  // node_modules/el-controls/src/controls/currency.coffee
+  // ../el-controls/src/controls/currency.coffee
   var Currency,
     extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$36 = {}.hasOwnProperty;
@@ -15809,10 +15817,10 @@ var Shop = (function () {
     return render(data, opts)
   });
 
-  // node_modules/el-controls/templates/controls/qrcode.pug
+  // ../el-controls/templates/controls/qrcode.pug
   var html$6 = "\n<canvas></canvas>";
 
-  // node_modules/el-controls/src/controls/qrcode.coffee
+  // ../el-controls/src/controls/qrcode.coffee
   var QRCode,
     extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$37 = {}.hasOwnProperty;
