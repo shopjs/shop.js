@@ -571,6 +571,24 @@ thankyou .input input[type=password]{
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
 }
+cart .input.input.input.input textarea,
+checkout .input.input.input.input textarea,
+checkout-card .input.input.input.input textarea,
+checkout-modal .input.input.input.input textarea,
+checkout-shippingaddress .input.input.input.input textarea,
+deposit .input.input.input.input textarea,
+login .input.input.input.input textarea,
+orders .input.input.input.input textarea,
+profile .input.input.input.input textarea,
+register .input.input.input.input textarea,
+reset-password .input.input.input.input textarea,
+reset-password-complete .input.input.input.input textarea,
+shippingaddress .input.input.input.input textarea,
+thankyou .input.input.input.input textarea{
+  margin-top:1rem;
+  margin-bottom:-0.5rem;
+  padding:0.25rem;
+}
 cart .input textarea,
 checkout .input textarea,
 checkout-card .input textarea,
@@ -587,7 +605,7 @@ shippingaddress .input textarea,
 thankyou .input textarea{
   outline:none;
   height:6rem;
-  border:1px solid $borderColor1;
+  border:1px solid #000;
   border-radius:2px;
 }
 cart .input input[type=text],
@@ -1812,10 +1830,15 @@ view .input input[type=password]{
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
 }
+view .input.input.input.input textarea{
+  margin-top:1rem;
+  margin-bottom:-0.5rem;
+  padding:0.25rem;
+}
 view .input textarea{
   outline:none;
   height:6rem;
-  border:1px solid $borderColor1;
+  border:1px solid #000;
   border-radius:2px;
 }
 view .input input[type=text],

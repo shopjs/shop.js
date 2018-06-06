@@ -5,4 +5,7 @@ export default class UserName extends Text
   tag:  'user-name'
   bind: 'user.name'
 
+  init: ->
+    super arguments...
+
 UserName.register()

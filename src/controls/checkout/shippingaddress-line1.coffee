@@ -5,4 +5,7 @@ export default class ShippingAddressLine1 extends Text
   tag:  'shippingaddress-line1'
   bind: 'order.shippingAddress.line1'
 
+  init: ->
+    super arguments...
+
 ShippingAddressLine1.register()

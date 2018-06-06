@@ -11,7 +11,7 @@ class LineItems extends El.View
     if @parentData?
       @data = @parentData
 
-    super
+    super arguments...
 
     @on 'update', =>
       if @parentData?

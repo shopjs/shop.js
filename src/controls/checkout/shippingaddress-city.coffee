@@ -5,5 +5,8 @@ export default class ShippingAddressCity extends Text
   tag:  'shippingaddress-city'
   bind: 'order.shippingAddress.city'
 
+  init: ->
+    super arguments...
+
 ShippingAddressCity.register()
 

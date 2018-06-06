@@ -5,5 +5,8 @@ export default class Terms extends CheckBox
   tag:  'terms'
   bind: 'terms'
 
+  init: ->
+    super arguments...
+
 Terms.register()
 

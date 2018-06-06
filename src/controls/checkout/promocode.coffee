@@ -5,4 +5,7 @@ export default class PromoCode extends Text
   tag:  'promocode'
   bind: 'order.promoCode'
 
+  init: ->
+    super arguments...
+
 PromoCode.register()

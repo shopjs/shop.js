@@ -7,7 +7,7 @@ export default class ShippingAddressCountry extends CountrySelect
   countriesField: 'countries'
 
   init: ->
-    super
+    super arguments...
 
     @input.ref.on 'set', (k, v)=>
       if k.indexOf(@countriesField) > -1

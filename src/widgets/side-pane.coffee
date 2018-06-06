@@ -12,7 +12,7 @@ class SidePane extends El.View
   opened: false
 
   init: ->
-    super
+    super arguments...
 
     m.on Events.SidePaneOpen, (id)=>
       if !id || id == @id

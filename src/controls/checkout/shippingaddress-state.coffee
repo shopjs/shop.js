@@ -10,7 +10,7 @@ export default class ShippingAddressState extends StateSelect
     return @data.get @countryField
 
   init: ->
-    super
+    super arguments...
 
     @input.ref.on 'set', (k, v)=>
       if k.indexOf(@countryField) > -1

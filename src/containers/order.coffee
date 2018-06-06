@@ -10,7 +10,7 @@ class OrderForm extends El.Form
   parentData: null
 
   init: ->
-    super
+    super arguments...
     @parentData = refer {}
 
     @on 'update', =>

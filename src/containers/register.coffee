@@ -31,7 +31,7 @@ class RegisterForm extends El.Form
   errorMessage: ''
 
   init: ->
-    super
+    super arguments...
 
   _submit: (event) ->
     opts =

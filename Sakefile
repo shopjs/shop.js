@@ -15,8 +15,7 @@ task 'build', 'build js', ['build:static'], ->
   bundle.write
     entry:   'src/index.coffee'
     compilers:
-      coffee:
-        version: 1
+      coffee: version: 1
     # quiet: false
     # details: true
     external: false

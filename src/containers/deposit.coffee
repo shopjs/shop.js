@@ -13,6 +13,9 @@ class DepositForm extends CheckoutForm
   configs:
     'order.subtotal': [isRequired]
 
+  init: ->
+    super arguments...
+
 DepositForm.register()
 
 export default DepositForm

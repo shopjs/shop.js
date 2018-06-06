@@ -5,6 +5,9 @@ class CardName extends Text
   tag:    'card-name'
   bind: 'payment.account.name'
 
+  init: ->
+    super arguments...
+
 CardName.register()
 
 export default CardName

@@ -6,6 +6,6 @@ export default class View extends El.View
   html: html
 
   init: ->
-    super
+    super arguments...
 
 View.register()

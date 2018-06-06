@@ -5,4 +5,7 @@ export default class ShippingAddressPostalCode extends Text
   tag:  'shippingaddress-postalcode'
   bind: 'order.shippingAddress.postalCode'
 
+  init: ->
+    super arguments...
+
 ShippingAddressPostalCode.register()

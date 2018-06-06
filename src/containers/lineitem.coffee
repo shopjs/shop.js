@@ -10,7 +10,7 @@ class LineItemForm extends El.Form
     'quantity': null
 
   init: ->
-    super
+    super arguments...
 
   delete: (event) ->
     @mediator.trigger Events.DeleteLineItem, @data

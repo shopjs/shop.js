@@ -8,7 +8,7 @@ export default class UserPasswordConfirm extends Text
 
   autocomplete: 'off'
 
-  init: ()->
-    super
+  init: ->
+    super arguments...
 
 UserPasswordConfirm.register()

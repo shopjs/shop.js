@@ -5,4 +5,7 @@ export default class UserEmail extends Text
   tag:  'user-email'
   bind: 'user.email'
 
+  init: ->
+    super arguments...
+
 UserEmail.register()

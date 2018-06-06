@@ -6,4 +6,7 @@ export default class UserPassword extends Text
   lookup:   'user.password'
   type:     'password'
 
+  init: ->
+    super arguments...
+
 UserPassword.register()

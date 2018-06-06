@@ -5,6 +5,9 @@ class GiftEmail extends Text
   tag:  'gift-email'
   bind: 'order.giftEmail'
 
+  init: ->
+    super arguments...
+
 export default GiftEmail
 
 GiftEmail.register()

@@ -19,6 +19,9 @@ class LoginForm extends El.Form
 
   errorMessage: ''
 
+  init: ->
+    super arguments...
+
   _submit: (event) ->
     opts =
       email:    @data.get 'user.email'

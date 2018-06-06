@@ -5,4 +5,7 @@ export default class GiftToggle extends CheckBox
   tag:  'gift-toggle'
   bind: 'order.gift'
 
+  init: ->
+    super arguments...
+
 GiftToggle.register()

@@ -5,4 +5,7 @@ export default class GiftMessage extends TextBox
   tag:  'gift-message'
   bind: 'order.giftMessage'
 
+  init: ->
+    super arguments...
+
 GiftMessage.register()

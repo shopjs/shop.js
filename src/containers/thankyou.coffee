@@ -24,7 +24,7 @@ class ThankYouForm extends El.Form
   metamaskInterval : null
 
   init: ->
-    super
+    super arguments...
 
     if @testCrypto
       @test = true
