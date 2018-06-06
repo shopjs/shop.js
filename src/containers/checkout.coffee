@@ -18,7 +18,7 @@ class CheckoutForm extends El.Form
   configs:      configs
 
   init: ->
-    super()
+    super arguments...
 
     @data.on 'set', (name, value) =>
       if name == 'user.email'

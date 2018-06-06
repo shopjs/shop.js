@@ -26,7 +26,7 @@ class ShippingAddressForm extends El.Form
     if @parentData?
       @data = @parentData
 
-    super
+    super arguments...
 
     @on 'update', =>
       if @parentData?

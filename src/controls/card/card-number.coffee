@@ -13,7 +13,7 @@ class CardNumber extends Text
   cardType: ''
 
   init: ->
-    super
+    super arguments...
 
     @on 'mount', =>
       # avoid weird rendering race conditions

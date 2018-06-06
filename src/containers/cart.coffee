@@ -14,7 +14,7 @@ class CartForm extends El.Form
   # showButtons: true
 
   init: ->
-    super
+    super arguments...
     promoCode = store.get 'promoCode'
 
     if promoCode

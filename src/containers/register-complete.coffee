@@ -23,7 +23,7 @@ class RegisterCompleteForm extends El.Form
   errorMessage: ''
 
   init: ->
-    super
+    super arguments...
 
     if !@twoStageSignUp
       @_submit()

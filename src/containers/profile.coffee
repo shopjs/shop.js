@@ -63,7 +63,7 @@ class ProfileForm extends El.Form
       @mediator.trigger Events.ProfileLoadFailed, err
       El.scheduleUpdate()
 
-    super
+    super arguments...
 
   _submit: (event) ->
     opts =

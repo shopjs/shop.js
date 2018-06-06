@@ -9,7 +9,7 @@ class CardExpiry extends Text
   bind: 'payment.account.expiry'
 
   init: ->
-    super
+    super arguments...
 
     @on 'mount', =>
       el = @root.querySelector('input')

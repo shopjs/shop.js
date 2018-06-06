@@ -8,7 +8,7 @@ class CartCounter extends El.View
   html: html
 
   init: ->
-    super
+    super arguments...
 
   countItems: ->
     items = @data.get 'order.items'

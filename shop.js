@@ -8980,7 +8980,7 @@ var Shop = (function () {
     return [getQueries().mc_eid, getQueries().mc_cid];
   };
 
-  // ../el-controls/src/events.coffee
+  // node_modules/el-controls/src/events.coffee
   var Events;
 
   var Events$1 = Events = {
@@ -8989,7 +8989,7 @@ var Shop = (function () {
     ChangeFailed: 'change-failed'
   };
 
-  // ../el-controls/src/utils/valueOrCall.coffee
+  // node_modules/el-controls/src/utils/valueOrCall.coffee
   var valueOrCall;
 
   var valueOrCall$1 = valueOrCall = function(valueOrFunc) {
@@ -10870,7 +10870,7 @@ var Shop = (function () {
 
   // node_modules/es6-tween/src/index.js
 
-  // ../el-controls/src/controls/control.coffee
+  // node_modules/el-controls/src/controls/control.coffee
   var Control, _controlId, scrolling,
     extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$3 = {}.hasOwnProperty;
@@ -10956,7 +10956,7 @@ var Shop = (function () {
 
   })(El$1.Input);
 
-  // ../el-controls/src/utils/placeholder.coffee
+  // node_modules/el-controls/src/utils/placeholder.coffee
   var exports$1, hidePlaceholderOnFocus, unfocusOnAnElement;
 
   hidePlaceholderOnFocus = function(event) {
@@ -11003,10 +11003,10 @@ var Shop = (function () {
 
   var placeholder = exports$1;
 
-  // ../el-controls/templates/controls/text.pug
+  // node_modules/el-controls/templates/controls/text.pug
   var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: getText() || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // ../el-controls/src/controls/text.coffee
+  // node_modules/el-controls/src/controls/text.coffee
   var Text,
     extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$4 = {}.hasOwnProperty;
@@ -11352,6 +11352,10 @@ var Shop = (function () {
 
     CardName.prototype.bind = 'payment.account.name';
 
+    CardName.prototype.init = function() {
+      return CardName.__super__.init.apply(this, arguments);
+    };
+
     return CardName;
 
   })(Text$1);
@@ -11459,11 +11463,11 @@ var Shop = (function () {
 
   // src/controls/checkout/promocode.coffee
   var PromoCode,
-    extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    extend$a = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$9 = {}.hasOwnProperty;
 
   var PromoCode$1 = PromoCode = (function(superClass) {
-    extend$10(PromoCode, superClass);
+    extend$a(PromoCode, superClass);
 
     function PromoCode() {
       return PromoCode.__super__.constructor.apply(this, arguments);
@@ -11473,22 +11477,26 @@ var Shop = (function () {
 
     PromoCode.prototype.bind = 'order.promoCode';
 
+    PromoCode.prototype.init = function() {
+      return PromoCode.__super__.init.apply(this, arguments);
+    };
+
     return PromoCode;
 
   })(Text$1);
 
   PromoCode.register();
 
-  // ../el-controls/templates/controls/selection.pug
+  // node_modules/el-controls/templates/controls/selection.pug
   var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // ../el-controls/src/controls/selection.coffee
+  // node_modules/el-controls/src/controls/selection.coffee
   var Select,
-    extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$10 = {}.hasOwnProperty;
+    extend$b = function(child, parent) { for (var key in parent) { if (hasProp$a.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$a = {}.hasOwnProperty;
 
   var Select$1 = Select = (function(superClass) {
-    extend$11(Select, superClass);
+    extend$b(Select, superClass);
 
     function Select() {
       return Select.__super__.constructor.apply(this, arguments);
@@ -11548,8 +11556,8 @@ var Shop = (function () {
 
   // src/controls/checkout/quantity-select.coffee
   var QuantitySelect, i$1, j$1, opts,
-    extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$11 = {}.hasOwnProperty;
+    extend$c = function(child, parent) { for (var key in parent) { if (hasProp$b.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$b = {}.hasOwnProperty;
 
   opts = {};
 
@@ -11558,7 +11566,7 @@ var Shop = (function () {
   }
 
   var QuantitySelect$1 = QuantitySelect = (function(superClass) {
-    extend$12(QuantitySelect, superClass);
+    extend$c(QuantitySelect, superClass);
 
     function QuantitySelect() {
       return QuantitySelect.__super__.constructor.apply(this, arguments);
@@ -11603,11 +11611,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-city.coffee
   var ShippingAddressCity,
-    extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$12 = {}.hasOwnProperty;
+    extend$d = function(child, parent) { for (var key in parent) { if (hasProp$c.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$c = {}.hasOwnProperty;
 
   var ShippingAddressCity$1 = ShippingAddressCity = (function(superClass) {
-    extend$13(ShippingAddressCity, superClass);
+    extend$d(ShippingAddressCity, superClass);
 
     function ShippingAddressCity() {
       return ShippingAddressCity.__super__.constructor.apply(this, arguments);
@@ -11617,19 +11625,23 @@ var Shop = (function () {
 
     ShippingAddressCity.prototype.bind = 'order.shippingAddress.city';
 
+    ShippingAddressCity.prototype.init = function() {
+      return ShippingAddressCity.__super__.init.apply(this, arguments);
+    };
+
     return ShippingAddressCity;
 
   })(Text$1);
 
   ShippingAddressCity.register();
 
-  // ../el-controls/src/controls/country-select.coffee
+  // node_modules/el-controls/src/controls/country-select.coffee
   var CountrySelect,
-    extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$13 = {}.hasOwnProperty;
+    extend$e = function(child, parent) { for (var key in parent) { if (hasProp$d.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$d = {}.hasOwnProperty;
 
   var CountrySelect$1 = CountrySelect = (function(superClass) {
-    extend$14(CountrySelect, superClass);
+    extend$e(CountrySelect, superClass);
 
     function CountrySelect() {
       return CountrySelect.__super__.constructor.apply(this, arguments);
@@ -11678,11 +11690,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-country.coffee
   var ShippingAddressCountry,
-    extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$14 = {}.hasOwnProperty;
+    extend$f = function(child, parent) { for (var key in parent) { if (hasProp$e.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$e = {}.hasOwnProperty;
 
   var ShippingAddressCountry$1 = ShippingAddressCountry = (function(superClass) {
-    extend$15(ShippingAddressCountry, superClass);
+    extend$f(ShippingAddressCountry, superClass);
 
     function ShippingAddressCountry() {
       return ShippingAddressCountry.__super__.constructor.apply(this, arguments);
@@ -11714,11 +11726,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-line1.coffee
   var ShippingAddressLine1,
-    extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$15 = {}.hasOwnProperty;
+    extend$g = function(child, parent) { for (var key in parent) { if (hasProp$f.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$f = {}.hasOwnProperty;
 
   var ShippingAddressLine1$1 = ShippingAddressLine1 = (function(superClass) {
-    extend$16(ShippingAddressLine1, superClass);
+    extend$g(ShippingAddressLine1, superClass);
 
     function ShippingAddressLine1() {
       return ShippingAddressLine1.__super__.constructor.apply(this, arguments);
@@ -11728,6 +11740,10 @@ var Shop = (function () {
 
     ShippingAddressLine1.prototype.bind = 'order.shippingAddress.line1';
 
+    ShippingAddressLine1.prototype.init = function() {
+      return ShippingAddressLine1.__super__.init.apply(this, arguments);
+    };
+
     return ShippingAddressLine1;
 
   })(Text$1);
@@ -11736,11 +11752,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-line2.coffee
   var ShippingAddressLine2,
-    extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$16.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$16 = {}.hasOwnProperty;
+    extend$h = function(child, parent) { for (var key in parent) { if (hasProp$g.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$g = {}.hasOwnProperty;
 
   var ShippingAddressLine2$1 = ShippingAddressLine2 = (function(superClass) {
-    extend$17(ShippingAddressLine2, superClass);
+    extend$h(ShippingAddressLine2, superClass);
 
     function ShippingAddressLine2() {
       return ShippingAddressLine2.__super__.constructor.apply(this, arguments);
@@ -11750,6 +11766,10 @@ var Shop = (function () {
 
     ShippingAddressLine2.prototype.bind = 'order.shippingAddress.line2';
 
+    ShippingAddressLine2.prototype.init = function() {
+      return ShippingAddressLine2.__super__.init.apply(this, arguments);
+    };
+
     return ShippingAddressLine2;
 
   })(Text$1);
@@ -11758,11 +11778,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-name.coffee
   var ShippingAddressName,
-    extend$18 = function(child, parent) { for (var key in parent) { if (hasProp$17.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$17 = {}.hasOwnProperty;
+    extend$i = function(child, parent) { for (var key in parent) { if (hasProp$h.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$h = {}.hasOwnProperty;
 
   var ShippingAddressName$1 = ShippingAddressName = (function(superClass) {
-    extend$18(ShippingAddressName, superClass);
+    extend$i(ShippingAddressName, superClass);
 
     function ShippingAddressName() {
       return ShippingAddressName.__super__.constructor.apply(this, arguments);
@@ -11772,6 +11792,10 @@ var Shop = (function () {
 
     ShippingAddressName.prototype.bind = 'order.shippingAddress.name';
 
+    ShippingAddressName.prototype.init = function() {
+      return ShippingAddressName.__super__.init.apply(this, arguments);
+    };
+
     return ShippingAddressName;
 
   })(Text$1);
@@ -11780,11 +11804,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-postalcode.coffee
   var ShippingAddressPostalCode,
-    extend$19 = function(child, parent) { for (var key in parent) { if (hasProp$18.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$18 = {}.hasOwnProperty;
+    extend$j = function(child, parent) { for (var key in parent) { if (hasProp$i.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$i = {}.hasOwnProperty;
 
   var ShippingAddressPostalCode$1 = ShippingAddressPostalCode = (function(superClass) {
-    extend$19(ShippingAddressPostalCode, superClass);
+    extend$j(ShippingAddressPostalCode, superClass);
 
     function ShippingAddressPostalCode() {
       return ShippingAddressPostalCode.__super__.constructor.apply(this, arguments);
@@ -11794,19 +11818,23 @@ var Shop = (function () {
 
     ShippingAddressPostalCode.prototype.bind = 'order.shippingAddress.postalCode';
 
+    ShippingAddressPostalCode.prototype.init = function() {
+      return ShippingAddressPostalCode.__super__.init.apply(this, arguments);
+    };
+
     return ShippingAddressPostalCode;
 
   })(Text$1);
 
   ShippingAddressPostalCode.register();
 
-  // ../el-controls/src/controls/state-select.coffee
+  // node_modules/el-controls/src/controls/state-select.coffee
   var StateSelect,
-    extend$20 = function(child, parent) { for (var key in parent) { if (hasProp$19.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$19 = {}.hasOwnProperty;
+    extend$k = function(child, parent) { for (var key in parent) { if (hasProp$j.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$j = {}.hasOwnProperty;
 
   var StateSelect$1 = StateSelect = (function(superClass) {
-    extend$20(StateSelect, superClass);
+    extend$k(StateSelect, superClass);
 
     function StateSelect() {
       return StateSelect.__super__.constructor.apply(this, arguments);
@@ -11877,11 +11905,11 @@ var Shop = (function () {
 
   // src/controls/checkout/shippingaddress-state.coffee
   var ShippingAddressState,
-    extend$21 = function(child, parent) { for (var key in parent) { if (hasProp$20.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$20 = {}.hasOwnProperty;
+    extend$l = function(child, parent) { for (var key in parent) { if (hasProp$k.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$k = {}.hasOwnProperty;
 
   var ShippingAddressState$1 = ShippingAddressState = (function(superClass) {
-    extend$21(ShippingAddressState, superClass);
+    extend$l(ShippingAddressState, superClass);
 
     function ShippingAddressState() {
       return ShippingAddressState.__super__.constructor.apply(this, arguments);
@@ -11915,16 +11943,16 @@ var Shop = (function () {
 
   ShippingAddressState.register();
 
-  // ../el-controls/templates/controls/checkbox.pug
+  // node_modules/el-controls/templates/controls/checkbox.pug
   var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
-  // ../el-controls/src/controls/checkbox.coffee
+  // node_modules/el-controls/src/controls/checkbox.coffee
   var CheckBox,
-    extend$22 = function(child, parent) { for (var key in parent) { if (hasProp$21.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$21 = {}.hasOwnProperty;
+    extend$m = function(child, parent) { for (var key in parent) { if (hasProp$l.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$l = {}.hasOwnProperty;
 
   var CheckBox$1 = CheckBox = (function(superClass) {
-    extend$22(CheckBox, superClass);
+    extend$m(CheckBox, superClass);
 
     function CheckBox() {
       return CheckBox.__super__.constructor.apply(this, arguments);
@@ -11946,11 +11974,11 @@ var Shop = (function () {
 
   // src/controls/checkout/terms.coffee
   var Terms,
-    extend$23 = function(child, parent) { for (var key in parent) { if (hasProp$22.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$22 = {}.hasOwnProperty;
+    extend$n = function(child, parent) { for (var key in parent) { if (hasProp$m.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$m = {}.hasOwnProperty;
 
   var Terms$1 = Terms = (function(superClass) {
-    extend$23(Terms, superClass);
+    extend$n(Terms, superClass);
 
     function Terms() {
       return Terms.__super__.constructor.apply(this, arguments);
@@ -11960,6 +11988,10 @@ var Shop = (function () {
 
     Terms.prototype.bind = 'terms';
 
+    Terms.prototype.init = function() {
+      return Terms.__super__.init.apply(this, arguments);
+    };
+
     return Terms;
 
   })(CheckBox$1);
@@ -11968,11 +12000,11 @@ var Shop = (function () {
 
   // src/controls/user/user-current-password.coffee
   var UserCurrentPassword,
-    extend$24 = function(child, parent) { for (var key in parent) { if (hasProp$23.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$23 = {}.hasOwnProperty;
+    extend$o = function(child, parent) { for (var key in parent) { if (hasProp$n.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$n = {}.hasOwnProperty;
 
   var UserCurrentPassword$1 = UserCurrentPassword = (function(superClass) {
-    extend$24(UserCurrentPassword, superClass);
+    extend$o(UserCurrentPassword, superClass);
 
     function UserCurrentPassword() {
       return UserCurrentPassword.__super__.constructor.apply(this, arguments);
@@ -11998,11 +12030,11 @@ var Shop = (function () {
 
   // src/controls/user/user-email.coffee
   var UserEmail,
-    extend$25 = function(child, parent) { for (var key in parent) { if (hasProp$24.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$24 = {}.hasOwnProperty;
+    extend$p = function(child, parent) { for (var key in parent) { if (hasProp$o.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$o = {}.hasOwnProperty;
 
   var UserEmail$1 = UserEmail = (function(superClass) {
-    extend$25(UserEmail, superClass);
+    extend$p(UserEmail, superClass);
 
     function UserEmail() {
       return UserEmail.__super__.constructor.apply(this, arguments);
@@ -12012,6 +12044,10 @@ var Shop = (function () {
 
     UserEmail.prototype.bind = 'user.email';
 
+    UserEmail.prototype.init = function() {
+      return UserEmail.__super__.init.apply(this, arguments);
+    };
+
     return UserEmail;
 
   })(Text$1);
@@ -12020,11 +12056,11 @@ var Shop = (function () {
 
   // src/controls/user/user-name.coffee
   var UserName,
-    extend$26 = function(child, parent) { for (var key in parent) { if (hasProp$25.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$25 = {}.hasOwnProperty;
+    extend$q = function(child, parent) { for (var key in parent) { if (hasProp$p.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$p = {}.hasOwnProperty;
 
   var UserName$1 = UserName = (function(superClass) {
-    extend$26(UserName, superClass);
+    extend$q(UserName, superClass);
 
     function UserName() {
       return UserName.__super__.constructor.apply(this, arguments);
@@ -12034,6 +12070,10 @@ var Shop = (function () {
 
     UserName.prototype.bind = 'user.name';
 
+    UserName.prototype.init = function() {
+      return UserName.__super__.init.apply(this, arguments);
+    };
+
     return UserName;
 
   })(Text$1);
@@ -12042,11 +12082,11 @@ var Shop = (function () {
 
   // src/controls/user/user-password-confirm.coffee
   var UserPasswordConfirm,
-    extend$27 = function(child, parent) { for (var key in parent) { if (hasProp$26.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$26 = {}.hasOwnProperty;
+    extend$r = function(child, parent) { for (var key in parent) { if (hasProp$q.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$q = {}.hasOwnProperty;
 
   var UserPasswordConfirm$1 = UserPasswordConfirm = (function(superClass) {
-    extend$27(UserPasswordConfirm, superClass);
+    extend$r(UserPasswordConfirm, superClass);
 
     function UserPasswordConfirm() {
       return UserPasswordConfirm.__super__.constructor.apply(this, arguments);
@@ -12072,11 +12112,11 @@ var Shop = (function () {
 
   // src/controls/user/user-password.coffee
   var UserPassword,
-    extend$28 = function(child, parent) { for (var key in parent) { if (hasProp$27.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$27 = {}.hasOwnProperty;
+    extend$s = function(child, parent) { for (var key in parent) { if (hasProp$r.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$r = {}.hasOwnProperty;
 
   var UserPassword$1 = UserPassword = (function(superClass) {
-    extend$28(UserPassword, superClass);
+    extend$s(UserPassword, superClass);
 
     function UserPassword() {
       return UserPassword.__super__.constructor.apply(this, arguments);
@@ -12088,6 +12128,10 @@ var Shop = (function () {
 
     UserPassword.prototype.type = 'password';
 
+    UserPassword.prototype.init = function() {
+      return UserPassword.__super__.init.apply(this, arguments);
+    };
+
     return UserPassword;
 
   })(Text$1);
@@ -12096,11 +12140,11 @@ var Shop = (function () {
 
   // src/controls/user/user-username.coffee
   var UserUsername,
-    extend$29 = function(child, parent) { for (var key in parent) { if (hasProp$28.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$28 = {}.hasOwnProperty;
+    extend$t = function(child, parent) { for (var key in parent) { if (hasProp$s.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$s = {}.hasOwnProperty;
 
   UserUsername = (function(superClass) {
-    extend$29(UserUsername, superClass);
+    extend$t(UserUsername, superClass);
 
     function UserUsername() {
       return UserUsername.__super__.constructor.apply(this, arguments);
@@ -12110,6 +12154,10 @@ var Shop = (function () {
 
     UserUsername.prototype.bind = 'user.username';
 
+    UserUsername.prototype.init = function() {
+      return UserUsername.__super__.init.apply(this, arguments);
+    };
+
     return UserUsername;
 
   })(Text$1);
@@ -12118,11 +12166,11 @@ var Shop = (function () {
 
   // src/controls/gift/gift-email.coffee
   var GiftEmail,
-    extend$30 = function(child, parent) { for (var key in parent) { if (hasProp$29.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$29 = {}.hasOwnProperty;
+    extend$u = function(child, parent) { for (var key in parent) { if (hasProp$t.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$t = {}.hasOwnProperty;
 
   GiftEmail = (function(superClass) {
-    extend$30(GiftEmail, superClass);
+    extend$u(GiftEmail, superClass);
 
     function GiftEmail() {
       return GiftEmail.__super__.constructor.apply(this, arguments);
@@ -12132,6 +12180,10 @@ var Shop = (function () {
 
     GiftEmail.prototype.bind = 'order.giftEmail';
 
+    GiftEmail.prototype.init = function() {
+      return GiftEmail.__super__.init.apply(this, arguments);
+    };
+
     return GiftEmail;
 
   })(Text$1);
@@ -12140,16 +12192,16 @@ var Shop = (function () {
 
   GiftEmail.register();
 
-  // ../el-controls/templates/controls/textarea.pug
+  // node_modules/el-controls/templates/controls/textarea.pug
   var html$3 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ getText() }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-  // ../el-controls/src/controls/textbox.coffee
+  // node_modules/el-controls/src/controls/textbox.coffee
   var TextBox,
-    extend$31 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$30 = {}.hasOwnProperty;
+    extend$v = function(child, parent) { for (var key in parent) { if (hasProp$u.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$u = {}.hasOwnProperty;
 
   TextBox = (function(superClass) {
-    extend$31(TextBox, superClass);
+    extend$v(TextBox, superClass);
 
     function TextBox() {
       return TextBox.__super__.constructor.apply(this, arguments);
@@ -12183,11 +12235,11 @@ var Shop = (function () {
 
   // src/controls/gift/gift-message.coffee
   var GiftMessage,
-    extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$31.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$31 = {}.hasOwnProperty;
+    extend$w = function(child, parent) { for (var key in parent) { if (hasProp$v.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$v = {}.hasOwnProperty;
 
   var GiftMessage$1 = GiftMessage = (function(superClass) {
-    extend$32(GiftMessage, superClass);
+    extend$w(GiftMessage, superClass);
 
     function GiftMessage() {
       return GiftMessage.__super__.constructor.apply(this, arguments);
@@ -12197,6 +12249,10 @@ var Shop = (function () {
 
     GiftMessage.prototype.bind = 'order.giftMessage';
 
+    GiftMessage.prototype.init = function() {
+      return GiftMessage.__super__.init.apply(this, arguments);
+    };
+
     return GiftMessage;
 
   })(TextBox$1);
@@ -12205,11 +12261,11 @@ var Shop = (function () {
 
   // src/controls/gift/gift-toggle.coffee
   var GiftToggle,
-    extend$33 = function(child, parent) { for (var key in parent) { if (hasProp$32.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$32 = {}.hasOwnProperty;
+    extend$x = function(child, parent) { for (var key in parent) { if (hasProp$w.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$w = {}.hasOwnProperty;
 
   var GiftToggle$1 = GiftToggle = (function(superClass) {
-    extend$33(GiftToggle, superClass);
+    extend$x(GiftToggle, superClass);
 
     function GiftToggle() {
       return GiftToggle.__super__.constructor.apply(this, arguments);
@@ -12219,6 +12275,10 @@ var Shop = (function () {
 
     GiftToggle.prototype.bind = 'order.gift';
 
+    GiftToggle.prototype.init = function() {
+      return GiftToggle.__super__.init.apply(this, arguments);
+    };
+
     return GiftToggle;
 
   })(CheckBox$1);
@@ -12227,11 +12287,11 @@ var Shop = (function () {
 
   // src/controls/gift/gift-type.coffee
   var GiftType,
-    extend$34 = function(child, parent) { for (var key in parent) { if (hasProp$33.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$33 = {}.hasOwnProperty;
+    extend$y = function(child, parent) { for (var key in parent) { if (hasProp$x.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$x = {}.hasOwnProperty;
 
   GiftType = (function(superClass) {
-    extend$34(GiftType, superClass);
+    extend$y(GiftType, superClass);
 
     function GiftType() {
       return GiftType.__super__.constructor.apply(this, arguments);
@@ -12241,6 +12301,10 @@ var Shop = (function () {
 
     GiftType.prototype.bind = 'order.giftType';
 
+    GiftType.prototype.init = function() {
+      return GiftType.__super__.init.apply(this, arguments);
+    };
+
     return GiftType;
 
   })(Select$1);
@@ -12249,13 +12313,13 @@ var Shop = (function () {
 
   var GiftType$1 = GiftType;
 
-  // ../el-controls/src/controls/readonly.coffee
+  // node_modules/el-controls/src/controls/readonly.coffee
   var ReadOnly,
-    extend$35 = function(child, parent) { for (var key in parent) { if (hasProp$34.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$34 = {}.hasOwnProperty;
+    extend$z = function(child, parent) { for (var key in parent) { if (hasProp$y.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$y = {}.hasOwnProperty;
 
   var ReadOnly$1 = ReadOnly = (function(superClass) {
-    extend$35(ReadOnly, superClass);
+    extend$z(ReadOnly, superClass);
 
     function ReadOnly() {
       return ReadOnly.__super__.constructor.apply(this, arguments);
@@ -12290,16 +12354,16 @@ var Shop = (function () {
 
   ReadOnly.register();
 
-  // ../el-controls/templates/controls/copy.pug
+  // node_modules/el-controls/templates/controls/copy.pug
   var html$4 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
-  // ../el-controls/src/controls/copy.coffee
+  // node_modules/el-controls/src/controls/copy.coffee
   var Copy,
-    extend$36 = function(child, parent) { for (var key in parent) { if (hasProp$35.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$35 = {}.hasOwnProperty;
+    extend$A = function(child, parent) { for (var key in parent) { if (hasProp$z.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$z = {}.hasOwnProperty;
 
   Copy = (function(superClass) {
-    extend$36(Copy, superClass);
+    extend$A(Copy, superClass);
 
     function Copy() {
       return Copy.__super__.constructor.apply(this, arguments);
@@ -12355,7 +12419,7 @@ var Shop = (function () {
 
   Copy.register();
 
-  // ../el-controls/templates/controls/currency.pug
+  // node_modules/el-controls/templates/controls/currency.pug
   var html$5 = "\n<yield from=\"input\">\n  <div class=\"currency-container { invalid: errorMessage, valid: valid }\">\n    <input class=\"currency-amount right-aligned {invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n    <div class=\"currency-code\">\n      <div class=\"currency-code-text\">{ getCurrency().toUpperCase() }</div>\n    </div>\n  </div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // node_modules/shop.js-util/src/data/currencies.coffee
@@ -12551,13 +12615,13 @@ var Shop = (function () {
     return parseInt(parseFloat(parts[0].replace(digitsOnlyRe, '')) * 100 + parseFloat(parts[1].replace(digitsOnlyRe, '')), 10);
   };
 
-  // ../el-controls/src/controls/currency.coffee
+  // node_modules/el-controls/src/controls/currency.coffee
   var Currency,
-    extend$37 = function(child, parent) { for (var key in parent) { if (hasProp$36.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$36 = {}.hasOwnProperty;
+    extend$B = function(child, parent) { for (var key in parent) { if (hasProp$A.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$A = {}.hasOwnProperty;
 
   Currency = (function(superClass) {
-    extend$37(Currency, superClass);
+    extend$B(Currency, superClass);
 
     function Currency() {
       return Currency.__super__.constructor.apply(this, arguments);
@@ -15817,16 +15881,16 @@ var Shop = (function () {
     return render(data, opts)
   });
 
-  // ../el-controls/templates/controls/qrcode.pug
+  // node_modules/el-controls/templates/controls/qrcode.pug
   var html$6 = "\n<canvas></canvas>";
 
-  // ../el-controls/src/controls/qrcode.coffee
+  // node_modules/el-controls/src/controls/qrcode.coffee
   var QRCode,
-    extend$38 = function(child, parent) { for (var key in parent) { if (hasProp$37.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$37 = {}.hasOwnProperty;
+    extend$C = function(child, parent) { for (var key in parent) { if (hasProp$B.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$B = {}.hasOwnProperty;
 
   QRCode = (function(superClass) {
-    extend$38(QRCode, superClass);
+    extend$C(QRCode, superClass);
 
     function QRCode() {
       return QRCode.__super__.constructor.apply(this, arguments);
@@ -16219,11 +16283,11 @@ var Shop = (function () {
 
   // src/views/form.coffee
   var Form$2;
-  var extend$39 = function(child, parent) { for (var key in parent) { if (hasProp$38.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-  var hasProp$38 = {}.hasOwnProperty;
+  var extend$D = function(child, parent) { for (var key in parent) { if (hasProp$C.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  var hasProp$C = {}.hasOwnProperty;
 
   Form$2 = (function(superClass) {
-    extend$39(Form, superClass);
+    extend$D(Form, superClass);
 
     function Form() {
       return Form.__super__.constructor.apply(this, arguments);
@@ -16679,11 +16743,11 @@ var Shop = (function () {
 
   // src/containers/checkout.coffee
   var CheckoutForm,
-    extend$40 = function(child, parent) { for (var key in parent) { if (hasProp$39.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$39 = {}.hasOwnProperty;
+    extend$E = function(child, parent) { for (var key in parent) { if (hasProp$D.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$D = {}.hasOwnProperty;
 
   CheckoutForm = (function(superClass) {
-    extend$40(CheckoutForm, superClass);
+    extend$E(CheckoutForm, superClass);
 
     function CheckoutForm() {
       return CheckoutForm.__super__.constructor.apply(this, arguments);
@@ -16702,7 +16766,7 @@ var Shop = (function () {
     CheckoutForm.prototype.configs = configs;
 
     CheckoutForm.prototype.init = function() {
-      CheckoutForm.__super__.init.call(this);
+      CheckoutForm.__super__.init.apply(this, arguments);
       this.data.on('set', (function(_this) {
         return function(name, value) {
           if (name === 'user.email') {
@@ -16850,11 +16914,11 @@ var Shop = (function () {
 
   // src/containers/checkout-card.coffee
   var CheckoutCardForm,
-    extend$41 = function(child, parent) { for (var key in parent) { if (hasProp$40.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$40 = {}.hasOwnProperty;
+    extend$F = function(child, parent) { for (var key in parent) { if (hasProp$E.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$E = {}.hasOwnProperty;
 
   CheckoutCardForm = (function(superClass) {
-    extend$41(CheckoutCardForm, superClass);
+    extend$F(CheckoutCardForm, superClass);
 
     function CheckoutCardForm() {
       return CheckoutCardForm.__super__.constructor.apply(this, arguments);
@@ -16899,11 +16963,11 @@ var Shop = (function () {
 
   // src/containers/checkout-shippingaddress.coffee
   var CheckoutShippingAddressForm,
-    extend$42 = function(child, parent) { for (var key in parent) { if (hasProp$41.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$41 = {}.hasOwnProperty;
+    extend$G = function(child, parent) { for (var key in parent) { if (hasProp$F.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$F = {}.hasOwnProperty;
 
   CheckoutShippingAddressForm = (function(superClass) {
-    extend$42(CheckoutShippingAddressForm, superClass);
+    extend$G(CheckoutShippingAddressForm, superClass);
 
     function CheckoutShippingAddressForm() {
       return CheckoutShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -16928,7 +16992,7 @@ var Shop = (function () {
     };
 
     CheckoutShippingAddressForm.prototype.init = function() {
-      CheckoutShippingAddressForm.__super__.init.call(this);
+      CheckoutShippingAddressForm.__super__.init.apply(this, arguments);
       return this.data.on('set', (function(_this) {
         return function(name, value) {
           if (name.indexOf('shippingAddress') >= 0) {
@@ -16957,15 +17021,15 @@ var Shop = (function () {
   var CheckoutShippingAddress = CheckoutShippingAddressForm;
 
   // templates/containers/cart.pug
-  var html$10 = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
+  var html$a = "\n<yield>\n  <h2 if=\"{ !isEmpty() }\">Your Cart</h2>\n  <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n  <lineitems if=\"{ !isEmpty() }\"></lineitems>\n  <div if=\"{ !isEmpty() }\">\n    <div class=\"promo\">\n      <div class=\"promo-label\">Coupon</div>\n      <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n        <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n        <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n      </div>\n    </div>\n    <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n      <div class=\"invoice-label\">Discount</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Subtotal</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Shipping</div>\n      <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line\">\n      <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <div class=\"invoice-line invoice-total\">\n      <div class=\"invoice-label\">Total</div>\n      <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n    </div>\n    <button class=\"submit\" onclick=\"{ checkout }\" if=\"{ showButtons }\">Checkout</button>\n  </div>\n  <div if=\"{ isEmpty() }\">\n    <button class=\"submit\" onclick=\"{ submit }\" if=\"{ showButtons }\">Continue Shopping</button>\n  </div>\n</yield>";
 
   // src/containers/cart.coffee
   var CartForm,
-    extend$43 = function(child, parent) { for (var key in parent) { if (hasProp$42.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$42 = {}.hasOwnProperty;
+    extend$H = function(child, parent) { for (var key in parent) { if (hasProp$G.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$G = {}.hasOwnProperty;
 
   CartForm = (function(superClass) {
-    extend$43(CartForm, superClass);
+    extend$H(CartForm, superClass);
 
     function CartForm() {
       return CartForm.__super__.constructor.apply(this, arguments);
@@ -16973,7 +17037,7 @@ var Shop = (function () {
 
     CartForm.prototype.tag = 'cart';
 
-    CartForm.prototype.html = html$10;
+    CartForm.prototype.html = html$a;
 
     CartForm.prototype.init = function() {
       var promoCode;
@@ -17084,15 +17148,15 @@ var Shop = (function () {
   var Cart$2 = CartForm;
 
   // templates/containers/deposit.pug
-  var html$11 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"deposit checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;deposit&quot; }\">Deposit Funds</h2>\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;contribution&quot; }\">Contribute</h2>\n      <div class=\"fields\">\n        <text class=\"input\" label=\"Deposit Amount\"></text>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n    <div class=\"deposit checkout-section\" if=\"{ !data.get(&quot;order.mode&quot;) }\">\n      <p>Error: <deposit> requires order.mode to be 'deposit' or 'contribution'</p>\n    </div>\n  </yield>\n</form>";
+  var html$b = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <div class=\"deposit checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;deposit&quot; }\">Deposit Funds</h2>\n      <h2 if=\"{ data.get(&quot;order.mode&quot;) == &quot;contribution&quot; }\">Contribute</h2>\n      <div class=\"fields\">\n        <text class=\"input\" label=\"Deposit Amount\"></text>\n      </div>\n    </div>\n    <div class=\"complete checkout-section\" if=\"{ data.get(&quot;order.mode&quot;) }\">\n      <button class=\"{ loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\"><span>Checkout</span></button>\n      <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    </div>\n    <div class=\"deposit checkout-section\" if=\"{ !data.get(&quot;order.mode&quot;) }\">\n      <p>Error: <deposit> requires order.mode to be 'deposit' or 'contribution'</p>\n    </div>\n  </yield>\n</form>";
 
   // src/containers/deposit.coffee
   var DepositForm,
-    extend$44 = function(child, parent) { for (var key in parent) { if (hasProp$43.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$43 = {}.hasOwnProperty;
+    extend$I = function(child, parent) { for (var key in parent) { if (hasProp$H.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$H = {}.hasOwnProperty;
 
   DepositForm = (function(superClass) {
-    extend$44(DepositForm, superClass);
+    extend$I(DepositForm, superClass);
 
     function DepositForm() {
       return DepositForm.__super__.constructor.apply(this, arguments);
@@ -17100,10 +17164,14 @@ var Shop = (function () {
 
     DepositForm.prototype.tag = 'deposit';
 
-    DepositForm.prototype.html = html$11;
+    DepositForm.prototype.html = html$b;
 
     DepositForm.prototype.configs = {
       'order.subtotal': [isRequired]
+    };
+
+    DepositForm.prototype.init = function() {
+      return DepositForm.__super__.init.apply(this, arguments);
     };
 
     return DepositForm;
@@ -17115,15 +17183,15 @@ var Shop = (function () {
   var Deposit = DepositForm;
 
   // templates/containers/lineitem.pug
-  var html$12 = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
+  var html$c = "\n<yield>\n  <div class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n    <quantity-select class=\"input\"></quantity-select>\n  </div>\n  <div class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</div>\n  <div class=\"product-text-container\">\n    <div class=\"product-name\">{ data.get('productName') }</div>\n    <div class=\"product-slug\">{ data.get('productSlug') }</div>\n    <div class=\"product-description\" if=\"{ data.get('description') }\">{ data.get('description') }</div>\n  </div>\n  <div class=\"product-delete\" onclick=\"{ delete }\"></div>\n  <div class=\"product-price-container\">\n    <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n    <div class=\"product-list-price\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) }\n      <div class=\"product-currency\">{ parentData.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n</yield>";
 
   // src/containers/lineitem.coffee
   var LineItemForm,
-    extend$45 = function(child, parent) { for (var key in parent) { if (hasProp$44.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$44 = {}.hasOwnProperty;
+    extend$J = function(child, parent) { for (var key in parent) { if (hasProp$I.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$I = {}.hasOwnProperty;
 
   LineItemForm = (function(superClass) {
-    extend$45(LineItemForm, superClass);
+    extend$J(LineItemForm, superClass);
 
     function LineItemForm() {
       return LineItemForm.__super__.constructor.apply(this, arguments);
@@ -17131,7 +17199,7 @@ var Shop = (function () {
 
     LineItemForm.prototype.tag = 'lineitem';
 
-    LineItemForm.prototype.html = html$12;
+    LineItemForm.prototype.html = html$c;
 
     LineItemForm.prototype.configs = {
       'quantity': null
@@ -17154,15 +17222,15 @@ var Shop = (function () {
   var LineItem = LineItemForm;
 
   // templates/containers/lineitems.pug
-  var html$13 = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+  var html$d = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
   // src/containers/lineitems.coffee
   var LineItems,
-    extend$46 = function(child, parent) { for (var key in parent) { if (hasProp$45.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$45 = {}.hasOwnProperty;
+    extend$K = function(child, parent) { for (var key in parent) { if (hasProp$J.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$J = {}.hasOwnProperty;
 
   LineItems = (function(superClass) {
-    extend$46(LineItems, superClass);
+    extend$K(LineItems, superClass);
 
     function LineItems() {
       return LineItems.__super__.constructor.apply(this, arguments);
@@ -17170,7 +17238,7 @@ var Shop = (function () {
 
     LineItems.prototype.tag = 'lineitems';
 
-    LineItems.prototype.html = html$13;
+    LineItems.prototype.html = html$d;
 
     LineItems.prototype.init = function() {
       if (this.parentData != null) {
@@ -17195,15 +17263,15 @@ var Shop = (function () {
   var LineItems$1 = LineItems;
 
   // templates/containers/login.pug
-  var html$14 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
+  var html$e = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Login</button>\n  </yield>\n</form>";
 
   // src/containers/login.coffee
   var LoginForm,
-    extend$47 = function(child, parent) { for (var key in parent) { if (hasProp$46.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$46 = {}.hasOwnProperty;
+    extend$L = function(child, parent) { for (var key in parent) { if (hasProp$K.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$K = {}.hasOwnProperty;
 
   LoginForm = (function(superClass) {
-    extend$47(LoginForm, superClass);
+    extend$L(LoginForm, superClass);
 
     function LoginForm() {
       return LoginForm.__super__.constructor.apply(this, arguments);
@@ -17211,7 +17279,7 @@ var Shop = (function () {
 
     LoginForm.prototype.tag = 'login';
 
-    LoginForm.prototype.html = html$14;
+    LoginForm.prototype.html = html$e;
 
     LoginForm.prototype.configs = {
       'user.email': [isRequired, isEmail],
@@ -17219,6 +17287,10 @@ var Shop = (function () {
     };
 
     LoginForm.prototype.errorMessage = '';
+
+    LoginForm.prototype.init = function() {
+      return LoginForm.__super__.init.apply(this, arguments);
+    };
 
     LoginForm.prototype._submit = function(event) {
       var opts;
@@ -17252,15 +17324,15 @@ var Shop = (function () {
   var Login = LoginForm;
 
   // templates/containers/order.pug
-  var html$15 = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
+  var html$f = "\n<yield>\n  <div class=\"order-information\">\n    <div class=\"order-number-container\">\n      <div class=\"order-number-label\">Order Number:</div>\n      <div class=\"order-number\">{ data.get('number') }</div>\n    </div>\n    <div class=\"order-date-container\">\n      <div class=\"order-date-label\">Purchase Date:</div>\n      <div class=\"order-date\">{ renderDate(data.get('createdAt'), 'LL') }</div>\n    </div>\n    <lineitems if=\"{ !isEmpty() }\"></lineitems>\n    <div class=\"discount-container\">\n      <div class=\"discount-label\">Discount:</div>\n      <div class=\"discount\">{ renderCurrency(data.get('currency'), data.get('discount'))}</div>\n    </div>\n    <div class=\"subtotal-container\">\n      <div class=\"subtotal-label\">Subtotal:</div>\n      <div class=\"subtotal\">{ renderCurrency(data.get('currency'), data.get('subtotal'))}</div>\n    </div>\n    <div class=\"shipping-container\">\n      <div class=\"shipping-label\">Shipping:</div>\n      <div class=\"shipping\">{ renderCurrency(data.get('currency'), data.get('shipping'))}</div>\n    </div>\n    <div class=\"tax-container\">\n      <div class=\"tax-label\">Tax({ data.get('tax') / data.get('subtotal') * 100 }%):</div>\n      <div class=\"tax\">{ renderCurrency(data.get('currency'), data.get('tax'))}</div>\n    </div>\n    <div class=\"total-container\">\n      <div class=\"total-label\">Total:</div>\n      <div class=\"total\">{ renderCurrency(data.get('currency'), data.get('total'))}&nbsp;{ data.get('currency').toUpperCase() }</div>\n    </div>\n  </div>\n  <div class=\"address-information\">\n    <div class=\"street\">{ data.get('shippingAddress.line1') }</div>\n    <div class=\"apartment\" if=\"{ data.get('shippingAddress.line2') }\">{ data.get('shippingAddress.line2') }</div>\n    <div class=\"city\">{ data.get('shippingAddress.city') }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.state')}\">{ data.get('shippingAddress.state').toUpperCase() }</div>\n    <div class=\"state\" if=\"{ data.get('shippingAddress.postalCode')}\">{ data.get('shippingAddress.postalCode') }</div>\n    <div class=\"country\">{ data.get('shippingAddress.country').toUpperCase() }</div>\n  </div>\n</yield>";
 
   // src/containers/order.coffee
   var OrderForm,
-    extend$48 = function(child, parent) { for (var key in parent) { if (hasProp$47.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$47 = {}.hasOwnProperty;
+    extend$M = function(child, parent) { for (var key in parent) { if (hasProp$L.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$L = {}.hasOwnProperty;
 
   OrderForm = (function(superClass) {
-    extend$48(OrderForm, superClass);
+    extend$M(OrderForm, superClass);
 
     function OrderForm() {
       return OrderForm.__super__.constructor.apply(this, arguments);
@@ -17268,7 +17340,7 @@ var Shop = (function () {
 
     OrderForm.prototype.tag = 'order';
 
-    OrderForm.prototype.html = html$15;
+    OrderForm.prototype.html = html$f;
 
     OrderForm.prototype.parentData = null;
 
@@ -17308,15 +17380,15 @@ var Shop = (function () {
   var Order = OrderForm;
 
   // templates/containers/orders.pug
-  var html$16 = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
+  var html$g = "\n<order each=\"{ order, v in data('user.orders') }\" parent-data=\"{ this.parent.data.get('user') }\" data=\"{ this.parent.data.ref('user.orders.' + v) }\" if=\"{ order.paymentStatus != 'unpaid' }\">\n  <yield></yield>\n</order>";
 
   // src/containers/orders.coffee
   var Orders,
-    extend$49 = function(child, parent) { for (var key in parent) { if (hasProp$48.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$48 = {}.hasOwnProperty;
+    extend$N = function(child, parent) { for (var key in parent) { if (hasProp$M.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$M = {}.hasOwnProperty;
 
   Orders = (function(superClass) {
-    extend$49(Orders, superClass);
+    extend$N(Orders, superClass);
 
     function Orders() {
       return Orders.__super__.constructor.apply(this, arguments);
@@ -17324,7 +17396,7 @@ var Shop = (function () {
 
     Orders.prototype.tag = 'orders';
 
-    Orders.prototype.html = html$16;
+    Orders.prototype.html = html$g;
 
     Orders.prototype.init = function() {
       return Orders.__super__.init.apply(this, arguments);
@@ -17339,15 +17411,15 @@ var Shop = (function () {
   var Orders$1 = Orders;
 
   // templates/containers/form.pug
-  var html$17 = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
+  var html$h = "\n<form onsubmit=\"{ submit }\">\n  <yield></yield>\n</form>";
 
   // src/containers/profile.coffee
   var ProfileForm,
-    extend$50 = function(child, parent) { for (var key in parent) { if (hasProp$49.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$49 = {}.hasOwnProperty;
+    extend$O = function(child, parent) { for (var key in parent) { if (hasProp$N.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$N = {}.hasOwnProperty;
 
   ProfileForm = (function(superClass) {
-    extend$50(ProfileForm, superClass);
+    extend$O(ProfileForm, superClass);
 
     function ProfileForm() {
       return ProfileForm.__super__.constructor.apply(this, arguments);
@@ -17355,7 +17427,7 @@ var Shop = (function () {
 
     ProfileForm.prototype.tag = 'profile';
 
-    ProfileForm.prototype.html = html$17;
+    ProfileForm.prototype.html = html$h;
 
     ProfileForm.prototype.configs = {
       'user.email': [isRequired, isEmail],
@@ -17457,15 +17529,15 @@ var Shop = (function () {
   var Profile = ProfileForm;
 
   // templates/containers/register.pug
-  var html$18 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
+  var html$i = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-name class=\"input\" placeholder=\"Name\"></user-name>\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Register</button>\n  </yield>\n</form>";
 
   // src/containers/register.coffee
   var RegisterForm,
-    extend$51 = function(child, parent) { for (var key in parent) { if (hasProp$50.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$50 = {}.hasOwnProperty;
+    extend$P = function(child, parent) { for (var key in parent) { if (hasProp$O.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$O = {}.hasOwnProperty;
 
   RegisterForm = (function(superClass) {
-    extend$51(RegisterForm, superClass);
+    extend$P(RegisterForm, superClass);
 
     function RegisterForm() {
       return RegisterForm.__super__.constructor.apply(this, arguments);
@@ -17473,7 +17545,7 @@ var Shop = (function () {
 
     RegisterForm.prototype.tag = 'register';
 
-    RegisterForm.prototype.html = html$18;
+    RegisterForm.prototype.html = html$i;
 
     RegisterForm.prototype.immediateLogin = false;
 
@@ -17555,11 +17627,11 @@ var Shop = (function () {
 
   // src/containers/register-complete.coffee
   var RegisterCompleteForm,
-    extend$52 = function(child, parent) { for (var key in parent) { if (hasProp$51.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$51 = {}.hasOwnProperty;
+    extend$Q = function(child, parent) { for (var key in parent) { if (hasProp$P.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$P = {}.hasOwnProperty;
 
   RegisterCompleteForm = (function(superClass) {
-    extend$52(RegisterCompleteForm, superClass);
+    extend$Q(RegisterCompleteForm, superClass);
 
     function RegisterCompleteForm() {
       return RegisterCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17567,7 +17639,7 @@ var Shop = (function () {
 
     RegisterCompleteForm.prototype.tag = 'register-complete';
 
-    RegisterCompleteForm.prototype.html = html$17;
+    RegisterCompleteForm.prototype.html = html$h;
 
     RegisterCompleteForm.prototype.twoStageSignUp = false;
 
@@ -17630,15 +17702,15 @@ var Shop = (function () {
   var RegisterComplete = RegisterCompleteForm;
 
   // templates/containers/reset-password.pug
-  var html$19 = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
+  var html$j = "\n<form onsubmit=\"{ submit }\">\n  <yield >\n    <user-email class=\"input\" placeholder=\"Email\"></user-email>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield >\n</form>";
 
   // src/containers/reset-password.coffee
   var ResetPasswordForm,
-    extend$53 = function(child, parent) { for (var key in parent) { if (hasProp$52.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$52 = {}.hasOwnProperty;
+    extend$R = function(child, parent) { for (var key in parent) { if (hasProp$Q.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$Q = {}.hasOwnProperty;
 
   ResetPasswordForm = (function(superClass) {
-    extend$53(ResetPasswordForm, superClass);
+    extend$R(ResetPasswordForm, superClass);
 
     function ResetPasswordForm() {
       return ResetPasswordForm.__super__.constructor.apply(this, arguments);
@@ -17646,7 +17718,7 @@ var Shop = (function () {
 
     ResetPasswordForm.prototype.tag = 'reset-password';
 
-    ResetPasswordForm.prototype.html = html$19;
+    ResetPasswordForm.prototype.html = html$j;
 
     ResetPasswordForm.prototype.configs = {
       'user.email': [isRequired, isEmail]
@@ -17689,15 +17761,15 @@ var Shop = (function () {
   var ResetPassword = ResetPasswordForm;
 
   // templates/containers/reset-password-complete.pug
-  var html$20 = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
+  var html$k = "\n<form onsubmit=\"{ submit }\">\n  <yield>\n    <user-password class=\"input\" placeholder=\"Password\"></user-password>\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n    <button type=\"submit\">Reset</button>\n  </yield>\n</form>";
 
   // src/containers/reset-password-complete.coffee
   var ResetPasswordCompleteForm,
-    extend$54 = function(child, parent) { for (var key in parent) { if (hasProp$53.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$53 = {}.hasOwnProperty;
+    extend$S = function(child, parent) { for (var key in parent) { if (hasProp$R.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$R = {}.hasOwnProperty;
 
   ResetPasswordCompleteForm = (function(superClass) {
-    extend$54(ResetPasswordCompleteForm, superClass);
+    extend$S(ResetPasswordCompleteForm, superClass);
 
     function ResetPasswordCompleteForm() {
       return ResetPasswordCompleteForm.__super__.constructor.apply(this, arguments);
@@ -17705,7 +17777,7 @@ var Shop = (function () {
 
     ResetPasswordCompleteForm.prototype.tag = 'reset-password-complete';
 
-    ResetPasswordCompleteForm.prototype.html = html$20;
+    ResetPasswordCompleteForm.prototype.html = html$k;
 
     ResetPasswordCompleteForm.prototype.configs = {
       'user.password': [isPassword],
@@ -17755,11 +17827,11 @@ var Shop = (function () {
 
   // src/containers/shippingaddress.coffee
   var ShippingAddressForm,
-    extend$55 = function(child, parent) { for (var key in parent) { if (hasProp$54.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$54 = {}.hasOwnProperty;
+    extend$T = function(child, parent) { for (var key in parent) { if (hasProp$S.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$S = {}.hasOwnProperty;
 
   ShippingAddressForm = (function(superClass) {
-    extend$55(ShippingAddressForm, superClass);
+    extend$T(ShippingAddressForm, superClass);
 
     function ShippingAddressForm() {
       return ShippingAddressForm.__super__.constructor.apply(this, arguments);
@@ -17767,7 +17839,7 @@ var Shop = (function () {
 
     ShippingAddressForm.prototype.tag = 'shippingaddress';
 
-    ShippingAddressForm.prototype.html = html$17;
+    ShippingAddressForm.prototype.html = html$h;
 
     ShippingAddressForm.prototype.configs = {
       'order.shippingAddress.name': [isRequired],
@@ -17827,15 +17899,15 @@ var Shop = (function () {
   var ShippingAddress = ShippingAddressForm;
 
   // templates/containers/thankyou.pug
-  var html$21 = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; !isMetamaskLoggedIn() }\">Log into your Metamask account to pay.</p>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; isMetamaskLoggedIn() &amp;&amp; metamaskNetworkMismatch }\">Set your Metamask to use the { @getNetwork() } network.</p>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() &amp;&amp; !checkedOut }\">\n        <div class=\"pay-with-metamask-button { disabled: loading || !isMetamaskLoggedIn() || metamaskNetworkMismatch }\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <p class=\"pay-with-metamask-success\" if=\"{ checkedOut }\">Your payment was successfully submited to the blockchain.</p>\n      <p class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</p>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
+  var html$l = "\n<yield>\n  <div class=\"thankyou-title\">\n    <yield from=\"thankyou-title\">\n      <h2>Order { getOrderNumber() }</h2>\n    </yield>\n  </div>\n  <div class=\"thankyou-crypto-body\" if=\"{ isCrypto() }\">\n    <yield from=\"thankyou-crypto-body\">\n      <p class=\"thankyou-crypto-instructions\">Send EXACTLY <strong>{ getAmount() / 1e9 } { getCurrency().toUpperCase() }</strong> to this address:</p>\n      <qrcode class=\"thankyou-qrcode\" text=\"{ getQRCode }\" margin=\"0\"></qrcode>\n      <copy class=\"input thankyou-address\" text=\"{ getAddress }\"></copy>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; !isMetamaskLoggedIn() }\">Log into your Metamask account to pay.</p>\n      <p class=\"thankyou-metamask-warning\" if=\"{ isMetamaskInstalled() &amp;&amp; isMetamaskLoggedIn() &amp;&amp; metamaskNetworkMismatch }\">Set your Metamask to use the { @getNetwork() } network.</p>\n      <div class=\"pay-with-metamask\" if=\"{ isMetamaskInstalled() &amp;&amp; !checkedOut }\">\n        <div class=\"pay-with-metamask-button { disabled: loading || !isMetamaskLoggedIn() || metamaskNetworkMismatch }\" onclick=\"{ payWithMetamask }\"></div>\n      </div>\n      <p class=\"pay-with-metamask-success\" if=\"{ checkedOut }\">Your payment was successfully submited to the blockchain.</p>\n      <p class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</p>\n    </yield>\n  </div>\n  <div class=\"thankyou-body\">\n    <yield from=\"thankyou-body\">\n      <p>Thank you for your purchase, you will receive an order confirmation email once your payment is processed.</p>\n    </yield>\n  </div>\n</yield>";
 
   // src/containers/thankyou.coffee
   var ThankYouForm,
-    extend$56 = function(child, parent) { for (var key in parent) { if (hasProp$55.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$55 = {}.hasOwnProperty;
+    extend$U = function(child, parent) { for (var key in parent) { if (hasProp$T.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$T = {}.hasOwnProperty;
 
   ThankYouForm = (function(superClass) {
-    extend$56(ThankYouForm, superClass);
+    extend$U(ThankYouForm, superClass);
 
     function ThankYouForm() {
       return ThankYouForm.__super__.constructor.apply(this, arguments);
@@ -17843,7 +17915,7 @@ var Shop = (function () {
 
     ThankYouForm.prototype.tag = 'thankyou';
 
-    ThankYouForm.prototype.html = html$21;
+    ThankYouForm.prototype.html = html$l;
 
     ThankYouForm.prototype.errorMessage = '';
 
@@ -18038,15 +18110,15 @@ var Shop = (function () {
   var ThankYou = ThankYouForm;
 
   // templates/containers/view.pug
-  var html$22 = "\n<yield></yield>";
+  var html$m = "\n<yield></yield>";
 
   // src/containers/view.coffee
   var View$3,
-    extend$57 = function(child, parent) { for (var key in parent) { if (hasProp$56.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$56 = {}.hasOwnProperty;
+    extend$V = function(child, parent) { for (var key in parent) { if (hasProp$U.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$U = {}.hasOwnProperty;
 
   var View$4 = View$3 = (function(superClass) {
-    extend$57(View, superClass);
+    extend$V(View, superClass);
 
     function View() {
       return View.__super__.constructor.apply(this, arguments);
@@ -18054,7 +18126,7 @@ var Shop = (function () {
 
     View.prototype.tag = 'view';
 
-    View.prototype.html = html$22;
+    View.prototype.html = html$m;
 
     View.prototype.init = function() {
       return View.__super__.init.apply(this, arguments);
@@ -18091,15 +18163,15 @@ var Shop = (function () {
   };
 
   // templates/widgets/cart-counter.pug
-  var html$23 = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
+  var html$n = "\n<yield>\n  <div class=\"cart-count\">({ countItems() })</div>\n  <div class=\"cart-price\">({ renderCurrency(data.get('order.currency'), totalPrice()) })</div>\n</yield>";
 
   // src/widgets/cart-counter.coffee
   var CartCounter,
-    extend$58 = function(child, parent) { for (var key in parent) { if (hasProp$57.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$57 = {}.hasOwnProperty;
+    extend$W = function(child, parent) { for (var key in parent) { if (hasProp$V.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$V = {}.hasOwnProperty;
 
   CartCounter = (function(superClass) {
-    extend$58(CartCounter, superClass);
+    extend$W(CartCounter, superClass);
 
     function CartCounter() {
       return CartCounter.__super__.constructor.apply(this, arguments);
@@ -18107,7 +18179,7 @@ var Shop = (function () {
 
     CartCounter.prototype.tag = 'cart-counter';
 
-    CartCounter.prototype.html = html$23;
+    CartCounter.prototype.html = html$n;
 
     CartCounter.prototype.init = function() {
       return CartCounter.__super__.init.apply(this, arguments);
@@ -18144,7 +18216,7 @@ var Shop = (function () {
   var CartCounter$1 = CartCounter;
 
   // templates/widgets/checkout-modal.pug
-  var html$24 = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <thankyou>\n            <yield ></yield >\n          </thankyou>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
+  var html$o = "\n<!-- Checkout Modal-->\n<div class=\"checkout-modal { opened: opened, closed: !opened }\"></div>\n<!-- Checkout widget-->\n<div class=\"checkout-container\">\n  <div class=\"checkout-header\">\n    <ul class=\"checkout-steps\">\n      <li class=\"checkout-step { active: parent.step == i }\" each=\"{ name, i in names }\">\n        <div class=\"checkout-step-number\">{ i + 1 }</div>\n        <div class=\"checkout-step-description\">{ name }</div>\n      </li>\n    </ul>\n    <div class=\"checkout-back\" if=\"{ step == 0 || step == 2}\" onclick=\"{ close }\">&#10005;</div>\n    <div class=\"checkout-back\" if=\"{ step == 1 }\" onclick=\"{ back }\">&#10140;</div>\n  </div>\n  <div class=\"checkout-content\">\n    <yield from=\"cart\">\n      <cart>\n        <h2 if=\"{ !isEmpty() }\">Your Items</h2>\n        <h2 if=\"{ isEmpty() }\">Your Cart Is Empty</h2>\n        <lineitems if=\"{ !isEmpty() }\"></lineitems>\n        <div class=\"promo\">\n          <div class=\"promo-label\">Coupon</div>\n          <div class=\"promo-row { applied: applied, applying: applying, failed: failed }\">\n            <promocode class=\"input\" placeholder=\"Coupon\"></promocode>\n            <button disabled=\"{ applying }\" onclick=\"{ applyPromoCode }\"><span if=\"{ !applied &amp;&amp; !applying &amp;&amp; !failed }\">+</span><span if=\"{ applied }\">&#10003;</span><span if=\"{ failed }\">&#10005;</span><span if=\"{ applying }\">...</span></button>\n          </div>\n        </div>\n        <div class=\"invoice-discount invoice-line animated fadeIn\" if=\"{ data.get('order.discount') &gt; 0 }\">\n          <div class=\"invoice-label\">Discount</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.discount'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Subtotal</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.subtotal'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Shipping</div>\n          <div class=\"invoice-amount not-bold\">{ data.get('order.shipping') == 0 ? 'FREE' : renderCurrency(data.get('order.currency'), data.get('order.shipping'))}&nbsp;{ data.get('order.shipping') == 0 ? '' : data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line\">\n          <div class=\"invoice-label\">Tax ({ Math.round(data.get('order.taxRate') * 100 * 1000, 10) / 1000 }%)</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.tax'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n        <div class=\"invoice-line invoice-total\">\n          <div class=\"invoice-label\">Total</div>\n          <div class=\"invoice-amount\">{ renderCurrency(data.get('order.currency'), data.get('order.total'))} { data.get('order.currency').toUpperCase() }</div>\n        </div>\n      </cart>\n    </yield>\n    <div class=\"checkout-form { step-1: step == 0, step-2: step == 1, step-3: step == 2 }\">\n      <div class=\"checkout-form-parts\">\n        <yield from=\"checkout-1\">\n          <checkout-card>\n            <div class=\"contact checkout-section\">\n              <h2>Contact</h2>\n              <div class=\"fields\">\n                <user-name class=\"input\" label=\"Name\"></user-name>\n                <user-email class=\"input\" label=\"Email\"></user-email>\n              </div>\n            </div>\n            <div class=\"payment checkout-section\">\n              <h2>Payment</h2><span class=\"secured-text\">SSL Secure<span>Checkout</span><img class=\"lock-icon\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/lock-icon.svg\"></span>\n              <div class=\"fields\">\n                <card-name class=\"input\" label=\"Name on Card\"></card-name>\n                <card-number class=\"input\" name=\"number\" label=\"Card Number\">\n                  <div class=\"cards-accepted\"><img class=\"card-logo amex-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/amex.svg\"><img class=\"card-logo visa-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/visa.svg\"><img class=\"card-logo discover-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/discover.svg\"><img class=\"card-logo jcb-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/jcb.svg\"><img class=\"card-logo mastercard-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/card-logos/mastercard.svg\"><a class=\"stripe-link\" href=\"//www.stripe.com\" target=\"_blank\"><img class=\"stripe-logo\" src=\"//cdn.jsdelivr.net/gh/hanzo-io/shop.js/img/stripelogo.png\"></a></div>\n                </card-number>\n                <div class=\"inline-fields\">\n                  <card-expiry class=\"input\" name=\"expiry\" label=\"MM / YY\"></card-expiry>\n                  <card-cvc class=\"input\" name=\"cvc\" label=\"CVC\"></card-cvc>\n                </div>\n              </div>\n            </div>\n            <button class=\"checkout-next\" type=\"submit\">Continue &#10140;</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout-card>\n        </yield>\n        <yield from=\"checkout-2\">\n          <checkout>\n            <div class=\"shipping checkout-section\">\n              <h2>Shipping</h2>\n              <shippingaddress-name class=\"input\" label=\"Recipient\"></shippingaddress-name>\n              <div class=\"inline-fields line1-line2\">\n                <shippingaddress-line1 class=\"input\" label=\"Address\"></shippingaddress-line1>\n                <shippingaddress-line2 class=\"input\" label=\"Suite\"></shippingaddress-line2>\n              </div>\n              <shippingaddress-city class=\"input\" label=\"City\"></shippingaddress-city>\n              <shippingaddress-country class=\"input\" label=\"Country\" placeholder=\"Select a Country\"></shippingaddress-country>\n              <div class=\"inline-fields state-postal-code\">\n                <shippingaddress-state class=\"input\" label=\"State\" placeholder=\"Select a State\"></shippingaddress-state>\n                <shippingaddress-postalcode class=\"input\" label=\"Postal Code\"></shippingaddress-postalcode>\n              </div>\n              <terms class=\"checkbox\">\n                <label for=\"{ getId() }\">I have read and accept the&nbsp;<a href=\"terms\" target=\"_blank\">terms and conditions</a></label>\n              </terms>\n            </div>\n            <button class=\"checkout-next { loading: loading || checkedOut }\" disabled=\"{ loading || checkedOut }\" type=\"submit\">Checkout</button>\n            <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n          </checkout>\n        </yield>\n        <yield from=\"checkout-3\">\n          <thankyou>\n            <yield ></yield >\n          </thankyou>\n        </yield>\n      </div>\n    </div>\n  </div>\n</div>";
 
   // src/mediator.coffee
 
@@ -18152,11 +18224,11 @@ var Shop = (function () {
 
   // src/widgets/checkout-modal.coffee
   var CheckoutModal,
-    extend$59 = function(child, parent) { for (var key in parent) { if (hasProp$58.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$58 = {}.hasOwnProperty;
+    extend$X = function(child, parent) { for (var key in parent) { if (hasProp$W.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$W = {}.hasOwnProperty;
 
   CheckoutModal = (function(superClass) {
-    extend$59(CheckoutModal, superClass);
+    extend$X(CheckoutModal, superClass);
 
     function CheckoutModal() {
       return CheckoutModal.__super__.constructor.apply(this, arguments);
@@ -18164,7 +18236,7 @@ var Shop = (function () {
 
     CheckoutModal.prototype.tag = 'checkout-modal';
 
-    CheckoutModal.prototype.html = html$24;
+    CheckoutModal.prototype.html = html$o;
 
     CheckoutModal.prototype.names = null;
 
@@ -18272,15 +18344,15 @@ var Shop = (function () {
   var CheckoutModal$1 = CheckoutModal;
 
   // templates/widgets/side-pane.pug
-  var html$25 = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
+  var html$p = "\n<div class=\"side-pane { opened: opened, closed: !opened }\">\n  <div class=\"side-pane-close\" onclick=\"{ close }\">&#10140;</div>\n  <div class=\"side-pane-content\">\n    <yield></yield>\n  </div>\n</div>";
 
   // src/widgets/side-pane.coffee
   var SidePane,
-    extend$60 = function(child, parent) { for (var key in parent) { if (hasProp$59.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$59 = {}.hasOwnProperty;
+    extend$Y = function(child, parent) { for (var key in parent) { if (hasProp$X.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$X = {}.hasOwnProperty;
 
   SidePane = (function(superClass) {
-    extend$60(SidePane, superClass);
+    extend$Y(SidePane, superClass);
 
     function SidePane() {
       return SidePane.__super__.constructor.apply(this, arguments);
@@ -18288,7 +18360,7 @@ var Shop = (function () {
 
     SidePane.prototype.tag = 'side-pane';
 
-    SidePane.prototype.html = html$25;
+    SidePane.prototype.html = html$p;
 
     SidePane.prototype.id = '';
 
@@ -18438,7 +18510,7 @@ var Shop = (function () {
 
   // node_modules/moment/src/lib/utils/extend.js
 
-  function extend$61(a, b) {
+  function extend$Z(a, b) {
       for (var i in b) {
           if (hasOwnProp(b, i)) {
               a[i] = b[i];
@@ -18548,7 +18620,7 @@ var Shop = (function () {
   function createInvalid (flags) {
       var m = createUTC(NaN);
       if (flags != null) {
-          extend$61(getParsingFlags(m), flags);
+          extend$Z(getParsingFlags(m), flags);
       }
       else {
           getParsingFlags(m).userInvalidated = true;
@@ -18684,7 +18756,7 @@ var Shop = (function () {
   function deprecate(msg, fn) {
       var firstTime = true;
 
-      return extend$61(function () {
+      return extend$Z(function () {
           if (hooks.deprecationHandler != null) {
               hooks.deprecationHandler(null, msg);
           }
@@ -18753,13 +18825,13 @@ var Shop = (function () {
   }
 
   function mergeConfigs(parentConfig, childConfig) {
-      var res = extend$61({}, parentConfig), prop;
+      var res = extend$Z({}, parentConfig), prop;
       for (prop in childConfig) {
           if (hasOwnProp(childConfig, prop)) {
               if (isObject$3(parentConfig[prop]) && isObject$3(childConfig[prop])) {
                   res[prop] = {};
-                  extend$61(res[prop], parentConfig[prop]);
-                  extend$61(res[prop], childConfig[prop]);
+                  extend$Z(res[prop], parentConfig[prop]);
+                  extend$Z(res[prop], childConfig[prop]);
               } else if (childConfig[prop] != null) {
                   res[prop] = childConfig[prop];
               } else {
@@ -18772,7 +18844,7 @@ var Shop = (function () {
                   !hasOwnProp(childConfig, prop) &&
                   isObject$3(parentConfig[prop])) {
               // make sure changes to properties don't modify parent config
-              res[prop] = extend$61({}, res[prop]);
+              res[prop] = extend$Z({}, res[prop]);
           }
       }
       return res;
@@ -19895,9 +19967,9 @@ var Shop = (function () {
 
           mom = createUTC([2000, 1]).day(i);
           if (strict && !this._fullWeekdaysParse[i]) {
-              this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\.?') + '$', 'i');
-              this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\.?') + '$', 'i');
-              this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\.?') + '$', 'i');
+              this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\\.?') + '$', 'i');
+              this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\\.?') + '$', 'i');
+              this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\\.?') + '$', 'i');
           }
           if (!this._weekdaysParse[i]) {
               regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
@@ -20713,7 +20785,7 @@ var Shop = (function () {
 
   function preprocessRFC2822(s) {
       // Remove comments and folding whitespace and replace multiple-spaces with a single space
-      return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').trim();
+      return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
   }
 
   function checkWeekday(weekdayStr, parsedInput, config) {
@@ -20964,7 +21036,7 @@ var Shop = (function () {
           }
       }
 
-      extend$61(config, bestMoment || tempConfig);
+      extend$Z(config, bestMoment || tempConfig);
   }
 
   // node_modules/moment/src/lib/create/from-object.js
@@ -21994,7 +22066,7 @@ var Shop = (function () {
   }
 
   function parsingFlags () {
-      return extend$61({}, getParsingFlags(this));
+      return extend$Z({}, getParsingFlags(this));
   }
 
   function invalidAt () {
@@ -22986,7 +23058,7 @@ var Shop = (function () {
 
   // node_modules/moment/src/moment.js
 
-  hooks.version = '2.22.1';
+  hooks.version = '2.22.2';
 
   setHookCallback(createLocal);
 

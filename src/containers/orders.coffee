@@ -6,7 +6,7 @@ class Orders extends El.View
   tag:  'orders'
   html: html
   init: ->
-    super
+    super arguments...
 
 Orders.register()
 

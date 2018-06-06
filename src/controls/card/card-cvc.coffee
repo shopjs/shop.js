@@ -9,7 +9,7 @@ class CardCVC extends Text
   bind: 'payment.account.cvc'
 
   init: ->
-    super
+    super arguments...
 
     @on 'mount', =>
       el = @root.querySelector('input')

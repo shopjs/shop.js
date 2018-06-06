@@ -7,7 +7,7 @@ export default class UserCurrentPassword extends Text
   type: 'password'
   autocomplete: 'off'
 
-  init: ()->
-    super
+  init: ->
+    super arguments...
 
 UserCurrentPassword.register()

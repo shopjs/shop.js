@@ -17,7 +17,7 @@ class CheckoutModal extends El.View
   init: ->
     @names = ['Payment Info', 'Shipping Info', 'Done'] if !@names
 
-    super
+    super arguments...
 
     m.on Events.CheckoutOpen, (id)=>
       if !id || id == @id

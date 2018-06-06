@@ -33,7 +33,7 @@ class CheckoutShippingAddressForm extends El.Form
     'order.shippingAddress.country':    [ isRequired ]
 
   init: ->
-    super()
+    super arguments...
 
     @data.on 'set', (name, value) =>
       if name.indexOf('shippingAddress') >= 0

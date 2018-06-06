@@ -12,8 +12,8 @@ export default class QuantitySelect extends Select
   options: ->
     return opts
 
-  init: ()->
-    super
+  init: ->
+    super arguments...
 
   readOnly: true
 
@@ -26,7 +26,7 @@ export default class QuantitySelect extends Select
       return
 
     oldValue = @data.get 'quantity'
-    super
+    super arguments...
     newValue = @data.get 'quantity'
     @data.set 'quantity', oldValue
 

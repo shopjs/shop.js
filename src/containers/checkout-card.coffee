@@ -33,7 +33,7 @@ class CheckoutCardForm extends El.Form
     'payment.account.cvc':      [ requiresStripe, cvc ]
 
   init: ->
-    super
+    super arguments...
 
   _submit: ->
     @mediator.trigger Events.SubmitCard
