@@ -4030,12 +4030,18 @@ var Shop = (function () {
   })();
 
   collapsePrototype = function(collapse, proto) {
-    var parentProto;
+    var i, len, member, members, parentProto;
     if (proto === View.prototype) {
       return;
     }
     parentProto = Object.getPrototypeOf(proto);
     collapsePrototype(collapse, parentProto);
+    if (members = Object.getOwnPropertyNames(parentProto)) {
+      for (i = 0, len = members.length; i < len; i++) {
+        member = members[i];
+        collapse[member] = parentProto[member];
+      }
+    }
     return index(collapse, parentProto);
   };
 
@@ -16104,12 +16110,18 @@ var Shop = (function () {
   })();
 
   collapsePrototype$1 = function(collapse, proto) {
-    var parentProto;
+    var i, len, member, members, parentProto;
     if (proto === View$2.prototype) {
       return;
     }
     parentProto = Object.getPrototypeOf(proto);
     collapsePrototype$1(collapse, parentProto);
+    if (members = Object.getOwnPropertyNames(parentProto)) {
+      for (i = 0, len = members.length; i < len; i++) {
+        member = members[i];
+        collapse[member] = parentProto[member];
+      }
+    }
     return index(collapse, parentProto);
   };
 
