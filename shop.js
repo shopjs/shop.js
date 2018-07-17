@@ -5453,10 +5453,10 @@ var Shop = (function () {
     extend$3(BrowserClient, superClass);
 
     function BrowserClient(opts) {
+      BrowserClient.__super__.constructor.call(this, opts);
       if (!(this instanceof BrowserClient)) {
         return new BrowserClient(opts);
       }
-      BrowserClient.__super__.constructor.call(this, opts);
       this.getCustomerToken();
     }
 
