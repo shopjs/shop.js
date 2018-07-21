@@ -397,7 +397,7 @@ var Shop = (function () {
 
   queue = [];
 
-  var raf$1 = requestAnimationFrame$1 = function(callback) {
+  var raf = requestAnimationFrame$1 = function(callback) {
     var next, now_;
     if (queue.length === 0) {
       now_ = browser();
@@ -571,11 +571,11 @@ var Shop = (function () {
   }
 
   if (window.requestAnimationFrame == null) {
-    window.requestAnimationFrame = raf$1;
+    window.requestAnimationFrame = raf;
   }
 
   if (window.cancelAnimationFrame == null) {
-    window.cancelAnimationFrame = raf$1.cancel;
+    window.cancelAnimationFrame = raf.cancel;
   }
 
   addEventPoly();
@@ -3993,7 +3993,7 @@ var Shop = (function () {
       todos[tag._schedulingId] = tag;
     }
     if (rafId === -1) {
-      rafId = raf$1(function() {
+      rafId = raf(function() {
         return p.resolve();
       });
     }
@@ -4001,7 +4001,8 @@ var Shop = (function () {
   };
 
   // node_modules/el.js/src/views/view.coffee
-  var View, collapsePrototype, setPrototypeOf;
+  var View, collapsePrototype, setPrototypeOf,
+    slice$1 = [].slice;
 
   setPrototypeOf = (function() {
     var mixinProperties, setProtoOf;
@@ -4076,12 +4077,16 @@ var Shop = (function () {
                   if (_this[k] != null) {
                     oldFn = _this[k];
                     return _this[k] = function() {
-                      oldFn.apply(_this, arguments);
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                      oldFn.apply(_this, args);
+                      return v.apply(_this, args);
                     };
                   } else {
                     return _this[k] = function() {
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                      return v.apply(_this, args);
                     };
                   }
                 });
@@ -4112,11 +4117,15 @@ var Shop = (function () {
             return function(name, handler) {
               if (typeof handler === 'string') {
                 return _this.on(name, function() {
-                  return _this[handler].apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                  return _this[handler].apply(_this, args);
                 });
               } else {
                 return _this.on(name, function() {
-                  return handler.apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                  return handler.apply(_this, args);
                 });
               }
             };
@@ -5362,7 +5371,7 @@ var Shop = (function () {
 
   // node_modules/hanzo.js/src/client/client.coffee
   var Client,
-    slice$1 = [].slice;
+    slice$2 = [].slice;
 
   Client = (function() {
     function Client(opts) {
@@ -5431,7 +5440,7 @@ var Shop = (function () {
 
     Client.prototype.log = function() {
       var args;
-      args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+      args = 1 <= arguments.length ? slice$2.call(arguments, 0) : [];
       args.unshift('hanzo.js>');
       if (this.opts.debug && (typeof console !== "undefined" && console !== null)) {
         return console.log.apply(console, args);
@@ -9068,11 +9077,16 @@ var Shop = (function () {
   const _tweens = [];
   let isStarted = false;
   let _autoPlay = false;
-  let _tick;
+  let _onRequestTick = [];
   const _ticker = requestAnimationFrame$2;
-  const _stopTicker = cancelAnimationFrame$1;
   let emptyFrame = 0;
   let powerModeThrottle = 120;
+
+  const _requestTick = () => {
+    for (let i = 0; i < _onRequestTick.length; i++) {
+      _onRequestTick[i]();
+    }
+  };
 
   /**
    * Adds tween to list
@@ -9095,8 +9109,10 @@ var Shop = (function () {
     emptyFrame = 0;
 
     if (_autoPlay && !isStarted) {
-      _tick = _ticker(update$2);
+      _ticker(update$2);
       isStarted = true;
+    } else {
+      _requestTick();
     }
   };
 
@@ -9133,24 +9149,33 @@ var Shop = (function () {
    */
 
   const update$2 = (time = now(), preserve) => {
+    if (emptyFrame >= powerModeThrottle) {
+      isStarted = false;
+      emptyFrame = 0;
+      return false
+    }
+
     if (_autoPlay && isStarted) {
-      _tick = _ticker(update$2);
+      _ticker(update$2);
+    } else {
+      _requestTick();
     }
 
     if (!_tweens.length) {
       emptyFrame++;
     }
 
-    if (emptyFrame > powerModeThrottle) {
-      _stopTicker(_tick);
-      isStarted = false;
-      emptyFrame = 0;
-      return false
-    }
-
     let i = 0;
-    while (i < _tweens.length) {
+    let length = _tweens.length;
+    while (i < length) {
       _tweens[i++].update(time, preserve);
+
+      if (length > _tweens.length) {
+        // The tween has been removed, keep same index
+        i--;
+      }
+
+      length = _tweens.length;
     }
 
     return true
@@ -10925,7 +10950,7 @@ var Shop = (function () {
       rect = this.root.getBoundingClientRect();
       elTop = rect.top - window.innerHeight / 2;
       wTop = window.pageYOffset;
-      if (!scrolling && elTop <= wTop) {
+      if (this.scrollToError && !scrolling && elTop <= wTop) {
         scrolling = true;
         autoPlay(true);
         t = new Tween({
@@ -16071,7 +16096,7 @@ var Shop = (function () {
       todos$1[tag._schedulingId] = tag;
     }
     if (rafId$1 === -1) {
-      rafId$1 = raf$1(function() {
+      rafId$1 = raf(function() {
         return p$1.resolve();
       });
     }
@@ -16082,6 +16107,7 @@ var Shop = (function () {
   var View$2;
   var collapsePrototype$1;
   var setPrototypeOf$1;
+  var slice$3 = [].slice;
 
   setPrototypeOf$1 = (function() {
     var mixinProperties, setProtoOf;
@@ -16156,12 +16182,16 @@ var Shop = (function () {
                   if (_this[k] != null) {
                     oldFn = _this[k];
                     return _this[k] = function() {
-                      oldFn.apply(_this, arguments);
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$3.call(arguments, 0) : [];
+                      oldFn.apply(_this, args);
+                      return v.apply(_this, args);
                     };
                   } else {
                     return _this[k] = function() {
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$3.call(arguments, 0) : [];
+                      return v.apply(_this, args);
                     };
                   }
                 });
@@ -16192,11 +16222,15 @@ var Shop = (function () {
             return function(name, handler) {
               if (typeof handler === 'string') {
                 return _this.on(name, function() {
-                  return _this[handler].apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$3.call(arguments, 0) : [];
+                  return _this[handler].apply(_this, args);
                 });
               } else {
                 return _this.on(name, function() {
-                  return handler.apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$3.call(arguments, 0) : [];
+                  return handler.apply(_this, args);
                 });
               }
             };
@@ -16663,9 +16697,6 @@ var Shop = (function () {
   var expiration = function(value) {
     var base, base1, date, digitsOnly, length, month, now, nowMonth, nowYear, year;
     if (!value) {
-      return value;
-    }
-    if (this('order.type') !== 'stripe') {
       return value;
     }
     digitsOnly = value.replace(/\D/g, '');
@@ -17467,7 +17498,7 @@ var Shop = (function () {
           lastName = _this.data.get('user.lastName');
           _this.data.set('user.name', firstName + ' ' + lastName);
           if (_this.data.get('referralProgram') && ((res.referrers == null) || res.referrers.length === 0)) {
-            return raf(function() {
+            return requestAnimationFrame(function() {
               _this.mediator.trigger(Events$3.CreateReferralProgram);
               return _this.client.referrer.create({
                 program: _this.data.get('referralProgram'),
@@ -23125,7 +23156,7 @@ var Shop = (function () {
   var momentTimezone = createCommonjsModule(function (module) {
   // node_modules/moment-timezone/moment-timezone.js
   //! moment-timezone.js
-  //! version : 0.5.17
+  //! version : 0.5.21
   //! Copyright (c) JS Foundation and other contributors
   //! license : MIT
   //! github.com/moment/moment-timezone
@@ -23133,10 +23164,10 @@ var Shop = (function () {
   (function (root, factory) {
 
   	/*global define*/
-  	if (typeof undefined === 'function' && undefined.amd) {
-  		undefined(['moment'], factory);                 // AMD
-  	} else if (module.exports) {
+  	if (module.exports) {
   		module.exports = factory(require$$0); // Node
+  	} else if (typeof undefined === 'function' && undefined.amd) {
+  		undefined(['moment'], factory);                 // AMD
   	} else {
   		factory(root.moment);                        // Browser
   	}
@@ -23148,14 +23179,18 @@ var Shop = (function () {
   	// 	return moment;
   	// }
 
-  	var VERSION = "0.5.17",
+  	var VERSION = "0.5.21",
   		zones = {},
   		links = {},
   		names = {},
   		guesses = {},
-  		cachedGuess,
+  		cachedGuess;
 
-  		momentVersion = moment.version.split('.'),
+  	if (!moment || typeof moment.version !== 'string') {
+  		logError('Moment Timezone requires Moment.js. See https://momentjs.com/timezone/docs/#/use-it/browser/');
+  	}
+
+  	var momentVersion = moment.version.split('.'),
   		major = +momentVersion[0],
   		minor = +momentVersion[1];
 
@@ -23517,6 +23552,7 @@ var Shop = (function () {
   	}
 
   	function getZone (name, caller) {
+  		
   		name = normalizeName(name);
 
   		var zone = zones[name];
@@ -23675,6 +23711,9 @@ var Shop = (function () {
 
   	fn.tz = function (name, keepTime) {
   		if (name) {
+  			if (typeof name !== 'string') {
+  				throw new Error('Time zone name must be a string, got ' + name + ' [' + typeof name + ']');
+  			}
   			this._z = getZone(name);
   			if (this._z) {
   				moment.updateOffset(this, keepTime);

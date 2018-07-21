@@ -109,8 +109,8 @@ export cardNumber = (value) ->
 export expiration = (value) ->
   return value unless value
 
-  if @('order.type') != 'stripe'
-    return value
+  # if @('order.type') != 'stripe'
+  #   return value
 
   digitsOnly = value.replace(/\D/g, '')
   length = digitsOnly.length

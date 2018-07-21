@@ -36,7 +36,7 @@ class ProfileForm extends El.Form
       @data.set 'user.name', firstName + ' ' + lastName
 
       if @data.get('referralProgram') && (!res.referrers? || res.referrers.length == 0)
-        raf =>
+        requestAnimationFrame =>
           @mediator.trigger Events.CreateReferralProgram
           @client.referrer.create({
             program:   @data.get 'referralProgram'
