@@ -472,38 +472,6 @@ thankyou .input input{
   padding:0;
   background:transparent;
 }
-cart .input input:-moz-placeholder,
-checkout .input input:-moz-placeholder,
-checkout-card .input input:-moz-placeholder,
-checkout-modal .input input:-moz-placeholder,
-checkout-shippingaddress .input input:-moz-placeholder,
-deposit .input input:-moz-placeholder,
-login .input input:-moz-placeholder,
-orders .input input:-moz-placeholder,
-profile .input input:-moz-placeholder,
-register .input input:-moz-placeholder,
-reset-password .input input:-moz-placeholder,
-reset-password-complete .input input:-moz-placeholder,
-shippingaddress .input input:-moz-placeholder,
-thankyou .input input:-moz-placeholder{
-  color:#000;
-}
-cart .input input::-moz-placeholder,
-checkout .input input::-moz-placeholder,
-checkout-card .input input::-moz-placeholder,
-checkout-modal .input input::-moz-placeholder,
-checkout-shippingaddress .input input::-moz-placeholder,
-deposit .input input::-moz-placeholder,
-login .input input::-moz-placeholder,
-orders .input input::-moz-placeholder,
-profile .input input::-moz-placeholder,
-register .input input::-moz-placeholder,
-reset-password .input input::-moz-placeholder,
-reset-password-complete .input input::-moz-placeholder,
-shippingaddress .input input::-moz-placeholder,
-thankyou .input input::-moz-placeholder{
-  color:#000;
-}
 cart .input input:-ms-input-placeholder,
 checkout .input input:-ms-input-placeholder,
 checkout-card .input input:-ms-input-placeholder,
@@ -534,6 +502,38 @@ reset-password .input input::-webkit-input-placeholder,
 reset-password-complete .input input::-webkit-input-placeholder,
 shippingaddress .input input::-webkit-input-placeholder,
 thankyou .input input::-webkit-input-placeholder{
+  color:#000;
+}
+cart .input input::-ms-input-placeholder,
+checkout .input input::-ms-input-placeholder,
+checkout-card .input input::-ms-input-placeholder,
+checkout-modal .input input::-ms-input-placeholder,
+checkout-shippingaddress .input input::-ms-input-placeholder,
+deposit .input input::-ms-input-placeholder,
+login .input input::-ms-input-placeholder,
+orders .input input::-ms-input-placeholder,
+profile .input input::-ms-input-placeholder,
+register .input input::-ms-input-placeholder,
+reset-password .input input::-ms-input-placeholder,
+reset-password-complete .input input::-ms-input-placeholder,
+shippingaddress .input input::-ms-input-placeholder,
+thankyou .input input::-ms-input-placeholder{
+  color:#000;
+}
+cart .input input::placeholder,
+checkout .input input::placeholder,
+checkout-card .input input::placeholder,
+checkout-modal .input input::placeholder,
+checkout-shippingaddress .input input::placeholder,
+deposit .input input::placeholder,
+login .input input::placeholder,
+orders .input input::placeholder,
+profile .input input::placeholder,
+register .input input::placeholder,
+reset-password .input input::placeholder,
+reset-password-complete .input input::placeholder,
+shippingaddress .input input::placeholder,
+thankyou .input input::placeholder{
   color:#000;
 }
 cart .input input[type=text],
@@ -1809,16 +1809,16 @@ view .input input{
   padding:0;
   background:transparent;
 }
-view .input input:-moz-placeholder{
-  color:#000;
-}
-view .input input::-moz-placeholder{
-  color:#000;
-}
 view .input input:-ms-input-placeholder{
   color:#000;
 }
 view .input input::-webkit-input-placeholder{
+  color:#000;
+}
+view .input input::-ms-input-placeholder{
+  color:#000;
+}
+view .input input::placeholder{
   color:#000;
 }
 view .input input[type=text],
