@@ -24,8 +24,19 @@ class ProfileForm extends El.Form
   errorMessage: ''
 
   hasOrders: ->
-    orders = @data.get('user.orders')
+    orders = @data.get 'user.orders'
     return orders && orders.length > 0
+
+  hasReferrals: ->
+    referrals = @data.get 'user.referrals'
+    return referrals && referrals.length > 0
+
+  hasBalances: ->
+    transactions = @data.get 'user.transactions'
+    return !!transactions
+
+  isAffiliate: ->
+    return !!@data.get 'user.isAffiliate'
 
   init: ->
     @mediator.trigger Events.ProfileLoad
