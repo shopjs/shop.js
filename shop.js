@@ -17265,7 +17265,7 @@ var Shop = (function () {
   var LineItem = LineItemForm;
 
   // templates/containers/lineitems.pug
-  var html$d = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+  var html$d = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input { disabled: isSubmitted() }\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\" if=\"{ !isSubmitted() }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-subscription-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
   // src/containers/lineitems.coffee
   var LineItems,
@@ -17295,6 +17295,10 @@ var Shop = (function () {
           }
         };
       })(this));
+    };
+
+    LineItems.prototype.isSubmitted = function() {
+      return !!this.data.get('order.status');
     };
 
     return LineItems;
@@ -17488,6 +17492,22 @@ var Shop = (function () {
       return orders && orders.length > 0;
     };
 
+    ProfileForm.prototype.hasReferrals = function() {
+      var referrals;
+      referrals = this.data.get('user.referrals');
+      return referrals && referrals.length > 0;
+    };
+
+    ProfileForm.prototype.hasBalances = function() {
+      var transactions;
+      transactions = this.data.get('user.transactions');
+      return !!transactions;
+    };
+
+    ProfileForm.prototype.isAffiliate = function() {
+      return !!this.data.get('user.isAffiliate');
+    };
+
     ProfileForm.prototype.init = function() {
       this.mediator.trigger(Events$3.ProfileLoad);
       this.client.account.get().then((function(_this) {
@@ -17594,6 +17614,8 @@ var Shop = (function () {
 
     RegisterForm.prototype.immediateLoginLatency = 400;
 
+    RegisterForm.prototype.affiliateSignup = false;
+
     RegisterForm.prototype.configs = {
       'user.username': [isRequired, isUsername],
       'user.email': [isRequired, isEmail],
@@ -17619,6 +17641,7 @@ var Shop = (function () {
         password: this.data.get('user.password'),
         passwordConfirm: this.data.get('user.passwordConfirm'),
         referrerId: this.data.get('order.referrerId'),
+        isAffiliate: !!this.affiliateSignup,
         metadata: {
           source: this.source
         }
@@ -24495,11 +24518,12 @@ var Shop = (function () {
   }
 
   initData = function(opts) {
-    var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, v2;
+    var cartId, checkoutPayment, checkoutShippingAddress, checkoutUser, countriesReady, country, d, data, dontPrefill, items, k2, meta, queries, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref23, ref24, ref25, ref26, ref27, ref28, ref29, ref3, ref30, ref4, ref5, ref6, ref7, ref8, ref9, referrer, state, storeId, v2;
     queries = getQueries();
     referrer = '';
     referrer = (ref2 = getReferrer((ref3 = opts.config) != null ? ref3.hashReferrer : void 0)) != null ? ref2 : (ref4 = opts.order) != null ? ref4.referrer : void 0;
     index$3.set('referrer', referrer);
+    storeId = index$3.get('storeId');
     items = index$3.get('items');
     cartId = index$3.get('cartId');
     meta = index$3.get('order.metadata');
@@ -24525,7 +24549,8 @@ var Shop = (function () {
         items: items != null ? items : [],
         cartId: cartId != null ? cartId : null,
         checkoutUrl: (ref25 = (ref26 = opts.config) != null ? ref26.checkoutUrl : void 0) != null ? ref25 : null,
-        metadata: meta != null ? meta : {}
+        metadata: meta != null ? meta : {},
+        storeId: (ref27 = opts.storeId) != null ? ref27 : storeId
       },
       user: null,
       payment: {
@@ -24538,11 +24563,11 @@ var Shop = (function () {
       if (d[k$3] == null) {
         d[k$3] = opts[k$3];
       } else {
-        ref27 = d[k$3];
-        for (k2 in ref27) {
-          v2 = ref27[k2];
+        ref28 = d[k$3];
+        for (k2 in ref28) {
+          v2 = ref28[k2];
           if (v2 == null) {
-            d[k$3][k2] = (ref28 = opts[k$3]) != null ? ref28[k2] : void 0;
+            d[k$3][k2] = (ref29 = opts[k$3]) != null ? ref29[k2] : void 0;
           }
         }
       }
@@ -24568,7 +24593,7 @@ var Shop = (function () {
     countriesReady = false;
     dontPrefill = false;
     if (data.get('autoGeo') && (!state || !country)) {
-      if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref29 = window.navigator) != null ? ref29.geolocation : void 0 : void 0)) {
+      if ((typeof window !== "undefined" && window !== null ? window.google : void 0) && (typeof window !== "undefined" && window !== null ? (ref30 = window.navigator) != null ? ref30.geolocation : void 0 : void 0)) {
         navigator.geolocation.getCurrentPosition((function(_this) {
           return function(position) {
             return gmaps.geocode({
@@ -24848,6 +24873,16 @@ var Shop = (function () {
 
   Shop$1.clear = function() {
     return this.cart.clear();
+  };
+
+  Shop$1.getStore = function() {
+    var ref2;
+    return (ref2 = this.data.get('order.storeId')) != null ? ref2 : '';
+  };
+
+  Shop$1.setStore = function(id) {
+    index$3.set('storeId', id);
+    return this.data.set('order.storeId', id);
   };
 
   Shop$1.getMediator = function() {
