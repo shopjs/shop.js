@@ -19,6 +19,7 @@ class RegisterForm extends El.Form
 
   immediateLogin: false
   immediateLoginLatency: 400
+  affiliateSignup: false
 
   configs:
     'user.username':        [ isRequired, isUsername ]
@@ -41,6 +42,7 @@ class RegisterForm extends El.Form
       password:        @data.get 'user.password'
       passwordConfirm: @data.get 'user.passwordConfirm'
       referrerId:      @data.get 'order.referrerId'
+      isAffiliate:     !!@affiliateSignup
       metadata:
         source: @source
 

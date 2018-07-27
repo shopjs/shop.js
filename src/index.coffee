@@ -166,9 +166,10 @@ initData = (opts)->
   referrer = getReferrer(opts.config?.hashReferrer) ? opts.order?.referrer
   store.set 'referrer', referrer
 
-  items  = store.get 'items'
-  cartId = store.get 'cartId'
-  meta   = store.get 'order.metadata'
+  storeId = store.get 'storeId'
+  items   = store.get 'items'
+  cartId  = store.get 'cartId'
+  meta    = store.get 'order.metadata'
 
   d =
     taxRates:       null
@@ -193,6 +194,7 @@ initData = (opts)->
       cartId:      cartId                   ? null
       checkoutUrl: opts.config?.checkoutUrl ? null
       metadata:    meta                     ? {}
+      storeId:     opts.storeId ? storeId
     user: null
     payment:
       type: opts.processor
@@ -505,6 +507,13 @@ Shop.initCart = ->
 
 Shop.clear = ->
   @cart.clear()
+
+Shop.getStore = ->
+  @data.get('order.storeId') ? ''
+
+Shop.setStore = (id)->
+  store.set 'storeId', id
+  @data.set 'order.storeId', id
 
 Shop.getMediator = ->
   return m

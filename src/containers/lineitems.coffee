@@ -17,6 +17,9 @@ class LineItems extends El.View
       if @parentData?
         @data = @parentData
 
+  isSubmitted: ->
+    return !!@data.get 'order.status'
+
 LineItems.register()
 
 export default LineItems
