@@ -452,6 +452,7 @@ reset-password-complete .input .disabled,
 shippingaddress .input .disabled,
 thankyou .input .disabled{
   opacity:0.5;
+  pointer-events:none;
 }
 cart .input input,
 checkout .input input,
@@ -1802,6 +1803,7 @@ view .input .label.active{
 view .input *:disabled,
 view .input .disabled{
   opacity:0.5;
+  pointer-events:none;
 }
 view .input input{
   outline:none;
