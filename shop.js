@@ -6462,6 +6462,7 @@ var Shop = (function () {
               items = _this.data.get('order.items').slice(0);
               _this.data.set('order', order);
               _this.data.set('order.items', items);
+              _this.invoice();
               return order;
             })["catch"](function(err) {
               var ref;
