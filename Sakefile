@@ -35,7 +35,7 @@ task 'build:web', 'build js', ->
       coffee: version: 1
 
 task 'build:min', 'build js for production', ['build', 'build:web'], ->
-  yield exec 'uglifyjs shop.js -o shop.min.js'
+  yield exec 'node_modules/.bin/uglifyjs shop.js -o shop.min.js'
   yield exec 'cp lib/theme.css theme.css'
 
 task 'build:static', 'build static assets', ->

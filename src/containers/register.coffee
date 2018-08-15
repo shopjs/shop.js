@@ -21,6 +21,9 @@ class RegisterForm extends El.Form
   immediateLoginLatency: 400
   affiliateSignup: false
 
+  # allow customers to set a default form to add this email to
+  #formId: ''
+
   configs:
     'user.username':        [ isRequired, isUsername ]
     'user.email':           [ isRequired, isEmail ]
@@ -39,6 +42,7 @@ class RegisterForm extends El.Form
       email:           @data.get 'user.email'
       firstName:       @data.get 'user.firstName'
       lastName:        @data.get 'user.lastName'
+      formId:          @formId
       password:        @data.get 'user.password'
       passwordConfirm: @data.get 'user.passwordConfirm'
       referrerId:      @data.get 'order.referrerId'
