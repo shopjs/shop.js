@@ -17639,6 +17639,7 @@ var Shop = (function () {
         email: this.data.get('user.email'),
         firstName: this.data.get('user.firstName'),
         lastName: this.data.get('user.lastName'),
+        formId: this.formId,
         password: this.data.get('user.password'),
         passwordConfirm: this.data.get('user.passwordConfirm'),
         referrerId: this.data.get('order.referrerId'),
