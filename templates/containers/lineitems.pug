@@ -18,5 +18,6 @@ lineitem(each="{ item, v in data('order.items') }", parent-data="{ this.parent.d
           | { renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }
         .product-list-price.invoice-amount(if='{ data.get().listPrice > data.get().price }')
           | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }
-        // .product-subscription-price.invoice-amount(if='{ data.get().listPrice > data.get().price }')
-        //   | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }
+      .product-subscription-interval-container.invoice-subscription-interval(if="{ data.get('isSubscribeable') }")
+        .product-subscription-interval
+          | Every { data.get('intervalCount') } { data.get('interval') }{ data.get('intervalCount') > 1 ? 's' : ''}
