@@ -6267,6 +6267,9 @@ var Shop = (function () {
       item.price = product.price;
       item.listPrice = product.listPrice;
       item.description = product.description;
+      item.isSubscribeable = product.isSubscribeable;
+      item.interval = product.interval;
+      item.intervalCount = product.intervalCount;
       return this.onUpdate(item);
     };
 
@@ -6448,9 +6451,9 @@ var Shop = (function () {
       };
       return this.client.checkout.authorize(data).then((function(_this) {
         return function(order) {
-          var a, i, item, items, j, len, options, p, p2, ref, referralProgram;
+          var a, i, item, items, j, len, options, p, p2, ref, ref1, referralProgram;
           _this.data.set('coupon', _this.data.get('order.coupon') || {});
-          items = _this.data.get('order.items').slice(0);
+          items = ((ref = _this.data.get('order.items')) != null ? ref : []).slice(0);
           _this.data.set('order', order);
           _this.data.set('order.items', items);
           if (order.type === 'ethereum' || order.type === 'bitcoin') {
@@ -6465,10 +6468,10 @@ var Shop = (function () {
               _this.invoice();
               return order;
             })["catch"](function(err) {
-              var ref;
+              var ref1;
               if (typeof window !== "undefined" && window !== null) {
-                if ((ref = window.Raven) != null) {
-                  ref.captureException(err);
+                if ((ref1 = window.Raven) != null) {
+                  ref1.captureException(err);
                 }
               }
               return console.log("capture Error: " + err);
@@ -6482,10 +6485,10 @@ var Shop = (function () {
               program: referralProgram,
               programId: _this.data.get('referralProgram.id')
             })["catch"](function(err) {
-              var ref;
+              var ref1;
               if (typeof window !== "undefined" && window !== null) {
-                if ((ref = window.Raven) != null) {
-                  ref.captureException(err);
+                if ((ref1 = window.Raven) != null) {
+                  ref1.captureException(err);
                 }
               }
               return console.log("new referralProgram Error: " + err);
@@ -6497,10 +6500,10 @@ var Shop = (function () {
               _this.data.set('referrerId', referrer.id);
               return order;
             })["catch"](function(err) {
-              var ref;
+              var ref1;
               if (typeof window !== "undefined" && window !== null) {
-                if ((ref = window.Raven) != null) {
-                  ref.captureException(err);
+                if ((ref1 = window.Raven) != null) {
+                  ref1.captureException(err);
                 }
               }
               return console.log("order/referralProgram Error: " + err);
@@ -6516,9 +6519,9 @@ var Shop = (function () {
             currency: _this.data.get('order.currency'),
             products: []
           };
-          ref = _this.data.get('order.items');
-          for (i = j = 0, len = ref.length; j < len; i = ++j) {
-            item = ref[i];
+          ref1 = _this.data.get('order.items');
+          for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+            item = ref1[i];
             a = {
               id: item.productId,
               sku: item.productSlug,
@@ -17266,7 +17269,7 @@ var Shop = (function () {
   var LineItem = LineItemForm;
 
   // templates/containers/lineitems.pug
-  var html$d = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input { disabled: isSubmitted() }\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\" if=\"{ !isSubmitted() }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <!-- .product-subscription-price.invoice-amount(if='{ data.get().listPrice > data.get().price }')-->\n        <!--   | { renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }-->\n      </div>\n    </div>\n  </yield>\n</lineitem>";
+  var html$d = "\n<lineitem each=\"{ item, v in data('order.items') }\" parent-data=\"{ this.parent.data.ref('order') }\" data=\"{ this.parent.data.ref('order.items.' + v) }\" no-reorder>\n  <yield>\n    <div class=\"animated fadeIn\">\n      <div class=\"product-image-container\" if=\"{ images }\"><img riot-src=\"{ images[data.get().productSlug] || images[data.get().productId] || images[data.get().productName] }\"></div>\n      <div class=\"product-text-container\"><span class=\"product-description\"><span class=\"product-name\">{ data.get('productName') }</span>\n          <p>{ data.get('description') }</p></span></div><span class=\"product-quantity-container locked\" if=\"{ data.get('locked') }\">{ data.get('quantity') }</span><span class=\"product-quantity-container\" if=\"{ !data.get('locked') }\">\n        <quantity-select class=\"input { disabled: isSubmitted() }\"></quantity-select></span>\n      <div class=\"product-delete\" onclick=\"{ delete }\" if=\"{ !isSubmitted() }\">Remove</div>\n      <div class=\"product-price-container invoice-amount\">\n        <div class=\"product-price\">{ renderCurrency(parentData.get('currency'), data.get().price * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n        <div class=\"product-list-price invoice-amount\" if=\"{ data.get().listPrice &gt; data.get().price }\">{ renderCurrency(parentData.get('currency'), data.get().listPrice * data.get().quantity) } { parentData.get('currency').toUpperCase() }</div>\n      </div>\n      <div class=\"product-subscription-interval-container invoice-subscription-interval\" if=\"{ data.get('isSubscribeable') }\">\n        <div class=\"product-subscription-interval\">Every { data.get('intervalCount') } { data.get('interval') }{ data.get('intervalCount') > 1 ? 's' : ''}</div>\n      </div>\n    </div>\n  </yield>\n</lineitem>";
 
   // src/containers/lineitems.coffee
   var LineItems,
