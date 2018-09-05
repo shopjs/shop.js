@@ -2467,6 +2467,11 @@ cart .product-price-container{
   float:right !important;
   line-height:1.25em;
 }
+cart .product-subscription-interval-container{
+  text-align:right;
+  float:right !important;
+  line-height:1.25em;
+}
 cart .product-list-price{
   color:#e91e63;
   font-size:0.9em;
