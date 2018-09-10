@@ -6034,11 +6034,12 @@ var Shop = (function () {
     };
 
     Cart.prototype.clear = function() {
-      var item, items, j, len;
+      var item, items, itemsClone, j, len;
       this.queue.length = 0;
       items = this.data.get('order.items');
-      for (j = 0, len = items.length; j < len; j++) {
-        item = items[j];
+      itemsClone = items.slice(0);
+      for (j = 0, len = itemsClone.length; j < len; j++) {
+        item = itemsClone[j];
         this.set(item.productId, 0);
       }
       return this.data.get('order.items');
@@ -16812,6 +16813,8 @@ var Shop = (function () {
 
     CheckoutForm.prototype.configs = configs;
 
+    CheckoutForm.prototype.async = true;
+
     CheckoutForm.prototype.init = function() {
       CheckoutForm.__super__.init.apply(this, arguments);
       this.data.on('set', (function(_this) {
@@ -16866,7 +16869,7 @@ var Shop = (function () {
       email = '';
       return this.client.account.exists(this.data.get('user.email')).then((function(_this) {
         return function(res) {
-          var cart;
+          var cart, opts;
           if (res.exists) {
             _this.data.set('user.id', _this.data.get('user.email'));
             email = _this.data.get('user.email');
@@ -16881,8 +16884,11 @@ var Shop = (function () {
             _this.cart._cartUpdate(cart);
           }
           _this.data.set('order.email', email);
+          opts = {
+            async: _this.async
+          };
           El$1$1.scheduleUpdate();
-          return _this.cart.checkout().then(function(pRef) {
+          return _this.cart.checkout(opts).then(function(pRef) {
             return pRef.p.then(function(order) {
               var hasErrored;
               hasErrored = false;
