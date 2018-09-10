@@ -16,6 +16,7 @@ class CheckoutForm extends El.Form
   loading:      false
   checkedOut:   false
   configs:      configs
+  async:        true
 
   init: ->
     super arguments...
@@ -56,7 +57,7 @@ class CheckoutForm extends El.Form
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
 
-        email =         @data.get 'user.email'
+        email = @data.get 'user.email'
 
         cart =
           userId: email
@@ -69,8 +70,11 @@ class CheckoutForm extends El.Form
 
       @data.set 'order.email', email
 
+      opts =
+        async: @async
+
       El.scheduleUpdate()
-      @cart.checkout().then (pRef) =>
+      @cart.checkout(opts).then (pRef) =>
         return pRef.p
           .then (order)=>
             hasErrored = false
