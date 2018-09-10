@@ -71,7 +71,7 @@ class CheckoutForm extends El.Form
       @data.set 'order.email', email
 
       opts =
-        async: @async
+        async: @async == true
 
       El.scheduleUpdate()
       @cart.checkout(opts).then (pRef) =>
