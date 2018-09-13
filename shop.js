@@ -5985,7 +5985,10 @@ var Shop = (function () {
               _this._cartSyncName();
             }
             if (name === 'user.lastName') {
-              return _this._cartSyncName();
+              _this._cartSyncName();
+            }
+            if (name === 'user.email') {
+              return _this._cartSyncEmail();
             }
           };
         })(this));
@@ -6029,6 +6032,28 @@ var Shop = (function () {
         return this.client.cart.update({
           id: cartId,
           storeId: this.data.get('order.storeId')
+        });
+      }
+    };
+
+    Cart.prototype._cartSyncName = function() {
+      var cartId;
+      cartId = this.data.get('order.cartId');
+      if (cartId && (this.client.cart != null)) {
+        return this.client.cart.update({
+          id: cartId,
+          name: this.data.get('user.firstName') + ' ' + this.data.get('user.lastName')
+        });
+      }
+    };
+
+    Cart.prototype._cartSyncEmail = function() {
+      var cartId;
+      cartId = this.data.get('order.cartId');
+      if (cartId && (this.client.cart != null)) {
+        return this.client.cart.update({
+          id: cartId,
+          email: this.data.get('user.email')
         });
       }
     };
@@ -16889,7 +16914,7 @@ var Shop = (function () {
     };
 
     CheckoutForm.prototype._submit = function(event) {
-      var email;
+      var email, opts;
       if (this.loading || this.checkedOut) {
         return;
       }
@@ -16898,9 +16923,13 @@ var Shop = (function () {
       this.errorMessage = '';
       El$1$1.scheduleUpdate();
       email = '';
-      return this.client.account.exists(this.data.get('user.email')).then((function(_this) {
+      opts = {
+        async: this.async === true,
+        email: this.data.get('user.email')
+      };
+      return this.client.account.exists(opts).then((function(_this) {
         return function(res) {
-          var cart, opts;
+          var cart;
           if (res.exists) {
             _this.data.set('user.id', _this.data.get('user.email'));
             email = _this.data.get('user.email');
@@ -24741,17 +24770,17 @@ var Shop = (function () {
       return El$1.scheduleUpdate();
     });
     cart.onCart = function() {
-      var _, mcCId, ref3;
+      var _, mcCId, mccart, ref3;
       index$3.set('cartId', data.get('order.cartId'));
       ref3 = getMCIds(), _ = ref3[0], mcCId = ref3[1];
-      cart = {
+      mccart = {
         mailchimp: {
           checkoutUrl: data.get('order.checkoutUrl')
         },
         currency: data.get('order.currency')
       };
       if (mcCId) {
-        cart.mailchimp.campaignId = mcCId;
+        mccart.mailchimp.campaignId = mcCId;
       }
       return client.account.get().then(function(res) {
         return cart._cartUpdate({
