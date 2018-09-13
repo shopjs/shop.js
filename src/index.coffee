@@ -345,13 +345,13 @@ initCart = (client, data, cartOptions)->
   cart.onCart = ->
     store.set 'cartId', data.get 'order.cartId'
     [_, mcCId] = getMCIds()
-    cart =
+    mccart =
       mailchimp:
         checkoutUrl: data.get 'order.checkoutUrl'
       currency: data.get 'order.currency'
 
     if mcCId
-      cart.mailchimp.campaignId = mcCId
+      mccart.mailchimp.campaignId = mcCId
 
     # try get userId
     client.account.get().then (res) ->

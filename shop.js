@@ -5926,10 +5926,10 @@ var Shop = (function () {
 
     Cart.prototype.opts = {};
 
-    function Cart(client, data1, opts) {
+    function Cart(client, data1, opts1) {
       this.client = client;
       this.data = data1;
-      this.opts = opts != null ? opts : {};
+      this.opts = opts1 != null ? opts1 : {};
       this.queue = [];
       this.data.on('set', (function(_this) {
         return function(name) {
@@ -6442,14 +6442,20 @@ var Shop = (function () {
       return this.data.set('order.total', subtotal + shipping + tax);
     };
 
-    Cart.prototype.checkout = function() {
+    Cart.prototype.checkout = function(opts, authOnly) {
       var data;
+      if (opts == null) {
+        opts = {};
+      }
+      if (authOnly == null) {
+        authOnly = false;
+      }
       this.invoice();
-      data = {
+      data = index({}, opts, {
         user: this.data.get('user'),
         order: this.data.get('order'),
         payment: this.data.get('payment')
-      };
+      });
       return this.client.checkout.authorize(data).then((function(_this) {
         return function(order) {
           var a, i, item, items, j, len, options, p, p2, ref, ref1, referralProgram;
@@ -6457,26 +6463,12 @@ var Shop = (function () {
           items = ((ref = _this.data.get('order.items')) != null ? ref : []).slice(0);
           _this.data.set('order', order);
           _this.data.set('order.items', items);
-          if (order.type === 'ethereum' || order.type === 'bitcoin') {
+          if (order.type === 'ethereum' || order.type === 'bitcoin' || authOnly) {
             p = new Promise$2(function(resolve) {
               return resolve(order);
             });
           } else {
-            p = _this.client.checkout.capture(order.id).then(function(order) {
-              items = _this.data.get('order.items').slice(0);
-              _this.data.set('order', order);
-              _this.data.set('order.items', items);
-              _this.invoice();
-              return order;
-            })["catch"](function(err) {
-              var ref1;
-              if (typeof window !== "undefined" && window !== null) {
-                if ((ref1 = window.Raven) != null) {
-                  ref1.captureException(err);
-                }
-              }
-              return console.log("capture Error: " + err);
-            });
+            p = _this.capture(opts).p;
           }
           referralProgram = _this.data.get('referralProgram');
           if (referralProgram != null) {
@@ -6541,6 +6533,45 @@ var Shop = (function () {
           };
         };
       })(this));
+    };
+
+    Cart.prototype.authorize = function() {
+      return this.checkout({}, true);
+    };
+
+    Cart.prototype.capture = function(opts) {
+      var data, order, p;
+      order = this.data.get('order');
+      if (!order.id) {
+        p = new Promise$2(function(resolve, reject) {
+          return reject(new Error('Order has no id, did you authorize?'));
+        });
+      } else {
+        data = index({}, opts, {
+          orderId: order.id
+        });
+        p = this.client.checkout.capture(data).then((function(_this) {
+          return function(order) {
+            var items;
+            items = _this.data.get('order.items').slice(0);
+            _this.data.set('order', order);
+            _this.data.set('order.items', items);
+            _this.invoice();
+            return order;
+          };
+        })(this))["catch"](function(err) {
+          var ref;
+          if (typeof window !== "undefined" && window !== null) {
+            if ((ref = window.Raven) != null) {
+              ref.captureException(err);
+            }
+          }
+          return console.log("capture error: " + err);
+        });
+      }
+      return {
+        p: p
+      };
     };
 
     return Cart;
@@ -16885,7 +16916,7 @@ var Shop = (function () {
           }
           _this.data.set('order.email', email);
           opts = {
-            async: _this.async
+            async: _this.async === true
           };
           El$1$1.scheduleUpdate();
           return _this.cart.checkout(opts).then(function(pRef) {

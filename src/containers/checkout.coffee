@@ -52,7 +52,12 @@ class CheckoutForm extends El.Form
 
     El.scheduleUpdate()
     email = ''
-    @client.account.exists(@data.get 'user.email').then (res) =>
+
+    opts =
+      async: @async == true
+      email: @data.get 'user.email'
+
+    @client.account.exists(opts).then (res) =>
 
       if res.exists
         @data.set 'user.id', @data.get 'user.email'
