@@ -523,7 +523,13 @@ Shop.getData = ->
 
 Shop.isEmpty   = ->
   items = @data.get 'order.items'
-  items.length == 0
+  if items.length == 0
+    return true
+
+  itemsNotIgnored = items.filter (item)->
+    return !item.ignore
+
+  return itemsNotIgnored.length == 0
 
 # cart item is in the form of:
 #
@@ -534,9 +540,9 @@ Shop.isEmpty   = ->
 # price:    number in cents
 #
 
-Shop.setItem = (id, quantity, locked=false) ->
+Shop.setItem = (id, quantity, locked=false, ignore=false) ->
   m.trigger Events.TryUpdateItem, id
-  p = @cart.set id, quantity, locked
+  p = @cart.set id, quantity, locked, ignore
   if @promise != p
     @promise = p
     @promise.then =>
