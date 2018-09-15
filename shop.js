@@ -5822,6 +5822,40 @@ var Shop = (function () {
 
   var Hanzo$1 = Hanzo;
 
+  // node_modules/commerce.js/src/polyfills.coffee
+  if (!Array.prototype.filter) {
+    Array.prototype.filter = function(func, thisArg) {
+      var c, i, len, res, t;
+      if (!((typeof func === 'Function' || typeof func === 'function') && this)) {
+        throw new TypeError;
+      }
+      len = this.length >>> 0;
+      res = new Array(len);
+      t = this;
+      c = 0;
+      i = -1;
+      if (thisArg === void 0) {
+        while (++i !== len) {
+          if (i in this) {
+            if (func(t[i], i, t)) {
+              res[c++] = t[i];
+            }
+          }
+        }
+      } else {
+        while (++i !== len) {
+          if (i in this) {
+            if (func.call(thisArg, t[i], i, t)) {
+              res[c++] = t[i];
+            }
+          }
+        }
+      }
+      res.length = c;
+      return res;
+    };
+  }
+
   // node_modules/commerce.js/src/analytics.coffee
   var analytics;
 
@@ -6070,11 +6104,14 @@ var Shop = (function () {
       return this.data.get('order.items');
     };
 
-    Cart.prototype.set = function(id, quantity, locked) {
+    Cart.prototype.set = function(id, quantity, locked, ignore) {
       if (locked == null) {
         locked = false;
       }
-      this.queue.push([id, quantity, locked]);
+      if (ignore == null) {
+        ignore = false;
+      }
+      this.queue.push([id, quantity, locked, ignore]);
       if (this.queue.length === 1) {
         this.promise = new Promise$2((function(_this) {
           return function(resolve, reject) {
@@ -6106,13 +6143,14 @@ var Shop = (function () {
         return {
           id: item[0],
           quantity: item[2],
-          locked: item[3]
+          locked: item[3],
+          ignore: item[4]
         };
       }
     };
 
     Cart.prototype._set = function() {
-      var a, deltaQuantity, i, id, item, items, j, k, len, len1, locked, newValue, oldValue, quantity, ref;
+      var a, deltaQuantity, i, id, ignore, item, items, j, k, len, len1, locked, newValue, oldValue, quantity, ref;
       items = this.data.get('order.items');
       if (this.queue.length === 0) {
         this.invoice();
@@ -6121,7 +6159,7 @@ var Shop = (function () {
         }
         return;
       }
-      ref = this.queue[0], id = ref[0], quantity = ref[1], locked = ref[2];
+      ref = this.queue[0], id = ref[0], quantity = ref[1], locked = ref[2], ignore = ref[3];
       if (this.inItemlessMode() && quantity > 0) {
         this.invoice();
         if (this.resolve != null) {
@@ -6171,6 +6209,7 @@ var Shop = (function () {
         oldValue = item.quantity;
         item.quantity = quantity;
         item.locked = locked;
+        item.ignore = ignore;
         newValue = quantity;
         deltaQuantity = newValue - oldValue;
         if (deltaQuantity > 0) {
@@ -6200,6 +6239,7 @@ var Shop = (function () {
         }
         this.data.set('order.items.' + i + '.quantity', quantity);
         this.data.set('order.items.' + i + '.locked', locked);
+        this.data.set('order.items.' + i + '.ignore', ignore);
         this._cartSet(item.productId, quantity);
         this.onUpdate(item);
         this.queue.shift();
@@ -6209,7 +6249,8 @@ var Shop = (function () {
       items.push({
         id: id,
         quantity: quantity,
-        locked: locked
+        locked: locked,
+        ignore: ignore
       });
       this.waits++;
       return this.load(id);
@@ -6468,7 +6509,7 @@ var Shop = (function () {
     };
 
     Cart.prototype.checkout = function(opts, authOnly) {
-      var data;
+      var data, newOrder, ref;
       if (opts == null) {
         opts = {};
       }
@@ -6476,16 +6517,21 @@ var Shop = (function () {
         authOnly = false;
       }
       this.invoice();
+      newOrder = index({}, this.data.get('order'));
+      newOrder.items = ((ref = this.data.get('order.items')) != null ? ref : []).slice(0);
+      newOrder.items = newOrder.items.filter(function(item) {
+        return !item.ignore;
+      });
       data = index({}, opts, {
         user: this.data.get('user'),
-        order: this.data.get('order'),
+        order: newOrder,
         payment: this.data.get('payment')
       });
       return this.client.checkout.authorize(data).then((function(_this) {
         return function(order) {
-          var a, i, item, items, j, len, options, p, p2, ref, ref1, referralProgram;
+          var a, i, item, items, j, len, options, p, p2, ref1, ref2, referralProgram;
           _this.data.set('coupon', _this.data.get('order.coupon') || {});
-          items = ((ref = _this.data.get('order.items')) != null ? ref : []).slice(0);
+          items = ((ref1 = _this.data.get('order.items')) != null ? ref1 : []).slice(0);
           _this.data.set('order', order);
           _this.data.set('order.items', items);
           if (order.type === 'ethereum' || order.type === 'bitcoin' || authOnly) {
@@ -6503,10 +6549,10 @@ var Shop = (function () {
               program: referralProgram,
               programId: _this.data.get('referralProgram.id')
             })["catch"](function(err) {
-              var ref1;
+              var ref2;
               if (typeof window !== "undefined" && window !== null) {
-                if ((ref1 = window.Raven) != null) {
-                  ref1.captureException(err);
+                if ((ref2 = window.Raven) != null) {
+                  ref2.captureException(err);
                 }
               }
               return console.log("new referralProgram Error: " + err);
@@ -6518,10 +6564,10 @@ var Shop = (function () {
               _this.data.set('referrerId', referrer.id);
               return order;
             })["catch"](function(err) {
-              var ref1;
+              var ref2;
               if (typeof window !== "undefined" && window !== null) {
-                if ((ref1 = window.Raven) != null) {
-                  ref1.captureException(err);
+                if ((ref2 = window.Raven) != null) {
+                  ref2.captureException(err);
                 }
               }
               return console.log("order/referralProgram Error: " + err);
@@ -6537,9 +6583,9 @@ var Shop = (function () {
             currency: _this.data.get('order.currency'),
             products: []
           };
-          ref1 = _this.data.get('order.items');
-          for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-            item = ref1[i];
+          ref2 = _this.data.get('order.items');
+          for (i = j = 0, len = ref2.length; j < len; i = ++j) {
+            item = ref2[i];
             a = {
               id: item.productId,
               sku: item.productSlug,
@@ -24965,18 +25011,27 @@ var Shop = (function () {
   };
 
   Shop$1.isEmpty = function() {
-    var items;
+    var items, itemsNotIgnored;
     items = this.data.get('order.items');
-    return items.length === 0;
+    if (items.length === 0) {
+      return true;
+    }
+    itemsNotIgnored = items.filter(function(item) {
+      return !item.ignore;
+    });
+    return itemsNotIgnored.length === 0;
   };
 
-  Shop$1.setItem = function(id, quantity, locked) {
+  Shop$1.setItem = function(id, quantity, locked, ignore) {
     var p;
     if (locked == null) {
       locked = false;
     }
+    if (ignore == null) {
+      ignore = false;
+    }
     m$1.trigger(Events$3.TryUpdateItem, id);
-    p = this.cart.set(id, quantity, locked);
+    p = this.cart.set(id, quantity, locked, ignore);
     if (this.promise !== p) {
       this.promise = p;
       return this.promise.then((function(_this) {
