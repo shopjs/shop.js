@@ -44,7 +44,7 @@
   "dependencies": {
     "akasha": "^0.1.10",
     "broken": "^0.1.13",
-    "commerce.js": "1.1.29",
+    "commerce.js": "1.1.30",
     "el-controls": "^1.2.38",
     "el.js": "2.1.36",
     "es-keyboardevent-key-polyfill": "^1.0.2",
