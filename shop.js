@@ -6530,6 +6530,9 @@ var Shop = (function () {
       return this.client.checkout.authorize(data).then((function(_this) {
         return function(order) {
           var a, i, item, items, j, len, options, p, p2, ref1, ref2, referralProgram;
+          if (order == null) {
+            throw 'Error authorizing order, please try again later.';
+          }
           _this.data.set('coupon', _this.data.get('order.coupon') || {});
           items = ((ref1 = _this.data.get('order.items')) != null ? ref1 : []).slice(0);
           _this.data.set('order', order);
@@ -6624,6 +6627,9 @@ var Shop = (function () {
         p = this.client.checkout.capture(data).then((function(_this) {
           return function(order) {
             var items;
+            if (order == null) {
+              throw 'Error capturing order, please try again later.';
+            }
             items = _this.data.get('order.items').slice(0);
             _this.data.set('order', order);
             _this.data.set('order.items', items);
