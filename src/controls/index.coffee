@@ -3,6 +3,9 @@ import CardExpiry   from './card/card-expiry'
 import CardName     from './card/card-name'
 import CardNumber   from './card/card-number'
 
+import AddressState     from './checkout/address-state'
+import AddressCountry   from './checkout/address-country'
+
 import PromoCode                    from './checkout/promocode'
 import QuantitySelect               from './checkout/quantity-select'
 import ShippingAddressCity          from './checkout/shippingaddress-city'
@@ -55,6 +58,9 @@ export {
   StateSelect
   Text
   TextBox
+
+  AddressState
+  AddressCountry
 
   PromoCode
   QuantitySelect
