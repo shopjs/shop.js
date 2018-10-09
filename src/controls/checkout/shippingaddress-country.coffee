@@ -1,18 +1,11 @@
 # import { CountrySelect } from 'el-controls'
-import CountrySelect from 'el-controls/src/controls/country-select'
+import AddressCountry from './address-country'
 
-export default class ShippingAddressCountry extends CountrySelect
+export default class ShippingAddressCountry extends AddressCountry
   tag:  'shippingaddress-country'
   bind: 'order.shippingAddress.country'
-  countriesField: 'countries'
 
   init: ->
     super arguments...
-
-    @input.ref.on 'set', (k, v)=>
-      if k.indexOf(@countriesField) > -1
-        # force update of selectOptions
-        @options()
-        @update()
 
 ShippingAddressCountry.register()

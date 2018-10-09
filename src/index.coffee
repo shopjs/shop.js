@@ -33,6 +33,8 @@ import {
   UserPassword
   UserPasswordConfirm
   UserUsername
+  AddressState
+  AddressCountry
   ShippingAddressName
   ShippingAddressLine1
   ShippingAddressLine2
@@ -69,6 +71,9 @@ Controls =
   UserCurrentPassword:  UserCurrentPassword
   UserPassword:         UserPassword
   UserPasswordConfirm:  UserPasswordConfirm
+
+  AddressState:     AddressState
+  AddressCountry:   AddressCountry
 
   # Shipping Address
   ShippingAddressName:          ShippingAddressName
