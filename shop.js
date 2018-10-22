@@ -5469,23 +5469,24 @@ var Shop = (function () {
       this.getCustomerToken();
     }
 
-    BrowserClient.prototype.request = function(blueprint, data, key) {
-      var opts;
-      if (data == null) {
-        data = {};
+    BrowserClient.prototype.request = function(blueprint, opts, key) {
+      var data;
+      if (opts == null) {
+        opts = {};
       }
       if (key == null) {
         key = this.getKey();
       }
-      opts = {
-        url: this.url(blueprint.url, data, key),
-        method: blueprint.method
-      };
-      if (blueprint.method !== 'GET') {
-        opts.headers = {
-          'Content-Type': 'application/json'
-        };
+      if (opts.data != null) {
+        data = opts.data;
+      } else {
+        data = opts;
       }
+      opts.url = this.url(blueprint.url, data, key);
+      opts.method = blueprint.method;
+      opts.headers = {
+        'Content-Type': 'application/json'
+      };
       if (blueprint.method === 'GET') {
         opts.url = updateQuery(opts.url, data);
       } else {
