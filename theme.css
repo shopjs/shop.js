@@ -473,6 +473,22 @@ thankyou .input input{
   padding:0;
   background:transparent;
 }
+cart .input input:-moz-placeholder,
+checkout .input input:-moz-placeholder,
+checkout-card .input input:-moz-placeholder,
+checkout-modal .input input:-moz-placeholder,
+checkout-shippingaddress .input input:-moz-placeholder,
+deposit .input input:-moz-placeholder,
+login .input input:-moz-placeholder,
+orders .input input:-moz-placeholder,
+profile .input input:-moz-placeholder,
+register .input input:-moz-placeholder,
+reset-password .input input:-moz-placeholder,
+reset-password-complete .input input:-moz-placeholder,
+shippingaddress .input input:-moz-placeholder,
+thankyou .input input:-moz-placeholder{
+  color:#000;
+}
 cart .input input:-ms-input-placeholder,
 checkout .input input:-ms-input-placeholder,
 checkout-card .input input:-ms-input-placeholder,
@@ -487,22 +503,6 @@ reset-password .input input:-ms-input-placeholder,
 reset-password-complete .input input:-ms-input-placeholder,
 shippingaddress .input input:-ms-input-placeholder,
 thankyou .input input:-ms-input-placeholder{
-  color:#000;
-}
-cart .input input::-webkit-input-placeholder,
-checkout .input input::-webkit-input-placeholder,
-checkout-card .input input::-webkit-input-placeholder,
-checkout-modal .input input::-webkit-input-placeholder,
-checkout-shippingaddress .input input::-webkit-input-placeholder,
-deposit .input input::-webkit-input-placeholder,
-login .input input::-webkit-input-placeholder,
-orders .input input::-webkit-input-placeholder,
-profile .input input::-webkit-input-placeholder,
-register .input input::-webkit-input-placeholder,
-reset-password .input input::-webkit-input-placeholder,
-reset-password-complete .input input::-webkit-input-placeholder,
-shippingaddress .input input::-webkit-input-placeholder,
-thankyou .input input::-webkit-input-placeholder{
   color:#000;
 }
 cart .input input::-ms-input-placeholder,
@@ -1811,10 +1811,10 @@ view .input input{
   padding:0;
   background:transparent;
 }
-view .input input:-ms-input-placeholder{
+view .input input:-moz-placeholder{
   color:#000;
 }
-view .input input::-webkit-input-placeholder{
+view .input input:-ms-input-placeholder{
   color:#000;
 }
 view .input input::-ms-input-placeholder{
