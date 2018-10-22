@@ -473,22 +473,6 @@ thankyou .input input{
   padding:0;
   background:transparent;
 }
-cart .input input:-moz-placeholder,
-checkout .input input:-moz-placeholder,
-checkout-card .input input:-moz-placeholder,
-checkout-modal .input input:-moz-placeholder,
-checkout-shippingaddress .input input:-moz-placeholder,
-deposit .input input:-moz-placeholder,
-login .input input:-moz-placeholder,
-orders .input input:-moz-placeholder,
-profile .input input:-moz-placeholder,
-register .input input:-moz-placeholder,
-reset-password .input input:-moz-placeholder,
-reset-password-complete .input input:-moz-placeholder,
-shippingaddress .input input:-moz-placeholder,
-thankyou .input input:-moz-placeholder{
-  color:#000;
-}
 cart .input input:-ms-input-placeholder,
 checkout .input input:-ms-input-placeholder,
 checkout-card .input input:-ms-input-placeholder,
@@ -692,11 +676,29 @@ thankyou .input select{
   border-width:1px;
   border-radius:0;
   line-height:2rem;
+  height:2rem;
   font-size:1em;
   -webkit-appearance:none;
      -moz-appearance:none;
           appearance:none;
   outline:none;
+}
+cart .input select:-moz-focusring,
+checkout .input select:-moz-focusring,
+checkout-card .input select:-moz-focusring,
+checkout-modal .input select:-moz-focusring,
+checkout-shippingaddress .input select:-moz-focusring,
+deposit .input select:-moz-focusring,
+login .input select:-moz-focusring,
+orders .input select:-moz-focusring,
+profile .input select:-moz-focusring,
+register .input select:-moz-focusring,
+reset-password .input select:-moz-focusring,
+reset-password-complete .input select:-moz-focusring,
+shippingaddress .input select:-moz-focusring,
+thankyou .input select:-moz-focusring{
+  color:transparent;
+  text-shadow:0 0 0 #000;
 }
 cart .input select::-ms-expand,
 checkout .input select::-ms-expand,
@@ -750,7 +752,7 @@ reset-password .input select.labeled ~ .select-indicator,
 reset-password-complete .input select.labeled ~ .select-indicator,
 shippingaddress .input select.labeled ~ .select-indicator,
 thankyou .input select.labeled ~ .select-indicator{
-  top:2.25rem;
+  top:1.75rem;
 }
 cart .input select:disabled ~ .select-indicator,
 checkout .input select:disabled ~ .select-indicator,
@@ -1811,9 +1813,6 @@ view .input input{
   padding:0;
   background:transparent;
 }
-view .input input:-moz-placeholder{
-  color:#000;
-}
 view .input input:-ms-input-placeholder{
   color:#000;
 }
@@ -1861,11 +1860,16 @@ view .input select{
   border-width:1px;
   border-radius:0;
   line-height:2rem;
+  height:2rem;
   font-size:1em;
   -webkit-appearance:none;
      -moz-appearance:none;
           appearance:none;
   outline:none;
+}
+view .input select:-moz-focusring{
+  color:transparent;
+  text-shadow:0 0 0 #000;
 }
 view .input select::-ms-expand{
   display:none;
@@ -1880,7 +1884,7 @@ view .input select ~ .select-indicator{
   display:block;
 }
 view .input select.labeled ~ .select-indicator{
-  top:2.25rem;
+  top:1.75rem;
 }
 view .input select:disabled ~ .select-indicator{
   opacity:0.5;
