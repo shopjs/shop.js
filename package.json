@@ -51,12 +51,12 @@
     "es-md5": "^2.7.2",
     "es-raf": "^3.3.1",
     "gmaps": "^0.4.24",
-    "hanzo.js": "2.5.2",
+    "hanzo.js": "2.5.3",
     "moment-timezone": "^0.5.21",
     "shop.js-util": "^0.0.7"
   },
   "devDependencies": {
-    "autoprefixer": "^9.2.1",
+    "autoprefixer": "^9.3.0",
     "bebop": "^1.15.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
