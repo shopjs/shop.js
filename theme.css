@@ -738,20 +738,20 @@ thankyou .input select ~ .select-indicator{
   pointer-events:none;
   display:block;
 }
-cart .input select.labeled ~ .select-indicator,
-checkout .input select.labeled ~ .select-indicator,
-checkout-card .input select.labeled ~ .select-indicator,
-checkout-modal .input select.labeled ~ .select-indicator,
-checkout-shippingaddress .input select.labeled ~ .select-indicator,
-deposit .input select.labeled ~ .select-indicator,
-login .input select.labeled ~ .select-indicator,
-orders .input select.labeled ~ .select-indicator,
-profile .input select.labeled ~ .select-indicator,
-register .input select.labeled ~ .select-indicator,
-reset-password .input select.labeled ~ .select-indicator,
-reset-password-complete .input select.labeled ~ .select-indicator,
-shippingaddress .input select.labeled ~ .select-indicator,
-thankyou .input select.labeled ~ .select-indicator{
+cart .input select.labeled .select-indicator,
+checkout .input select.labeled .select-indicator,
+checkout-card .input select.labeled .select-indicator,
+checkout-modal .input select.labeled .select-indicator,
+checkout-shippingaddress .input select.labeled .select-indicator,
+deposit .input select.labeled .select-indicator,
+login .input select.labeled .select-indicator,
+orders .input select.labeled .select-indicator,
+profile .input select.labeled .select-indicator,
+register .input select.labeled .select-indicator,
+reset-password .input select.labeled .select-indicator,
+reset-password-complete .input select.labeled .select-indicator,
+shippingaddress .input select.labeled .select-indicator,
+thankyou .input select.labeled .select-indicator{
   top:1.75rem;
 }
 cart .input select:disabled ~ .select-indicator,
@@ -853,20 +853,20 @@ thankyou .input .copy-text{
   top:1rem;
   transform:translateY(-50%);
 }
-cart .input .labeled ~ .copy-text,
-checkout .input .labeled ~ .copy-text,
-checkout-card .input .labeled ~ .copy-text,
-checkout-modal .input .labeled ~ .copy-text,
-checkout-shippingaddress .input .labeled ~ .copy-text,
-deposit .input .labeled ~ .copy-text,
-login .input .labeled ~ .copy-text,
-orders .input .labeled ~ .copy-text,
-profile .input .labeled ~ .copy-text,
-register .input .labeled ~ .copy-text,
-reset-password .input .labeled ~ .copy-text,
-reset-password-complete .input .labeled ~ .copy-text,
-shippingaddress .input .labeled ~ .copy-text,
-thankyou .input .labeled ~ .copy-text{
+cart .input .labeled .copy-text,
+checkout .input .labeled .copy-text,
+checkout-card .input .labeled .copy-text,
+checkout-modal .input .labeled .copy-text,
+checkout-shippingaddress .input .labeled .copy-text,
+deposit .input .labeled .copy-text,
+login .input .labeled .copy-text,
+orders .input .labeled .copy-text,
+profile .input .labeled .copy-text,
+register .input .labeled .copy-text,
+reset-password .input .labeled .copy-text,
+reset-password-complete .input .labeled .copy-text,
+shippingaddress .input .labeled .copy-text,
+thankyou .input .labeled .copy-text{
   top:1.75rem;
 }
 cart .input .currency-container,
@@ -1883,7 +1883,7 @@ view .input select ~ .select-indicator{
   pointer-events:none;
   display:block;
 }
-view .input select.labeled ~ .select-indicator{
+view .input select.labeled .select-indicator{
   top:1.75rem;
 }
 view .input select:disabled ~ .select-indicator{
@@ -1907,7 +1907,7 @@ view .input .copy-text{
   top:1rem;
   transform:translateY(-50%);
 }
-view .input .labeled ~ .copy-text{
+view .input .labeled .copy-text{
   top:1.75rem;
 }
 view .input .currency-container{
