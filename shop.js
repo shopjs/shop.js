@@ -3955,6 +3955,14 @@ var Shop = (function () {
 
   id$1 = 0;
 
+  if (window.Promise == null) {
+    window.Promise = Promise$2;
+  }
+
+  if (window.requestAnimationFrame == null) {
+    window.requestAnimationFrame = raf;
+  }
+
   scheduleUpdate = function(tag) {
     var currentTag, parentTag;
     if (!p) {
@@ -3993,7 +4001,7 @@ var Shop = (function () {
       todos[tag._schedulingId] = tag;
     }
     if (rafId === -1) {
-      rafId = raf(function() {
+      rafId = requestAnimationFrame(function() {
         return p.resolve();
       });
     }
@@ -11638,7 +11646,7 @@ var Shop = (function () {
     Select.prototype.selectOptions = {};
 
     Select.prototype.hasOptions = function() {
-      this.options;
+      this.options();
       return this._optionsHash.length > 2;
     };
 
@@ -16231,6 +16239,14 @@ var Shop = (function () {
 
   id$2 = 0;
 
+  if (window.Promise == null) {
+    window.Promise = Promise$2;
+  }
+
+  if (window.requestAnimationFrame == null) {
+    window.requestAnimationFrame = raf;
+  }
+
   scheduleUpdate$1 = function(tag) {
     var currentTag, parentTag;
     if (!p$1) {
@@ -16269,7 +16285,7 @@ var Shop = (function () {
       todos$1[tag._schedulingId] = tag;
     }
     if (rafId$1 === -1) {
-      rafId$1 = raf(function() {
+      rafId$1 = requestAnimationFrame(function() {
         return p$1.resolve();
       });
     }
