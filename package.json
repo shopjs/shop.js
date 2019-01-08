@@ -45,7 +45,7 @@
     "akasha": "^0.1.10",
     "broken": "^0.1.13",
     "commerce.js": "1.1.31",
-    "el-controls": "^1.2.43",
+    "el-controls": "^1.2.44",
     "el.js": "2.1.37",
     "es-keyboardevent-key-polyfill": "^1.0.2",
     "es-md5": "^2.7.2",
@@ -56,7 +56,7 @@
     "shop.js-util": "^0.0.7"
   },
   "devDependencies": {
-    "autoprefixer": "^9.3.1",
+    "autoprefixer": "^9.4.4",
     "bebop": "^1.15.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
@@ -67,8 +67,8 @@
     "connect": "^3.6.6",
     "coveralls": "^3.0.2",
     "css-mqpacker": "^7.0.0",
-    "debug": "^4.1.0",
-    "electron": "^3.0.8",
+    "debug": "^4.1.1",
+    "electron": "^4.0.1",
     "es5-shim": "^4.5.12",
     "istanbul": "^0.4.5",
     "jquery": "^3.3.1",
