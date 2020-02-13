@@ -9,7 +9,7 @@
 
 > Ecommerce UI components and framework powered by Hanzo
 
-[Shop.js][getshopjs] is a complete set of reactive Ecommerce components powered
+[Shop.js][shopjsorg] is a complete set of reactive Ecommerce components powered
 by React. With [Hanzo][hanzo], it can be easily integrated into any
 website, no backend required.
 
