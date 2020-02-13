@@ -10,24 +10,20 @@
 > Ecommerce UI components and framework powered by Hanzo
 
 [Shop.js][getshopjs] is a complete set of reactive Ecommerce components powered
-by [El.js][eljs]. With [Hanzo][hanzo], it can be easily integrated into any
+by React. With [Hanzo][hanzo], it can be easily integrated into any
 website, no backend required.
 
 Shop.js provides countless components which can be mix-and-matched to completely
 customize a unique and branded shopping experience. From `<cart>` to
 `<checkout>`, Shop.js has you covered.
 
-You can see Shop.js in action on [getshopjs.com][getshopjs] as well as
-[around][kpak] [the][ludela] [web][stonedaudio].
+You can see Shop.js in action on [shop.js.org][shopjsorg].
 
 ## Features
 - Lightweight, complete shopping experience weighs in at 120kb gzipped
 - Core and all dependencies are ES modules, and can be mixed and matched freely
-- Components can be nested and customized with plain HTML/CSS thanks to
-  [El.js][eljs]
 - No backend needed, thanks to [Hanzo][hanzo]
 - Sophisticated analytics support, with support for contextual analytics
-- Bindings for Angular, React, and Vue coming soon!
 
 ## Install
 ```bash
@@ -343,13 +339,8 @@ These constants can be accessed via Shop.Events.<EventName> or the string value 
 ## License
 [BSD][license-url]
 
-[eljs]:             https://github.com/hanzoai/el.js
-[getshopjs]:        https://getshopjs.com
+[shopjsorg]:        https://shop.js.org
 [hanzo]:            https://hanzo.ai
-[kpak]:             https://kpakcase.com
-[ludela]:           https://ludela.com
-[stonedaudio]:      https://stoned.audio
-
 [build-img]:        https://img.shields.io/travis/hanzoai/shop.js.svg
 [build-url]:        https://travis-ci.org/hanzoai/shop.js
 [chat-img]:         https://badges.gitter.im/join-chat.svg
