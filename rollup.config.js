@@ -1,18 +1,20 @@
-import fs from 'fs'
+import pkg from './package.json'
 
-import autoprefixer from 'autoprefixer'
-import nodeEval from 'node-eval'
-import url from 'postcss-url'
-import babel from 'rollup-plugin-babel'
-import commonjs from 'rollup-plugin-commonjs'
+import commonjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
+import resolve from '@rollup/plugin-node-resolve'
+
 import filesize from 'rollup-plugin-filesize'
-import json from 'rollup-plugin-json'
-import resolve from 'rollup-plugin-node-resolve'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
-import postcss from 'rollup-plugin-postcss'
+import typescript from 'rollup-plugin-typescript2'
 import visualizer from 'rollup-plugin-visualizer'
 
-import pkg from './package.json'
+import fs from 'fs'
+import nodeEval from 'node-eval'
+
+const extensions = [
+  '.js', '.jsx', '.ts', '.tsx', 'json',
+]
 
 export function getModuleExports(moduleId) {
   const id = require.resolve(moduleId)
@@ -20,23 +22,28 @@ export function getModuleExports(moduleId) {
   let result = []
   const excludeExports = /^(default|__)/
   if (moduleOut && typeof moduleOut === 'object') {
-    result = Object.keys(moduleOut)
-      .filter((name) => !excludeExports.test(name))
+      result = Object.keys(moduleOut)
+          .filter((name) => !excludeExports.test(name))
   }
 
   return result
 }
 
+// Helper for getting the names exports automagically
 export function getNamedExports(moduleIds) {
   const result = {}
-  moduleIds.forEach((id) => {
-    result[id] = getModuleExports(id)
+  moduleIds.forEach( (id) => {
+      result[id] = getModuleExports(id)
   })
   return result
 }
 
 const plugins = [
   peerDepsExternal(),
+  resolve({
+    extensions,
+    preferBuiltins: true,
+  }),
   json({
     // All JSON files will be parsed by default,
     // but you can also specifically include/exclude files
@@ -54,69 +61,24 @@ const plugins = [
     compact: true, // Default: false
 
     // generate a named export for every property of the JSON object
-    namedExports: true, // Default: true
+    namedExports: true // Default: true
   }),
-  postcss({
-    extract: 'index.css',
-    plugins: [
-      url({
-        url: 'inline',
-      }),
-      autoprefixer,
-    ],
-  }),
-  resolve({
-    extensions: ['.mjs', '.js', '.jsx', '.json'],
-  }),
-  babel({
-    exclude: 'node_modules/**',
-  }),
-  commonjs({
-    namedExports: getNamedExports(['react', 'react-is', 'prop-types', 'lodash']),
-  }),
+  typescript(),
+  commonjs(),
   filesize(),
   visualizer(),
 ]
 
-const globals = {
-  // 'react': 'React',
-  // 'react-dom': 'ReactDOM',
-}
-
 export default [
-  // CommonJS (for Node) and ES module (for bundlers) build.
-  // (We could have three entries in the configuration array
-  // instead of two, but it's quicker to generate multiple
-  // builds from a single configuration where possible, using
-  // an array for the `output` option, where we can specify
-  // `file` and `format` for each target)
+  // source
   {
-    input: 'src/index.js',
-    external: [
-      // 'react',
-      // 'react-dom',
-    ],
+    input: 'src/index.ts',
+    external: [],
     plugins,
     output: [
-      {
-        name: 'react',
-        file: pkg.browser,
-        format: 'umd',
-        sourcemap: true,
-        globals,
-      },
-      {
-        file: pkg.main,
-        format: 'cjs',
-        sourcemap: true,
-        globals,
-      },
-      {
-        file: pkg.module,
-        format: 'es',
-        sourcemap: true,
-        globals,
-      },
+      { name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true },
+      { file: pkg.main, format: 'cjs', sourcemap: true },
+      { file: pkg.module, format: 'es', sourcemap: true },
     ],
   },
 ]
