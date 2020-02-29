@@ -1,14 +1,31 @@
 {
-  "name": "@hanzo/react",
-  "version": "0.0.14",
-  "description": "Hanzo React Components",
+  "name": "shop.js",
+  "version": "2.2.68",
+  "description": "Ecommerce UI components and framework powered by Hanzo",
+  "homepage": "http://github.com/hanzoai/shop.js",
+  "bugs": {
+    "url": "https://github.com/hanzoai/hanzo/issues"
+  },
+  "author": "Hanzo, Inc <hi@hanzo.ai>",
+  "license": "BSD-3-Clause",
   "keywords": [
+    "browser",
+    "checkout",
+    "commerce",
+    "crowdfunding",
+    "ecommerce",
+    "el.js",
+    "fulfillment",
     "hanzo",
-    "react"
+    "orders",
+    "payments",
+    "preorders",
+    "products",
+    "referrals",
+    "shipping",
+    "site",
+    "subscriptions"
   ],
-  "author": "David Tai <david@verus.io>",
-  "homepage": "http://hanzo.ai",
-  "license": "ISC",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
@@ -25,7 +42,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hanzoai/hanzo"
+    "url": "github:hanzoai/shop.js"
   },
   "scripts": {
     "audit": "node_modules/.bin/source-map-explorer dist/index.umd.js",
@@ -37,37 +54,31 @@
     "test": "node_modules/.bin/jest && npm run build",
     "test:coverage": "node_modules/.bin/jest --collect-coverage"
   },
-  "bugs": {
-    "url": "https://github.com/hanzoai/hanzo/issues"
-  },
   "devDependencies": {
-    "@babel/core": "7.8.4",
-    "@babel/plugin-proposal-class-properties": "7.8.3",
-    "@babel/plugin-proposal-decorators": "7.8.3",
-    "@babel/plugin-transform-react-jsx": "7.8.3",
-    "@babel/preset-env": "7.8.4",
-    "autoprefixer": "9.7.4",
-    "babel-core": "7.0.0-bridge.0",
+    "@rollup/plugin-commonjs": "11.0.2",
+    "@rollup/plugin-json": "4.0.2",
+    "@rollup/plugin-node-resolve": "7.1.1",
+    "@types/jest": "25.1.3",
+    "@typescript-eslint/eslint-plugin": "2.21.0",
+    "@typescript-eslint/parser": "2.21.0",
     "babel-jest": "25.1.0",
-    "babel-plugin-transform-react-pug": "7.0.1",
-    "concurrently": "5.1.0",
+    "eslint": "6.8.0",
+    "eslint-plugin-react": "7.18.3",
+    "eslint-plugin-react-hooks": "2.5.0",
     "jest": "25.1.0",
-    "node-eval": "2.0.0",
-    "postcss-assets": "5.0.0",
-    "postcss-url": "8.0.0",
     "rollup": "1.31.1",
-    "rollup-plugin-babel": "4.3.3",
-    "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-filesize": "6.2.1",
-    "rollup-plugin-json": "4.0.0",
-    "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-peer-deps-external": "2.2.2",
-    "rollup-plugin-postcss": "2.1.1",
+    "rollup-plugin-typescript2": "0.26.0",
     "rollup-plugin-visualizer": "3.3.1",
-    "serve": "11.3.0",
     "source-map-explorer": "2.3.1",
-    "styled-jsx": "3.2.4",
-    "styled-jsx-plugin-stylus": "0.0.4"
+    "source-map-support": "0.5.16",
+    "ts-jest": "25.2.1",
+    "ts-node": "8.6.2",
+    "tslib": "1.11.0",
+    "typedoc": "github:TypeStrong/typedoc#5704bf5",
+    "typedoc-plugin-markdown": "2.2.16",
+    "typescript": "3.8.2"
   },
   "renovate": {
     "extends": [
@@ -81,16 +92,14 @@
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
-    "@date-io/moment": "2.4.0",
-    "@material-ui/pickers": "3.2.10",
+    "commerce.js": "2.0.0",
     "classnames": "2.2.6",
-    "fast-memoize": "2.5.1",
-    "flag-icon-css": "3.4.6"
+    "fast-memoize": "2.5.1"
   },
   "peerDependencies": {
-    "@hanzo/utils": "^0.0.11",
     "@material-ui/core": "^4.9.4",
-    "moment-timezone": "^0.5.28",
+    "midstream": "2.0.1",
+    "mobx": "5.15.4",
     "react": "^16.12.0",
     "react-dom": "^16.12.0"
   }
