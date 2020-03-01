@@ -1,2 +1,3 @@
-export * from './ContactForm'
-export * from './PaymentForm'
+export { default as ContactForm } from './ContactForm'
+export { default as PaymentForm } from './PaymentForm'
+export { default as Checkout } from './Checkout'
