@@ -64,7 +64,12 @@ const plugins = [
     namedExports: true // Default: true
   }),
   typescript(),
-  commonjs(),
+  commonjs({
+    include: 'node_modules/**',
+    namedExports: {
+      'node_modules/react-is/index.js': ['isFragment', 'ForwardRef']
+    }
+  }),
   filesize(),
   visualizer(),
 ]
@@ -77,8 +82,8 @@ export default [
     plugins,
     output: [
       { name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true },
-      { file: pkg.main, format: 'cjs', sourcemap: true },
-      { file: pkg.module, format: 'es', sourcemap: true },
+      // { file: pkg.main, format: 'cjs', sourcemap: true },
+      // { file: pkg.module, format: 'es', sourcemap: true },
     ],
   },
 ]
