@@ -1,12 +1,31 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import {
+  Container,
   Grid,
+  Grow,
+  Paper,
 } from '@material-ui/core'
 
 import Cart from './Cart'
+
+import PaymentForm from './PaymentForm'
 import ShippingForm from './ShippingForm'
+import ThankYou from './ThankYou'
+
 import Steps from './Steps'
+
+import { makeStyles } from '@material-ui/core/styles'
+const useStyles = makeStyles((theme) => ({
+  notFirstPage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  formGrid: {
+    position: 'relative',
+  },
+}))
 
 import { AutoSizer } from 'react-virtualized'
 
@@ -22,40 +41,122 @@ const Checkout = ({
   setCoupon,
   checkout,
   setItem,
+  countryOptions,
+  stateOptions,
+  orderNumber,
 }): JSX.Element => {
-  return (
-    <AutoSizer>
-      {
-        ({ width, height }) => {
-          const halfWidth = Math.floor(width / 2)
+  const classes = useStyles()
 
-          return (
-            <div style={{ width: halfWidth * 2 }}>
-              <Grid container>
-                <Grid item xs={12}>
-                  <Steps/>
+  const [activeStep, setActiveStep] = useState(0)
+
+  const handleNext = () => {
+    setActiveStep(prevActiveStep => prevActiveStep + 1)
+  }
+
+  const handleBack = () => {
+    setActiveStep(prevActiveStep => prevActiveStep - 1)
+  }
+
+  const handleReset = () => {
+    setActiveStep(0)
+  }
+
+  return (
+    <Container maxWidth='md'>
+      <AutoSizer>
+        {
+          ({ width, height }) => {
+            const halfWidth = Math.floor(width / 2)
+
+            return (
+              <div style={{ width: halfWidth * 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Steps activeStep={activeStep}/>
+                  </Grid>
+                  <Grid item xs={12} md={6}
+                    className={ classes.formGrid }
+                  >
+                    <Grow
+                      in={ activeStep == 0 }
+                    >
+                      <div
+                        style={{
+                          height: activeStep == 0 ? 'inherit' : 0
+                        }}
+                      >
+                        { activeStep == 0 && (
+                          <ShippingForm
+                            width={halfWidth}
+                            height={height}
+                            order={order}
+                            user={user}
+                            setUser={setUser}
+                            setAddress={setAddress}
+                            setPayment={setPayment}
+                            countryOptions={countryOptions}
+                            stateOptions={stateOptions}
+                            next={handleNext}
+                          />
+                        )}
+                      </div>
+                    </Grow>
+                    <Grow
+                      in={ activeStep == 1 }
+                    >
+                      <div
+                        style={{
+                          height: activeStep == 1 ? 'inherit': 0,
+                        }}
+                      >
+                        { activeStep == 1 && (
+                          <PaymentForm
+                            width={halfWidth}
+                            height={height}
+                            payment={payment}
+                            setPayment={setPayment}
+                            next={handleNext}
+                            checkout={checkout}
+                          />
+                        )}
+                      </div>
+                    </Grow>
+                    <Grow
+                      in={ activeStep == 2 }
+                    >
+                      <div
+                        style={{
+                          height: activeStep == 2 ? 'inherit': 0,
+                        }}
+                      >
+                        { activeStep == 2 && (
+                          <ThankYou
+                            width={halfWidth}
+                            height={height}
+                            orderNumber={orderNumber}
+                          />
+                        )}
+                      </div>
+                    </Grow>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Paper>
+                      <Cart
+                        width={halfWidth}
+                        height={height}
+                        order={order}
+                        setCoupon={setCoupon}
+                        setItem={setItem}
+                      />
+                    </Paper>
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <ShippingForm
-                    width={halfWidth}
-                    height={height}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Cart
-                    width={halfWidth}
-                    height={height}
-                    order={order}
-                    setCoupon={setCoupon}
-                    setItem={setItem}
-                  />
-                </Grid>
-              </Grid>
-            </div>
-          )
+              </div>
+            )
+          }
         }
-      }
-    </AutoSizer>
+      </AutoSizer>
+    </Container>
   )
 }
 

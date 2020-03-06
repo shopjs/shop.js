@@ -67,7 +67,9 @@ const plugins = [
   commonjs({
     include: 'node_modules/**',
     namedExports: {
-      'node_modules/react-is/index.js': ['isFragment', 'ForwardRef']
+      'node_modules/react-is/index.js': ['isFragment', 'ForwardRef'],
+      'node_modules/prop-types/index.js': ['elementType'],
+      'node_modules/react-virtualized/dist/es/WindowScroller/WindowScroller.js': ['bpfrpt_proptype_WindowScroller'],
     }
   }),
   filesize(),
