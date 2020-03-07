@@ -11,6 +11,7 @@ import {
   IAddress,
   IClient,
   ICoupon,
+  IOrder,
   IPayment,
 } from 'commerce.js'
 
@@ -51,7 +52,7 @@ export default class ShopStore {
   isLoading = false
 
   @observable
-  orderNumber: number = 0
+  tempOrder?: IOrder
 
   @observable
   step: number = 0
@@ -233,8 +234,6 @@ export default class ShopStore {
     try {
       let o = await this.commerce.checkout(this._payment)
       this.isLoading = false
-
-      this.orderNumber = this.order.number ?? 0
 
       Order.clear()
 

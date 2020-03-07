@@ -28,6 +28,9 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: theme.spacing(2),
   },
   buttons: {
+    '& button': {
+      marginRight: theme.spacing(2),
+    },
   },
 }))
 
@@ -42,6 +45,7 @@ const ShippingForm = ({
   countryOptions,
   stateOptions,
   next,
+  isLoading,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -238,6 +242,7 @@ const ShippingForm = ({
               color='primary'
               size='large'
               onClick={submit}
+              disabled={isLoading}
             >
               Continue
             </Button>

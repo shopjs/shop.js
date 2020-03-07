@@ -9,7 +9,7 @@ import {
 const ThankYou = ({
   width,
   height,
-  orderNumber,
+  order,
 }): JSX.Element => {
   return (
     <Box p={[2, 3, 4]}>
@@ -20,7 +20,7 @@ const ThankYou = ({
           </Typography>
           <br />
           <Typography variant='body1'>
-            Your order confirmation number is { <strong>{orderNumber}</strong> }.
+            Your order confirmation number is { <strong>{order.number}</strong> }.
           </Typography>
           <br />
           <Typography variant='body1'>

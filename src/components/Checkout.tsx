@@ -43,7 +43,7 @@ const Checkout = ({
   setItem,
   countryOptions,
   stateOptions,
-  orderNumber,
+  isLoading,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -97,6 +97,7 @@ const Checkout = ({
                             countryOptions={countryOptions}
                             stateOptions={stateOptions}
                             next={handleNext}
+                            isLoading={isLoading}
                           />
                         )}
                       </div>
@@ -115,8 +116,10 @@ const Checkout = ({
                             height={height}
                             payment={payment}
                             setPayment={setPayment}
+                            back={handleBack}
                             next={handleNext}
                             checkout={checkout}
+                            isLoading={isLoading}
                           />
                         )}
                       </div>
@@ -133,7 +136,7 @@ const Checkout = ({
                           <ThankYou
                             width={halfWidth}
                             height={height}
-                            orderNumber={orderNumber}
+                            order={order}
                           />
                         )}
                       </div>
@@ -147,6 +150,7 @@ const Checkout = ({
                         order={order}
                         setCoupon={setCoupon}
                         setItem={setItem}
+                        locked={isLoading || activeStep === 2}
                       />
                     </Paper>
                   </Grid>

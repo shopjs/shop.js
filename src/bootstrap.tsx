@@ -26,7 +26,7 @@ export default function(client: ILibraryClient, el: Element) {
         setItem={(id: string, quantity: number) => shopStore.setItem(id, quantity)}
         countryOptions={ shopStore.countryOptions }
         stateOptions={ shopStore.stateOptions }
-        orderNumber={ shopStore.orderNumber }
+        isLoading={ shopStore.isLoading }
       />
     ))
   }

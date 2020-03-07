@@ -72,6 +72,7 @@ const Cart = ({
   order,
   setCoupon,
   setItem,
+  locked,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -106,7 +107,7 @@ const Cart = ({
                     <Grid item xs={4} sm={3} className={classes.right}>
                       <MUIText
                         select
-                        disabled={ item.locked }
+                        disabled={ item.locked || locked}
                         options={quantityOpts}
                         value={ item.quantity }
                         setValue={ (quantity) => {
@@ -134,6 +135,7 @@ const Cart = ({
                   placeholder='Coupon Code'
                   defaultValue={ order.couponCodes[0] }
                   setValue={ (code) => setCoupon(code) }
+                  disabled={locked}
                 />
               </Grid>
               <Grid item xs={4} sm={2} md={3}>
@@ -143,6 +145,7 @@ const Cart = ({
                   disableElevation
                   size='medium'
                   variant='contained'
+                  disabled={locked}
                 >
                   Apply
                 </Button>

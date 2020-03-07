@@ -22,6 +22,7 @@ import {
   Button,
   Grid,
   InputAdornment,
+  Link,
   Typography,
   TextField,
 } from '@material-ui/core'
@@ -36,6 +37,9 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: theme.spacing(2),
   },
   buttons: {
+    '& button': {
+      marginRight: theme.spacing(2),
+    },
   },
   error: {
     color: red[500],
@@ -57,7 +61,9 @@ const PaymentForm = ({
   payment,
   setPayment,
   checkout,
+  back,
   next,
+  isLoading,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -236,7 +242,7 @@ const PaymentForm = ({
 
         <Grid item xs={12}>
           <MUICheckbox
-            label={<a href='#'>Please agree to our terms and conditions.</a>}
+            label={<Link href='#'>Please agree to our terms and conditions.</Link>}
             placeholder='123'
             size='medium'
             value={src.terms}
@@ -252,8 +258,16 @@ const PaymentForm = ({
               color='primary'
               size='large'
               onClick={submit}
+              disabled={isLoading}
             >
               Continue
+            </Button>
+            <Button
+              size='large'
+              onClick={back}
+              disabled={isLoading}
+            >
+              Back
             </Button>
             {
               error && (
