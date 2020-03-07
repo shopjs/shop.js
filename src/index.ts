@@ -10,6 +10,8 @@ export * from './components/index'
 export { default as start } from './bootstrap'
 export { default as Client } from 'hanzo.js'
 
+import getStore from './stores'
+
 if (typeof window !== 'undefined') {
   window['ShopJS'] = {
     Client,
@@ -17,5 +19,12 @@ if (typeof window !== 'undefined') {
     PaymentForm,
     Checkout,
     start,
+    set: (...args) => {
+      const s = getStore()
+      if (!s) {
+        throw new Error('Use ShopJS.start before setting any items')
+      }
+      s.commerce.set.apply(window, (args as any))
+    },
   }
 }
