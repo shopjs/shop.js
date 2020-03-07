@@ -8,6 +8,7 @@ import filesize from 'rollup-plugin-filesize'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import typescript from 'rollup-plugin-typescript2'
 import visualizer from 'rollup-plugin-visualizer'
+import { terser } from 'rollup-plugin-terser'
 
 import fs from 'fs'
 import nodeEval from 'node-eval'
@@ -72,6 +73,7 @@ const plugins = [
       'node_modules/react-virtualized/dist/es/WindowScroller/WindowScroller.js': ['bpfrpt_proptype_WindowScroller'],
     }
   }),
+  // terser(),
   filesize(),
   visualizer(),
 ]

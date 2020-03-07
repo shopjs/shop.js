@@ -3,13 +3,19 @@ import ReactDOM from 'react-dom'
 import { useLocalStore, useObserver } from 'mobx-react'
 
 import { Checkout } from './components'
-import { ShopStore, ILibraryClient } from './stores'
+import initStore, { ShopStore, ILibraryClient } from './stores'
 
-export default function(client: ILibraryClient, el: Element) {
+export interface Options {
+  el: Element
+  termsUrl?: string
+  completionUrl?: string
+}
+
+export default function(client: ILibraryClient, opts: Options) {
+  let el = opts.el
+
   const ShopJS = (): JSX.Element => {
-    const shopStore = useLocalStore(() => new ShopStore(client, {}))
-
-    shopStore.commerce.set('sad-keanu-shirt', 1)
+    const shopStore = useLocalStore(() => (initStore(client, {})) as ShopStore)
 
     return useObserver(() => (
       <Checkout
