@@ -24,7 +24,7 @@ if (typeof window !== 'undefined') {
       if (!s) {
         throw new Error('Use ShopJS.start before setting any items')
       }
-      s.commerce.set.apply(window, (args as any))
+      s.commerce.set.apply(s.commerce, (args as any))
     },
   }
 }
