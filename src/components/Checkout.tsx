@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import classnames from 'classnames'
 
 import {
@@ -45,17 +45,33 @@ const Checkout = ({
   countryOptions,
   stateOptions,
   isLoading,
+  track,
 }): JSX.Element => {
   const classes = useStyles()
+  useCallback(() => {
+    track('Viewed Checkout Step', {step: 2})
+  }, [])
 
   const [activeStep, setActiveStep] = useState(0)
 
   const handleNext = () => {
-    setActiveStep(prevActiveStep => prevActiveStep + 1)
+    setActiveStep((prevActiveStep) => {
+      if (prevActiveStep === 1) {
+        track('Completed Checkout Step', {step: 2})
+        track('Viewed Checkout Step', {step: 3})
+      } else if (prevActiveStep === 2) {
+        track('Completed Checkout Step', {step: 3})
+      }
+
+      return prevActiveStep + 1
+    })
   }
 
   const handleBack = () => {
-    setActiveStep(prevActiveStep => prevActiveStep - 1)
+    setActiveStep((prevActiveStep) => {
+
+      return prevActiveStep - 1
+    })
   }
 
   const handleReset = () => {

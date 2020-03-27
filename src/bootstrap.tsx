@@ -15,7 +15,7 @@ export default function(client: ILibraryClient, opts: Options) {
   let el = opts.el
 
   const ShopJS = (): JSX.Element => {
-    const shopStore = useLocalStore(() => (initStore(client, {})) as ShopStore)
+    const shopStore = useLocalStore(() => (initStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
 
     return useObserver(() => (
       <Checkout
@@ -33,6 +33,7 @@ export default function(client: ILibraryClient, opts: Options) {
         countryOptions={ shopStore.countryOptions }
         stateOptions={ shopStore.stateOptions }
         isLoading={ shopStore.isLoading }
+        track={(event, opts) => shopStore.track(event, opts)}
       />
     ))
   }

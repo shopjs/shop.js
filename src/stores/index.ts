@@ -6,7 +6,7 @@ export * from './ShopStore'
 let client: ILibraryClient | undefined
 let store: ShopStore | undefined
 
-const getStore = (cl?: ILibraryClient, opts = {}): ShopStore | undefined => {
+const getStore = (cl?: ILibraryClient, analytics: any = undefined, opts = {}): ShopStore | undefined => {
   client = cl ? cl : client
 
   if (!client) {
@@ -14,7 +14,7 @@ const getStore = (cl?: ILibraryClient, opts = {}): ShopStore | undefined => {
   }
 
   if (!store) {
-    store = new ShopStore(client, opts)
+    store = new ShopStore(client, analytics, opts)
   }
 
   return store
