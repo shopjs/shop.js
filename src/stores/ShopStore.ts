@@ -79,13 +79,14 @@ export default class ShopStore {
 
   constructor(
     client: ILibraryClient,
+    analytics: any,
     raw: any,
   ) {
     Object.assign(this, raw)
 
     this.client = client
 
-    this.commerce = new Commerce(client)
+    this.commerce = new Commerce(client, {}, [], [], analytics)
 
     if (!this.order.currency) {
       this.order.currency = 'usd'
@@ -247,7 +248,22 @@ export default class ShopStore {
   }
 
   @action
-  setItem(id: string, quantity: number) {
-    this.commerce.set(id, quantity)
+  async setItem(id: string, quantity: number) {
+    if (quantity) {
+      this.track('Viewed Checkout Step', {step: 1})
+    }
+
+    await this.commerce.set(id, quantity)
+
+    if (quantity) {
+      this.track('Completed Checkout Step', {step: 1})
+    }
+  }
+
+  @action
+  track(event: string, opts: any) {
+    if (this.commerce.analytics) {
+      this.commerce.analytics.track(event, opts)
+    }
   }
 }
