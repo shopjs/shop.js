@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import classnames from 'classnames'
 
 import {
   Container,
@@ -69,13 +70,13 @@ const Checkout = ({
             const halfWidth = Math.floor(width / 2)
 
             return (
-              <div style={{ width: halfWidth * 2 }}>
+              <div style={{ width: halfWidth * 2 }} className='checkout'>
                 <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} className='checkout-steps'>
                     <Steps activeStep={activeStep}/>
                   </Grid>
                   <Grid item xs={12} md={6}
-                    className={ classes.formGrid }
+                    className={ classnames(classes.formGrid, 'checkout-forms') }
                   >
                     <Grow
                       in={ activeStep == 0 }
@@ -84,6 +85,7 @@ const Checkout = ({
                         style={{
                           height: activeStep == 0 ? 'inherit' : 0
                         }}
+                        className='checkout-form'
                       >
                         { activeStep == 0 && (
                           <ShippingForm
@@ -109,6 +111,7 @@ const Checkout = ({
                         style={{
                           height: activeStep == 1 ? 'inherit': 0,
                         }}
+                        className='checkout-form'
                       >
                         { activeStep == 1 && (
                           <PaymentForm
@@ -131,6 +134,7 @@ const Checkout = ({
                         style={{
                           height: activeStep == 2 ? 'inherit': 0,
                         }}
+                        className='checkout-form'
                       >
                         { activeStep == 2 && (
                           <ThankYou
@@ -142,7 +146,7 @@ const Checkout = ({
                       </div>
                     </Grow>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={6} className='checkout-cart'>
                     <Paper>
                       <Cart
                         width={halfWidth}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import classnames from 'classnames'
 
 import {
   red,
@@ -172,17 +173,17 @@ const PaymentForm = ({
   delete expiryDateProps.ref
 
   return (
-    <Box p={[2, 3, 4]}>
+    <Box p={[2, 3, 4]} className='payment'>
       <Grid container>
-        <Grid item xs={12}>
+        <Grid item xs={12} className='payment-header'>
           <Typography variant='h5'>
             Payment Information
           </Typography>
         </Grid>
       </Grid>
 
-      <Grid container className={classes.form} spacing={3}>
-        <Grid item xs={12}>
+      <Grid container className={classnames(classes.form, 'payment-body')} spacing={3}>
+        <Grid item xs={12} className='payment-card-name'>
           <MUIText
             fullWidth
             label='Name on Card'
@@ -194,7 +195,7 @@ const PaymentForm = ({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid item xs={12} className='payment-card-numbers'>
           <TextField
             { ...cardNumberProps }
             inputRef={ cardNumberPropsRef }
@@ -214,7 +215,7 @@ const PaymentForm = ({
           />
         </Grid>
 
-        <Grid item xs={6}>
+        <Grid item xs={6} className='payment-card-expiry'>
           <TextField
             { ...expiryDateProps }
             inputRef={ expiryDatePropsRef }
@@ -227,7 +228,7 @@ const PaymentForm = ({
           />
         </Grid>
 
-        <Grid item xs={6}>
+        <Grid item xs={6} className='payment-card-cvc'>
           <TextField
             { ...cvcProps }
             inputRef={ cvcPropsRef }
@@ -240,7 +241,7 @@ const PaymentForm = ({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid item xs={12} className='payment-card-terms'>
           <MUICheckbox
             label={<Link href='#'>Please agree to our terms and conditions.</Link>}
             placeholder='123'
@@ -252,7 +253,7 @@ const PaymentForm = ({
         </Grid>
 
         <Grid item xs={12}>
-          <div className={classes.buttons}>
+          <div className={classnames(classes.buttons, 'payment-buttons')}>
             <Button
               variant='contained'
               color='primary'
@@ -271,7 +272,7 @@ const PaymentForm = ({
             </Button>
             {
               error && (
-                <div className={classes.error}>
+                <div className={classnames(classes.error, 'payment-errors')}>
                   { error }
                 </div>
               )

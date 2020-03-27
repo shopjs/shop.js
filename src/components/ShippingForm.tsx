@@ -1,4 +1,5 @@
 import React from 'react'
+import classnames from 'classnames'
 
 import {
   MUIText,
@@ -127,17 +128,17 @@ const ShippingForm = ({
   }
 
   return (
-    <Box p={[2, 3, 4]}>
+    <Box p={[2, 3, 4]} className='shipping'>
       <Grid container>
-        <Grid item xs={12}>
+        <Grid item xs={12} className='shipping-header'>
           <Typography variant='h5'>
             Shipping Information
           </Typography>
         </Grid>
       </Grid>
 
-      <Grid container className={classes.form} spacing={3}>
-        <Grid item xs={12} sm={6}>
+      <Grid container className={classnames(classes.form, 'shipping-body')} spacing={3}>
+        <Grid item xs={12} sm={6} className='shipping-name'>
           <MUIText
             fullWidth
             label='Name'
@@ -148,7 +149,7 @@ const ShippingForm = ({
             error={userErr.name}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={6} className='shipping-email'>
           <MUIText
             fullWidth
             label='Email'
@@ -160,7 +161,7 @@ const ShippingForm = ({
           />
         </Grid>
 
-        <Grid item xs={12} sm={8}>
+        <Grid item xs={12} sm={8} className='shipping-line1'>
           <MUIText
             fullWidth
             label='Address'
@@ -171,7 +172,7 @@ const ShippingForm = ({
             error={addressErr.line1}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={4} className='shipping-line2'>
           <MUIText
             fullWidth
             label='Suite'
@@ -183,7 +184,7 @@ const ShippingForm = ({
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={6} className='shipping-country'>
           <MUIText
             fullWidth
             select
@@ -197,7 +198,7 @@ const ShippingForm = ({
             error={addressErr.country}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={6} className='shipping-state'>
           <MUIText
             fullWidth
             select
@@ -212,7 +213,7 @@ const ShippingForm = ({
           />
         </Grid>
 
-        <Grid item xs={12} sm={7}>
+        <Grid item xs={12} sm={7} className='shipping-city'>
           <MUIText
             fullWidth
             label='City'
@@ -223,7 +224,7 @@ const ShippingForm = ({
             error={addressErr.city}
           />
         </Grid>
-        <Grid item xs={12} sm={5}>
+        <Grid item xs={12} sm={5} className='shipping-postal-code'>
           <MUIText
             fullWidth
             label='Postal Code'
@@ -236,7 +237,7 @@ const ShippingForm = ({
         </Grid>
 
         <Grid item xs={12}>
-          <div className={classes.buttons}>
+          <div className={classnames(classes.buttons, 'shipping-buttons')}>
             <Button
               variant='contained'
               color='primary'

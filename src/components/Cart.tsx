@@ -1,5 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react'
+import classnames from 'classnames'
 
 import {
   MUIText,
@@ -77,20 +78,20 @@ const Cart = ({
   const classes = useStyles()
 
   return (
-    <Box p={[2, 3, 4]}>
+    <Box p={[2, 3, 4]} className='cart'>
       <Grid container>
-        <Grid item xs={12}>
+        <Grid item xs={12} className='cart-header'>
           <Typography variant='h5'>
             Your Items
           </Typography>
         </Grid>
         <Grid item xs={12}>
-          <div className={classes.items}>
+          <div className={classnames(classes.items, 'cart-items')}>
             {
               order.items.map((item) => {
                 return (
-                  <Grid container alignItems='center' key={item.name}>
-                    <Grid item xs={12} sm={7}>
+                  <Grid container alignItems='center' key={item.name} className='cart-item'>
+                    <Grid item xs={12} sm={8} className='cart-item-name'>
                       <Typography variant='body1'>
                         { item.name }
                       </Typography>
@@ -99,12 +100,12 @@ const Cart = ({
                       </Typography>
                       <br/>
                     </Grid>
-                    <Grid item xs={8} sm={2} className={classes.right}>
+                    <Grid item xs={8} sm={2} className={classnames(classes.right, 'cart-item-price')}>
                       <Typography variant='body1'>
-                        { renderUICurrencyFromJSON(order.currency, item.price) } x
+                        { renderUICurrencyFromJSON(order.currency, item.price) }&nbsp;x
                       </Typography>
                     </Grid>
-                    <Grid item xs={4} sm={3} className={classes.right}>
+                    <Grid item xs={4} sm={2} className={classnames(classes.right, 'cart-item-quantity')}>
                       <MUIText
                         select
                         disabled={ item.locked || locked}
@@ -122,7 +123,7 @@ const Cart = ({
           </div>
         </Grid>
 
-        <Grid item xs={12} className={classes.coupon}>
+        <Grid item xs={12} className={classnames(classes.coupon, 'cart-coupon')}>
           <div>
             <Grid container>
               <Grid item xs={8} sm={10} md={9}>
@@ -154,9 +155,9 @@ const Cart = ({
           </div>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid item xs={12} className='cart-summary'>
           <div>
-            <Grid container className={classes.lineSpacing}>
+            <Grid container className={classnames(classes.lineSpacing, 'cart-summary-subtotal')}>
               <Grid item xs={8} sm={9} className={classes.right}>
                 <Typography variant='body1'>
                   Subtotal
@@ -171,7 +172,7 @@ const Cart = ({
 
             {
               order.discount > 0 && (
-                <Grid container className={classes.lineSpacing}>
+                <Grid container className={classnames(classes.lineSpacing, 'cart-summary-discount')}>
                   <Grid item xs={8} sm={9} className={classes.right}>
                     <Typography variant='body1'>
                       You Saved
@@ -186,7 +187,7 @@ const Cart = ({
               )
             }
 
-            <Grid container className={classes.lineSpacing}>
+            <Grid container className={classnames(classes.lineSpacing, 'cart-summary-shipping')}>
               <Grid item xs={8} sm={9} className={classes.right}>
                 <Typography variant='body1'>
                   Shipping
@@ -199,7 +200,7 @@ const Cart = ({
               </Grid>
             </Grid>
 
-            <Grid container>
+            <Grid container className='cart-summary-tax'>
               <Grid item xs={8} sm={9} className={classes.right}>
                 <Typography variant='body1'>
                   Tax
@@ -212,7 +213,7 @@ const Cart = ({
               </Grid>
             </Grid>
 
-            <Grid container className={classes.total}>
+            <Grid container className={classnames(classes.total, 'cart-summary-total')}>
               <Grid item xs={8} sm={9} className={classes.right}>
                 <Typography variant='h6'>
                   Total
