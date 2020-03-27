@@ -56,10 +56,10 @@ const Checkout = ({
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => {
-      if (prevActiveStep === 1) {
+      if (prevActiveStep === 0) {
         track('Completed Checkout Step', {step: 2})
         track('Viewed Checkout Step', {step: 3})
-      } else if (prevActiveStep === 2) {
+      } else if (prevActiveStep === 1) {
         track('Completed Checkout Step', {step: 3})
       }
 
