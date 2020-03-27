@@ -1,6 +1,7 @@
 import React, {
   useState,
 } from 'react'
+import classnames from 'classnames'
 
 import {
   Step,
@@ -38,10 +39,10 @@ const HorizontalLabelPositionBelowStepper = ({
   const steps = getSteps()
 
   return (
-    <div className={classes.root}>
+    <div className={classnames(classes.root, 'steps')}>
       <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
         {steps.map(label => (
-          <Step key={label}>
+          <Step key={label} className='step'>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}

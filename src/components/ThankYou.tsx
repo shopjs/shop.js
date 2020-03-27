@@ -12,7 +12,7 @@ const ThankYou = ({
   order,
 }): JSX.Element => {
   return (
-    <Box p={[2, 3, 4]}>
+    <Box p={[2, 3, 4]} className='thank-you'>
       <Grid container>
         <Grid item xs={12}>
           <Typography variant='h5'>
