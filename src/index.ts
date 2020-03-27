@@ -5,12 +5,12 @@ import {
 } from './components/index'
 import start from './bootstrap'
 import Client from 'hanzo.js'
+import getStore from './stores'
 
 export * from './components/index'
 export { default as start } from './bootstrap'
 export { default as Client } from 'hanzo.js'
-
-import getStore from './stores'
+export { default as getstore } from './stores'
 
 if (typeof window !== 'undefined') {
   window['ShopJS'] = {
