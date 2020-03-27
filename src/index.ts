@@ -10,7 +10,7 @@ import getStore from './stores'
 export * from './components/index'
 export { default as start } from './bootstrap'
 export { default as Client } from 'hanzo.js'
-export { default as getstore } from './stores'
+export { default as getStore } from './stores'
 
 if (typeof window !== 'undefined') {
   window['ShopJS'] = {
