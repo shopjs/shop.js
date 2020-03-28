@@ -64,6 +64,7 @@ const PaymentForm = ({
   checkout,
   back,
   next,
+  termsUrl,
   isLoading,
 }): JSX.Element => {
   const classes = useStyles()
@@ -243,7 +244,7 @@ const PaymentForm = ({
 
         <Grid item xs={12} className='payment-card-terms'>
           <MUICheckbox
-            label={<Link href='#'>Please agree to our terms and conditions.</Link>}
+            label={<Link href={termsUrl} target='_blank'>Please agree to our terms and conditions.</Link>}
             placeholder='123'
             size='medium'
             value={src.terms}
