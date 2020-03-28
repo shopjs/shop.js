@@ -45,6 +45,7 @@ const Checkout = ({
   countryOptions,
   stateOptions,
   isLoading,
+  termsUrl,
   track,
 }): JSX.Element => {
   const classes = useStyles()
@@ -59,7 +60,7 @@ const Checkout = ({
       if (prevActiveStep === 0) {
         track('Completed Checkout Step', {step: 2})
         track('Viewed Checkout Step', {step: 3})
-      } else if (prevActiveStep === 1) {
+      } else if (prevActiveStep === 2) {
         track('Completed Checkout Step', {step: 3})
       }
 
@@ -139,6 +140,7 @@ const Checkout = ({
                             next={handleNext}
                             checkout={checkout}
                             isLoading={isLoading}
+                            termsUrl={termsUrl}
                           />
                         )}
                       </div>

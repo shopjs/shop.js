@@ -34,6 +34,7 @@ export default function(client: ILibraryClient, opts: Options) {
         stateOptions={ shopStore.stateOptions }
         isLoading={ shopStore.isLoading }
         track={(event, opts) => shopStore.track(event, opts)}
+        termsUrl={opts.termsUrl || '/terms'}
       />
     ))
   }
