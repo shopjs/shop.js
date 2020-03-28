@@ -86,7 +86,7 @@ export default class ShopStore {
 
     this.client = client
 
-    this.commerce = new Commerce(client, {}, [], [], analytics)
+    this.commerce = new Commerce(client, undefined, [], [], analytics)
 
     if (!this.order.currency) {
       this.order.currency = 'usd'
