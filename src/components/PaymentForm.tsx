@@ -1,13 +1,8 @@
-import React, { useState } from 'react'
+import React, { useMemo } from 'react'
 import classnames from 'classnames'
 
 import {
-  red,
-} from '@material-ui/core/colors'
-
-import {
   MUIText,
-  MUICheckbox,
 } from '@hanzo/react'
 
 import { useTheme } from '@material-ui/core/styles'
@@ -23,53 +18,40 @@ import {
   Button,
   Grid,
   InputAdornment,
-  Link,
   Typography,
   TextField,
 } from '@material-ui/core'
+
+import LockIcon from '@material-ui/icons/Lock';
 
 import usePaymentInputs from 'react-payment-inputs/es/usePaymentInputs';
 import images from 'react-payment-inputs/images';
 
 import { makeStyles } from '@material-ui/core/styles'
+
 const useStyles = makeStyles((theme) => ({
   form: {
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
   },
-  buttons: {
-    '& button': {
-      marginRight: theme.spacing(2),
-    },
-  },
-  error: {
-    color: red[500],
-    paddingTop: theme.spacing(1),
-  }
 }))
-
-const agreed = (v) => {
-  if (!v) {
-    throw new Error('Agree to our terms and conditions.')
-  }
-
-  return v
-}
 
 const PaymentForm = ({
   width,
   height,
   payment,
   setPayment,
+  setFormAwait,
   checkout,
   back,
   next,
   termsUrl,
+  isActive,
   isLoading,
+  paymentIcon,
+  paymentTitle,
 }): JSX.Element => {
   const classes = useStyles()
-
-  const [error, setError] = useState('')
 
   const {
     meta,
@@ -88,7 +70,6 @@ const PaymentForm = ({
     setYear,
     setTerms,
     err,
-    src,
     run,
   } = useMidstream({
     name: [isRequired],
@@ -96,7 +77,6 @@ const PaymentForm = ({
     cvc: [isRequired],
     month: [isRequired],
     year: [isRequired],
-    terms: [agreed],
   }, {
     dst: (k, v) => {
       if (k == 'terms') {
@@ -106,24 +86,6 @@ const PaymentForm = ({
       setPayment(k, v)
     },
   })
-
-  const submit = async () => {
-    try {
-      let ret = await run()
-
-      if (ret instanceof Error) {
-        return
-      }
-
-      await checkout()
-
-      next()
-    } catch (e) {
-      console.log('payment form error', e)
-
-      setError(e.message)
-    }
-  }
 
   let {
     ...cardNumberProps
@@ -173,13 +135,37 @@ const PaymentForm = ({
   let expiryDatePropsRef = expiryDateProps.ref
   delete expiryDateProps.ref
 
+  const submit = useMemo(() => async () => {
+    let ret = await run()
+
+    if (ret instanceof Error) {
+      console.log('payment form error', ret)
+      throw ret
+    }
+  }, [])
+
+  if (isActive) {
+    requestAnimationFrame(() => {
+      setFormAwait(submit)
+    })
+  }
+
   return (
-    <Box p={[2, 3, 4]} className='payment'>
+    <div className='payment'>
       <Grid container>
         <Grid item xs={12} className='payment-header'>
-          <Typography variant='h5'>
-            Payment Information
-          </Typography>
+          <Grid container spacing={1} alignItems='center'>
+            <Grid item className='payment-icon'>
+              { paymentIcon || <LockIcon style={{fontSize: '2rem'}}/> }
+            </Grid>
+            <Grid item className='payment-title'>
+              { paymentTitle || (
+                <Typography variant='h6'>
+                  Payment Information
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
 
@@ -241,47 +227,8 @@ const PaymentForm = ({
             helperText={touchedInputs.cvc && erroredInputs.cvc || err.cvc && err.cvc.message}
           />
         </Grid>
-
-        <Grid item xs={12} className='payment-card-terms'>
-          <MUICheckbox
-            label={<Link href={termsUrl} target='_blank'>Please agree to our terms and conditions.</Link>}
-            placeholder='123'
-            size='medium'
-            value={src.terms}
-            error={err.terms}
-            setValue={setTerms}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <div className={classnames(classes.buttons, 'payment-buttons')}>
-            <Button
-              variant='contained'
-              color='primary'
-              size='large'
-              onClick={submit}
-              disabled={isLoading}
-            >
-              Continue
-            </Button>
-            <Button
-              size='large'
-              onClick={back}
-              disabled={isLoading}
-            >
-              Back
-            </Button>
-            {
-              error && (
-                <div className={classnames(classes.error, 'payment-errors')}>
-                  { error }
-                </div>
-              )
-            }
-          </div>
-        </Grid>
       </Grid>
-    </Box>
+    </div>
   )
 }
 

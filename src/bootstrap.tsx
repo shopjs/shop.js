@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { useLocalStore, useObserver } from 'mobx-react'
 
-import { Checkout } from './components'
+import { Checkout, PaymentForm, ShippingForm } from './components'
 import initStore, { ShopStore, ILibraryClient } from './stores'
 
 export interface Options {
@@ -19,6 +19,16 @@ export default function(client: ILibraryClient, opts: Options) {
 
     return useObserver(() => (
       <Checkout
+        forms={[PaymentForm, ShippingForm]}
+        stepLabels={['Payment Info', 'Shipping Info', 'Confirm Order']}
+        contactIcon={null}
+        contactTitle={null}
+        shippingIcon={null}
+        shippingTitle={null}
+        paymentIcon={null}
+        paymentTitle={null}
+        cartIcon={null}
+        cartTitle={null}
         address={shopStore.address}
         setAddress={(k: string, v: any) => shopStore.setAddress(k, v)}
         order={shopStore.order}

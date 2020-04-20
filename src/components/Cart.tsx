@@ -16,6 +16,9 @@ import {
 } from '@material-ui/core'
 
 import { makeStyles } from '@material-ui/core/styles'
+
+import ShoppingCartIcon from '@material-ui/icons/ShoppingCart'
+
 const useStyles = makeStyles((theme) => ({
   right: {
     textAlign: 'right',
@@ -36,6 +39,10 @@ const useStyles = makeStyles((theme) => ({
   total: {
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
+
+    '& > *': {
+      fontWeight: 800,
+    },
   },
   couponInput: {
     '& .MuiInputBase-root': {
@@ -74,6 +81,8 @@ const Cart = ({
   setCoupon,
   setItem,
   locked,
+  cartIcon,
+  cartTitle,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -81,9 +90,18 @@ const Cart = ({
     <Box p={[2, 3, 4]} className='cart'>
       <Grid container>
         <Grid item xs={12} className='cart-header'>
-          <Typography variant='h5'>
-            Your Items
-          </Typography>
+          <Grid container spacing={1} alignItems='center'>
+            <Grid item className='cart-icon'>
+              { cartIcon || <ShoppingCartIcon style={{fontSize: '2rem'}}/> }
+            </Grid>
+            <Grid item className='cart-title'>
+              { cartTitle || (
+                <Typography variant='h6'>
+                  Your Items
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
         </Grid>
         <Grid item xs={12}>
           <div className={classnames(classes.items, 'cart-items')}>
@@ -215,12 +233,12 @@ const Cart = ({
 
             <Grid container className={classnames(classes.total, 'cart-summary-total')}>
               <Grid item xs={8} sm={9} className={classes.right}>
-                <Typography variant='h6'>
+                <Typography variant='body1'>
                   Total
                 </Typography>
               </Grid>
               <Grid item xs className={classes.right}>
-                <Typography variant='h6'>
+                <Typography variant='body1'>
                   { renderUICurrencyFromJSON(order.currency, order.total) }
                 </Typography>
               </Grid>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import classnames from 'classnames'
 
 import {
@@ -6,6 +6,8 @@ import {
 } from '@hanzo/react'
 
 import { useTheme } from '@material-ui/core/styles'
+
+import LocalShippingIcon from '@material-ui/icons/LocalShipping'
 
 import { useMidstream } from '../hooks'
 
@@ -41,43 +43,17 @@ const ShippingForm = ({
   setAddress,
   setUser,
   setPayment,
+  setFormAwait,
   user,
   order,
   countryOptions,
   stateOptions,
-  next,
+  isActive,
   isLoading,
+  shippingIcon,
+  shippingTitle,
 }): JSX.Element => {
   const classes = useStyles()
-
-  const splitName = (v) => {
-    let [firstName, lastName] = v.split(/\s+/)
-    setUser('firstName', firstName)
-    setUser('lastName', lastName)
-
-    return v
-  }
-
-  const setPaymentName = (v) => {
-    setPayment('name', v)
-
-    return v
-  }
-
-  const userMS = useMidstream({
-    email: [isRequired, isEmail],
-    name: [isRequired, splitName, setPaymentName],
-  }, {
-    dst: setUser,
-  })
-
-  const {
-    setEmail,
-    setName,
-  } = userMS
-
-  const userErr = userMS.err
-  const userRun = userMS.runAll
 
   const addressMS = useMidstream({
     line1: [isRequired],
@@ -107,60 +83,41 @@ const ShippingForm = ({
   const addressErr = addressMS.err
   const addressRun = addressMS.runAll
 
-  const submit = async () => {
-    try {
-      let ret = await userRun()
+  const submit = useMemo(() => async () => {
+    let ret = await addressRun()
 
-      if (ret instanceof Error) {
-        return
-      }
-
-      ret = await addressRun()
-
-      if (ret instanceof Error) {
-        return
-      }
-
-      next()
-    } catch (e) {
-      console.log('shipping form error', e)
+    if (ret instanceof Error) {
+      console.log('shipping form error', ret)
+      throw ret
     }
+  }, [])
+
+  if (isActive) {
+    requestAnimationFrame(() => {
+      setFormAwait(submit)
+    })
   }
 
   return (
-    <Box p={[2, 3, 4]} className='shipping'>
+    <div className='shipping'>
       <Grid container>
         <Grid item xs={12} className='shipping-header'>
-          <Typography variant='h5'>
-            Shipping Information
-          </Typography>
+          <Grid container spacing={1} alignItems='center'>
+            <Grid item className='shipping-icon'>
+              { shippingIcon || <LocalShippingIcon style={{fontSize: '2rem'}}/> }
+            </Grid>
+            <Grid item className='shipping-title'>
+              { shippingTitle || (
+                <Typography variant='h6'>
+                  Shipping Information
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
 
       <Grid container className={classnames(classes.form, 'shipping-body')} spacing={3}>
-        <Grid item xs={12} sm={6} className='shipping-name'>
-          <MUIText
-            fullWidth
-            label='Name'
-            variant={undefined}
-            size='medium'
-            value={user.name}
-            setValue={setName}
-            error={userErr.name}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} className='shipping-email'>
-          <MUIText
-            fullWidth
-            label='Email'
-            variant={undefined}
-            size='medium'
-            value={user.email}
-            setValue={setEmail}
-            error={userErr.email}
-          />
-        </Grid>
-
         <Grid item xs={12} sm={8} className='shipping-line1'>
           <MUIText
             fullWidth
@@ -235,22 +192,8 @@ const ShippingForm = ({
             error={addressErr.postalCode}
           />
         </Grid>
-
-        <Grid item xs={12}>
-          <div className={classnames(classes.buttons, 'shipping-buttons')}>
-            <Button
-              variant='contained'
-              color='primary'
-              size='large'
-              onClick={submit}
-              disabled={isLoading}
-            >
-              Continue
-            </Button>
-          </div>
-        </Grid>
       </Grid>
-    </Box>
+    </div>
   )
 }
 
