@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(1),
   },
   checkoutGrid: {
-    [theme.breakpoints.down('md')]: {
+    [theme.breakpoints.down('sm')]: {
       flexDirection: 'column-reverse',
     },
   },
@@ -162,7 +162,6 @@ const Checkout = ({
 
   const setFormAwait = useMemo(() => (x) => {
     if (x != formAwait) {
-      console.log('setFA', x)
       _setFormAwait(() => x)
     }
   }, [])
