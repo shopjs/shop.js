@@ -29,14 +29,19 @@ const useStyles = makeStyles(theme => ({
 }))
 
 const getSteps = () => {
-  return ['Shipping Info', 'Payment Info', 'Confirm Order']
+  return ['Your Info', 'Payment Info', 'Confirm Order']
 }
 
 const HorizontalLabelPositionBelowStepper = ({
   activeStep,
+  steps,
 }) => {
   const classes = useStyles()
-  const steps = getSteps()
+  if (!steps || !steps.length) {
+    steps = getSteps()
+  } else if (steps.length < 3) {
+    steps = getSteps()
+  }
 
   return (
     <div className={classnames(classes.root, 'steps')}>

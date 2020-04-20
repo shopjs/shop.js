@@ -137,6 +137,12 @@ export default class ShopStore {
   @computed
   get countryOptions() {
     let countries = this.countries.slice().sort((a, b) => {
+      if (a.code.toUpperCase() == 'US') {
+        return -1
+      } else if (b.code.toUpperCase() == 'US') {
+        return 1
+      }
+
       if (a.name < b.name) { return -1 }
       if (a.name > b.name) { return 1 }
       return 0
@@ -234,6 +240,7 @@ export default class ShopStore {
 
     try {
       let o = await this.commerce.checkout(this._payment)
+
       this.isLoading = false
 
       Order.clear()
