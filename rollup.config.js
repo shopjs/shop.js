@@ -8,7 +8,6 @@ import filesize from 'rollup-plugin-filesize'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import typescript from 'rollup-plugin-typescript2'
 import visualizer from 'rollup-plugin-visualizer'
-import { terser } from 'rollup-plugin-terser'
 
 import fs from 'fs'
 import nodeEval from 'node-eval'
@@ -68,12 +67,11 @@ const plugins = [
   commonjs({
     include: 'node_modules/**',
     namedExports: {
-      'node_modules/react-is/index.js': ['isFragment', 'ForwardRef'],
+      'node_modules/react-is/index.js': ['isFragment', 'ForwardRef', 'Memo'],
       'node_modules/prop-types/index.js': ['elementType'],
       'node_modules/react-virtualized/dist/es/WindowScroller/WindowScroller.js': ['bpfrpt_proptype_WindowScroller'],
     }
   }),
-  // terser(),
   filesize(),
   visualizer(),
 ]
