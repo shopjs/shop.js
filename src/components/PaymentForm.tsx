@@ -1,3 +1,4 @@
+import raf from 'raf'
 import React, { useMemo } from 'react'
 import classnames from 'classnames'
 
@@ -145,7 +146,7 @@ const PaymentForm = ({
   }, [])
 
   if (isActive) {
-    requestAnimationFrame(() => {
+    raf(() => {
       setFormAwait(submit)
     })
   }

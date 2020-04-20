@@ -1,3 +1,4 @@
+import raf from 'raf'
 import React, { useMemo } from 'react'
 import classnames from 'classnames'
 
@@ -93,7 +94,7 @@ const ShippingForm = ({
   }, [])
 
   if (isActive) {
-    requestAnimationFrame(() => {
+    raf(() => {
       setFormAwait(submit)
     })
   }
