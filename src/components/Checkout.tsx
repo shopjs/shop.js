@@ -369,7 +369,7 @@ const Checkout = ({
                                         color='primary'
                                         size='large'
                                         onClick={handleNext}
-                                        disabled={isLoading}
+                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
                                       >
                                         Continue
                                       </Button>
@@ -389,14 +389,14 @@ const Checkout = ({
                                         color='primary'
                                         size='large'
                                         onClick={handleSubmit}
-                                        disabled={isLoading}
+                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
                                       >
                                         Complete
                                       </Button>
                                       <Button
                                         size='large'
                                         onClick={handleBack}
-                                        disabled={isLoading}
+                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
                                       >
                                         Back
                                       </Button>
