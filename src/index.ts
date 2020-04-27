@@ -26,5 +26,12 @@ if (typeof window !== 'undefined') {
       }
       s.commerce.set.apply(s.commerce, (args as any))
     },
+    clear: () => {
+      const s = getStore()
+      if (!s) {
+        throw new Error('Use ShopJS.start before setting any items')
+      }
+      s.commerce.clear()
+    }
   }
 }
