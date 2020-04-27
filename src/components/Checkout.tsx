@@ -191,8 +191,6 @@ const Checkout = ({
       if (prevActiveStep === 0) {
         track('Completed Checkout Step', {step: 2})
         track('Viewed Checkout Step', {step: 3})
-      } else if (prevActiveStep === 2) {
-        track('Completed Checkout Step', {step: 3})
       }
 
       return prevActiveStep + 1
@@ -212,6 +210,17 @@ const Checkout = ({
 
   const handleSubmit = async () => {
     try {
+      const fn: any = formAwait
+
+      if (fn) {
+        try {
+          await fn()
+        } catch (e) {
+          console.log('checkout form error', e)
+          return
+        }
+      }
+
       let ret = await termsRun()
 
       if (ret instanceof Error) {
@@ -221,7 +230,10 @@ const Checkout = ({
       await checkout()
 
       setFormAwait(null)
-      handleNext()
+
+      track('Completed Checkout Step', {step: 3})
+
+      setActiveStep((prevActiveStep) => prevActiveStep + 1)
     } catch (e) {
       console.log('payment form error', e)
 
