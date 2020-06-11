@@ -80,7 +80,7 @@
     "ts-jest": "25.4.0",
     "ts-node": "8.8.2",
     "tslib": "1.11.1",
-    "typedoc": "github:TypeStrong/typedoc#5704bf5",
+    "typedoc": "^0.17.7",
     "typedoc-plugin-markdown": "2.2.17",
     "typescript": "3.8.3"
   },
@@ -103,7 +103,7 @@
     "@material-ui/icons": "4.9.1",
     "akasha": "0.1.13",
     "classnames": "2.2.6",
-    "commerce.js": "2.0.17",
+    "commerce.js": "^2.0.19",
     "fast-memoize": "2.5.2",
     "midstream": "2.0.2",
     "mobx": "5.15.4",
