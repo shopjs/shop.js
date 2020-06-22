@@ -61,6 +61,15 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: 7,
     paddingBottom: 7,
   },
+  cartItemPrice: {
+    transform: 'translate(0, 4px)',
+  },
+  cartItemImg: {
+    maxWidth: 120,
+  },
+  cartImg: {
+    width: '100%',
+  },
 }))
 
 import {
@@ -75,8 +84,6 @@ for (let i = 0; i < 10; i++) {
 }
 
 const Cart = ({
-  width,
-  height,
   order,
   setCoupon,
   setItem,
@@ -112,34 +119,81 @@ const Cart = ({
           !!(order.items && order.items.length && order.items.length > 0)
             && <Grid item xs={12}>
               <div className={classnames(classes.items, 'cart-items')}>
-                { order.items.map((item) => {
+                {
+                  order.items.map((item) => {
                     return (
                       <Grid container alignItems='center' key={item.name} className='cart-item'>
-                        <Grid item xs={12} sm={8} className='cart-item-name'>
-                          <Typography variant='body1'>
-                            { item.name }
-                          </Typography>
-                          <Typography variant='body2'>
-                            { item.description }
-                          </Typography>
-                          <br/>
-                        </Grid>
-                        <Grid item xs={8} sm={2} className={classnames(classes.right, 'cart-item-price')}>
-                          <Typography variant='body1'>
-                            { renderUICurrencyFromJSON(order.currency, item.price) }&nbsp;x
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={4} sm={2} className={classnames(classes.right, 'cart-item-quantity')}>
-                          <MUIText
-                            select
-                            disabled={ item.locked || locked}
-                            options={quantityOpts}
-                            value={ item.quantity }
-                            setValue={ (quantity) => {
-                              setItem(item.id, parseInt(quantity, 10))
-                            }}
-                          />
-                        </Grid>
+                        {
+                          item.imageURL
+                            ? (
+                              <>
+                                <Grid container spacing={2}>
+                                  <Grid item className={ classnames('cart-item-image', classes.cartItemImg) }>
+                                    <img src={item.imageURL} alt={item.name} className={classes.cartImg}/>
+                                  </Grid>
+                                  <Grid item xs className='cart-item-name'>
+                                    <Typography variant='body1'>
+                                      <strong>{ item.name }</strong>
+                                    </Typography>
+                                    <Typography variant='body2'>
+                                      { item.description }
+                                    </Typography>
+                                    <br/>
+                                  </Grid>
+                                </Grid>
+                                <Grid container spacing={2}>
+                                  <Grid item xs className='cart-item-spacer'>
+                                  </Grid>
+                                  <Grid item className={classnames(classes.cartItemPrice, classes.right, 'cart-item-price')}>
+                                    <Typography variant='body1'>
+                                      { renderUICurrencyFromJSON(order.currency, item.price) }&nbsp;x
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item className={classnames(classes.right, 'cart-item-quantity')}>
+                                    <MUIText
+                                      select
+                                      disabled={ item.locked || locked}
+                                      options={quantityOpts}
+                                      value={ item.quantity }
+                                      setValue={ (quantity) => {
+                                        setItem(item.id, parseInt(quantity, 10))
+                                      }}
+                                    />
+                                  </Grid>
+                                </Grid>
+                              </>
+                            ) : (
+                              <>
+                                <Grid container spacing={2}>
+                                  <Grid item xs={12} sm={8} className='cart-item-name'>
+                                    <Typography variant='body1'>
+                                      { item.name }
+                                    </Typography>
+                                    <Typography variant='body2'>
+                                      { item.description }
+                                    </Typography>
+                                    <br/>
+                                  </Grid>
+                                  <Grid item xs={8} sm={2} className={classnames(classes.right, 'cart-item-price')}>
+                                    <Typography variant='body1'>
+                                      { renderUICurrencyFromJSON(order.currency, item.price) }&nbsp;x
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item xs={4} sm={2} className={classnames(classes.right, 'cart-item-quantity')}>
+                                    <MUIText
+                                      select
+                                      disabled={ item.locked || locked}
+                                      options={quantityOpts}
+                                      value={ item.quantity }
+                                      setValue={ (quantity) => {
+                                        setItem(item.id, parseInt(quantity, 10))
+                                      }}
+                                    />
+                                  </Grid>
+                                </Grid>
+                              </>
+                            )
+                        }
                       </Grid>
                     )
                   })

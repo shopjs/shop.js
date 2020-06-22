@@ -3,12 +3,12 @@ import {
   PaymentForm,
   Checkout,
 } from './components/index'
-import start from './bootstrap'
+import start, { cart } from './bootstrap'
 import Client from 'hanzo.js'
 import getStore from './stores'
 
 export * from './components/index'
-export { default as start } from './bootstrap'
+export { default as start, cart } from './bootstrap'
 export { default as Client } from 'hanzo.js'
 export { default as getStore } from './stores'
 
@@ -19,6 +19,7 @@ if (typeof window !== 'undefined') {
     PaymentForm,
     Checkout,
     start,
+    cart,
     set: (...args) => {
       const s = getStore()
       if (!s) {
