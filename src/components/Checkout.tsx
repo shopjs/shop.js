@@ -252,8 +252,8 @@ const Checkout = ({
   }
 
   return (
-    <Container maxWidth='md'>
-      <AutoSizer>
+    <Container maxWidth='md' style={{ width: '100%' }}>
+      <AutoSizer disableHeight>
         {
           ({ width, height }) => {
             const halfWidth = Math.floor(width / 2)
@@ -440,8 +440,6 @@ const Checkout = ({
                       <Cart
                         cartIcon={cartIcon}
                         cartTitle={cartTitle}
-                        width={halfWidth}
-                        height={height}
                         order={order}
                         setCoupon={setCoupon}
                         setItem={setItem}
