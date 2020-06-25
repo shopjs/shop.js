@@ -61,7 +61,7 @@
 
 	}).call(commonjsGlobal);
 
-
+	//# sourceMappingURL=performance-now.js.map
 	});
 
 	var root = typeof window === 'undefined' ? commonjsGlobal : window
@@ -6803,6 +6803,7 @@
 	    if (immediate && !timeout) func.apply(context, args);
 	  };
 	}
+	//# sourceMappingURL=index.esm.js.map
 
 	var common = {
 	  black: '#000',
@@ -37019,11 +37020,18 @@
 	          onChange = function onChange(ev) {
 	            clearTimeout(onChangeTimeoutId);
 	            var target = ev.target;
-	            onChangeTimeoutId = setTimeout(function () {
+
+	            if (isSelect) {
 	              onBlur({
 	                target: target
 	              });
-	            }, 500);
+	            } else {
+	              onChangeTimeoutId = setTimeout(function () {
+	                onBlur({
+	                  target: target
+	                });
+	              }, 500);
+	            }
 	          };
 	        }
 	      }
@@ -45952,6 +45960,7 @@
 
 	NumberFormat.propTypes = propTypes$1$1$1;
 	NumberFormat.defaultProps = defaultProps$2;
+	//# sourceMappingURL=index.esm.js.map
 
 	var createSvgIcon_1 = createCommonjsModule(function (module, exports) {
 
@@ -46370,6 +46379,7 @@
 
 	  return ret
 	};
+	//# sourceMappingURL=midstream.esm.js.map
 
 	const useMidstream = (config, opts) => {
 	    const [dst, setDst] = React.useState(() => opts.dst || opts.destination || {});
@@ -51241,6 +51251,7 @@
 	    throw new Error('Required');
 	  };
 	};
+	//# sourceMappingURL=index.esm.js.map
 
 	const useStyles$7 = makeStyles$1((theme) => ({
 	    form: {
@@ -51253,7 +51264,7 @@
 	        },
 	    },
 	}));
-	const ShippingForm = ({ width, height, setAddress, setUser, setPayment, setFormAwait, user, order, countryOptions, stateOptions, isActive, isLoading, shippingIcon, shippingTitle, }) => {
+	const ShippingForm = ({ width, height, setAddress, setUser, setPayment, setFormAwait, user, order, countryOptions, stateOptions, isActive, isLoading, shippingIcon, shippingTitle, nativeSelects, }) => {
 	    const classes = useStyles$7();
 	    const addressMS = useMidstream({
 	        line1: [isRequired],
@@ -51294,9 +51305,9 @@
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 4, className: 'shipping-line2' },
 	                React__default.createElement(MUIText, { fullWidth: true, label: 'Suite', variant: undefined, size: 'medium', value: order.shippingAddress.line2, setValue: setLine2, error: addressErr.line2 })),
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 6, className: 'shipping-country' },
-	                React__default.createElement(MUIText, { fullWidth: true, select: true, options: countryOptions, placeholder: 'Select a Country', label: 'Country', variant: undefined, size: 'medium', value: order.shippingAddress.country, setValue: setCountry, error: addressErr.country })),
+	                React__default.createElement(MUIText, { fullWidth: true, select: true, options: countryOptions, placeholder: 'Select a Country', label: 'Country', variant: undefined, size: 'medium', value: order.shippingAddress.country, setValue: setCountry, error: addressErr.country, SelectProps: { native: !!nativeSelects } })),
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 6, className: 'shipping-state' },
-	                React__default.createElement(MUIText, { fullWidth: true, select: true, options: stateOptions[order.shippingAddress.country], label: 'State', placeholder: 'Select a State', variant: undefined, size: 'medium', value: order.shippingAddress.state, setValue: setState, error: addressErr.state })),
+	                React__default.createElement(MUIText, { fullWidth: true, select: true, options: stateOptions[order.shippingAddress.country], label: 'State', placeholder: 'Select a State', variant: undefined, size: 'medium', value: order.shippingAddress.state, setValue: setState, error: addressErr.state, SelectProps: { native: !!nativeSelects } })),
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 7, className: 'shipping-city' },
 	                React__default.createElement(MUIText, { fullWidth: true, label: 'City', variant: undefined, size: 'medium', value: order.shippingAddress.city, setValue: setCity, error: addressErr.city })),
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 5, className: 'shipping-postal-code' },
@@ -57126,6 +57137,7 @@
 	    });
 	  };
 	}
+	//# sourceMappingURL=mobxreactlite.esm.js.map
 
 	var symbolId = 0;
 
@@ -57518,6 +57530,7 @@
 
 	if (!React.Component) throw new Error("mobx-react requires React to be available");
 	if (!observable) throw new Error("mobx-react requires mobx to be available");
+	//# sourceMappingURL=mobxreact.esm.js.map
 
 	var ShoppingCart = createCommonjsModule(function (module, exports) {
 
@@ -57603,21 +57616,26 @@
 	        width: 120,
 	        maxWidth: '40%',
 	    },
+	    checkoutButton: {
+	        marginTop: theme.spacing(2),
+	    },
 	}));
 	const quantityOpts = {};
 	for (let i = 0; i < 10; i++) {
 	    quantityOpts[i] = i;
 	}
-	const Cart = ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, }) => {
+	const Cart = ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
 	    const classes = useStyles$9();
-	    return (React__default.createElement(Box, { p: [2, 3, 4], className: 'cart' },
+	    return (React__default.createElement(Box, { p: [2, 3, 4], className: 'cart', onMouseDown: (event) => {
+	            event.stopPropagation();
+	        } },
 	        React__default.createElement(StyledGrid, { container: true },
 	            React__default.createElement(StyledGrid, { item: true, xs: 12, className: 'cart-header' },
 	                React__default.createElement(StyledGrid, { container: true, spacing: 1, alignItems: 'center' },
 	                    React__default.createElement(StyledGrid, { item: true, className: 'cart-icon' }, cartIcon || React__default.createElement(ShoppingCartIcon, { style: { fontSize: '2rem' } })),
 	                    React__default.createElement(StyledGrid, { item: true, className: 'cart-title' }, !!(order.items && order.items.length && order.items.length > 0)
-	                        ? cartTitle || (React__default.createElement(Typography$1, { variant: 'h6' }, "Your Items"))
-	                        : React__default.createElement(Typography$1, { variant: 'h6' }, "Your Cart Is Empty.")))),
+	                        ? cartTitle || (React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-your-items-title' }, "Your Items"))
+	                        : React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-is-empty-title' }, "Your Cart Is Empty.")))),
 	            !!(order.items && order.items.length && order.items.length > 0)
 	                && React__default.createElement(StyledGrid, { item: true, xs: 12 },
 	                    React__default.createElement("div", { className: classnames(classes.cartItems, 'cart-items') }, order.items.map((item) => {
@@ -57640,7 +57658,7 @@
 	                                    React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, 'cart-item-quantity') },
 	                                        React__default.createElement(MUIText, { select: true, disabled: item.locked || locked, options: quantityOpts, value: item.quantity, setValue: (quantity) => {
 	                                                setItem(item.id, parseInt(quantity, 10));
-	                                            } }))),
+	                                            }, SelectProps: { native: !!nativeSelects } }))),
 	                                React__default.createElement("br", null))) : (React__default.createElement(React__default.Fragment, null,
 	                            React__default.createElement(StyledGrid, { container: true, spacing: 2 },
 	                                React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 8, className: 'cart-item-name' },
@@ -57693,7 +57711,11 @@
 	                                    React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
 	                                        React__default.createElement(Typography$1, { variant: 'body1' }, "Total")),
 	                                    React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.total))))))))))));
+	                                        React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.total)))))),
+	                            cartCheckoutUrl && (React__default.createElement(StyledGrid, { container: true, className: classnames(classes.checkoutButton, 'cart-summary-checkout-button') },
+	                                React__default.createElement(StyledGrid, { item: true, xs: true },
+	                                    React__default.createElement(Link$1, { href: cartCheckoutUrl },
+	                                        React__default.createElement(Button$1, { variant: 'contained', size: 'large', color: 'primary', fullWidth: true }, "Checkout")))))))))));
 	};
 	var Cart$1 = observer$1(Cart);
 
@@ -69128,7 +69150,7 @@
 	    }
 	    return v;
 	};
-	const Checkout = ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, }) => {
+	const Checkout = ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
 	    const classes = useStyles$b();
 	    const splitName = (v) => {
 	        let [firstName, lastName] = v.split(/\s+/);
@@ -69238,7 +69260,9 @@
 	    else {
 	        Forms = [forms[0], forms[1]];
 	    }
-	    return (React__default.createElement(Container$1, { maxWidth: 'md', style: { width: '100%' } },
+	    return (React__default.createElement(Container$1, { maxWidth: 'md', style: { width: '100%' }, onMouseDown: (event) => {
+	            event.stopPropagation();
+	        } },
 	        React__default.createElement(AutoSizer, { disableHeight: true }, ({ width, height }) => {
 	            const halfWidth = Math.floor(width / 2);
 	            return (React__default.createElement("div", { style: { width: halfWidth * 2 }, className: 'checkout' },
@@ -69263,7 +69287,7 @@
 	                                            React__default.createElement(StyledGrid, { item: true, xs: 12, sm: 6, className: 'contact-email' },
 	                                                React__default.createElement(MUIText, { fullWidth: true, label: 'Email', variant: undefined, size: 'medium', value: user.email, setValue: setEmail, error: userErr.email })))),
 	                                        React__default.createElement(StyledGrid, { item: true, xs: 12 },
-	                                            React__default.createElement(Form, { isActive: activeStep === i, shippingIcon: shippingIcon, shippingTitle: shippingTitle, paymentIcon: paymentIcon, paymentTitle: paymentTitle, width: halfWidth, height: height, order: order, payment: payment, user: user, setUser: setUser, setAddress: setAddress, setPayment: setPayment, setFormAwait: setFormAwait, countryOptions: countryOptions, stateOptions: stateOptions, isLoading: isLoading, termsUrl: termsUrl })),
+	                                            React__default.createElement(Form, { isActive: activeStep === i, shippingIcon: shippingIcon, shippingTitle: shippingTitle, paymentIcon: paymentIcon, paymentTitle: paymentTitle, width: halfWidth, height: height, order: order, payment: payment, user: user, setUser: setUser, setAddress: setAddress, setPayment: setPayment, setFormAwait: setFormAwait, countryOptions: countryOptions, stateOptions: stateOptions, isLoading: isLoading, termsUrl: termsUrl, nativeSelects: nativeSelects })),
 	                                        activeStep == 1 && (React__default.createElement(StyledGrid, { item: true, xs: 12, className: 'checkout-terms' },
 	                                            React__default.createElement(MUICheckbox, { label: React__default.createElement(Link$1, { href: termsUrl, target: '_blank' }, "Please agree to our terms and conditions."), placeholder: '123', size: 'medium', value: src.terms, error: err.terms, setValue: setTerms }))),
 	                                        React__default.createElement(StyledGrid, { item: true, xs: 12, className: 'checkout-buttons' },
@@ -69280,13 +69304,12 @@
 	                                }, className: 'checkout-form' }, activeStep == 2 && (React__default.createElement(ThankYou, { width: halfWidth, height: height, order: order }))))),
 	                    React__default.createElement(StyledGrid, { item: true, xs: 12, md: 6, className: 'checkout-cart' },
 	                        React__default.createElement(Paper$1, null,
-	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals }))))));
+	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects }))))));
 	        })));
 	};
 
-	var CartCount = ({ order, }) => {
-	    console.log(order, order.items);
-	    return (React__default.createElement("div", null, order.items.reduce((a, b) => a + b.quantity, 0)));
+	var CartCount = ({ count, }) => {
+	    return (React__default.createElement("div", null, count));
 	};
 
 	/*! *****************************************************************************
@@ -74907,6 +74930,7 @@
 	    __metadata$1("design:paramtypes", [Object]),
 	    __metadata$1("design:returntype", Promise)
 	], Commerce.prototype, "checkout", null);
+	//# sourceMappingURL=index.esm.js.map
 
 	function toString$5(obj) {
 	  return Object.prototype.toString.call(obj)
@@ -74918,6 +74942,8 @@
 	var isNumber$3 = isNumber$2 = function(value) {
 	  return toString$5(value) === '[object Number]';
 	};
+
+	//# sourceMappingURL=number.js.map
 
 	// src/index.coffee
 	var getOwnSymbols$1;
@@ -75000,6 +75026,7 @@
 	    return to;
 	  };
 	})();
+	//# sourceMappingURL=es-object-assign.mjs.map
 
 	// src/cookies.coffee
 	var Cookies$2;
@@ -75109,6 +75136,7 @@
 
 	// src/index.coffee
 	var index$4 = new Cookies$1$1();
+	//# sourceMappingURL=cookies.mjs.map
 
 	// src/cookie-storage.coffee
 	var cookieStorage$1 = (function() {
@@ -75241,6 +75269,7 @@
 	    return pretendStorage$1;
 	  }
 	})();
+	//# sourceMappingURL=akasha.mjs.map
 
 	class ShopStore {
 	    constructor(client, analytics, raw) {
@@ -75404,6 +75433,9 @@
 	            this.commerce.analytics.track(event, opts);
 	        }
 	    }
+	    get count() {
+	        return this.order.items.reduce((a, b) => a + b.quantity, 0);
+	    }
 	}
 	__decorate([
 	    observable,
@@ -75525,6 +75557,11 @@
 	    __metadata("design:paramtypes", [String, Object]),
 	    __metadata("design:returntype", void 0)
 	], ShopStore.prototype, "track", null);
+	__decorate([
+	    computed$1,
+	    __metadata("design:type", Number),
+	    __metadata("design:paramtypes", [])
+	], ShopStore.prototype, "count", null);
 
 	let client;
 	let store;
@@ -75543,7 +75580,7 @@
 	    let el = opts.el;
 	    const ShopJS = () => {
 	        const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })));
-	        return useObserver(() => (React__default.createElement(Checkout, { forms: [PaymentForm, ShippingForm], stepLabels: ['Payment Info', 'Shipping Info', 'Confirm Order'], contactIcon: opts.contactIcon, contactTitle: opts.contactTitle, shippingIcon: opts.shippingIcon, shippingTitle: opts.shippingTitle, paymentIcon: opts.paymentIcon, paymentTitle: opts.paymentTitle, cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, address: shopStore.address, setAddress: (k, v) => shopStore.setAddress(k, v), order: shopStore.order, setOrder: (k, v) => shopStore.setOrder(k, v), payment: shopStore.payment, setPayment: (k, v) => shopStore.setPayment(k, v), user: shopStore.user, setUser: (k, v) => shopStore.setUser(k, v), setCoupon: (c) => shopStore.setCoupon(c), checkout: () => shopStore.checkout(), setItem: (id, quantity) => shopStore.setItem(id, quantity), countryOptions: shopStore.countryOptions, stateOptions: shopStore.stateOptions, isLoading: shopStore.isLoading, track: (event, opts) => shopStore.track(event, opts), termsUrl: opts.termsUrl || '/terms', showDescription: opts.showDescription, showTotals: opts.showTotals })));
+	        return useObserver(() => (React__default.createElement(Checkout, { forms: [PaymentForm, ShippingForm], stepLabels: ['Payment Info', 'Shipping Info', 'Confirm Order'], contactIcon: opts.contactIcon, contactTitle: opts.contactTitle, shippingIcon: opts.shippingIcon, shippingTitle: opts.shippingTitle, paymentIcon: opts.paymentIcon, paymentTitle: opts.paymentTitle, cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, address: shopStore.address, setAddress: (k, v) => shopStore.setAddress(k, v), order: shopStore.order, setOrder: (k, v) => shopStore.setOrder(k, v), payment: shopStore.payment, setPayment: (k, v) => shopStore.setPayment(k, v), user: shopStore.user, setUser: (k, v) => shopStore.setUser(k, v), setCoupon: (c) => shopStore.setCoupon(c), checkout: () => shopStore.checkout(), setItem: (id, quantity) => shopStore.setItem(id, quantity), countryOptions: shopStore.countryOptions, stateOptions: shopStore.stateOptions, isLoading: shopStore.isLoading, track: (event, opts) => shopStore.track(event, opts), termsUrl: opts.termsUrl || '/terms', showDescription: opts.showDescription, showTotals: opts.showTotals, cartCheckoutUrl: opts.cartCheckoutUrl, nativeSelects: opts.nativeSelects })));
 	    };
 	    ReactDOM__default.render(React__default.createElement(ShopJS, null), el);
 	};
@@ -75551,7 +75588,7 @@
 	    let el = opts.el;
 	    const ShopJSCart = () => {
 	        const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })));
-	        return useObserver(() => (React__default.createElement(Cart$1, { cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, order: shopStore.order, setCoupon: (c) => shopStore.setCoupon(c), setItem: (id, quantity) => shopStore.setItem(id, quantity), locked: opts.locked, showDescription: opts.showDescription, showTotals: opts.showTotals })));
+	        return useObserver(() => (React__default.createElement(Cart$1, { cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, order: shopStore.order, setCoupon: (c) => shopStore.setCoupon(c), setItem: (id, quantity) => shopStore.setItem(id, quantity), locked: opts.locked, showDescription: opts.showDescription, showTotals: opts.showTotals, cartCheckoutUrl: opts.cartCheckoutUrl, nativeSelects: opts.nativeSelects })));
 	    };
 	    ReactDOM__default.render(React__default.createElement(ShopJSCart, null), el);
 	};
@@ -75559,7 +75596,7 @@
 	    let el = opts.el;
 	    const ShopJSCartCount = () => {
 	        const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })));
-	        return useObserver(() => (React__default.createElement(CartCount, { order: shopStore.order })));
+	        return useObserver(() => (React__default.createElement(CartCount, { count: shopStore.count })));
 	    };
 	    ReactDOM__default.render(React__default.createElement(ShopJSCartCount, null), el);
 	};
@@ -75577,11 +75614,13 @@
 	        el: cartEl2,
 	        showDescription: false,
 	        showTotals: false,
+	        nativeSelects: true,
 	    });
 	    count(client, {
 	        ...opts,
 	        el: countEl2,
 	        showDescription: false,
+	        nativeSelects: true,
 	    });
 	};
 
@@ -75950,6 +75989,7 @@
 	Promise$2.settle = settle;
 
 	Promise$2.soon = soon$1;
+	//# sourceMappingURL=broken.mjs.map
 
 	// src/parse-headers.coffee
 	var isArray;
@@ -76205,6 +76245,7 @@
 	})();
 
 	var XhrPromise$1 = XhrPromise;
+	//# sourceMappingURL=es-xhr-promise.mjs.map
 
 	// node_modules/es-tostring/index.mjs
 	function toString$6(obj) {
@@ -76867,6 +76908,7 @@
 	Hanzo.Client = Client$2;
 
 	var Hanzo$1 = Hanzo;
+	//# sourceMappingURL=hanzo.mjs.map
 
 	if (typeof window !== 'undefined') {
 	    window['ShopJS'] = {

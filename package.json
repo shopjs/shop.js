@@ -96,9 +96,9 @@
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
-    "@hanzo/middleware": "0.0.17",
-    "@hanzo/react": "0.0.17",
-    "@hanzo/utils": "0.0.17",
+    "@hanzo/middleware": "^0.0.18",
+    "@hanzo/react": "^0.0.18",
+    "@hanzo/utils": "^0.0.18",
     "@material-ui/core": "4.10.2",
     "@material-ui/icons": "4.9.1",
     "akasha": "0.1.13",

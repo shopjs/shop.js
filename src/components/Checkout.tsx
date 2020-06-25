@@ -104,6 +104,8 @@ const Checkout = ({
   cartTitle,
   showDescription,
   showTotals,
+  cartCheckoutUrl,
+  nativeSelects,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -254,7 +256,9 @@ const Checkout = ({
   }
 
   return (
-    <Container maxWidth='md' style={{ width: '100%' }}>
+    <Container maxWidth='md' style={{ width: '100%' }} onMouseDown={(event) => {
+      event.stopPropagation()
+    }}>
       <AutoSizer disableHeight>
         {
           ({ width, height }) => {
@@ -347,6 +351,7 @@ const Checkout = ({
                                     stateOptions={stateOptions}
                                     isLoading={isLoading}
                                     termsUrl={termsUrl}
+                                    nativeSelects={nativeSelects}
                                   />
                                 </Grid>
 
@@ -448,6 +453,8 @@ const Checkout = ({
                         locked={isLoading || activeStep === 2}
                         showDescription={showDescription}
                         showTotals={showTotals}
+                        cartCheckoutUrl={cartCheckoutUrl}
+                        nativeSelects={nativeSelects}
                       />
                     </Paper>
                   </Grid>

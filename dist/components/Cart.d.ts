@@ -1,5 +1,5 @@
 /// <reference types="react" />
-declare const _default: ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, }: {
+declare const _default: ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }: {
     order: any;
     setCoupon: any;
     setItem: any;
@@ -8,5 +8,7 @@ declare const _default: ({ order, setCoupon, setItem, locked, cartIcon, cartTitl
     cartTitle: any;
     showDescription: any;
     showTotals: any;
+    cartCheckoutUrl: any;
+    nativeSelects: any;
 }) => JSX.Element;
 export default _default;
