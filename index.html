@@ -23,6 +23,7 @@
   <!-- The app hooks into this div -->
   <div id='app'></div>
   <div id='cart' style='width:100%'></div>
+  <div id='count' style='width:100%;text-align:center'></div>
 
   <script src='https://unpkg.com/react@16/umd/react.development.js' crossorigin></script>
   <script src='https://unpkg.com/react-dom@16/umd/react-dom.development.js' crossorigin></script>
@@ -67,7 +68,19 @@
       },
     )
 
-    ShopJS.set('GAcgAl7dcAwZBQ', 1)
+    ShopJS.count(
+      new ShopJS.Client({
+        key: KEY,
+        endpoint: ENDPOINT,
+      }),
+      {
+        el: document.getElementById('count'),
+      },
+    )
+
+    ShopJS.set('GAcgAl7dcAwZBQ', 2)
+    ShopJS.set('YNcrxO1mCmKOgE', 1)
+
     // ShopJS.set('sad-keanu-shirt', 1)
     // ShopJS.set('sad-keanu-shirt', 1)
   </script>
