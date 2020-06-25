@@ -11,19 +11,21 @@ export interface Options {
   el?: Element
   termsUrl?: string
   completionUrl?: string
-  width?: number,
-  height?: number,
-  locked?: boolean,
-  contactIcon?: any,
-  contactTitle?: string,
-  shippingIcon?: any,
-  shippingTitle?: string,
-  paymentIcon?: any,
-  paymentTitle?: string,
-  cartIcon?: any,
-  cartTitle?: string,
+  width?: number
+  height?: number
+  locked?: boolean
+  contactIcon?: any
+  contactTitle?: string
+  shippingIcon?: any
+  shippingTitle?: string
+  paymentIcon?: any
+  paymentTitle?: string
+  cartIcon?: any
+  cartTitle?: string
   showDescription?: boolean
   showTotals?: boolean
+  cartCheckoutUrl?: string
+  nativeSelects?: boolean
 }
 
 const checkout = (client: ILibraryClient, opts: Options = {}) => {
@@ -62,6 +64,8 @@ const checkout = (client: ILibraryClient, opts: Options = {}) => {
         termsUrl={opts.termsUrl || '/terms'}
         showDescription={opts.showDescription}
         showTotals={opts.showTotals}
+        cartCheckoutUrl={opts.cartCheckoutUrl}
+        nativeSelects={opts.nativeSelects}
       />
     ))
   }
@@ -90,6 +94,8 @@ export const cart = (client: ILibraryClient, opts: Options = {}) => {
         locked={opts.locked}
         showDescription={opts.showDescription}
         showTotals={opts.showTotals}
+        cartCheckoutUrl={opts.cartCheckoutUrl}
+        nativeSelects={opts.nativeSelects}
       />
     ))
   }
@@ -108,7 +114,7 @@ export const count = (client: ILibraryClient, opts: Options = {}) => {
 
     return useObserver(() => (
       <CartCount
-        order={shopStore.order}
+        count={shopStore.count}
       />
     ))
   }
@@ -137,11 +143,13 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
     el: cartEl2,
     showDescription: false,
     showTotals: false,
+    nativeSelects: true,
   })
 
   count(client, {
     ...opts,
     el: countEl2,
     showDescription: false,
+    nativeSelects: true,
   })
 }

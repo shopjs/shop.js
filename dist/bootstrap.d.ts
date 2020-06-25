@@ -16,6 +16,8 @@ export interface Options {
     cartTitle?: string;
     showDescription?: boolean;
     showTotals?: boolean;
+    cartCheckoutUrl?: string;
+    nativeSelects?: boolean;
 }
 declare const checkout: (client: ILibraryClient, opts?: Options) => void;
 export default checkout;

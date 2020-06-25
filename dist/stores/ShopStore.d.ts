@@ -47,4 +47,5 @@ export default class ShopStore {
     checkout(): Promise<any>;
     setItem(id: string, quantity: number): Promise<void>;
     track(event: string, opts: any): void;
+    get count(): number;
 }

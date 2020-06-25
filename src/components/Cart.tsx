@@ -13,6 +13,7 @@ import {
 import {
   Button,
   Grid,
+  Link,
 } from '@material-ui/core'
 
 import { makeStyles } from '@material-ui/core/styles'
@@ -82,6 +83,9 @@ const useStyles = makeStyles((theme) => ({
     width: 120,
     maxWidth: '40%',
   },
+  checkoutButton: {
+    marginTop: theme.spacing(2),
+  },
 }))
 
 import {
@@ -104,11 +108,15 @@ const Cart = ({
   cartTitle,
   showDescription,
   showTotals,
+  cartCheckoutUrl,
+  nativeSelects,
 }): JSX.Element => {
   const classes = useStyles()
 
   return (
-    <Box p={[2, 3, 4]} className='cart'>
+    <Box p={[2, 3, 4]} className='cart' onMouseDown={(event) => {
+      event.stopPropagation()
+    }}>
       <Grid container>
         <Grid item xs={12} className='cart-header'>
           <Grid container spacing={1} alignItems='center'>
@@ -118,11 +126,11 @@ const Cart = ({
             <Grid item className='cart-title'>
               { !!(order.items && order.items.length && order.items.length > 0)
                   ? cartTitle || (
-                    <Typography variant='h6'>
+                    <Typography variant='h6' className='cart-your-items-title'>
                       Your Items
                     </Typography>
                   )
-                  : <Typography variant='h6'>
+                  : <Typography variant='h6' className='cart-is-empty-title'>
                       Your Cart Is Empty.
                     </Typography>
                }
@@ -172,6 +180,7 @@ const Cart = ({
                                       setValue={ (quantity) => {
                                         setItem(item.id, parseInt(quantity, 10))
                                       }}
+                                      SelectProps={{ native: !!nativeSelects }}
                                     />
                                   </Grid>
                                 </Grid>
@@ -326,6 +335,18 @@ const Cart = ({
                         </Grid>
                       </Grid>
                     </>
+                  )
+                }
+
+                {
+                  cartCheckoutUrl && (
+                    <Grid container className={classnames(classes.checkoutButton, 'cart-summary-checkout-button')}>
+                      <Grid item xs>
+                        <Link href={cartCheckoutUrl}>
+                          <Button variant='contained' size='large' color='primary' fullWidth>Checkout</Button>
+                        </Link>
+                      </Grid>
+                    </Grid>
                   )
                 }
               </div>

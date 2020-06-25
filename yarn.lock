@@ -302,17 +302,17 @@
   resolved "https://registry.yarnpkg.com/@emotion/hash/-/hash-0.8.0.tgz#bbbff68978fefdbe68ccb533bc8cbe1d1afb5413"
   integrity sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow==
 
-"@hanzo/middleware@0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@hanzo/middleware/-/middleware-0.0.17.tgz#07107703f2d75deca4e3b451048e0ba60680bb01"
-  integrity sha512-/KG1DwjXn4+6hkWz/9DXJkxja2CjBGgqdf/LDE68eAJDMR2Sydj6e3quJdmsQuIO3Bc+Pya9TO53QgKggQKgRg==
+"@hanzo/middleware@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@hanzo/middleware/-/middleware-0.0.18.tgz#dcddc957ded361fa67bd66846aee0b8d9f77737a"
+  integrity sha512-XxYiSG0jbgQXGAlbAuHYxoNFdGLnTBWsx0Y4epqgRiCiycjRzzvC5YKMoYVPL+bdf8HtrMaOPv/0cjjz7TWArw==
   dependencies:
     libphonenumber-js "^1.7.50"
 
-"@hanzo/react@0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@hanzo/react/-/react-0.0.17.tgz#4ddbbbca504de5ebd5f39922624f84662c0ad3aa"
-  integrity sha512-pYsDE37eqnGyGgk4z1aEZC2XokNMUxA/iE31Y9GJS5eMysn6SGWtCvdyC3QDzFzzeRCiAJfIp5w7kjjaIH+frQ==
+"@hanzo/react@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@hanzo/react/-/react-0.0.18.tgz#5fe3c09c118e1d79bebd5168b9570dfe74330ded"
+  integrity sha512-0pQ7xK96RfoaGqikdtyb7UjV/gQ6c98bUQXxWsgdD9WazMcL3ioG8AhzqZVbsv1Gt7flbX6ynEYi4tZraI6MlA==
   dependencies:
     "@date-io/moment" "2.6.0"
     "@material-ui/pickers" "3.2.10"
@@ -321,10 +321,10 @@
     flag-icon-css "3.4.6"
     react-number-format "4.4.1"
 
-"@hanzo/utils@0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@hanzo/utils/-/utils-0.0.17.tgz#7c75ede5f6d1a04ae05d680d44af5b295f5b4c68"
-  integrity sha512-0jNihBBkcsB6MqWgdLwDU7OKkdLuDV+t2XZ7rmakg4jw4i1MiouEkjCtAlUJ73x4cotzW+Vhot2dGyF4c57mvA==
+"@hanzo/utils@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@hanzo/utils/-/utils-0.0.18.tgz#8dd385712c9b7eade9a482a1d7911cf1f8985bd1"
+  integrity sha512-M0MbwI9FvJFaz086IGl/cgfnKZgV3l2gSpLrLtZSJbS0EULCxSR+UbvpGiN3HCl9Lieg/kx6RJUhytSeKIIQCA==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"

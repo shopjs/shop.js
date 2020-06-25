@@ -53,6 +53,7 @@ const ShippingForm = ({
   isLoading,
   shippingIcon,
   shippingTitle,
+  nativeSelects,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -154,6 +155,7 @@ const ShippingForm = ({
             value={order.shippingAddress.country}
             setValue={setCountry}
             error={addressErr.country}
+            SelectProps={{ native: !!nativeSelects }}
           />
         </Grid>
         <Grid item xs={12} sm={6} className='shipping-state'>
@@ -168,6 +170,7 @@ const ShippingForm = ({
             value={order.shippingAddress.state}
             setValue={setState}
             error={addressErr.state}
+            SelectProps={{ native: !!nativeSelects }}
           />
         </Grid>
 

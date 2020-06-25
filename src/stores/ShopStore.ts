@@ -273,4 +273,9 @@ export default class ShopStore {
       this.commerce.analytics.track(event, opts)
     }
   }
+
+  @computed
+  get count(): number {
+    return this.order.items.reduce((a,b) => a + b.quantity, 0)
+  }
 }
