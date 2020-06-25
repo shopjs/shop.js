@@ -1,6 +1,6 @@
 import { ILibraryClient } from './stores';
 export interface Options {
-    el: Element;
+    el?: Element;
     termsUrl?: string;
     completionUrl?: string;
     width?: number;
@@ -17,8 +17,8 @@ export interface Options {
     showDescription?: boolean;
     showTotals?: boolean;
 }
-declare const checkout: (client: ILibraryClient, opts: Options) => void;
+declare const checkout: (client: ILibraryClient, opts?: Options) => void;
 export default checkout;
-export declare const cart: (client: ILibraryClient, opts: Options) => void;
-export declare const count: (client: ILibraryClient, opts: Options) => void;
-export declare const shopify: (client: ILibraryClient, opts: Options) => void;
+export declare const cart: (client: ILibraryClient, opts?: Options) => void;
+export declare const count: (client: ILibraryClient, opts?: Options) => void;
+export declare const shopify: (client: ILibraryClient, opts?: Options) => void;

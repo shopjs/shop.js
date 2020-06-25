@@ -8,7 +8,7 @@ import { Checkout, Cart, CartCount, PaymentForm, ShippingForm } from './componen
 import initStore, { ShopStore, ILibraryClient } from './stores'
 
 export interface Options {
-  el: Element
+  el?: Element
   termsUrl?: string
   completionUrl?: string
   width?: number,
@@ -26,7 +26,7 @@ export interface Options {
   showTotals?: boolean
 }
 
-const checkout = (client: ILibraryClient, opts: Options) => {
+const checkout = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJS = (): JSX.Element => {
@@ -74,7 +74,7 @@ const checkout = (client: ILibraryClient, opts: Options) => {
 
 export default checkout
 
-export const cart = (client: ILibraryClient, opts: Options) => {
+export const cart = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJSCart = (): JSX.Element => {
@@ -100,7 +100,7 @@ export const cart = (client: ILibraryClient, opts: Options) => {
   )
 }
 
-export const count = (client: ILibraryClient, opts: Options) => {
+export const count = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJSCartCount = (): JSX.Element => {
@@ -119,17 +119,29 @@ export const count = (client: ILibraryClient, opts: Options) => {
   )
 }
 
-export const shopify = function(client: ILibraryClient, opts: Options) {
+export const shopify = function(client: ILibraryClient, opts: Options = {}) {
+  const cartEl1 = document.getElementById('CartContainer') as HTMLElement
+  cartEl1.removeAttribute('id')
+  const cartEl2 = cartEl1.cloneNode(true) as HTMLElement
+
+  (cartEl1.parentNode as any).replaceChild(cartEl2 as HTMLElement, cartEl1)
+
+  const countEl1 = document.getElementById('CartCount') as HTMLElement
+  countEl1.removeAttribute('id')
+  const countEl2 = countEl1.cloneNode(true) as HTMLElement
+
+  (countEl1.parentNode as any).replaceChild(countEl2 as HTMLElement, countEl1)
+
   cart(client, {
     ...opts,
-    el: document.getElementById('CartContainer') as HTMLElement,
+    el: cartEl2,
     showDescription: false,
     showTotals: false,
   })
 
   count(client, {
     ...opts,
-    el: document.getElementById('CartCount') as HTMLElement,
+    el: countEl2,
     showDescription: false,
   })
 }

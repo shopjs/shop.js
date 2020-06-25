@@ -25,6 +25,9 @@
   <div id='cart' style='width:100%'></div>
   <div id='count' style='width:100%;text-align:center'></div>
 
+  <div id='CartContainer' style='width:100%'></div>
+  <div id='CartCount' style='width:100%;text-align:center'></div>
+
   <script src='https://unpkg.com/react@16/umd/react.development.js' crossorigin></script>
   <script src='https://unpkg.com/react-dom@16/umd/react-dom.development.js' crossorigin></script>
   <script type='text/javascript'>
@@ -76,6 +79,13 @@
       {
         el: document.getElementById('count'),
       },
+    )
+
+    ShopJS.shopify(
+      new ShopJS.Client({
+        key: KEY,
+        endpoint: ENDPOINT,
+      }),
     )
 
     ShopJS.set('GAcgAl7dcAwZBQ', 2)
