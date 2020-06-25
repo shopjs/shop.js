@@ -4,7 +4,7 @@ import { AutoSizer } from 'react-virtualized'
 
 import { useLocalStore, useObserver } from 'mobx-react'
 
-import { Checkout, Cart, PaymentForm, ShippingForm } from './components'
+import { Checkout, Cart, CartCount, PaymentForm, ShippingForm } from './components'
 import initStore, { ShopStore, ILibraryClient } from './stores'
 
 export interface Options {
@@ -22,9 +22,11 @@ export interface Options {
   paymentTitle?: string,
   cartIcon?: any,
   cartTitle?: string,
+  showDescription?: boolean
+  showTotals?: boolean
 }
 
-export default function(client: ILibraryClient, opts: Options) {
+const checkout = (client: ILibraryClient, opts: Options) => {
   let el = opts.el
 
   const ShopJS = (): JSX.Element => {
@@ -58,6 +60,8 @@ export default function(client: ILibraryClient, opts: Options) {
         isLoading={ shopStore.isLoading }
         track={(event, opts) => shopStore.track(event, opts)}
         termsUrl={opts.termsUrl || '/terms'}
+        showDescription={opts.showDescription}
+        showTotals={opts.showTotals}
       />
     ))
   }
@@ -68,7 +72,9 @@ export default function(client: ILibraryClient, opts: Options) {
   )
 }
 
-export const cart = function(client: ILibraryClient, opts: Options) {
+export default checkout
+
+export const cart = (client: ILibraryClient, opts: Options) => {
   let el = opts.el
 
   const ShopJSCart = (): JSX.Element => {
@@ -82,6 +88,8 @@ export const cart = function(client: ILibraryClient, opts: Options) {
         setCoupon={(c: string) => shopStore.setCoupon(c)}
         setItem={(id: string, quantity: number) => shopStore.setItem(id, quantity)}
         locked={opts.locked}
+        showDescription={opts.showDescription}
+        showTotals={opts.showTotals}
       />
     ))
   }
@@ -90,4 +98,38 @@ export const cart = function(client: ILibraryClient, opts: Options) {
     <ShopJSCart/>,
     el,
   )
+}
+
+export const count = (client: ILibraryClient, opts: Options) => {
+  let el = opts.el
+
+  const ShopJSCartCount = (): JSX.Element => {
+    const shopStore = useLocalStore(() => (initStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
+
+    return useObserver(() => (
+      <CartCount
+        order={shopStore.order}
+      />
+    ))
+  }
+
+  ReactDOM.render(
+    <ShopJSCartCount/>,
+    el,
+  )
+}
+
+export const shopify = function(client: ILibraryClient, opts: Options) {
+  cart(client, {
+    ...opts,
+    el: document.getElementById('CartContainer') as HTMLElement,
+    showDescription: false,
+    showTotals: false,
+  })
+
+  count(client, {
+    ...opts,
+    el: document.getElementById('CartCount') as HTMLElement,
+    showDescription: false,
+  })
 }

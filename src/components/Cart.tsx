@@ -26,10 +26,6 @@ const useStyles = makeStyles((theme) => ({
   bold: {
     fontWeight: 700,
   },
-  items: {
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-  },
   coupon: {
     paddingBottom: theme.spacing(2),
   },
@@ -61,14 +57,30 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: 7,
     paddingBottom: 7,
   },
+  cartItems: {
+    paddingTop: theme.spacing(2),
+  },
+  cartItem: {
+    paddingBottom: theme.spacing(2),
+  },
   cartItemPrice: {
     transform: 'translate(0, 4px)',
   },
   cartItemImg: {
-    maxWidth: 120,
+    width: 120,
+    maxWidth: '33%',
   },
   cartImg: {
     width: '100%',
+  },
+  cartDescription: {
+    '& *': {
+      margin: 0,
+    },
+  },
+  summaryNumber: {
+    width: 120,
+    maxWidth: '40%',
   },
 }))
 
@@ -90,6 +102,8 @@ const Cart = ({
   locked,
   cartIcon,
   cartTitle,
+  showDescription,
+  showTotals,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -118,11 +132,11 @@ const Cart = ({
         {
           !!(order.items && order.items.length && order.items.length > 0)
             && <Grid item xs={12}>
-              <div className={classnames(classes.items, 'cart-items')}>
+              <div className={classnames(classes.cartItems, 'cart-items')}>
                 {
                   order.items.map((item) => {
                     return (
-                      <Grid container alignItems='center' key={item.name} className='cart-item'>
+                      <Grid container alignItems='center' key={item.name} className={classnames('cart-item', classes.cartItem)}>
                         {
                           item.imageURL
                             ? (
@@ -131,13 +145,13 @@ const Cart = ({
                                   <Grid item className={ classnames('cart-item-image', classes.cartItemImg) }>
                                     <img src={item.imageURL} alt={item.name} className={classes.cartImg}/>
                                   </Grid>
-                                  <Grid item xs className='cart-item-name'>
-                                    <Typography variant='body1'>
+                                  <Grid item xs className='cart-item-text'>
+                                    <Typography className='cart-item-name' variant='body1'>
                                       <strong>{ item.name }</strong>
                                     </Typography>
-                                    <Typography variant='body2'>
-                                      { item.description }
-                                    </Typography>
+                                    {
+                                      showDescription !== false && <Typography className={classnames('cart-item-description', classes.cartDescription)} variant='body2' dangerouslySetInnerHTML={{__html: item.description }}/>
+                                    }
                                     <br/>
                                   </Grid>
                                 </Grid>
@@ -161,6 +175,7 @@ const Cart = ({
                                     />
                                   </Grid>
                                 </Grid>
+                                <br/>
                               </>
                             ) : (
                               <>
@@ -191,6 +206,7 @@ const Cart = ({
                                     />
                                   </Grid>
                                 </Grid>
+                                <br/>
                               </>
                             )
                         }
@@ -239,12 +255,12 @@ const Cart = ({
             <Grid item xs={12} className='cart-summary'>
               <div>
                 <Grid container className={classnames(classes.lineSpacing, 'cart-summary-subtotal')}>
-                  <Grid item xs={8} sm={9} className={classes.right}>
+                  <Grid item xs className={classes.right}>
                     <Typography variant='body1'>
                       Subtotal
                     </Typography>
                   </Grid>
-                  <Grid item xs className={classes.right}>
+                  <Grid item className={classnames(classes.right, classes.summaryNumber)}>
                     <Typography variant='body1'>
                       { renderUICurrencyFromJSON(order.currency, order.subtotal) }
                     </Typography>
@@ -254,12 +270,12 @@ const Cart = ({
                 {
                   order.discount > 0 && (
                     <Grid container className={classnames(classes.lineSpacing, 'cart-summary-discount')}>
-                      <Grid item xs={8} sm={9} className={classes.right}>
+                      <Grid item xs className={classes.right}>
                         <Typography variant='body1'>
                           You Saved
                         </Typography>
                       </Grid>
-                      <Grid item xs className={classes.right}>
+                      <Grid item className={classnames(classes.right, classes.summaryNumber)}>
                         <Typography variant='body1'>
                           { renderUICurrencyFromJSON(order.currency, order.discount) }
                         </Typography>
@@ -268,44 +284,50 @@ const Cart = ({
                   )
                 }
 
-                <Grid container className={classnames(classes.lineSpacing, 'cart-summary-shipping')}>
-                  <Grid item xs={8} sm={9} className={classes.right}>
-                    <Typography variant='body1'>
-                      Shipping
-                    </Typography>
-                  </Grid>
-                  <Grid item xs className={classes.right}>
-                    <Typography variant='body1'>
-                      { order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free' }
-                    </Typography>
-                  </Grid>
-                </Grid>
+                {
+                  showTotals !== false && (
+                    <>
+                      <Grid container className={classnames(classes.lineSpacing, 'cart-summary-shipping')}>
+                        <Grid item xs className={classes.right}>
+                          <Typography variant='body1'>
+                            Shipping
+                          </Typography>
+                        </Grid>
+                        <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                          <Typography variant='body1'>
+                            { order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free' }
+                          </Typography>
+                        </Grid>
+                      </Grid>
 
-                <Grid container className='cart-summary-tax'>
-                  <Grid item xs={8} sm={9} className={classes.right}>
-                    <Typography variant='body1'>
-                      Tax
-                    </Typography>
-                  </Grid>
-                  <Grid item xs className={classes.right}>
-                    <Typography variant='body1'>
-                      { renderUICurrencyFromJSON(order.currency, order.tax) }
-                    </Typography>
-                  </Grid>
-                </Grid>
+                      <Grid container className='cart-summary-tax'>
+                        <Grid item xs className={classes.right}>
+                          <Typography variant='body1'>
+                            Tax
+                          </Typography>
+                        </Grid>
+                        <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                          <Typography variant='body1'>
+                            { renderUICurrencyFromJSON(order.currency, order.tax) }
+                          </Typography>
+                        </Grid>
+                      </Grid>
 
-                <Grid container className={classnames(classes.total, 'cart-summary-total')}>
-                  <Grid item xs={8} sm={9} className={classes.right}>
-                    <Typography variant='body1'>
-                      Total
-                    </Typography>
-                  </Grid>
-                  <Grid item xs className={classes.right}>
-                    <Typography variant='body1'>
-                      { renderUICurrencyFromJSON(order.currency, order.total) }
-                    </Typography>
-                  </Grid>
-                </Grid>
+                      <Grid container className={classnames(classes.total, 'cart-summary-total')}>
+                        <Grid item xs className={classes.right}>
+                          <Typography variant='body1'>
+                            Total
+                          </Typography>
+                        </Grid>
+                        <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                          <Typography variant='body1'>
+                            { renderUICurrencyFromJSON(order.currency, order.total) }
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </>
+                  )
+                }
               </div>
             </Grid>
           </>

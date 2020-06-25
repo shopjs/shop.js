@@ -102,6 +102,8 @@ const Checkout = ({
   paymentTitle,
   cartIcon,
   cartTitle,
+  showDescription,
+  showTotals,
 }): JSX.Element => {
   const classes = useStyles()
 
@@ -444,6 +446,8 @@ const Checkout = ({
                         setCoupon={setCoupon}
                         setItem={setItem}
                         locked={isLoading || activeStep === 2}
+                        showDescription={showDescription}
+                        showTotals={showTotals}
                       />
                     </Paper>
                   </Grid>
