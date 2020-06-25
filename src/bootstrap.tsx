@@ -159,16 +159,16 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   const styles = `
   .cart-drawer.drawer .cart-items {
     padding: 0 !important;
-  };
+  }
   .cart-drawer.drawer .cart {
     padding: 0 !important;
-  };
+  }
   .cart-drawer.drawer .cart-icon {
     display: none;
-  };
+  }
   .cart-drawer.drawer .cart-your-items-title {
     display: none;
-  };
+  }
   `
   css.appendChild(document.createTextNode(styles))
 
