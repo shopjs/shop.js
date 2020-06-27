@@ -153,6 +153,21 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
     nativeSelects: true,
   })
 
+  // if (window.location.pathname.indexOf('cart') > -1) {
+  const checkoutEl1 = document.querySelector('form.cart') as HTMLElement
+  checkoutEl1.removeAttribute('id')
+  const checkoutEl2 = checkoutEl1.cloneNode(true) as HTMLElement
+
+  (checkoutEl1.parentNode as any).replaceChild(checkoutEl2 as HTMLElement, checkoutEl1)
+
+  checkout(client, {
+    ...opts,
+    el: checkoutEl2,
+    showDescription: false,
+    nativeSelects: true,
+  })
+  // }
+
   const css = document.createElement('style')
   css.type = 'text/css'
 
@@ -173,4 +188,5 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   css.appendChild(document.createTextNode(styles))
 
   document.getElementsByTagName('head')[0].appendChild(css)
+  document.getElementsByClassName('addToCart')
 }
