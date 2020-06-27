@@ -143,7 +143,8 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   .cart-drawer.drawer .cart-your-items-title {
     display: none;
   }
-  form.cart {
+  #your-shopping-cart form.cart,
+  #your-shopping-cart main section > .wrapper {
     display: none;
   }
   .shopify-payment-button {
