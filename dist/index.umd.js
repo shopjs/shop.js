@@ -53620,50 +53620,6 @@
 	                React__default.createElement(TextField$1, Object.assign({}, cvcProps, { inputRef: cvcPropsRef, fullWidth: true, label: 'CVC', placeholder: '123', size: 'medium', error: touchedInputs.cvc && erroredInputs.cvc || err.cvc, helperText: touchedInputs.cvc && erroredInputs.cvc || err.cvc && err.cvc.message }))))));
 	};
 
-	var Person = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = void 0;
-
-	var _react = interopRequireDefault(React__default);
-
-	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
-
-	var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
-	  d: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-	}), 'Person');
-
-	exports.default = _default;
-	});
-
-	var PersonIcon = unwrapExports(Person);
-
-	var ExpandMore = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = void 0;
-
-	var _react = interopRequireDefault(React__default);
-
-	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
-
-	var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
-	  d: "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
-	}), 'ExpandMore');
-
-	exports.default = _default;
-	});
-
-	var ExpandMoreIcon = unwrapExports(ExpandMore);
-
 	/** MobX - (c) Michel Weststrate 2015 - 2020 - MIT Licensed */
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation. All rights reserved.
@@ -58396,6 +58352,50 @@
 	if (!React.Component) throw new Error("mobx-react requires React to be available");
 	if (!observable) throw new Error("mobx-react requires mobx to be available");
 	//# sourceMappingURL=mobxreact.esm.js.map
+
+	var Person = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(React__default);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
+	  d: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+	}), 'Person');
+
+	exports.default = _default;
+	});
+
+	var PersonIcon = unwrapExports(Person);
+
+	var ExpandMore = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(React__default);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
+	  d: "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+	}), 'ExpandMore');
+
+	exports.default = _default;
+	});
+
+	var ExpandMoreIcon = unwrapExports(ExpandMore);
 
 	var ShoppingCart = createCommonjsModule(function (module, exports) {
 
@@ -70017,7 +70017,7 @@
 	};
 	const Checkout = ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
 	    const theme = useTheme$1();
-	    const isBelowMD = useMediaQuery(theme.breakpoints.down('md'));
+	    const isBelowSM = useMediaQuery(theme.breakpoints.down('sm'));
 	    const classes = useStyles$b();
 	    const splitName = (v) => {
 	        let [firstName, lastName] = v.split(/\s+/);
@@ -70127,6 +70127,7 @@
 	    else {
 	        Forms = [forms[0], forms[1]];
 	    }
+	    console.log('disabled', !(order.items && order.items.length && order.items.length > 0));
 	    return (React__default.createElement(Container$1, { maxWidth: 'md', style: { width: '100%' }, onMouseDown: (event) => {
 	            event.stopPropagation();
 	        } },
@@ -70169,7 +70170,7 @@
 	                            React__default.createElement("div", { style: {
 	                                    height: activeStep == 2 ? 'inherit' : 0,
 	                                }, className: 'checkout-form' }, activeStep == 2 && (React__default.createElement(ThankYou, { width: halfWidth, height: height, order: order }))))),
-	                    React__default.createElement(StyledGrid, { item: true, xs: 12, md: 6, className: 'checkout-cart' }, isBelowMD ? (React__default.createElement(ExpansionPanel$1, null,
+	                    React__default.createElement(StyledGrid, { item: true, xs: 12, md: 6, className: 'checkout-cart' }, isBelowSM ? (React__default.createElement(ExpansionPanel$1, null,
 	                        React__default.createElement(ExpansionPanelSummary$1, { expandIcon: React__default.createElement(ExpandMoreIcon, null), "aria-controls": 'cart-items-content', id: 'cart-items-header' },
 	                            React__default.createElement(StyledGrid, { container: true, alignItems: 'center', spacing: 2 },
 	                                React__default.createElement(StyledGrid, { item: true, xs: true },
@@ -70181,6 +70182,7 @@
 	                        React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: undefined, nativeSelects: nativeSelects })))))));
 	        })));
 	};
+	var Checkout$1 = observer$1(Checkout);
 
 	var CartCount = ({ count, }) => {
 	    return (React__default.createElement("div", null, count));
@@ -76454,7 +76456,7 @@
 	    let el = opts.el;
 	    const ShopJS = () => {
 	        const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })));
-	        return useObserver(() => (React__default.createElement(Checkout, { forms: [PaymentForm, ShippingForm], stepLabels: ['Payment Info', 'Shipping Info', 'Confirm Order'], contactIcon: opts.contactIcon, contactTitle: opts.contactTitle, shippingIcon: opts.shippingIcon, shippingTitle: opts.shippingTitle, paymentIcon: opts.paymentIcon, paymentTitle: opts.paymentTitle, cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, address: shopStore.address, setAddress: (k, v) => shopStore.setAddress(k, v), order: shopStore.order, setOrder: (k, v) => shopStore.setOrder(k, v), payment: shopStore.payment, setPayment: (k, v) => shopStore.setPayment(k, v), user: shopStore.user, setUser: (k, v) => shopStore.setUser(k, v), setCoupon: (c) => shopStore.setCoupon(c), checkout: () => shopStore.checkout(), setItem: (id, quantity) => shopStore.setItem(id, quantity), countryOptions: shopStore.countryOptions, stateOptions: shopStore.stateOptions, isLoading: shopStore.isLoading, track: (event, opts) => shopStore.track(event, opts), termsUrl: opts.termsUrl || '/terms', showDescription: opts.showDescription, showTotals: opts.showTotals, cartCheckoutUrl: opts.cartCheckoutUrl, nativeSelects: opts.nativeSelects })));
+	        return useObserver(() => (React__default.createElement(Checkout$1, { forms: [PaymentForm, ShippingForm], stepLabels: ['Payment Info', 'Shipping Info', 'Confirm Order'], contactIcon: opts.contactIcon, contactTitle: opts.contactTitle, shippingIcon: opts.shippingIcon, shippingTitle: opts.shippingTitle, paymentIcon: opts.paymentIcon, paymentTitle: opts.paymentTitle, cartIcon: opts.cartIcon, cartTitle: opts.cartTitle, address: shopStore.address, setAddress: (k, v) => shopStore.setAddress(k, v), order: shopStore.order, setOrder: (k, v) => shopStore.setOrder(k, v), payment: shopStore.payment, setPayment: (k, v) => shopStore.setPayment(k, v), user: shopStore.user, setUser: (k, v) => shopStore.setUser(k, v), setCoupon: (c) => shopStore.setCoupon(c), checkout: () => shopStore.checkout(), setItem: (id, quantity) => shopStore.setItem(id, quantity), countryOptions: shopStore.countryOptions, stateOptions: shopStore.stateOptions, isLoading: shopStore.isLoading, track: (event, opts) => shopStore.track(event, opts), termsUrl: opts.termsUrl || '/terms', showDescription: opts.showDescription, showTotals: opts.showTotals, cartCheckoutUrl: opts.cartCheckoutUrl, nativeSelects: opts.nativeSelects })));
 	    };
 	    ReactDOM__default.render(React__default.createElement(ShopJS, null), el);
 	};
@@ -77820,7 +77822,7 @@
 	        Client: Hanzo$1,
 	        ShippingForm,
 	        PaymentForm,
-	        Checkout,
+	        Checkout: Checkout$1,
 	        start: checkout,
 	        cart,
 	        count,
@@ -77844,7 +77846,7 @@
 
 	exports.Cart = Cart$1;
 	exports.CartCount = CartCount;
-	exports.Checkout = Checkout;
+	exports.Checkout = Checkout$1;
 	exports.Client = Hanzo$1;
 	exports.PaymentForm = PaymentForm;
 	exports.ShippingForm = ShippingForm;

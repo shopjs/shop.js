@@ -1,5 +1,5 @@
 /// <reference types="react" />
-declare const Checkout: ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }: {
+declare const _default: ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }: {
     forms: any;
     address: any;
     setAddress: any;
@@ -31,4 +31,4 @@ declare const Checkout: ({ forms, address, setAddress, order, setOrder, payment,
     cartCheckoutUrl: any;
     nativeSelects: any;
 }) => JSX.Element;
-export default Checkout;
+export default _default;

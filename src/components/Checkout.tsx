@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { observer } from 'mobx-react'
 import classnames from 'classnames'
 
 import {
@@ -118,7 +119,7 @@ const Checkout = ({
   nativeSelects,
 }): JSX.Element => {
   const theme = useTheme()
-  const isBelowMD = useMediaQuery(theme.breakpoints.down('md'))
+  const isBelowSM = useMediaQuery(theme.breakpoints.down('sm'))
 
   const classes = useStyles()
 
@@ -457,7 +458,7 @@ const Checkout = ({
                   </Grid>
                   <Grid item xs={12} md={6} className='checkout-cart'>
                     {
-                      isBelowMD ? (
+                      isBelowSM ? (
                         <ExpansionPanel>
                           <ExpansionPanelSummary
                             expandIcon={<ExpandMoreIcon />}
@@ -520,4 +521,4 @@ const Checkout = ({
   )
 }
 
-export default Checkout
+export default observer(Checkout)
