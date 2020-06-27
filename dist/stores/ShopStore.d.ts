@@ -46,6 +46,7 @@ export default class ShopStore {
     get user(): import("commerce.js").User;
     checkout(): Promise<any>;
     setItem(id: string, quantity: number): Promise<void>;
+    addItem(id: string, quantity: number): Promise<void>;
     track(event: string, opts: any): void;
     get count(): number;
 }

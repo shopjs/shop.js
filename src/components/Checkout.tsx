@@ -269,6 +269,8 @@ const Checkout = ({
     Forms = [forms[0], forms[1]]
   }
 
+  const disabled = !(order.items && order.items.length && order.items.length > 0)
+
   return (
     <Container maxWidth='md' style={{ width: '100%' }} onMouseDown={(event) => {
       event.stopPropagation()
@@ -390,7 +392,7 @@ const Checkout = ({
                                         color='primary'
                                         size='large'
                                         onClick={handleNext}
-                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
+                                        disabled={isLoading || disabled}
                                       >
                                         Continue
                                       </Button>
@@ -410,14 +412,14 @@ const Checkout = ({
                                         color='primary'
                                         size='large'
                                         onClick={handleSubmit}
-                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
+                                        disabled={isLoading || disabled}
                                       >
                                         Complete
                                       </Button>
                                       <Button
                                         size='large'
                                         onClick={handleBack}
-                                        disabled={isLoading || !(order.items && order.items.length && order.items.length > 0)}
+                                        disabled={isLoading || disabled}
                                       >
                                         Back
                                       </Button>

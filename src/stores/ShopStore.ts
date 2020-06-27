@@ -268,6 +268,25 @@ export default class ShopStore {
   }
 
   @action
+  async addItem(id: string, quantity: number) {
+    if (quantity) {
+      this.track('Viewed Checkout Step', {step: 1})
+    }
+
+    let item = await this.commerce.get(id)
+
+    if (item && item.quantity) {
+      quantity += item.quantity
+    }
+
+    await this.commerce.set(id, quantity)
+
+    if (quantity) {
+      this.track('Completed Checkout Step', {step: 1})
+    }
+  }
+
+  @action
   track(event: string, opts: any) {
     if (this.commerce.analytics) {
       this.commerce.analytics.track(event, opts)

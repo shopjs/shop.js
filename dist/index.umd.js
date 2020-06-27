@@ -61,7 +61,7 @@
 
 	}).call(commonjsGlobal);
 
-	//# sourceMappingURL=performance-now.js.map
+
 	});
 
 	var root = typeof window === 'undefined' ? commonjsGlobal : window
@@ -6803,7 +6803,6 @@
 	    if (immediate && !timeout) func.apply(context, args);
 	  };
 	}
-	//# sourceMappingURL=index.esm.js.map
 
 	var common = {
 	  black: '#000',
@@ -46803,7 +46802,6 @@
 
 	NumberFormat.propTypes = propTypes$1$1$1;
 	NumberFormat.defaultProps = defaultProps$2;
-	//# sourceMappingURL=index.esm.js.map
 
 	var createSvgIcon_1 = createCommonjsModule(function (module, exports) {
 
@@ -47222,7 +47220,6 @@
 
 	  return ret
 	};
-	//# sourceMappingURL=midstream.esm.js.map
 
 	const useMidstream = (config, opts) => {
 	    const [dst, setDst] = React.useState(() => opts.dst || opts.destination || {});
@@ -52094,7 +52091,6 @@
 	    throw new Error('Required');
 	  };
 	};
-	//# sourceMappingURL=index.esm.js.map
 
 	const useStyles$7 = makeStyles$1((theme) => ({
 	    form: {
@@ -57958,7 +57954,6 @@
 	    });
 	  };
 	}
-	//# sourceMappingURL=mobxreactlite.esm.js.map
 
 	var symbolId = 0;
 
@@ -58351,7 +58346,6 @@
 
 	if (!React.Component) throw new Error("mobx-react requires React to be available");
 	if (!observable) throw new Error("mobx-react requires mobx to be available");
-	//# sourceMappingURL=mobxreact.esm.js.map
 
 	var Person = createCommonjsModule(function (module, exports) {
 
@@ -58486,7 +58480,7 @@
 	    },
 	}));
 	const quantityOpts = {};
-	for (let i = 0; i < 10; i++) {
+	for (let i = 0; i < 100; i++) {
 	    quantityOpts[i] = i;
 	}
 	const Cart = ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
@@ -70127,6 +70121,7 @@
 	    else {
 	        Forms = [forms[0], forms[1]];
 	    }
+	    const disabled = !(order.items && order.items.length && order.items.length > 0);
 	    return (React__default.createElement(Container$1, { maxWidth: 'md', style: { width: '100%' }, onMouseDown: (event) => {
 	            event.stopPropagation();
 	        } },
@@ -70159,11 +70154,11 @@
 	                                            React__default.createElement(MUICheckbox, { label: React__default.createElement(Link$1, { href: termsUrl, target: '_blank' }, "Please agree to our terms and conditions."), placeholder: '123', size: 'medium', value: src.terms, error: err.terms, setValue: setTerms }))),
 	                                        React__default.createElement(StyledGrid, { item: true, xs: 12, className: 'checkout-buttons' },
 	                                            activeStep == 0 && (React__default.createElement("div", { className: classnames(classes.buttons, 'checkout-buttons') },
-	                                                React__default.createElement(Button$1, { variant: 'contained', color: 'primary', size: 'large', onClick: handleNext, disabled: isLoading || !(order.items && order.items.length && order.items.length > 0) }, "Continue"),
+	                                                React__default.createElement(Button$1, { variant: 'contained', color: 'primary', size: 'large', onClick: handleNext, disabled: isLoading || disabled }, "Continue"),
 	                                                error && (React__default.createElement("div", { className: classnames(classes.error, 'checkout-errors') }, error)))),
 	                                            activeStep == 1 && (React__default.createElement("div", { className: classnames(classes.buttons, 'checkout-buttons') },
-	                                                React__default.createElement(Button$1, { variant: 'contained', color: 'primary', size: 'large', onClick: handleSubmit, disabled: isLoading || !(order.items && order.items.length && order.items.length > 0) }, "Complete"),
-	                                                React__default.createElement(Button$1, { size: 'large', onClick: handleBack, disabled: isLoading || !(order.items && order.items.length && order.items.length > 0) }, "Back"),
+	                                                React__default.createElement(Button$1, { variant: 'contained', color: 'primary', size: 'large', onClick: handleSubmit, disabled: isLoading || disabled }, "Complete"),
+	                                                React__default.createElement(Button$1, { size: 'large', onClick: handleBack, disabled: isLoading || disabled }, "Back"),
 	                                                error && (React__default.createElement("div", { className: classnames(classes.error, 'checkout-errors') }, error))))))))))),
 	                        React__default.createElement(Grow, { in: activeStep == 2 },
 	                            React__default.createElement("div", { style: {
@@ -70186,6 +70181,19 @@
 	var CartCount = ({ count, }) => {
 	    return (React__default.createElement("div", null, count));
 	};
+
+	if (window.Element && !Element.prototype.closest) {
+	  Element.prototype.closest =
+	  function(s) {
+	    var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+	        i,
+	        el = this;
+	    do {
+	      i = matches.length;
+	      while (--i >= 0 && matches.item(i) !== el) {}    } while ((i < 0) && (el = el.parentElement));
+	    return el;
+	  };
+	}
 
 	/*! *****************************************************************************
 	Copyright (c) Microsoft Corporation.
@@ -75805,7 +75813,6 @@
 	    __metadata$1("design:paramtypes", [Object]),
 	    __metadata$1("design:returntype", Promise)
 	], Commerce.prototype, "checkout", null);
-	//# sourceMappingURL=index.esm.js.map
 
 	function toString$5(obj) {
 	  return Object.prototype.toString.call(obj)
@@ -75817,8 +75824,6 @@
 	var isNumber$3 = isNumber$2 = function(value) {
 	  return toString$5(value) === '[object Number]';
 	};
-
-	//# sourceMappingURL=number.js.map
 
 	// src/index.coffee
 	var getOwnSymbols$1;
@@ -75901,7 +75906,6 @@
 	    return to;
 	  };
 	})();
-	//# sourceMappingURL=es-object-assign.mjs.map
 
 	// src/cookies.coffee
 	var Cookies$2;
@@ -76011,7 +76015,6 @@
 
 	// src/index.coffee
 	var index$4 = new Cookies$1$1();
-	//# sourceMappingURL=cookies.mjs.map
 
 	// src/cookie-storage.coffee
 	var cookieStorage$1 = (function() {
@@ -76144,7 +76147,6 @@
 	    return pretendStorage$1;
 	  }
 	})();
-	//# sourceMappingURL=akasha.mjs.map
 
 	class ShopStore {
 	    constructor(client, analytics, raw) {
@@ -76303,6 +76305,19 @@
 	            this.track('Completed Checkout Step', { step: 1 });
 	        }
 	    }
+	    async addItem(id, quantity) {
+	        if (quantity) {
+	            this.track('Viewed Checkout Step', { step: 1 });
+	        }
+	        let item = await this.commerce.get(id);
+	        if (item && item.quantity) {
+	            quantity += item.quantity;
+	        }
+	        await this.commerce.set(id, quantity);
+	        if (quantity) {
+	            this.track('Completed Checkout Step', { step: 1 });
+	        }
+	    }
 	    track(event, opts) {
 	        if (this.commerce.analytics) {
 	            this.commerce.analytics.track(event, opts);
@@ -76429,6 +76444,12 @@
 	__decorate([
 	    action,
 	    __metadata("design:type", Function),
+	    __metadata("design:paramtypes", [String, Number]),
+	    __metadata("design:returntype", Promise)
+	], ShopStore.prototype, "addItem", null);
+	__decorate([
+	    action,
+	    __metadata("design:type", Function),
 	    __metadata("design:paramtypes", [String, Object]),
 	    __metadata("design:returntype", void 0)
 	], ShopStore.prototype, "track", null);
@@ -76440,10 +76461,13 @@
 
 	let client;
 	let store;
-	const getStore = (cl, analytics = undefined, opts = {}) => {
+	const getStore = (cl, analytics, opts = {}) => {
 	    client = cl ? cl : client;
 	    if (!client) {
-	        return;
+	        if (store) {
+	            return store;
+	        }
+	        throw new Error('store has not been initialized with a client');
 	    }
 	    if (!store) {
 	        store = new ShopStore(client, analytics, opts);
@@ -76494,44 +76518,84 @@
   form.cart {
     display: none;
   }
+  .shopify-payment-button {
+    display: none;
+  }
   `;
 	    css.appendChild(document.createTextNode(styles));
 	    document.getElementsByTagName('head')[0].appendChild(css);
+	    // replace side cart element
 	    const cartEl1 = document.getElementById('CartContainer');
-	    cartEl1.removeAttribute('id');
-	    const cartEl2 = cartEl1.cloneNode(true);
-	    cartEl1.parentNode.replaceChild(cartEl2, cartEl1);
+	    if (cartEl1) {
+	        cartEl1.removeAttribute('id');
+	        const cartEl2 = cartEl1.cloneNode(true);
+	        cartEl1.parentNode.replaceChild(cartEl2, cartEl1);
+	        // init side cart
+	        cart(client, {
+	            ...opts,
+	            el: cartEl2,
+	            showDescription: false,
+	            showTotals: false,
+	            nativeSelects: true,
+	        });
+	    }
+	    // replace count element
 	    const countEl1 = document.getElementById('CartCount');
-	    countEl1.removeAttribute('id');
-	    const countEl2 = countEl1.cloneNode(true);
-	    countEl1.parentNode.replaceChild(countEl2, countEl1);
-	    cart(client, {
-	        ...opts,
-	        el: cartEl2,
-	        showDescription: false,
-	        showTotals: false,
-	        nativeSelects: true,
-	    });
-	    count(client, {
-	        ...opts,
-	        el: countEl2,
-	        showDescription: false,
-	        nativeSelects: true,
-	    });
-	    // if (window.location.pathname.indexOf('cart') > -1) {
+	    if (countEl1) {
+	        countEl1.removeAttribute('id');
+	        const countEl2 = countEl1.cloneNode(true);
+	        countEl1.parentNode.replaceChild(countEl2, countEl1);
+	        // init count
+	        count(client, {
+	            ...opts,
+	            el: countEl2,
+	            showDescription: false,
+	            nativeSelects: true,
+	        });
+	    }
+	    // replace cart with checkout
 	    const checkoutEl1 = document.querySelector('form.cart');
-	    checkoutEl1.removeAttribute('id');
-	    const checkoutEl2 = document.createElement('div');
-	    checkoutEl2.classList.add('cart');
-	    checkoutEl1.parentNode.replaceChild(checkoutEl2, checkoutEl1);
-	    checkout(client, {
-	        ...opts,
-	        el: checkoutEl2,
-	        showDescription: false,
-	        nativeSelects: true,
-	    });
-	    // }
-	    document.getElementsByClassName('addToCart');
+	    if (checkoutEl1) {
+	        checkoutEl1.removeAttribute('id');
+	        const checkoutEl2 = document.createElement('div');
+	        checkoutEl2.classList.add('cart');
+	        checkoutEl1.parentNode.replaceChild(checkoutEl2, checkoutEl1);
+	        // init checkout
+	        checkout(client, {
+	            ...opts,
+	            el: checkoutEl2,
+	            showDescription: false,
+	            nativeSelects: true,
+	        });
+	    }
+	    // add events to cart button
+	    const buttonEl = document.querySelector('button.addToCart');
+	    if (buttonEl) {
+	        buttonEl.addEventListener('click', (event) => {
+	            const formEl = buttonEl.closest('form');
+	            let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector')));
+	            let slug = '';
+	            let slugOpts = options.map((d, i) => {
+	                console.log(`option${i}`, d.classList);
+	                const classes = [].slice.call(d.classList);
+	                classes.map((x) => {
+	                    let res = (/single-option-selector-section-(.*)/g).exec(x);
+	                    if (res && res[1]) {
+	                        slug = res[1];
+	                    }
+	                });
+	                return d.value;
+	            });
+	            slug = `${slug}-${slugOpts.join('-')}`;
+	            const quantity = parseInt(document.getElementById('Quantity').value, 10);
+	            console.log('slug', slug, quantity);
+	            const s = getStore();
+	            s.addItem(slug, quantity);
+	            event.preventDefault();
+	            event.stopPropagation();
+	            return false;
+	        });
+	    }
 	};
 
 	// src/promise-inspection.coffee
@@ -76899,7 +76963,6 @@
 	Promise$2.settle = settle;
 
 	Promise$2.soon = soon$1;
-	//# sourceMappingURL=broken.mjs.map
 
 	// src/parse-headers.coffee
 	var isArray;
@@ -77155,7 +77218,6 @@
 	})();
 
 	var XhrPromise$1 = XhrPromise;
-	//# sourceMappingURL=es-xhr-promise.mjs.map
 
 	// node_modules/es-tostring/index.mjs
 	function toString$6(obj) {
@@ -77818,7 +77880,6 @@
 	Hanzo.Client = Client$2;
 
 	var Hanzo$1 = Hanzo;
-	//# sourceMappingURL=hanzo.mjs.map
 
 	if (typeof window !== 'undefined') {
 	    window['ShopJS'] = {
