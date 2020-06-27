@@ -211,7 +211,10 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   const buttonEl = (document.querySelector('button.addToCart') as HTMLElement)
   if (buttonEl) {
     buttonEl.addEventListener('click', (event) => {
-      const formEl = (buttonEl.closest('form') as HTMLElement)
+      const formEl = (buttonEl.closest('form') as HTMLFormElement)
+      formEl.action = ''
+      formEl.method = ''
+
       let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector'))) as HTMLSelectElement[]
       let slug = ''
 
@@ -234,10 +237,14 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
       console.log('slug', slug, quantity)
 
       const s = getStore()
-      s.addItem(slug, quantity)
-      // event.preventDefault()
-      // event.stopPropagation()
-      // return false
+
+      s.addItem(slug, quantity);
+
+      (document.querySelector('.js--drawer-open-right') as HTMLElement).click()
+
+      event.preventDefault()
+      event.stopPropagation()
+      return false
     })
   }
 }
