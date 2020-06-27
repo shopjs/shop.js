@@ -76585,6 +76585,8 @@
 	    if (buttonEl) {
 	        buttonEl.addEventListener('click', (event) => {
 	            const formEl = buttonEl.closest('form');
+	            formEl.action = '';
+	            formEl.method = '';
 	            let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector')));
 	            let slug = '';
 	            let slugOpts = options.map((d, i) => {
@@ -76603,9 +76605,10 @@
 	            console.log('slug', slug, quantity);
 	            const s = getStore();
 	            s.addItem(slug, quantity);
-	            // event.preventDefault()
-	            // event.stopPropagation()
-	            // return false
+	            document.querySelector('.js--drawer-open-right').click();
+	            event.preventDefault();
+	            event.stopPropagation();
+	            return false;
 	        });
 	    }
 	};
