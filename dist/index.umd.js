@@ -76476,6 +76476,27 @@
 	    ReactDOM__default.render(React__default.createElement(ShopJSCartCount, null), el);
 	};
 	const shopify = function (client, opts = {}) {
+	    const css = document.createElement('style');
+	    css.type = 'text/css';
+	    const styles = `
+  .cart-drawer.drawer .cart-items {
+    padding: 0 !important;
+  }
+  .cart-drawer.drawer .cart {
+    padding: 0 !important;
+  }
+  .cart-drawer.drawer .cart-icon {
+    display: none;
+  }
+  .cart-drawer.drawer .cart-your-items-title {
+    display: none;
+  }
+  form.cart {
+    display: none;
+  }
+  `;
+	    css.appendChild(document.createTextNode(styles));
+	    document.getElementsByTagName('head')[0].appendChild(css);
 	    const cartEl1 = document.getElementById('CartContainer');
 	    cartEl1.removeAttribute('id');
 	    const cartEl2 = cartEl1.cloneNode(true);
@@ -76510,27 +76531,6 @@
 	        nativeSelects: true,
 	    });
 	    // }
-	    const css = document.createElement('style');
-	    css.type = 'text/css';
-	    const styles = `
-  .cart-drawer.drawer .cart-items {
-    padding: 0 !important;
-  }
-  .cart-drawer.drawer .cart {
-    padding: 0 !important;
-  }
-  .cart-drawer.drawer .cart-icon {
-    display: none;
-  }
-  .cart-drawer.drawer .cart-your-items-title {
-    display: none;
-  }
-  form.cart {
-    display: none;
-  }
-  `;
-	    css.appendChild(document.createTextNode(styles));
-	    document.getElementsByTagName('head')[0].appendChild(css);
 	    document.getElementsByClassName('addToCart');
 	};
 
