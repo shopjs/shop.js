@@ -70127,7 +70127,6 @@
 	    else {
 	        Forms = [forms[0], forms[1]];
 	    }
-	    console.log('disabled', !(order.items && order.items.length && order.items.length > 0));
 	    return (React__default.createElement(Container$1, { maxWidth: 'md', style: { width: '100%' }, onMouseDown: (event) => {
 	            event.stopPropagation();
 	        } },
@@ -76501,7 +76500,8 @@
 	    // if (window.location.pathname.indexOf('cart') > -1) {
 	    const checkoutEl1 = document.querySelector('form.cart');
 	    checkoutEl1.removeAttribute('id');
-	    const checkoutEl2 = checkoutEl1.cloneNode(true);
+	    const checkoutEl2 = document.createElement('div');
+	    checkoutEl2.classList.add('cart');
 	    checkoutEl1.parentNode.replaceChild(checkoutEl2, checkoutEl1);
 	    checkout(client, {
 	        ...opts,
@@ -76523,6 +76523,9 @@
     display: none;
   }
   .cart-drawer.drawer .cart-your-items-title {
+    display: none;
+  }
+  form.cart {
     display: none;
   }
   `;
