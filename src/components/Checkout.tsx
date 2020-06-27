@@ -5,20 +5,25 @@ import {
   Box,
   Button,
   Container,
+  ExpansionPanel,
+  ExpansionPanelSummary,
+  ExpansionPanelDetails,
   Grid,
   Grow,
   Link,
   Paper,
   Typography,
+  useMediaQuery,
 } from '@material-ui/core'
 
 import {
   red,
 } from '@material-ui/core/colors'
 
-import { makeStyles } from '@material-ui/core/styles'
+import { makeStyles, useTheme } from '@material-ui/core/styles'
 
 import PersonIcon from '@material-ui/icons/Person'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 
 import {
   isEmail,
@@ -30,6 +35,10 @@ import {
   MUIText,
 } from '@hanzo/react'
 
+import {
+  renderUICurrencyFromJSON,
+} from '@hanzo/utils'
+
 import { useMidstream } from '../hooks'
 
 import Cart from './Cart'
@@ -39,6 +48,7 @@ import ShippingForm from './ShippingForm'
 import ThankYou from './ThankYou'
 
 import Steps from './Steps'
+
 
 const useStyles = makeStyles((theme) => ({
   notFirstPage: {
@@ -107,6 +117,9 @@ const Checkout = ({
   cartCheckoutUrl,
   nativeSelects,
 }): JSX.Element => {
+  const theme = useTheme()
+  const isBelowMD = useMediaQuery(theme.breakpoints.down('md'))
+
   const classes = useStyles()
 
   const splitName = (v) => {
@@ -443,20 +456,59 @@ const Checkout = ({
                     </Grow>
                   </Grid>
                   <Grid item xs={12} md={6} className='checkout-cart'>
-                    <Paper>
-                      <Cart
-                        cartIcon={cartIcon}
-                        cartTitle={cartTitle}
-                        order={order}
-                        setCoupon={setCoupon}
-                        setItem={setItem}
-                        locked={isLoading || activeStep === 2}
-                        showDescription={showDescription}
-                        showTotals={showTotals}
-                        cartCheckoutUrl={cartCheckoutUrl}
-                        nativeSelects={nativeSelects}
-                      />
-                    </Paper>
+                    {
+                      isBelowMD ? (
+                        <ExpansionPanel>
+                          <ExpansionPanelSummary
+                            expandIcon={<ExpandMoreIcon />}
+                            aria-controls='cart-items-content'
+                            id='cart-items-header'
+                          >
+                            <Grid container alignItems='center' spacing={2}>
+                              <Grid item xs>
+                                <Typography variant='body1' className='cart-show-more-summary-text'>
+                                  Show Order
+                                </Typography>
+                              </Grid>
+                              <Grid item>
+                                <Typography variant='h6' className='cart-show-more-summary-price'>
+                                  { renderUICurrencyFromJSON(order.currency, order.total) }
+                                </Typography>
+                              </Grid>
+                            </Grid>
+                          </ExpansionPanelSummary>
+                          <ExpansionPanelDetails>
+                            <Cart
+                              cartIcon={cartIcon}
+                              cartTitle={cartTitle}
+                              order={order}
+                              setCoupon={setCoupon}
+                              setItem={setItem}
+                              locked={isLoading || activeStep === 2}
+                              showDescription={showDescription}
+                              showTotals={showTotals}
+                              cartCheckoutUrl={cartCheckoutUrl}
+                              nativeSelects={nativeSelects}
+                            />
+                          </ExpansionPanelDetails>
+                        </ExpansionPanel>
+                      ) : (
+                        <Paper>
+                          <Cart
+                            cartIcon={cartIcon}
+                            cartTitle={cartTitle}
+                            order={order}
+                            setCoupon={setCoupon}
+                            setItem={setItem}
+                            locked={isLoading || activeStep === 2}
+                            showDescription={showDescription}
+                            showTotals={showTotals}
+                            cartCheckoutUrl={cartCheckoutUrl}
+                            nativeSelects={nativeSelects}
+                          />
+                        </Paper>
+                      )
+                    }
                   </Grid>
                 </Grid>
               </div>

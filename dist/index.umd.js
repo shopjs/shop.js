@@ -19326,6 +19326,310 @@
 
 	var styles$c = function styles(theme) {
 	  return {
+	    /* Styles applied to the container element. */
+	    container: {
+	      height: 0,
+	      overflow: 'hidden',
+	      transition: theme.transitions.create('height')
+	    },
+
+	    /* Styles applied to the container element when the transition has entered. */
+	    entered: {
+	      height: 'auto',
+	      overflow: 'visible'
+	    },
+
+	    /* Styles applied to the container element when the transition has exited and `collapsedHeight` != 0px. */
+	    hidden: {
+	      visibility: 'hidden'
+	    },
+
+	    /* Styles applied to the outer wrapper element. */
+	    wrapper: {
+	      // Hack to get children with a negative margin to not falsify the height computation.
+	      display: 'flex'
+	    },
+
+	    /* Styles applied to the inner wrapper element. */
+	    wrapperInner: {
+	      width: '100%'
+	    }
+	  };
+	};
+	/**
+	 * The Collapse transition is used by the
+	 * [Vertical Stepper](/components/steppers/#vertical-stepper) StepContent component.
+	 * It uses [react-transition-group](https://github.com/reactjs/react-transition-group) internally.
+	 */
+
+	var Collapse = /*#__PURE__*/React.forwardRef(function Collapse(props, ref) {
+	  var children = props.children,
+	      classes = props.classes,
+	      className = props.className,
+	      _props$collapsedHeigh = props.collapsedHeight,
+	      collapsedHeightProp = _props$collapsedHeigh === void 0 ? '0px' : _props$collapsedHeigh,
+	      _props$component = props.component,
+	      Component = _props$component === void 0 ? 'div' : _props$component,
+	      _props$disableStrictM = props.disableStrictModeCompat,
+	      disableStrictModeCompat = _props$disableStrictM === void 0 ? false : _props$disableStrictM,
+	      inProp = props.in,
+	      onEnter = props.onEnter,
+	      onEntered = props.onEntered,
+	      onEntering = props.onEntering,
+	      onExit = props.onExit,
+	      onExited = props.onExited,
+	      onExiting = props.onExiting,
+	      style = props.style,
+	      _props$timeout = props.timeout,
+	      timeout = _props$timeout === void 0 ? duration.standard : _props$timeout,
+	      _props$TransitionComp = props.TransitionComponent,
+	      TransitionComponent = _props$TransitionComp === void 0 ? Transition : _props$TransitionComp,
+	      other = _objectWithoutProperties(props, ["children", "classes", "className", "collapsedHeight", "component", "disableStrictModeCompat", "in", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "style", "timeout", "TransitionComponent"]);
+
+	  var theme = useTheme$1();
+	  var timer = React.useRef();
+	  var wrapperRef = React.useRef(null);
+	  var autoTransitionDuration = React.useRef();
+	  var collapsedHeight = typeof collapsedHeightProp === 'number' ? "".concat(collapsedHeightProp, "px") : collapsedHeightProp;
+	  React.useEffect(function () {
+	    return function () {
+	      clearTimeout(timer.current);
+	    };
+	  }, []);
+	  var enableStrictModeCompat = theme.unstable_strictMode && !disableStrictModeCompat;
+	  var nodeRef = React.useRef(null);
+	  var handleRef = useForkRef(ref, enableStrictModeCompat ? nodeRef : undefined);
+
+	  var normalizedTransitionCallback = function normalizedTransitionCallback(callback) {
+	    return function (nodeOrAppearing, maybeAppearing) {
+	      if (callback) {
+	        var _ref = enableStrictModeCompat ? [nodeRef.current, nodeOrAppearing] : [nodeOrAppearing, maybeAppearing],
+	            _ref2 = _slicedToArray(_ref, 2),
+	            node = _ref2[0],
+	            isAppearing = _ref2[1]; // onEnterXxx and onExitXxx callbacks have a different arguments.length value.
+
+
+	        if (isAppearing === undefined) {
+	          callback(node);
+	        } else {
+	          callback(node, isAppearing);
+	        }
+	      }
+	    };
+	  };
+
+	  var handleEnter = normalizedTransitionCallback(function (node, isAppearing) {
+	    node.style.height = collapsedHeight;
+
+	    if (onEnter) {
+	      onEnter(node, isAppearing);
+	    }
+	  });
+	  var handleEntering = normalizedTransitionCallback(function (node, isAppearing) {
+	    var wrapperHeight = wrapperRef.current ? wrapperRef.current.clientHeight : 0;
+
+	    var _getTransitionProps = getTransitionProps({
+	      style: style,
+	      timeout: timeout
+	    }, {
+	      mode: 'enter'
+	    }),
+	        transitionDuration = _getTransitionProps.duration;
+
+	    if (timeout === 'auto') {
+	      var duration2 = theme.transitions.getAutoHeightDuration(wrapperHeight);
+	      node.style.transitionDuration = "".concat(duration2, "ms");
+	      autoTransitionDuration.current = duration2;
+	    } else {
+	      node.style.transitionDuration = typeof transitionDuration === 'string' ? transitionDuration : "".concat(transitionDuration, "ms");
+	    }
+
+	    node.style.height = "".concat(wrapperHeight, "px");
+
+	    if (onEntering) {
+	      onEntering(node, isAppearing);
+	    }
+	  });
+	  var handleEntered = normalizedTransitionCallback(function (node, isAppearing) {
+	    node.style.height = 'auto';
+
+	    if (onEntered) {
+	      onEntered(node, isAppearing);
+	    }
+	  });
+	  var handleExit = normalizedTransitionCallback(function (node) {
+	    var wrapperHeight = wrapperRef.current ? wrapperRef.current.clientHeight : 0;
+	    node.style.height = "".concat(wrapperHeight, "px");
+
+	    if (onExit) {
+	      onExit(node);
+	    }
+	  });
+	  var handleExited = normalizedTransitionCallback(onExited);
+	  var handleExiting = normalizedTransitionCallback(function (node) {
+	    var wrapperHeight = wrapperRef.current ? wrapperRef.current.clientHeight : 0;
+
+	    var _getTransitionProps2 = getTransitionProps({
+	      style: style,
+	      timeout: timeout
+	    }, {
+	      mode: 'exit'
+	    }),
+	        transitionDuration = _getTransitionProps2.duration;
+
+	    if (timeout === 'auto') {
+	      var duration2 = theme.transitions.getAutoHeightDuration(wrapperHeight);
+	      node.style.transitionDuration = "".concat(duration2, "ms");
+	      autoTransitionDuration.current = duration2;
+	    } else {
+	      node.style.transitionDuration = typeof transitionDuration === 'string' ? transitionDuration : "".concat(transitionDuration, "ms");
+	    }
+
+	    node.style.height = collapsedHeight;
+
+	    if (onExiting) {
+	      onExiting(node);
+	    }
+	  });
+
+	  var addEndListener = function addEndListener(nodeOrNext, maybeNext) {
+	    var next = enableStrictModeCompat ? nodeOrNext : maybeNext;
+
+	    if (timeout === 'auto') {
+	      timer.current = setTimeout(next, autoTransitionDuration.current || 0);
+	    }
+	  };
+
+	  return /*#__PURE__*/React.createElement(TransitionComponent, _extends({
+	    in: inProp,
+	    onEnter: handleEnter,
+	    onEntered: handleEntered,
+	    onEntering: handleEntering,
+	    onExit: handleExit,
+	    onExited: handleExited,
+	    onExiting: handleExiting,
+	    addEndListener: addEndListener,
+	    nodeRef: enableStrictModeCompat ? nodeRef : undefined,
+	    timeout: timeout === 'auto' ? null : timeout
+	  }, other), function (state, childProps) {
+	    return /*#__PURE__*/React.createElement(Component, _extends({
+	      className: clsx(classes.container, className, {
+	        'entered': classes.entered,
+	        'exited': !inProp && collapsedHeight === '0px' && classes.hidden
+	      }[state]),
+	      style: _extends({
+	        minHeight: collapsedHeight
+	      }, style),
+	      ref: handleRef
+	    }, childProps), /*#__PURE__*/React.createElement("div", {
+	      className: classes.wrapper,
+	      ref: wrapperRef
+	    }, /*#__PURE__*/React.createElement("div", {
+	      className: classes.wrapperInner
+	    }, children)));
+	  });
+	});
+	process.env.NODE_ENV !== "production" ? Collapse.propTypes = {
+	  // ----------------------------- Warning --------------------------------
+	  // | These PropTypes are generated from the TypeScript type definitions |
+	  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+	  // ----------------------------------------------------------------------
+
+	  /**
+	   * The content node to be collapsed.
+	   */
+	  children: propTypes.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css) below for more details.
+	   */
+	  classes: propTypes.object,
+
+	  /**
+	   * @ignore
+	   */
+	  className: propTypes.string,
+
+	  /**
+	   * The height of the container when collapsed.
+	   */
+	  collapsedHeight: propTypes.oneOfType([propTypes.number, propTypes.string]),
+
+	  /**
+	   * The component used for the root node.
+	   * Either a string to use a HTML element or a component.
+	   */
+	  component: propTypes
+	  /* @typescript-to-proptypes-ignore */
+	  .elementType,
+
+	  /**
+	   * Enable this prop if you encounter 'Function components cannot be given refs',
+	   * use `unstable_createStrictModeTheme`,
+	   * and can't forward the ref in the passed `Component`.
+	   */
+	  disableStrictModeCompat: propTypes.bool,
+
+	  /**
+	   * If `true`, the component will transition in.
+	   */
+	  in: propTypes.bool,
+
+	  /**
+	   * @ignore
+	   */
+	  onEnter: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onEntered: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onEntering: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onExit: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onExited: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onExiting: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  style: propTypes.object,
+
+	  /**
+	   * The duration for the transition, in milliseconds.
+	   * You may specify a single timeout for all transitions, or individually with an object.
+	   *
+	   * Set to 'auto' to automatically calculate transition time based on height.
+	   */
+	  timeout: propTypes.oneOfType([propTypes.oneOf(['auto']), propTypes.number, propTypes.shape({
+	    appear: propTypes.number,
+	    enter: propTypes.number,
+	    exit: propTypes.number
+	  })])
+	} : void 0;
+	Collapse.muiSupportAuto = true;
+	var Collapse$1 = withStyles$1(styles$c, {
+	  name: 'MuiCollapse'
+	})(Collapse);
+
+	var styles$d = function styles(theme) {
+	  return {
 	    /* Styles applied to the root element. */
 	    root: _defineProperty({
 	      width: '100%',
@@ -19455,7 +19759,7 @@
 	   */
 	  maxWidth: propTypes.oneOf(['lg', 'md', 'sm', 'xl', 'xs', false])
 	} : void 0;
-	var Container$1 = withStyles$1(styles$c, {
+	var Container$1 = withStyles$1(styles$d, {
 	  name: 'MuiContainer'
 	})(Container);
 
@@ -20009,7 +20313,7 @@
 	  Unstable_TrapFocus['propTypes' + ''] = exactProp(Unstable_TrapFocus.propTypes);
 	}
 
-	var styles$d = {
+	var styles$e = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    zIndex: -1,
@@ -20041,7 +20345,7 @@
 	    "aria-hidden": true,
 	    ref: ref
 	  }, other, {
-	    style: _extends({}, styles$d.root, invisible ? styles$d.invisible : {}, other.style)
+	    style: _extends({}, styles$e.root, invisible ? styles$e.invisible : {}, other.style)
 	  })) : null;
 	});
 	process.env.NODE_ENV !== "production" ? SimpleBackdrop.propTypes = {
@@ -20069,7 +20373,7 @@
 
 
 	var defaultManager = new ModalManager();
-	var styles$e = function styles(theme) {
+	var styles$f = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -20270,7 +20574,7 @@
 	    }
 	  };
 
-	  var inlineStyle = styles$e(theme || {
+	  var inlineStyle = styles$f(theme || {
 	    zIndex: zIndex$1
 	  });
 	  var childProps = {};
@@ -20435,7 +20739,7 @@
 	  open: propTypes.bool.isRequired
 	} : void 0;
 
-	var styles$f = function styles(theme) {
+	var styles$g = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -20838,11 +21142,11 @@
 	   */
 	  TransitionProps: propTypes.object
 	} : void 0;
-	var Dialog$1 = withStyles$1(styles$f, {
+	var Dialog$1 = withStyles$1(styles$g, {
 	  name: 'MuiDialog'
 	})(Dialog);
 
-	var styles$g = {
+	var styles$h = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    display: 'flex',
@@ -20898,11 +21202,11 @@
 	   */
 	  disableSpacing: propTypes.bool
 	} : void 0;
-	var DialogActions$1 = withStyles$1(styles$g, {
+	var DialogActions$1 = withStyles$1(styles$h, {
 	  name: 'MuiDialogActions'
 	})(DialogActions);
 
-	var styles$h = function styles(theme) {
+	var styles$i = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -20964,11 +21268,11 @@
 	   */
 	  dividers: propTypes.bool
 	} : void 0;
-	var DialogContent$1 = withStyles$1(styles$h, {
+	var DialogContent$1 = withStyles$1(styles$i, {
 	  name: 'MuiDialogContent'
 	})(DialogContent);
 
-	var styles$i = function styles(theme) {
+	var styles$j = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -21103,9 +21407,462 @@
 	   */
 	  variant: propTypes.oneOf(['fullWidth', 'inset', 'middle'])
 	} : void 0;
-	var Divider$1 = withStyles$1(styles$i, {
+	var Divider$1 = withStyles$1(styles$j, {
 	  name: 'MuiDivider'
 	})(Divider);
+
+	function _toArray(arr) {
+	  return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableRest();
+	}
+
+	/**
+	 * @ignore - internal component.
+	 * @type {React.Context<{} | {expanded: boolean, disabled: boolean, toggle: () => void}>}
+	 */
+
+	var ExpansionPanelContext = React.createContext({});
+
+	if (process.env.NODE_ENV !== 'production') {
+	  ExpansionPanelContext.displayName = 'ExpansionPanelContext';
+	}
+
+	var styles$k = function styles(theme) {
+	  var transition = {
+	    duration: theme.transitions.duration.shortest
+	  };
+	  return {
+	    /* Styles applied to the root element. */
+	    root: {
+	      position: 'relative',
+	      transition: theme.transitions.create(['margin'], transition),
+	      '&:before': {
+	        position: 'absolute',
+	        left: 0,
+	        top: -1,
+	        right: 0,
+	        height: 1,
+	        content: '""',
+	        opacity: 1,
+	        backgroundColor: theme.palette.divider,
+	        transition: theme.transitions.create(['opacity', 'background-color'], transition)
+	      },
+	      '&:first-child': {
+	        '&:before': {
+	          display: 'none'
+	        }
+	      },
+	      '&$expanded': {
+	        margin: '16px 0',
+	        '&:first-child': {
+	          marginTop: 0
+	        },
+	        '&:last-child': {
+	          marginBottom: 0
+	        },
+	        '&:before': {
+	          opacity: 0
+	        }
+	      },
+	      '&$expanded + &': {
+	        '&:before': {
+	          display: 'none'
+	        }
+	      },
+	      '&$disabled': {
+	        backgroundColor: theme.palette.action.disabledBackground
+	      }
+	    },
+
+	    /* Styles applied to the root element if `square={false}`. */
+	    rounded: {
+	      borderRadius: 0,
+	      '&:first-child': {
+	        borderTopLeftRadius: theme.shape.borderRadius,
+	        borderTopRightRadius: theme.shape.borderRadius
+	      },
+	      '&:last-child': {
+	        borderBottomLeftRadius: theme.shape.borderRadius,
+	        borderBottomRightRadius: theme.shape.borderRadius,
+	        // Fix a rendering issue on Edge
+	        '@supports (-ms-ime-align: auto)': {
+	          borderBottomLeftRadius: 0,
+	          borderBottomRightRadius: 0
+	        }
+	      }
+	    },
+
+	    /* Styles applied to the root element if `expanded={true}`. */
+	    expanded: {},
+
+	    /* Styles applied to the root element if `disabled={true}`. */
+	    disabled: {}
+	  };
+	};
+	var ExpansionPanel = /*#__PURE__*/React.forwardRef(function ExpansionPanel(props, ref) {
+	  var childrenProp = props.children,
+	      classes = props.classes,
+	      className = props.className,
+	      _props$defaultExpande = props.defaultExpanded,
+	      defaultExpanded = _props$defaultExpande === void 0 ? false : _props$defaultExpande,
+	      _props$disabled = props.disabled,
+	      disabled = _props$disabled === void 0 ? false : _props$disabled,
+	      expandedProp = props.expanded,
+	      onChange = props.onChange,
+	      _props$square = props.square,
+	      square = _props$square === void 0 ? false : _props$square,
+	      _props$TransitionComp = props.TransitionComponent,
+	      TransitionComponent = _props$TransitionComp === void 0 ? Collapse$1 : _props$TransitionComp,
+	      TransitionProps = props.TransitionProps,
+	      other = _objectWithoutProperties(props, ["children", "classes", "className", "defaultExpanded", "disabled", "expanded", "onChange", "square", "TransitionComponent", "TransitionProps"]);
+
+	  var _useControlled = useControlled({
+	    controlled: expandedProp,
+	    default: defaultExpanded,
+	    name: 'ExpansionPanel',
+	    state: 'expanded'
+	  }),
+	      _useControlled2 = _slicedToArray(_useControlled, 2),
+	      expanded = _useControlled2[0],
+	      setExpandedState = _useControlled2[1];
+
+	  var handleChange = React.useCallback(function (event) {
+	    setExpandedState(!expanded);
+
+	    if (onChange) {
+	      onChange(event, !expanded);
+	    }
+	  }, [expanded, onChange, setExpandedState]);
+
+	  var _React$Children$toArr = React.Children.toArray(childrenProp),
+	      _React$Children$toArr2 = _toArray(_React$Children$toArr),
+	      summary = _React$Children$toArr2[0],
+	      children = _React$Children$toArr2.slice(1);
+
+	  var contextValue = React.useMemo(function () {
+	    return {
+	      expanded: expanded,
+	      disabled: disabled,
+	      toggle: handleChange
+	    };
+	  }, [expanded, disabled, handleChange]);
+	  return /*#__PURE__*/React.createElement(Paper$1, _extends({
+	    className: clsx(classes.root, className, expanded && classes.expanded, disabled && classes.disabled, !square && classes.rounded),
+	    ref: ref,
+	    square: square
+	  }, other), /*#__PURE__*/React.createElement(ExpansionPanelContext.Provider, {
+	    value: contextValue
+	  }, summary), /*#__PURE__*/React.createElement(TransitionComponent, _extends({
+	    in: expanded,
+	    timeout: "auto"
+	  }, TransitionProps), /*#__PURE__*/React.createElement("div", {
+	    "aria-labelledby": summary.props.id,
+	    id: summary.props['aria-controls'],
+	    role: "region"
+	  }, children)));
+	});
+	process.env.NODE_ENV !== "production" ? ExpansionPanel.propTypes = {
+	  // ----------------------------- Warning --------------------------------
+	  // | These PropTypes are generated from the TypeScript type definitions |
+	  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+	  // ----------------------------------------------------------------------
+
+	  /**
+	   * The content of the expansion panel.
+	   */
+	  children: chainPropTypes(propTypes.node.isRequired, function (props) {
+	    var summary = React.Children.toArray(props.children)[0];
+
+	    if (reactIs_1(summary)) {
+	      return new Error("Material-UI: The ExpansionPanel doesn't accept a Fragment as a child. " + 'Consider providing an array instead.');
+	    }
+
+	    if (! /*#__PURE__*/React.isValidElement(summary)) {
+	      return new Error('Material-UI: Expected the first child of ExpansionPanel to be a valid element.');
+	    }
+
+	    return null;
+	  }),
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css) below for more details.
+	   */
+	  classes: propTypes.object,
+
+	  /**
+	   * @ignore
+	   */
+	  className: propTypes.string,
+
+	  /**
+	   * If `true`, expands the panel by default.
+	   */
+	  defaultExpanded: propTypes.bool,
+
+	  /**
+	   * If `true`, the panel will be displayed in a disabled state.
+	   */
+	  disabled: propTypes.bool,
+
+	  /**
+	   * If `true`, expands the panel, otherwise collapse it.
+	   * Setting this prop enables control over the panel.
+	   */
+	  expanded: propTypes.bool,
+
+	  /**
+	   * Callback fired when the expand/collapse state is changed.
+	   *
+	   * @param {object} event The event source of the callback.
+	   * @param {boolean} expanded The `expanded` state of the panel.
+	   */
+	  onChange: propTypes.func,
+
+	  /**
+	   * If `true`, rounded corners are disabled.
+	   */
+	  square: propTypes.bool,
+
+	  /**
+	   * The component used for the collapse effect.
+	   * [Follow this guide](/components/transitions/#transitioncomponent-prop) to learn more about the requirements for this component.
+	   */
+	  TransitionComponent: propTypes.elementType,
+
+	  /**
+	   * Props applied to the [`Transition`](http://reactcommunity.org/react-transition-group/transition#Transition-props) element.
+	   */
+	  TransitionProps: propTypes.object
+	} : void 0;
+	var ExpansionPanel$1 = withStyles$1(styles$k, {
+	  name: 'MuiExpansionPanel'
+	})(ExpansionPanel);
+
+	var styles$l = function styles(theme) {
+	  return {
+	    /* Styles applied to the root element. */
+	    root: {
+	      display: 'flex',
+	      padding: theme.spacing(1, 2, 2)
+	    }
+	  };
+	};
+	var ExpansionPanelDetails = /*#__PURE__*/React.forwardRef(function ExpansionPanelDetails(props, ref) {
+	  var classes = props.classes,
+	      className = props.className,
+	      other = _objectWithoutProperties(props, ["classes", "className"]);
+
+	  return /*#__PURE__*/React.createElement("div", _extends({
+	    className: clsx(classes.root, className),
+	    ref: ref
+	  }, other));
+	});
+	process.env.NODE_ENV !== "production" ? ExpansionPanelDetails.propTypes = {
+	  // ----------------------------- Warning --------------------------------
+	  // | These PropTypes are generated from the TypeScript type definitions |
+	  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+	  // ----------------------------------------------------------------------
+
+	  /**
+	   * The content of the expansion panel details.
+	   */
+	  children: propTypes.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css) below for more details.
+	   */
+	  classes: propTypes.object,
+
+	  /**
+	   * @ignore
+	   */
+	  className: propTypes.string
+	} : void 0;
+	var ExpansionPanelDetails$1 = withStyles$1(styles$l, {
+	  name: 'MuiExpansionPanelDetails'
+	})(ExpansionPanelDetails);
+
+	var styles$m = function styles(theme) {
+	  var transition = {
+	    duration: theme.transitions.duration.shortest
+	  };
+	  return {
+	    /* Styles applied to the root element. */
+	    root: {
+	      display: 'flex',
+	      minHeight: 8 * 6,
+	      transition: theme.transitions.create(['min-height', 'background-color'], transition),
+	      padding: theme.spacing(0, 2),
+	      '&:hover:not($disabled)': {
+	        cursor: 'pointer'
+	      },
+	      '&$expanded': {
+	        minHeight: 64
+	      },
+	      '&$focused': {
+	        backgroundColor: theme.palette.action.focus
+	      },
+	      '&$disabled': {
+	        opacity: theme.palette.action.disabledOpacity
+	      }
+	    },
+
+	    /* Pseudo-class applied to the root element, children wrapper element and `IconButton` component if `expanded={true}`. */
+	    expanded: {},
+
+	    /* Pseudo-class applied to the root element if `focused={true}`. */
+	    focused: {},
+
+	    /* Pseudo-class applied to the root element if `disabled={true}`. */
+	    disabled: {},
+
+	    /* Styles applied to the children wrapper element. */
+	    content: {
+	      display: 'flex',
+	      flexGrow: 1,
+	      transition: theme.transitions.create(['margin'], transition),
+	      margin: '12px 0',
+	      '&$expanded': {
+	        margin: '20px 0'
+	      }
+	    },
+
+	    /* Styles applied to the `IconButton` component when `expandIcon` is supplied. */
+	    expandIcon: {
+	      transform: 'rotate(0deg)',
+	      transition: theme.transitions.create('transform', transition),
+	      '&:hover': {
+	        // Disable the hover effect for the IconButton,
+	        // because a hover effect should apply to the entire Expand button and
+	        // not only to the IconButton.
+	        backgroundColor: 'transparent'
+	      },
+	      '&$expanded': {
+	        transform: 'rotate(180deg)'
+	      }
+	    }
+	  };
+	};
+	var ExpansionPanelSummary = /*#__PURE__*/React.forwardRef(function ExpansionPanelSummary(props, ref) {
+	  var children = props.children,
+	      classes = props.classes,
+	      className = props.className,
+	      expandIcon = props.expandIcon,
+	      IconButtonProps = props.IconButtonProps,
+	      onBlur = props.onBlur,
+	      onClick = props.onClick,
+	      onFocusVisible = props.onFocusVisible,
+	      other = _objectWithoutProperties(props, ["children", "classes", "className", "expandIcon", "IconButtonProps", "onBlur", "onClick", "onFocusVisible"]);
+
+	  var _React$useState = React.useState(false),
+	      focusedState = _React$useState[0],
+	      setFocusedState = _React$useState[1];
+
+	  var handleFocusVisible = function handleFocusVisible(event) {
+	    setFocusedState(true);
+
+	    if (onFocusVisible) {
+	      onFocusVisible(event);
+	    }
+	  };
+
+	  var handleBlur = function handleBlur(event) {
+	    setFocusedState(false);
+
+	    if (onBlur) {
+	      onBlur(event);
+	    }
+	  };
+
+	  var _React$useContext = React.useContext(ExpansionPanelContext),
+	      _React$useContext$dis = _React$useContext.disabled,
+	      disabled = _React$useContext$dis === void 0 ? false : _React$useContext$dis,
+	      expanded = _React$useContext.expanded,
+	      toggle = _React$useContext.toggle;
+
+	  var handleChange = function handleChange(event) {
+	    if (toggle) {
+	      toggle(event);
+	    }
+
+	    if (onClick) {
+	      onClick(event);
+	    }
+	  };
+
+	  return /*#__PURE__*/React.createElement(ButtonBase$1, _extends({
+	    focusRipple: false,
+	    disableRipple: true,
+	    disabled: disabled,
+	    component: "div",
+	    "aria-expanded": expanded,
+	    className: clsx(classes.root, className, disabled && classes.disabled, expanded && classes.expanded, focusedState && classes.focused),
+	    onFocusVisible: handleFocusVisible,
+	    onBlur: handleBlur,
+	    onClick: handleChange,
+	    ref: ref
+	  }, other), /*#__PURE__*/React.createElement("div", {
+	    className: clsx(classes.content, expanded && classes.expanded)
+	  }, children), expandIcon && /*#__PURE__*/React.createElement(IconButton$1, _extends({
+	    className: clsx(classes.expandIcon, expanded && classes.expanded),
+	    edge: "end",
+	    component: "div",
+	    tabIndex: null,
+	    role: null,
+	    "aria-hidden": true
+	  }, IconButtonProps), expandIcon));
+	});
+	process.env.NODE_ENV !== "production" ? ExpansionPanelSummary.propTypes = {
+	  // ----------------------------- Warning --------------------------------
+	  // | These PropTypes are generated from the TypeScript type definitions |
+	  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+	  // ----------------------------------------------------------------------
+
+	  /**
+	   * The content of the expansion panel summary.
+	   */
+	  children: propTypes.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css) below for more details.
+	   */
+	  classes: propTypes.object,
+
+	  /**
+	   * @ignore
+	   */
+	  className: propTypes.string,
+
+	  /**
+	   * The icon to display as the expand indicator.
+	   */
+	  expandIcon: propTypes.node,
+
+	  /**
+	   * Props applied to the `IconButton` element wrapping the expand icon.
+	   */
+	  IconButtonProps: propTypes.object,
+
+	  /**
+	   * @ignore
+	   */
+	  onBlur: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onClick: propTypes.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onFocusVisible: propTypes.func
+	} : void 0;
+	var ExpansionPanelSummary$1 = withStyles$1(styles$m, {
+	  name: 'MuiExpansionPanelSummary'
+	})(ExpansionPanelSummary);
 
 	function formControlState(_ref) {
 	  var props = _ref.props,
@@ -21129,7 +21886,7 @@
 	}
 
 	var useEnhancedEffect$3 = typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
-	var styles$j = {
+	var styles$n = {
 	  /* Styles applied to the shadow textarea element. */
 	  shadow: {
 	    // Visibility needed to hide the extra text area on iPads
@@ -21274,7 +22031,7 @@
 	    readOnly: true,
 	    ref: shadowRef,
 	    tabIndex: -1,
-	    style: _extends({}, styles$j.shadow, style)
+	    style: _extends({}, styles$n.shadow, style)
 	  }));
 	});
 	process.env.NODE_ENV !== "production" ? TextareaAutosize.propTypes = {
@@ -21356,7 +22113,7 @@
 	  return obj.startAdornment;
 	}
 
-	var styles$k = function styles(theme) {
+	var styles$o = function styles(theme) {
 	  var light = theme.palette.type === 'light';
 	  var placeholder = {
 	    color: 'currentColor',
@@ -21989,11 +22746,11 @@
 	   */
 	  value: propTypes.any
 	} : void 0;
-	var InputBase$1 = withStyles$1(styles$k, {
+	var InputBase$1 = withStyles$1(styles$o, {
 	  name: 'MuiInputBase'
 	})(InputBase);
 
-	var styles$l = function styles(theme) {
+	var styles$p = function styles(theme) {
 	  var light = theme.palette.type === 'light';
 	  var bottomLineColor = light ? 'rgba(0, 0, 0, 0.42)' : 'rgba(255, 255, 255, 0.7)';
 	  var backgroundColor = light ? 'rgba(0, 0, 0, 0.09)' : 'rgba(255, 255, 255, 0.09)';
@@ -22325,11 +23082,11 @@
 	  value: propTypes.any
 	} : void 0;
 	FilledInput.muiName = 'Input';
-	var FilledInput$1 = withStyles$1(styles$l, {
+	var FilledInput$1 = withStyles$1(styles$p, {
 	  name: 'MuiFilledInput'
 	})(FilledInput);
 
-	var styles$m = {
+	var styles$q = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    display: 'inline-flex',
@@ -22603,11 +23360,11 @@
 	   */
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
-	var FormControl$1 = withStyles$1(styles$m, {
+	var FormControl$1 = withStyles$1(styles$q, {
 	  name: 'MuiFormControl'
 	})(FormControl);
 
-	var styles$n = function styles(theme) {
+	var styles$r = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -22768,11 +23525,11 @@
 	   */
 	  value: propTypes.any
 	} : void 0;
-	var FormControlLabel$1 = withStyles$1(styles$n, {
+	var FormControlLabel$1 = withStyles$1(styles$r, {
 	  name: 'MuiFormControlLabel'
 	})(FormControlLabel);
 
-	var styles$o = function styles(theme) {
+	var styles$s = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: _extends({
@@ -22917,11 +23674,11 @@
 	   */
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
-	var FormHelperText$1 = withStyles$1(styles$o, {
+	var FormHelperText$1 = withStyles$1(styles$s, {
 	  name: 'MuiFormHelperText'
 	})(FormHelperText);
 
-	var styles$p = function styles(theme) {
+	var styles$t = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: _extends({
@@ -23058,7 +23815,7 @@
 	   */
 	  required: propTypes.bool
 	} : void 0;
-	var FormLabel$1 = withStyles$1(styles$p, {
+	var FormLabel$1 = withStyles$1(styles$t, {
 	  name: 'MuiFormLabel'
 	})(FormLabel);
 
@@ -23139,7 +23896,7 @@
 	// justifyContent: 'flex-start',
 
 
-	var styles$q = function styles(theme) {
+	var styles$u = function styles(theme) {
 	  return _extends({
 	    /* Styles applied to the root element. */
 	    root: {},
@@ -23414,7 +24171,7 @@
 	   */
 	  zeroMinWidth: propTypes.bool
 	} : void 0;
-	var StyledGrid = withStyles$1(styles$q, {
+	var StyledGrid = withStyles$1(styles$u, {
 	  name: 'MuiGrid'
 	})(Grid);
 
@@ -23439,7 +24196,7 @@
 	  return "scale(".concat(value, ", ").concat(Math.pow(value, 2), ")");
 	}
 
-	var styles$r = {
+	var styles$v = {
 	  entering: {
 	    opacity: 1,
 	    transform: getScale(1)
@@ -23601,7 +24358,7 @@
 	        opacity: 0,
 	        transform: getScale(0.75),
 	        visibility: state === 'exited' && !inProp ? 'hidden' : undefined
-	      }, styles$r[state], style, children.props.style),
+	      }, styles$v[state], style, children.props.style),
 	      ref: handleRef
 	    }, childProps));
 	  });
@@ -23678,7 +24435,93 @@
 	} : void 0;
 	Grow.muiSupportAuto = true;
 
-	var styles$s = function styles(theme) {
+	function useMediaQuery(queryInput) {
+	  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+	  var theme = useTheme();
+	  var props = getThemeProps({
+	    theme: theme,
+	    name: 'MuiUseMediaQuery',
+	    props: {}
+	  });
+
+	  if (process.env.NODE_ENV !== 'production') {
+	    if (typeof queryInput === 'function' && theme === null) {
+	      console.error(['Material-UI: The `query` argument provided is invalid.', 'You are providing a function without a theme in the context.', 'One of the parent elements needs to use a ThemeProvider.'].join('\n'));
+	    }
+	  }
+
+	  var query = typeof queryInput === 'function' ? queryInput(theme) : queryInput;
+	  query = query.replace(/^@media( ?)/m, ''); // Wait for jsdom to support the match media feature.
+	  // All the browsers Material-UI support have this built-in.
+	  // This defensive check is here for simplicity.
+	  // Most of the time, the match media logic isn't central to people tests.
+
+	  var supportMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia !== 'undefined';
+
+	  var _props$options = _extends({}, props, options),
+	      _props$options$defaul = _props$options.defaultMatches,
+	      defaultMatches = _props$options$defaul === void 0 ? false : _props$options$defaul,
+	      _props$options$matchM = _props$options.matchMedia,
+	      matchMedia = _props$options$matchM === void 0 ? supportMatchMedia ? window.matchMedia : null : _props$options$matchM,
+	      _props$options$noSsr = _props$options.noSsr,
+	      noSsr = _props$options$noSsr === void 0 ? false : _props$options$noSsr,
+	      _props$options$ssrMat = _props$options.ssrMatchMedia,
+	      ssrMatchMedia = _props$options$ssrMat === void 0 ? null : _props$options$ssrMat;
+
+	  var _React$useState = React.useState(function () {
+	    if (noSsr && supportMatchMedia) {
+	      return matchMedia(query).matches;
+	    }
+
+	    if (ssrMatchMedia) {
+	      return ssrMatchMedia(query).matches;
+	    } // Once the component is mounted, we rely on the
+	    // event listeners to return the correct matches value.
+
+
+	    return defaultMatches;
+	  }),
+	      match = _React$useState[0],
+	      setMatch = _React$useState[1];
+
+	  React.useEffect(function () {
+	    var active = true;
+
+	    if (!supportMatchMedia) {
+	      return undefined;
+	    }
+
+	    var queryList = matchMedia(query);
+
+	    var updateMatch = function updateMatch() {
+	      // Workaround Safari wrong implementation of matchMedia
+	      // TODO can we remove it?
+	      // https://github.com/mui-org/material-ui/pull/17315#issuecomment-528286677
+	      if (active) {
+	        setMatch(queryList.matches);
+	      }
+	    };
+
+	    updateMatch();
+	    queryList.addListener(updateMatch);
+	    return function () {
+	      active = false;
+	      queryList.removeListener(updateMatch);
+	    };
+	  }, [query, matchMedia, supportMatchMedia]);
+
+	  if (process.env.NODE_ENV !== 'production') {
+	    // eslint-disable-next-line react-hooks/rules-of-hooks
+	    React.useDebugValue({
+	      query: query,
+	      match: match
+	    });
+	  }
+
+	  return match;
+	}
+
+	var styles$w = function styles(theme) {
 	  var light = theme.palette.type === 'light';
 	  var bottomLineColor = light ? 'rgba(0, 0, 0, 0.42)' : 'rgba(255, 255, 255, 0.7)';
 	  return {
@@ -23956,11 +24799,11 @@
 	  value: propTypes.any
 	} : void 0;
 	Input.muiName = 'Input';
-	var Input$1 = withStyles$1(styles$s, {
+	var Input$1 = withStyles$1(styles$w, {
 	  name: 'MuiInput'
 	})(Input);
 
-	var styles$t = {
+	var styles$x = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    display: 'flex',
@@ -24093,11 +24936,11 @@
 	   */
 	  variant: propTypes.oneOf(['standard', 'outlined', 'filled'])
 	} : void 0;
-	var InputAdornment$1 = withStyles$1(styles$t, {
+	var InputAdornment$1 = withStyles$1(styles$x, {
 	  name: 'MuiInputAdornment'
 	})(InputAdornment);
 
-	var styles$u = function styles(theme) {
+	var styles$y = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -24290,11 +25133,11 @@
 	   */
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
-	var InputLabel$1 = withStyles$1(styles$u, {
+	var InputLabel$1 = withStyles$1(styles$y, {
 	  name: 'MuiInputLabel'
 	})(InputLabel);
 
-	var styles$v = {
+	var styles$z = {
 	  /* Styles applied to the root element. */
 	  root: {},
 
@@ -24462,7 +25305,7 @@
 	   */
 	  variant: propTypes.string
 	} : void 0;
-	var Link$1 = withStyles$1(styles$v, {
+	var Link$1 = withStyles$1(styles$z, {
 	  name: 'MuiLink'
 	})(Link);
 
@@ -24476,7 +25319,7 @@
 	  ListContext.displayName = 'ListContext';
 	}
 
-	var styles$w = {
+	var styles$A = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    listStyle: 'none',
@@ -24566,11 +25409,11 @@
 	   */
 	  subheader: propTypes.node
 	} : void 0;
-	var List$1 = withStyles$1(styles$w, {
+	var List$1 = withStyles$1(styles$A, {
 	  name: 'MuiList'
 	})(List);
 
-	var styles$x = function styles(theme) {
+	var styles$B = function styles(theme) {
 	  return {
 	    /* Styles applied to the (normally root) `component` element. May be wrapped by a `container`. */
 	    root: {
@@ -24857,7 +25700,7 @@
 	   */
 	  selected: propTypes.bool
 	} : void 0;
-	var ListItem$1 = withStyles$1(styles$x, {
+	var ListItem$1 = withStyles$1(styles$B, {
 	  name: 'MuiListItem'
 	})(ListItem);
 
@@ -24911,7 +25754,7 @@
 	  return typeof anchorEl === 'function' ? anchorEl() : anchorEl;
 	}
 
-	var styles$y = {
+	var styles$C = {
 	  /* Styles applied to the root element. */
 	  root: {},
 
@@ -25391,7 +26234,7 @@
 	   */
 	  TransitionProps: propTypes.object
 	} : void 0;
-	var Popover$1 = withStyles$1(styles$y, {
+	var Popover$1 = withStyles$1(styles$C, {
 	  name: 'MuiPopover'
 	})(Popover);
 
@@ -25699,7 +26542,7 @@
 	  vertical: 'top',
 	  horizontal: 'left'
 	};
-	var styles$z = {
+	var styles$D = {
 	  /* Styles applied to the `Paper` component. */
 	  paper: {
 	    // specZ: The maximum height of a simple menu should be one or more rows less than the view
@@ -25947,11 +26790,11 @@
 	   */
 	  variant: propTypes.oneOf(['menu', 'selectedMenu'])
 	} : void 0;
-	var Menu$1 = withStyles$1(styles$z, {
+	var Menu$1 = withStyles$1(styles$D, {
 	  name: 'MuiMenu'
 	})(Menu);
 
-	var styles$A = function styles(theme) {
+	var styles$E = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: _extends({}, theme.typography.body1, _defineProperty({
@@ -26073,7 +26916,7 @@
 	   */
 	  tabIndex: propTypes.number
 	} : void 0;
-	var MenuItem$1 = withStyles$1(styles$A, {
+	var MenuItem$1 = withStyles$1(styles$E, {
 	  name: 'MuiMenuItem'
 	})(MenuItem);
 
@@ -26171,7 +27014,7 @@
 	  d: "M7 10l5 5 5-5z"
 	}), 'ArrowDropDown');
 
-	var styles$B = function styles(theme) {
+	var styles$F = function styles(theme) {
 	  return {
 	    /* Styles applied to the select component `root` class. */
 	    root: {},
@@ -26373,11 +27216,11 @@
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
 	NativeSelect.muiName = 'Select';
-	var NativeSelect$1 = withStyles$1(styles$B, {
+	var NativeSelect$1 = withStyles$1(styles$F, {
 	  name: 'MuiNativeSelect'
 	})(NativeSelect);
 
-	var styles$C = function styles(theme) {
+	var styles$G = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -26529,11 +27372,11 @@
 	   */
 	  style: propTypes.object
 	} : void 0;
-	var NotchedOutline$1 = withStyles$1(styles$C, {
+	var NotchedOutline$1 = withStyles$1(styles$G, {
 	  name: 'PrivateNotchedOutline'
 	})(NotchedOutline);
 
-	var styles$D = function styles(theme) {
+	var styles$H = function styles(theme) {
 	  var borderColor = theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)';
 	  return {
 	    /* Styles applied to the root element. */
@@ -26832,7 +27675,7 @@
 	  value: propTypes.any
 	} : void 0;
 	OutlinedInput.muiName = 'Input';
-	var OutlinedInput$1 = withStyles$1(styles$D, {
+	var OutlinedInput$1 = withStyles$1(styles$H, {
 	  name: 'MuiOutlinedInput'
 	})(OutlinedInput);
 
@@ -27541,7 +28384,7 @@
 	  variant: propTypes.oneOf(['standard', 'outlined', 'filled'])
 	} : void 0;
 
-	var styles$E = styles$B;
+	var styles$I = styles$F;
 
 	var _ref = /*#__PURE__*/React.createElement(Input$1, null);
 
@@ -27780,11 +28623,11 @@
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
 	Select.muiName = 'Select';
-	var Select$1 = withStyles$1(styles$E, {
+	var Select$1 = withStyles$1(styles$I, {
 	  name: 'MuiSelect'
 	})(Select);
 
-	var styles$F = {
+	var styles$J = {
 	  /* Styles applied to the root element. */
 	  root: {},
 
@@ -27908,7 +28751,7 @@
 	   */
 	  expanded: propTypes.bool
 	} : void 0;
-	var Step$1 = withStyles$1(styles$F, {
+	var Step$1 = withStyles$1(styles$J, {
 	  name: 'MuiStep'
 	})(Step);
 
@@ -27928,7 +28771,7 @@
 	  d: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
 	}), 'Warning');
 
-	var styles$G = function styles(theme) {
+	var styles$K = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -28041,11 +28884,11 @@
 	   */
 	  icon: propTypes.node
 	} : void 0;
-	var StepIcon$1 = withStyles$1(styles$G, {
+	var StepIcon$1 = withStyles$1(styles$K, {
 	  name: 'MuiStepIcon'
 	})(StepIcon);
 
-	var styles$H = function styles(theme) {
+	var styles$L = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -28220,11 +29063,11 @@
 	  StepIconProps: propTypes.object
 	} : void 0;
 	StepLabel.muiName = 'StepLabel';
-	var StepLabel$1 = withStyles$1(styles$H, {
+	var StepLabel$1 = withStyles$1(styles$L, {
 	  name: 'MuiStepLabel'
 	})(StepLabel);
 
-	var styles$I = function styles(theme) {
+	var styles$M = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -28318,11 +29161,11 @@
 	   */
 	  className: propTypes.string
 	} : void 0;
-	var StepConnector$1 = withStyles$1(styles$I, {
+	var StepConnector$1 = withStyles$1(styles$M, {
 	  name: 'MuiStepConnector'
 	})(StepConnector);
 
-	var styles$J = {
+	var styles$N = {
 	  /* Styles applied to the root element. */
 	  root: {
 	    display: 'flex',
@@ -28445,11 +29288,11 @@
 	   */
 	  orientation: propTypes.oneOf(['horizontal', 'vertical'])
 	} : void 0;
-	var Stepper$1 = withStyles$1(styles$J, {
+	var Stepper$1 = withStyles$1(styles$N, {
 	  name: 'MuiStepper'
 	})(Stepper);
 
-	var styles$K = function styles(theme) {
+	var styles$O = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -28736,11 +29579,11 @@
 	   */
 	  value: propTypes.any
 	} : void 0;
-	var Switch$1 = withStyles$1(styles$K, {
+	var Switch$1 = withStyles$1(styles$O, {
 	  name: 'MuiSwitch'
 	})(Switch);
 
-	var styles$L = function styles(theme) {
+	var styles$P = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
 	    root: {
@@ -28818,7 +29661,7 @@
 	   */
 	  variant: propTypes.oneOf(['regular', 'dense'])
 	} : void 0;
-	var Toolbar$1 = withStyles$1(styles$L, {
+	var Toolbar$1 = withStyles$1(styles$P, {
 	  name: 'MuiToolbar'
 	})(Toolbar);
 
@@ -28827,7 +29670,7 @@
 	  filled: FilledInput$1,
 	  outlined: OutlinedInput$1
 	};
-	var styles$M = {
+	var styles$Q = {
 	  /* Styles applied to the root element. */
 	  root: {}
 	};
@@ -29177,7 +30020,7 @@
 	   */
 	  variant: propTypes.oneOf(['filled', 'outlined', 'standard'])
 	} : void 0;
-	var TextField$1 = withStyles$1(styles$M, {
+	var TextField$1 = withStyles$1(styles$Q, {
 	  name: 'MuiTextField'
 	})(TextField);
 
@@ -36595,7 +37438,7 @@
 	  return _arrayWithHoles$1(arr) || _iterableToArrayLimit$1(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest$1();
 	}
 
-	function _toArray(arr) {
+	function _toArray$1(arr) {
 	  return _arrayWithHoles$1(arr) || _iterableToArray$1(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableRest$1();
 	}
 
@@ -38742,7 +39585,7 @@
 	}
 
 	var head = function head(array) {
-	  var _array = _toArray(array),
+	  var _array = _toArray$1(array),
 	      h = _array[0],
 	      t = _array.slice(1);
 
@@ -38750,14 +39593,14 @@
 	};
 
 	var tail = function tail(array) {
-	  var _array2 = _toArray(array),
+	  var _array2 = _toArray$1(array),
 	      h = _array2[0],
 	      t = _array2.slice(1);
 
 	  return t;
 	};
 
-	var styles$N = function styles() {
+	var styles$R = function styles() {
 	  return {
 	    flagButton: {
 	      minWidth: 30,
@@ -39694,7 +40537,7 @@
 	  }
 	};
 	MaterialUiPhoneNumber.displayName = 'MuiPhoneNumber';
-	var MaterialUiPhoneNumber$1 = withStyles$2(styles$N)(MaterialUiPhoneNumber);
+	var MaterialUiPhoneNumber$1 = withStyles$2(styles$R)(MaterialUiPhoneNumber);
 
 	var _class$2;
 	// *** Hanzo Standardized Checkbox ***
@@ -51709,7 +52552,7 @@
 	  return _arrayWithHoles$3(arr) || _iterableToArrayLimit$3(arr, i) || _nonIterableRest$3();
 	}
 
-	function _toArray$1(arr) {
+	function _toArray$2(arr) {
 	  return _arrayWithHoles$3(arr) || _iterableToArray$2(arr) || _nonIterableRest$3();
 	}
 
@@ -51784,7 +52627,7 @@
 
 	  if (prevExpiry.length === 2 && +prevExpiry > 12) {
 	    var _prevExpiry$split = prevExpiry.split(''),
-	        _prevExpiry$split2 = _toArray$1(_prevExpiry$split),
+	        _prevExpiry$split2 = _toArray$2(_prevExpiry$split),
 	        head = _prevExpiry$split2[0],
 	        tail = _prevExpiry$split2.slice(1);
 
@@ -52798,6 +53641,28 @@
 	});
 
 	var PersonIcon = unwrapExports(Person);
+
+	var ExpandMore = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(React__default);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
+	  d: "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+	}), 'ExpandMore');
+
+	exports.default = _default;
+	});
+
+	var ExpandMoreIcon = unwrapExports(ExpandMore);
 
 	/** MobX - (c) Michel Weststrate 2015 - 2020 - MIT Licensed */
 	/*! *****************************************************************************
@@ -69151,6 +70016,8 @@
 	    return v;
 	};
 	const Checkout = ({ forms, address, setAddress, order, setOrder, payment, setPayment, user, setUser, setCoupon, checkout, setItem, countryOptions, stateOptions, isLoading, termsUrl, track, stepLabels, contactIcon, contactTitle, shippingIcon, shippingTitle, paymentIcon, paymentTitle, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
+	    const theme = useTheme$1();
+	    const isBelowMD = useMediaQuery(theme.breakpoints.down('md'));
 	    const classes = useStyles$b();
 	    const splitName = (v) => {
 	        let [firstName, lastName] = v.split(/\s+/);
@@ -69302,9 +70169,16 @@
 	                            React__default.createElement("div", { style: {
 	                                    height: activeStep == 2 ? 'inherit' : 0,
 	                                }, className: 'checkout-form' }, activeStep == 2 && (React__default.createElement(ThankYou, { width: halfWidth, height: height, order: order }))))),
-	                    React__default.createElement(StyledGrid, { item: true, xs: 12, md: 6, className: 'checkout-cart' },
-	                        React__default.createElement(Paper$1, null,
-	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects }))))));
+	                    React__default.createElement(StyledGrid, { item: true, xs: 12, md: 6, className: 'checkout-cart' }, isBelowMD ? (React__default.createElement(ExpansionPanel$1, null,
+	                        React__default.createElement(ExpansionPanelSummary$1, { expandIcon: React__default.createElement(ExpandMoreIcon, null), "aria-controls": 'cart-items-content', id: 'cart-items-header' },
+	                            React__default.createElement(StyledGrid, { container: true, alignItems: 'center', spacing: 2 },
+	                                React__default.createElement(StyledGrid, { item: true, xs: true },
+	                                    React__default.createElement(Typography$1, { variant: 'body1', className: 'cart-show-more-summary-text' }, "Show Order")),
+	                                React__default.createElement(StyledGrid, { item: true },
+	                                    React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-show-more-summary-price' }, renderUICurrencyFromJSON(order.currency, order.total))))),
+	                        React__default.createElement(ExpansionPanelDetails$1, null,
+	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects })))) : (React__default.createElement(Paper$1, null,
+	                        React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects })))))));
 	        })));
 	};
 
@@ -75627,16 +76501,16 @@
 	    const styles = `
   .cart-drawer.drawer .cart-items {
     padding: 0 !important;
-  };
+  }
   .cart-drawer.drawer .cart {
     padding: 0 !important;
-  };
+  }
   .cart-drawer.drawer .cart-icon {
     display: none;
-  };
+  }
   .cart-drawer.drawer .cart-your-items-title {
     display: none;
-  };
+  }
   `;
 	    css.appendChild(document.createTextNode(styles));
 	    document.getElementsByTagName('head')[0].appendChild(css);
