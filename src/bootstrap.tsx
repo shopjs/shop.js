@@ -126,6 +126,30 @@ export const count = (client: ILibraryClient, opts: Options = {}) => {
 }
 
 export const shopify = function(client: ILibraryClient, opts: Options = {}) {
+  const css = document.createElement('style')
+  css.type = 'text/css'
+
+  const styles = `
+  .cart-drawer.drawer .cart-items {
+    padding: 0 !important;
+  }
+  .cart-drawer.drawer .cart {
+    padding: 0 !important;
+  }
+  .cart-drawer.drawer .cart-icon {
+    display: none;
+  }
+  .cart-drawer.drawer .cart-your-items-title {
+    display: none;
+  }
+  form.cart {
+    display: none;
+  }
+  `
+  css.appendChild(document.createTextNode(styles))
+
+  document.getElementsByTagName('head')[0].appendChild(css)
+
   const cartEl1 = document.getElementById('CartContainer') as HTMLElement
   cartEl1.removeAttribute('id')
   const cartEl2 = cartEl1.cloneNode(true) as HTMLElement
@@ -154,9 +178,10 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   })
 
   // if (window.location.pathname.indexOf('cart') > -1) {
-  const checkoutEl1 = document.querySelector('form.cart') as HTMLElement
+  const checkoutEl1 = (document.querySelector('form.cart') as HTMLElement)
   checkoutEl1.removeAttribute('id')
-  const checkoutEl2 = checkoutEl1.cloneNode(true) as HTMLElement
+  const checkoutEl2 = (document.createElement('div') as HTMLElement)
+  checkoutEl2.classList.add('cart');
 
   (checkoutEl1.parentNode as any).replaceChild(checkoutEl2 as HTMLElement, checkoutEl1)
 
@@ -168,25 +193,5 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   })
   // }
 
-  const css = document.createElement('style')
-  css.type = 'text/css'
-
-  const styles = `
-  .cart-drawer.drawer .cart-items {
-    padding: 0 !important;
-  }
-  .cart-drawer.drawer .cart {
-    padding: 0 !important;
-  }
-  .cart-drawer.drawer .cart-icon {
-    display: none;
-  }
-  .cart-drawer.drawer .cart-your-items-title {
-    display: none;
-  }
-  `
-  css.appendChild(document.createTextNode(styles))
-
-  document.getElementsByTagName('head')[0].appendChild(css)
   document.getElementsByClassName('addToCart')
 }
