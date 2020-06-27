@@ -190,7 +190,7 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   }
 
   // replace cart with checkout
-  const checkoutEl1 = (document.querySelector('form.cart') as HTMLElement)
+  const checkoutEl1 = (document.querySelector('#your-shopping-cart form.cart, #your-shopping-cart main section > *') as HTMLElement)
   if (checkoutEl1) {
     checkoutEl1.removeAttribute('id')
     const checkoutEl2 = (document.createElement('div') as HTMLElement)
