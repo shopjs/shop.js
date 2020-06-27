@@ -70177,8 +70177,8 @@
 	                                React__default.createElement(StyledGrid, { item: true },
 	                                    React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-show-more-summary-price' }, renderUICurrencyFromJSON(order.currency, order.total))))),
 	                        React__default.createElement(ExpansionPanelDetails$1, null,
-	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects })))) : (React__default.createElement(Paper$1, null,
-	                        React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: cartCheckoutUrl, nativeSelects: nativeSelects })))))));
+	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: undefined, nativeSelects: nativeSelects })))) : (React__default.createElement(Paper$1, null,
+	                        React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: undefined, nativeSelects: nativeSelects })))))));
 	        })));
 	};
 
@@ -76496,6 +76496,18 @@
 	        showDescription: false,
 	        nativeSelects: true,
 	    });
+	    // if (window.location.pathname.indexOf('cart') > -1) {
+	    const checkoutEl1 = document.querySelector('form.cart');
+	    checkoutEl1.removeAttribute('id');
+	    const checkoutEl2 = checkoutEl1.cloneNode(true);
+	    checkoutEl1.parentNode.replaceChild(checkoutEl2, checkoutEl1);
+	    checkout(client, {
+	        ...opts,
+	        el: checkoutEl2,
+	        showDescription: false,
+	        nativeSelects: true,
+	    });
+	    // }
 	    const css = document.createElement('style');
 	    css.type = 'text/css';
 	    const styles = `
@@ -76514,6 +76526,7 @@
   `;
 	    css.appendChild(document.createTextNode(styles));
 	    document.getElementsByTagName('head')[0].appendChild(css);
+	    document.getElementsByClassName('addToCart');
 	};
 
 	// src/promise-inspection.coffee

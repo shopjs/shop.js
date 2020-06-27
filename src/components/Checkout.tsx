@@ -487,7 +487,7 @@ const Checkout = ({
                               locked={isLoading || activeStep === 2}
                               showDescription={showDescription}
                               showTotals={showTotals}
-                              cartCheckoutUrl={cartCheckoutUrl}
+                              cartCheckoutUrl={undefined}
                               nativeSelects={nativeSelects}
                             />
                           </ExpansionPanelDetails>
@@ -503,7 +503,7 @@ const Checkout = ({
                             locked={isLoading || activeStep === 2}
                             showDescription={showDescription}
                             showTotals={showTotals}
-                            cartCheckoutUrl={cartCheckoutUrl}
+                            cartCheckoutUrl={undefined}
                             nativeSelects={nativeSelects}
                           />
                         </Paper>
