@@ -61,7 +61,7 @@
 
 	}).call(commonjsGlobal);
 
-
+	//# sourceMappingURL=performance-now.js.map
 	});
 
 	var root = typeof window === 'undefined' ? commonjsGlobal : window
@@ -6803,6 +6803,7 @@
 	    if (immediate && !timeout) func.apply(context, args);
 	  };
 	}
+	//# sourceMappingURL=index.esm.js.map
 
 	var common = {
 	  black: '#000',
@@ -46802,6 +46803,7 @@
 
 	NumberFormat.propTypes = propTypes$1$1$1;
 	NumberFormat.defaultProps = defaultProps$2;
+	//# sourceMappingURL=index.esm.js.map
 
 	var createSvgIcon_1 = createCommonjsModule(function (module, exports) {
 
@@ -47220,6 +47222,7 @@
 
 	  return ret
 	};
+	//# sourceMappingURL=midstream.esm.js.map
 
 	const useMidstream = (config, opts) => {
 	    const [dst, setDst] = React.useState(() => opts.dst || opts.destination || {});
@@ -52091,6 +52094,7 @@
 	    throw new Error('Required');
 	  };
 	};
+	//# sourceMappingURL=index.esm.js.map
 
 	const useStyles$7 = makeStyles$1((theme) => ({
 	    form: {
@@ -57954,6 +57958,7 @@
 	    });
 	  };
 	}
+	//# sourceMappingURL=mobxreactlite.esm.js.map
 
 	var symbolId = 0;
 
@@ -58346,6 +58351,7 @@
 
 	if (!React.Component) throw new Error("mobx-react requires React to be available");
 	if (!observable) throw new Error("mobx-react requires mobx to be available");
+	//# sourceMappingURL=mobxreact.esm.js.map
 
 	var Person = createCommonjsModule(function (module, exports) {
 
@@ -75813,6 +75819,7 @@
 	    __metadata$1("design:paramtypes", [Object]),
 	    __metadata$1("design:returntype", Promise)
 	], Commerce.prototype, "checkout", null);
+	//# sourceMappingURL=index.esm.js.map
 
 	function toString$5(obj) {
 	  return Object.prototype.toString.call(obj)
@@ -75824,6 +75831,8 @@
 	var isNumber$3 = isNumber$2 = function(value) {
 	  return toString$5(value) === '[object Number]';
 	};
+
+	//# sourceMappingURL=number.js.map
 
 	// src/index.coffee
 	var getOwnSymbols$1;
@@ -75906,6 +75915,7 @@
 	    return to;
 	  };
 	})();
+	//# sourceMappingURL=es-object-assign.mjs.map
 
 	// src/cookies.coffee
 	var Cookies$2;
@@ -76015,6 +76025,7 @@
 
 	// src/index.coffee
 	var index$4 = new Cookies$1$1();
+	//# sourceMappingURL=cookies.mjs.map
 
 	// src/cookie-storage.coffee
 	var cookieStorage$1 = (function() {
@@ -76147,6 +76158,7 @@
 	    return pretendStorage$1;
 	  }
 	})();
+	//# sourceMappingURL=akasha.mjs.map
 
 	class ShopStore {
 	    constructor(client, analytics, raw) {
@@ -76591,9 +76603,9 @@
 	            console.log('slug', slug, quantity);
 	            const s = getStore();
 	            s.addItem(slug, quantity);
-	            event.preventDefault();
-	            event.stopPropagation();
-	            return false;
+	            // event.preventDefault()
+	            // event.stopPropagation()
+	            // return false
 	        });
 	    }
 	};
@@ -76963,6 +76975,7 @@
 	Promise$2.settle = settle;
 
 	Promise$2.soon = soon$1;
+	//# sourceMappingURL=broken.mjs.map
 
 	// src/parse-headers.coffee
 	var isArray;
@@ -77218,6 +77231,7 @@
 	})();
 
 	var XhrPromise$1 = XhrPromise;
+	//# sourceMappingURL=es-xhr-promise.mjs.map
 
 	// node_modules/es-tostring/index.mjs
 	function toString$6(obj) {
@@ -77880,6 +77894,7 @@
 	Hanzo.Client = Client$2;
 
 	var Hanzo$1 = Hanzo;
+	//# sourceMappingURL=hanzo.mjs.map
 
 	if (typeof window !== 'undefined') {
 	    window['ShopJS'] = {

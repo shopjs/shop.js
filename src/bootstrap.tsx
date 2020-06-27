@@ -235,10 +235,9 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
 
       const s = getStore()
       s.addItem(slug, quantity)
-
-      event.preventDefault()
-      event.stopPropagation()
-      return false
+      // event.preventDefault()
+      // event.stopPropagation()
+      // return false
     })
   }
 }
