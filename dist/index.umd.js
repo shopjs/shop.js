@@ -76566,7 +76566,7 @@
 	        });
 	    }
 	    // replace cart with checkout
-	    const checkoutEl1 = document.querySelector('form.cart');
+	    const checkoutEl1 = document.querySelector('#your-shopping-cart form.cart, #your-shopping-cart main section > *');
 	    if (checkoutEl1) {
 	        checkoutEl1.removeAttribute('id');
 	        const checkoutEl2 = document.createElement('div');
