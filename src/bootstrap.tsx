@@ -1,11 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { AutoSizer } from 'react-virtualized'
+import './poly'
 
 import { useLocalStore, useObserver } from 'mobx-react'
 
 import { Checkout, Cart, CartCount, PaymentForm, ShippingForm } from './components'
-import initStore, { ShopStore, ILibraryClient } from './stores'
+import getStore, { ShopStore, ILibraryClient } from './stores'
 
 export interface Options {
   el?: Element
@@ -32,7 +33,7 @@ const checkout = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJS = (): JSX.Element => {
-    const shopStore = useLocalStore(() => (initStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
+    const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
 
     return useObserver(() => (
       <Checkout
@@ -82,7 +83,7 @@ export const cart = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJSCart = (): JSX.Element => {
-    const shopStore = useLocalStore(() => (initStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
+    const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
 
     return useObserver(() => (
       <Cart
@@ -110,7 +111,7 @@ export const count = (client: ILibraryClient, opts: Options = {}) => {
   let el = opts.el
 
   const ShopJSCartCount = (): JSX.Element => {
-    const shopStore = useLocalStore(() => (initStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
+    const shopStore = useLocalStore(() => (getStore(client, { track: (event, opts) => console.log(event, opts) })) as ShopStore)
 
     return useObserver(() => (
       <CartCount
@@ -145,53 +146,99 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   form.cart {
     display: none;
   }
+  .shopify-payment-button {
+    display: none;
+  }
   `
   css.appendChild(document.createTextNode(styles))
 
   document.getElementsByTagName('head')[0].appendChild(css)
 
+  // replace side cart element
   const cartEl1 = document.getElementById('CartContainer') as HTMLElement
-  cartEl1.removeAttribute('id')
-  const cartEl2 = cartEl1.cloneNode(true) as HTMLElement
+  if (cartEl1) {
+    cartEl1.removeAttribute('id')
+    const cartEl2 = cartEl1.cloneNode(true) as HTMLElement
 
-  (cartEl1.parentNode as any).replaceChild(cartEl2 as HTMLElement, cartEl1)
+    (cartEl1.parentNode as any).replaceChild(cartEl2 as HTMLElement, cartEl1)
 
+    // init side cart
+    cart(client, {
+      ...opts,
+      el: cartEl2,
+      showDescription: false,
+      showTotals: false,
+      nativeSelects: true,
+    })
+  }
+
+  // replace count element
   const countEl1 = document.getElementById('CartCount') as HTMLElement
-  countEl1.removeAttribute('id')
-  const countEl2 = countEl1.cloneNode(true) as HTMLElement
+  if (countEl1) {
+    countEl1.removeAttribute('id')
+    const countEl2 = countEl1.cloneNode(true) as HTMLElement
 
-  (countEl1.parentNode as any).replaceChild(countEl2 as HTMLElement, countEl1)
+    (countEl1.parentNode as any).replaceChild(countEl2 as HTMLElement, countEl1)
 
-  cart(client, {
-    ...opts,
-    el: cartEl2,
-    showDescription: false,
-    showTotals: false,
-    nativeSelects: true,
-  })
+    // init count
+    count(client, {
+      ...opts,
+      el: countEl2,
+      showDescription: false,
+      nativeSelects: true,
+    })
+  }
 
-  count(client, {
-    ...opts,
-    el: countEl2,
-    showDescription: false,
-    nativeSelects: true,
-  })
-
-  // if (window.location.pathname.indexOf('cart') > -1) {
+  // replace cart with checkout
   const checkoutEl1 = (document.querySelector('form.cart') as HTMLElement)
-  checkoutEl1.removeAttribute('id')
-  const checkoutEl2 = (document.createElement('div') as HTMLElement)
-  checkoutEl2.classList.add('cart');
+  if (checkoutEl1) {
+    checkoutEl1.removeAttribute('id')
+    const checkoutEl2 = (document.createElement('div') as HTMLElement)
+    checkoutEl2.classList.add('cart');
 
-  (checkoutEl1.parentNode as any).replaceChild(checkoutEl2 as HTMLElement, checkoutEl1)
+    (checkoutEl1.parentNode as any).replaceChild(checkoutEl2 as HTMLElement, checkoutEl1)
 
-  checkout(client, {
-    ...opts,
-    el: checkoutEl2,
-    showDescription: false,
-    nativeSelects: true,
-  })
-  // }
+    // init checkout
+    checkout(client, {
+      ...opts,
+      el: checkoutEl2,
+      showDescription: false,
+      nativeSelects: true,
+    })
+  }
 
-  document.getElementsByClassName('addToCart')
+  // add events to cart button
+  const buttonEl = (document.querySelector('button.addToCart') as HTMLElement)
+  if (buttonEl) {
+    buttonEl.addEventListener('click', (event) => {
+      const formEl = (buttonEl.closest('form') as HTMLElement)
+      let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector'))) as HTMLSelectElement[]
+      let slug = ''
+
+      let slugOpts = options.map((d, i) => {
+        console.log(`option${i}`, d.classList)
+        const classes = [].slice.call(d.classList)
+        classes.map((x) => {
+          let res = (/single-option-selector-section-(.*)/g).exec(x)
+          if (res && res[1]) {
+            slug = res[1]
+          }
+        })
+
+        return d.value
+      })
+
+      slug = `${slug}-${slugOpts.join('-')}`
+      const quantity = parseInt((document.getElementById('Quantity') as HTMLInputElement).value, 10)
+
+      console.log('slug', slug, quantity)
+
+      const s = getStore()
+      s.addItem(slug, quantity)
+
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    })
+  }
 }

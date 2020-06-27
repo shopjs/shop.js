@@ -6,11 +6,15 @@ export * from './ShopStore'
 let client: ILibraryClient | undefined
 let store: ShopStore | undefined
 
-const getStore = (cl?: ILibraryClient, analytics: any = undefined, opts = {}): ShopStore | undefined => {
+const getStore = (cl?: ILibraryClient, analytics?: any, opts = {}): ShopStore => {
   client = cl ? cl : client
 
   if (!client) {
-    return
+    if (store) {
+      return store
+    }
+
+    throw new Error('store has not been initialized with a client')
   }
 
   if (!store) {

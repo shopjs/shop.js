@@ -1,3 +1,4 @@
+import './poly';
 import { ILibraryClient } from './stores';
 export interface Options {
     el?: Element;
