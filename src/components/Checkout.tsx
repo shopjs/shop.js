@@ -74,6 +74,22 @@ const useStyles = makeStyles((theme) => ({
       flexDirection: 'column-reverse',
     },
   },
+  compactCart: {
+    [theme.breakpoints.down('sm')]: {
+      '& .cart-your-items-title': {
+        display: 'none',
+      },
+      '& .cart-icon': {
+        display: 'none',
+      },
+      '& .cart': {
+        padding: 0,
+      },
+      '& .cart-items': {
+        paddingTop: 0,
+      },
+    },
+  },
 }))
 
 import { AutoSizer } from 'react-virtualized'
@@ -475,12 +491,12 @@ const Checkout = ({
                               </Grid>
                               <Grid item>
                                 <Typography variant='h6' className='cart-show-more-summary-price'>
-                                  { renderUICurrencyFromJSON(order.currency, order.total) }
+                                  <strong>{ renderUICurrencyFromJSON(order.currency, order.total) }</strong>
                                 </Typography>
                               </Grid>
                             </Grid>
                           </ExpansionPanelSummary>
-                          <ExpansionPanelDetails>
+                          <ExpansionPanelDetails className={classes.compactCart}>
                             <Cart
                               cartIcon={cartIcon}
                               cartTitle={cartTitle}

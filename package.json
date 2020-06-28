@@ -103,7 +103,7 @@
     "@material-ui/icons": "4.9.1",
     "akasha": "0.1.13",
     "classnames": "^2.2.6",
-    "commerce.js": "^2.0.20",
+    "commerce.js": "^2.0.23",
     "fast-memoize": "2.5.2",
     "midstream": "2.0.2",
     "mobx": "5.15.4",

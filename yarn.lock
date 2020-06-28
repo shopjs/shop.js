@@ -1722,10 +1722,10 @@ commander@^5.1.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-5.1.0.tgz#46abbd1652f8e059bddaef99bbdcb2ad9cf179ae"
   integrity sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==
 
-commerce.js@^2.0.20:
-  version "2.0.20"
-  resolved "https://registry.yarnpkg.com/commerce.js/-/commerce.js-2.0.20.tgz#004134ff6586c25ae36ce037a5acd8ad18cd9c31"
-  integrity sha512-yCZ1HMdcRPgHaYorKum/knCdEbxDGVQJjuDnfIyqpQh/at66HRpy+DZAskFbCrkvmwYC98FfbiGEKIGzq5T3EA==
+commerce.js@^2.0.23:
+  version "2.0.23"
+  resolved "https://registry.yarnpkg.com/commerce.js/-/commerce.js-2.0.23.tgz#8919ae2950077e61716dad664d4bdeca3f693d21"
+  integrity sha512-1636PPB+j0gK4RuJgISSS1z5GI9gVxOwBhmG0DnwuSskqtJPtirCfkGtuOXrBLuVNdWE34CrM9RtTUpfiTXYjQ==
   dependencies:
     akasha "0.1.13"
     mobx "5.15.4"

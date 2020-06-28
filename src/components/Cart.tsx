@@ -113,6 +113,12 @@ const Cart = ({
 }): JSX.Element => {
   const classes = useStyles()
 
+  const hasCountry = !!order.shippingAddress.country
+  const hasState = !!order.shippingAddress.state
+  const hasShipping = !!order.shipping
+  const hasTax = !!order.tax
+  const canCalculate = (hasCountry && hasState) || hasTax || hasShipping
+
   return (
     <Box p={[2, 3, 4]} className='cart' onMouseDown={(event) => {
       event.stopPropagation()
@@ -263,19 +269,33 @@ const Cart = ({
 
             <Grid item xs={12} className='cart-summary'>
               <div>
-                <Grid container className={classnames(classes.lineSpacing, 'cart-summary-subtotal')}>
-                  <Grid item xs className={classes.right}>
-                    <Typography variant='body1'>
-                      Subtotal
-                    </Typography>
-                  </Grid>
-                  <Grid item className={classnames(classes.right, classes.summaryNumber)}>
-                    <Typography variant='body1'>
-                      { renderUICurrencyFromJSON(order.currency, order.subtotal) }
-                    </Typography>
-                  </Grid>
-                </Grid>
-
+                {
+                  !canCalculate && (
+                    <Grid container className={classnames(classes.lineSpacing, 'cart-summary-calculation-message')}>
+                      <Grid item xs={12} className={classes.right}>
+                        <Typography variant='body2'>
+                          Shipping and tax will be calculated during checkout.
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  )
+                }
+                {
+                  (canCalculate || order.discount > 0) && (
+                    <Grid container className={classnames(classes.lineSpacing, 'cart-summary-subtotal')}>
+                      <Grid item xs className={classes.right}>
+                        <Typography variant='body1'>
+                          Subtotal
+                        </Typography>
+                      </Grid>
+                      <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                        <Typography variant='body1'>
+                          { renderUICurrencyFromJSON(order.currency, order.subtotal) }
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  )
+                }
                 {
                   order.discount > 0 && (
                     <Grid container className={classnames(classes.lineSpacing, 'cart-summary-discount')}>
@@ -292,45 +312,50 @@ const Cart = ({
                     </Grid>
                   )
                 }
-
                 {
                   showTotals !== false && (
                     <>
-                      <Grid container className={classnames(classes.lineSpacing, 'cart-summary-shipping')}>
-                        <Grid item xs className={classes.right}>
-                          <Typography variant='body1'>
-                            Shipping
-                          </Typography>
-                        </Grid>
-                        <Grid item className={classnames(classes.right, classes.summaryNumber)}>
-                          <Typography variant='body1'>
-                            { order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free' }
-                          </Typography>
-                        </Grid>
-                      </Grid>
+                      {
+                        canCalculate && (
+                          <>
+                            <Grid container className={classnames(classes.lineSpacing, 'cart-summary-shipping')}>
+                              <Grid item xs className={classes.right}>
+                                <Typography variant='body1'>
+                                  Shipping
+                                </Typography>
+                              </Grid>
+                              <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                                <Typography variant='body1'>
+                                  { order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free' }
+                                </Typography>
+                              </Grid>
+                            </Grid>
 
-                      <Grid container className='cart-summary-tax'>
-                        <Grid item xs className={classes.right}>
-                          <Typography variant='body1'>
-                            Tax
-                          </Typography>
-                        </Grid>
-                        <Grid item className={classnames(classes.right, classes.summaryNumber)}>
-                          <Typography variant='body1'>
-                            { renderUICurrencyFromJSON(order.currency, order.tax) }
-                          </Typography>
-                        </Grid>
-                      </Grid>
+                            <Grid container className='cart-summary-tax'>
+                              <Grid item xs className={classes.right}>
+                                <Typography variant='body1'>
+                                  Tax
+                                </Typography>
+                              </Grid>
+                              <Grid item className={classnames(classes.right, classes.summaryNumber)}>
+                                <Typography variant='body1'>
+                                  { renderUICurrencyFromJSON(order.currency, order.tax) }
+                                </Typography>
+                              </Grid>
+                            </Grid>
+                          </>
+                        )
+                      }
 
-                      <Grid container className={classnames(classes.total, 'cart-summary-total')}>
+                      <Grid container className={classnames(classes.total, 'cart-summary-total')} alignItems='center'>
                         <Grid item xs className={classes.right}>
                           <Typography variant='body1'>
                             Total
                           </Typography>
                         </Grid>
                         <Grid item className={classnames(classes.right, classes.summaryNumber)}>
-                          <Typography variant='body1'>
-                            { renderUICurrencyFromJSON(order.currency, order.total) }
+                          <Typography variant='h6'>
+                            <strong>{ renderUICurrencyFromJSON(order.currency, order.total) }</strong>
                           </Typography>
                         </Grid>
                       </Grid>

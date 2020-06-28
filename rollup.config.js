@@ -80,7 +80,10 @@ export default [
   // source
   {
     input: 'src/index.ts',
-    external: [],
+    external: ['cross-fetch'],
+    globals: {
+      'cross-fetch': 'fetch',
+    },
     plugins,
     output: [
       { name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true },

@@ -13,6 +13,7 @@ import {
   ICoupon,
   IOrder,
   IPayment,
+  IGeoRate,
 } from 'commerce.js'
 
 import {
@@ -33,6 +34,14 @@ export interface ICountry extends IRegion{
 
 export interface LibraryResponse {
   countries: ICountry[]
+  storeId: string
+  currency: string
+  shippingRates: {
+    geoRates: IGeoRate[]
+  },
+  taxRates: {
+    geoRates: IGeoRate[]
+  },
 }
 
 export interface ILibraryClient extends IClient {
@@ -80,13 +89,16 @@ export default class ShopStore {
   constructor(
     client: ILibraryClient,
     analytics: any,
-    raw: any,
+    raw: any = {},
   ) {
     Object.assign(this, raw)
 
     this.client = client
 
     this.commerce = new Commerce(client, undefined, [], [], analytics)
+    if (raw.storeId || this.order.storeId) {
+      // this.commerce.setStoreId(raw.storeId ?? this.order.storeId)
+    }
 
     if (!this.order.currency) {
       this.order.currency = 'usd'
@@ -113,12 +125,17 @@ export default class ShopStore {
 
     try {
       let res = await this.client.library.shopjs({
-        hasCountries:       !!this.countries && this.countries.length != 0,
-        lastChecked:        renderDate(this.lastChecked || '2000-01-01', rfc3339),
+        hasCountries:   !!this.countries && this.countries.length != 0,
+        storeId:        this.commerce.storeId,
+        lastChecked:    renderDate(this.lastChecked || '2000-01-01', rfc3339),
       })
 
       runInAction(() => {
         this.countries = res.countries || this.countries
+        this.order.currency = res.currency
+        this.order.shippingRates = res.shippingRates.geoRates
+        this.order.taxRates = res.taxRates.geoRates
+        // this.commerce.setStoreId(res.storeId)
 
         this.save()
         this.isLoading = false

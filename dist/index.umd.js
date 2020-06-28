@@ -61,7 +61,7 @@
 
 	}).call(commonjsGlobal);
 
-	//# sourceMappingURL=performance-now.js.map
+
 	});
 
 	var root = typeof window === 'undefined' ? commonjsGlobal : window
@@ -6803,7 +6803,6 @@
 	    if (immediate && !timeout) func.apply(context, args);
 	  };
 	}
-	//# sourceMappingURL=index.esm.js.map
 
 	var common = {
 	  black: '#000',
@@ -46803,7 +46802,6 @@
 
 	NumberFormat.propTypes = propTypes$1$1$1;
 	NumberFormat.defaultProps = defaultProps$2;
-	//# sourceMappingURL=index.esm.js.map
 
 	var createSvgIcon_1 = createCommonjsModule(function (module, exports) {
 
@@ -47222,7 +47220,6 @@
 
 	  return ret
 	};
-	//# sourceMappingURL=midstream.esm.js.map
 
 	const useMidstream = (config, opts) => {
 	    const [dst, setDst] = React.useState(() => opts.dst || opts.destination || {});
@@ -52094,7 +52091,6 @@
 	    throw new Error('Required');
 	  };
 	};
-	//# sourceMappingURL=index.esm.js.map
 
 	const useStyles$7 = makeStyles$1((theme) => ({
 	    form: {
@@ -57958,7 +57954,6 @@
 	    });
 	  };
 	}
-	//# sourceMappingURL=mobxreactlite.esm.js.map
 
 	var symbolId = 0;
 
@@ -58351,7 +58346,6 @@
 
 	if (!React.Component) throw new Error("mobx-react requires React to be available");
 	if (!observable) throw new Error("mobx-react requires mobx to be available");
-	//# sourceMappingURL=mobxreact.esm.js.map
 
 	var Person = createCommonjsModule(function (module, exports) {
 
@@ -58491,6 +58485,11 @@
 	}
 	const Cart = ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDescription, showTotals, cartCheckoutUrl, nativeSelects, }) => {
 	    const classes = useStyles$9();
+	    const hasCountry = !!order.shippingAddress.country;
+	    const hasState = !!order.shippingAddress.state;
+	    const hasShipping = !!order.shipping;
+	    const hasTax = !!order.tax;
+	    const canCalculate = (hasCountry && hasState) || hasTax || hasShipping;
 	    return (React__default.createElement(Box, { p: [2, 3, 4], className: 'cart', onMouseDown: (event) => {
 	            event.stopPropagation();
 	        } },
@@ -58551,32 +58550,37 @@
 	                                    React__default.createElement(Button$1, { className: classes.couponButton, fullWidth: true, disableElevation: true, size: 'medium', variant: 'contained', disabled: locked }, "Apply"))))),
 	                    React__default.createElement(StyledGrid, { item: true, xs: 12, className: 'cart-summary' },
 	                        React__default.createElement("div", null,
-	                            React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-subtotal') },
+	                            !canCalculate && (React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-calculation-message') },
+	                                React__default.createElement(StyledGrid, { item: true, xs: 12, className: classes.right },
+	                                    React__default.createElement(Typography$1, { variant: 'body2' }, "Shipping and tax will be calculated during checkout.")))),
+	                            (canCalculate || order.discount > 0) && (React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-subtotal') },
 	                                React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
 	                                    React__default.createElement(Typography$1, { variant: 'body1' }, "Subtotal")),
 	                                React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
-	                                    React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.subtotal)))),
+	                                    React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.subtotal))))),
 	                            order.discount > 0 && (React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-discount') },
 	                                React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
 	                                    React__default.createElement(Typography$1, { variant: 'body1' }, "You Saved")),
 	                                React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
 	                                    React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.discount))))),
 	                            showTotals !== false && (React__default.createElement(React__default.Fragment, null,
-	                                React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-shipping') },
-	                                    React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, "Shipping")),
-	                                    React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free'))),
-	                                React__default.createElement(StyledGrid, { container: true, className: 'cart-summary-tax' },
-	                                    React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, "Tax")),
-	                                    React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.tax)))),
-	                                React__default.createElement(StyledGrid, { container: true, className: classnames(classes.total, 'cart-summary-total') },
+	                                canCalculate && (React__default.createElement(React__default.Fragment, null,
+	                                    React__default.createElement(StyledGrid, { container: true, className: classnames(classes.lineSpacing, 'cart-summary-shipping') },
+	                                        React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
+	                                            React__default.createElement(Typography$1, { variant: 'body1' }, "Shipping")),
+	                                        React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
+	                                            React__default.createElement(Typography$1, { variant: 'body1' }, order.shipping ? renderUICurrencyFromJSON(order.currency, order.shipping) : 'Free'))),
+	                                    React__default.createElement(StyledGrid, { container: true, className: 'cart-summary-tax' },
+	                                        React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
+	                                            React__default.createElement(Typography$1, { variant: 'body1' }, "Tax")),
+	                                        React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
+	                                            React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.tax)))))),
+	                                React__default.createElement(StyledGrid, { container: true, className: classnames(classes.total, 'cart-summary-total'), alignItems: 'center' },
 	                                    React__default.createElement(StyledGrid, { item: true, xs: true, className: classes.right },
 	                                        React__default.createElement(Typography$1, { variant: 'body1' }, "Total")),
 	                                    React__default.createElement(StyledGrid, { item: true, className: classnames(classes.right, classes.summaryNumber) },
-	                                        React__default.createElement(Typography$1, { variant: 'body1' }, renderUICurrencyFromJSON(order.currency, order.total)))))),
+	                                        React__default.createElement(Typography$1, { variant: 'h6' },
+	                                            React__default.createElement("strong", null, renderUICurrencyFromJSON(order.currency, order.total))))))),
 	                            cartCheckoutUrl && (React__default.createElement(StyledGrid, { container: true, className: classnames(classes.checkoutButton, 'cart-summary-checkout-button') },
 	                                React__default.createElement(StyledGrid, { item: true, xs: true },
 	                                    React__default.createElement(Link$1, { href: cartCheckoutUrl },
@@ -70008,6 +70012,22 @@
 	            flexDirection: 'column-reverse',
 	        },
 	    },
+	    compactCart: {
+	        [theme.breakpoints.down('sm')]: {
+	            '& .cart-your-items-title': {
+	                display: 'none',
+	            },
+	            '& .cart-icon': {
+	                display: 'none',
+	            },
+	            '& .cart': {
+	                padding: 0,
+	            },
+	            '& .cart-items': {
+	                paddingTop: 0,
+	            },
+	        },
+	    },
 	}));
 	const agreed = (v) => {
 	    if (!v) {
@@ -70176,8 +70196,9 @@
 	                                React__default.createElement(StyledGrid, { item: true, xs: true },
 	                                    React__default.createElement(Typography$1, { variant: 'body1', className: 'cart-show-more-summary-text' }, "Show Order")),
 	                                React__default.createElement(StyledGrid, { item: true },
-	                                    React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-show-more-summary-price' }, renderUICurrencyFromJSON(order.currency, order.total))))),
-	                        React__default.createElement(ExpansionPanelDetails$1, null,
+	                                    React__default.createElement(Typography$1, { variant: 'h6', className: 'cart-show-more-summary-price' },
+	                                        React__default.createElement("strong", null, renderUICurrencyFromJSON(order.currency, order.total)))))),
+	                        React__default.createElement(ExpansionPanelDetails$1, { className: classes.compactCart },
 	                            React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: undefined, nativeSelects: nativeSelects })))) : (React__default.createElement(Paper$1, null,
 	                        React__default.createElement(Cart$1, { cartIcon: cartIcon, cartTitle: cartTitle, order: order, setCoupon: setCoupon, setItem: setItem, locked: isLoading || activeStep === 2, showDescription: showDescription, showTotals: showTotals, cartCheckoutUrl: undefined, nativeSelects: nativeSelects })))))));
 	        })));
@@ -74571,14 +74592,26 @@
 	 * @param pc postalCode
 	 * @return return if it is matched and level of match
 	 */
-	const matchesGeoRate = (g, country, state, city, postalCode) => {
+	const matchesGeoRate = (g, country, state, city, postalCode, price) => {
 	    const ctr = clean(country);
 	    const st = clean(state);
 	    const ct = clean(city);
 	    const pc = clean(postalCode);
 	    const ctr2 = clean(g.country);
+	    if (g.above) {
+	        // above reject
+	        if (price < g.above) {
+	            return [false, -1];
+	        }
+	    }
+	    else if (g.below) {
+	        // below reject
+	        if (price >= g.below) {
+	            return [false, -1];
+	        }
+	    }
 	    // Invalid input
-	    if (!ctr || !st || (!ct && !pc)) {
+	    if (!ctr && !ct && !pc) {
 	        return [false, 0];
 	    }
 	    // Country is Wild Card
@@ -74628,13 +74661,13 @@
 	 * @param pc postalCode
 	 * @return closest georate, level of match, and index
 	 */
-	const closestGeoRate = (grs, ctr, st, ct, pc) => {
+	const closestGeoRate = (grs, ctr, st, ct, pc, c) => {
 	    let retGr;
-	    let currentLevel = -1;
+	    let currentLevel = -2;
 	    let idx = -1;
 	    for (let i in grs) {
 	        const gr = grs[i];
-	        const [isMatch, level] = matchesGeoRate(gr, ctr, st, ct, pc);
+	        const [isMatch, level] = matchesGeoRate(gr, ctr, st, ct, pc, c);
 	        if (isMatch && (level > currentLevel)) {
 	            if (level === 3) {
 	                return [gr, level, parseInt(i, 10)];
@@ -74653,7 +74686,7 @@
 	 */
 	class Product {
 	    constructor(raw, client) {
-	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 	        this.client = client;
 	        this.id = (_a = raw.id) !== null && _a !== void 0 ? _a : '';
 	        this.productId = (_b = raw.productId) !== null && _b !== void 0 ? _b : '';
@@ -74675,16 +74708,43 @@
 	                url: '',
 	            };
 	        }
-	        this.bootstrapPromise = client.product.get(this.id).then((product) => {
-	            Object.assign(this, product);
-	            this.productId = product.id;
-	            this.productSlug = product.slug;
-	            this.productName = product.name;
-	            this.imageURL = product.image.url;
-	            return this;
-	        }).catch((err) => {
-	            throw err;
-	        });
+	        this.storeId = (_l = raw.storeId) !== null && _l !== void 0 ? _l : '';
+	        if (this.storeId) {
+	            this.bootstrapPromise = (async (self) => {
+	                try {
+	                    let path = client.client.url(`/store/${self.storeId}/product/${self.id}`);
+	                    let res;
+	                    if (client.fetch) {
+	                        res = await client.fetch(`${path}?token=${client.client.getKey()}`);
+	                    }
+	                    else {
+	                        res = await fetch(`${path}?token=${client.client.getKey()}`);
+	                    }
+	                    let product = await res.json();
+	                    Object.assign(self, product);
+	                    self.productId = product.id;
+	                    self.productSlug = product.slug;
+	                    self.productName = product.name;
+	                    self.imageURL = product.image.url;
+	                    return self;
+	                }
+	                catch (err) {
+	                    throw err;
+	                }
+	            })(this);
+	        }
+	        else {
+	            this.bootstrapPromise = client.product.get(this.id).then((product) => {
+	                Object.assign(this, product);
+	                this.productId = product.id;
+	                this.productSlug = product.slug;
+	                this.productName = product.name;
+	                this.imageURL = product.image.url;
+	                return this;
+	            }).catch((err) => {
+	                throw err;
+	            });
+	        }
 	    }
 	}
 	__decorate$1([
@@ -74739,6 +74799,10 @@
 	    observable$1,
 	    __metadata$1("design:type", Object)
 	], Product.prototype, "image", void 0);
+	__decorate$1([
+	    observable$1,
+	    __metadata$1("design:type", String)
+	], Product.prototype, "storeId", void 0);
 
 	/**
 	 * A combination of cart and quantity
@@ -74840,10 +74904,6 @@
 	        // Save order on any update
 	        autorun$1(() => {
 	            Order.save(this);
-	        });
-	        // Define reaction for storeid
-	        reaction(() => this.storeId, (storeId) => {
-	            cartAPI.cartSetStore(storeId);
 	        });
 	        // clear items when we switch to itemless mode
 	        reaction(() => this.mode, () => {
@@ -74953,7 +75013,7 @@
 	        const state = this.shippingAddress.state;
 	        const city = this.shippingAddress.city;
 	        const postalCode = this.shippingAddress.postalCode;
-	        let [gr, l, i] = closestGeoRate(this.taxRates, country, state, city, postalCode);
+	        let [gr, l, i] = closestGeoRate(this.taxRates, country, state, city, postalCode, this.subtotal);
 	        return gr !== null && gr !== void 0 ? gr : rate;
 	    }
 	    get tax() {
@@ -74970,7 +75030,7 @@
 	        const state = this.shippingAddress.state;
 	        const city = this.shippingAddress.city;
 	        const postalCode = this.shippingAddress.postalCode;
-	        let [gr, l, i] = closestGeoRate(this.shippingRates, country, state, city, postalCode);
+	        let [gr, l, i] = closestGeoRate(this.shippingRates, country, state, city, postalCode, this.subtotal);
 	        return gr !== null && gr !== void 0 ? gr : rate;
 	    }
 	    get shipping() {
@@ -75203,6 +75263,7 @@
 	        this.payment = {};
 	        this.client = client;
 	        this.order = order ? new Order(order, taxRates, shippingRates, client, this) : Order.load(client, taxRates, shippingRates, this);
+	        this._storeId = order ? order.storeId : '';
 	        this.user = new User({}, this);
 	        this.analytics = analytics;
 	        this.analyticsProductTransform = aPT;
@@ -75237,8 +75298,18 @@
 	    get isCartInit() {
 	        return !!this.cartId;
 	    }
+	    async setStoreId(sId) {
+	        this._storeId = sId;
+	        this.order.storeId = sId;
+	        // refresh all items
+	        const ps = this.items.map((li) => {
+	            return this.refresh(li.id);
+	        });
+	        this.cartSetStore(sId);
+	        await Promise.all(ps);
+	    }
 	    get storeId() {
-	        return this.order.storeId;
+	        return this._storeId;
 	    }
 	    /**
 	     * Initialize the cart system.
@@ -75275,11 +75346,13 @@
 	            if (request[0] !== id) {
 	                continue;
 	            }
+	            // TODO: we should await the update queue and await instead
 	            const li = new LineItem({
 	                id: request[0],
 	                quantity: request[1],
 	                locked: request[2],
 	                ignore: request[3],
+	                storeId: this.storeId,
 	            }, this.client);
 	            try {
 	                await li.bootstrapPromise;
@@ -75299,14 +75372,14 @@
 	     * freebie etc)
 	     * @return promise for when all set operations are completed
 	     */
-	    async set(id, quantity, locked = false, ignore = false) {
+	    async set(id, quantity, locked = false, ignore = false, force = false) {
 	        if (this.updateQueue.length === 0) {
-	            this.updateQueue.push([id, quantity, locked, ignore]);
+	            this.updateQueue.push([id, quantity, locked, ignore, force]);
 	            this.updateQueuePromise = this.executeUpdates();
 	            await this.updateQueuePromise;
 	        }
 	        else {
-	            this.updateQueue.push([id, quantity, locked, ignore]);
+	            this.updateQueue.push([id, quantity, locked, ignore, force]);
 	            await this.updateQueuePromise;
 	        }
 	    }
@@ -75315,12 +75388,13 @@
 	     * @return return the LineItem if it exists or nothing if it doesn't.
 	     */
 	    async refresh(id) {
+	        // console.log('refresh', id)
 	        let item = await this.get(id);
 	        if (item) {
-	            await this.updateQueue.push([id, item.quantity, item.locked, item.ignore]);
+	            await this.set(id, item.quantity, item.locked, item.ignore, true);
+	            // console.log('refresh2', id)
 	            return await this.get(id);
 	        }
-	        return;
 	    }
 	    /**
 	     * Execute all queued updates
@@ -75337,10 +75411,10 @@
 	            this.updateQueue.shift();
 	            return;
 	        }
-	        let [id, quantity, locked, ignore] = updateQueueRequest;
+	        let [id, quantity, locked, ignore, force] = updateQueueRequest;
 	        // log('eu', id)
 	        // Resolve or escape if itemless mode
-	        if (this.order.inItemlessMode && quantity > 0) {
+	        if (this.order.inItemlessMode && quantity > 0 && !force) {
 	            this.updateQueue.shift();
 	            return await this.executeUpdates();
 	        }
@@ -75357,6 +75431,7 @@
 	            return await this.executeUpdates();
 	        }
 	        // log('eu3')
+	        // console.log('eu', updateQueueRequest)
 	        // try and update item quantity
 	        if (await this.executeUpdateItem(id, quantity, locked, ignore) != null) {
 	            this.updateQueue.shift();
@@ -75369,7 +75444,8 @@
 	            id,
 	            quantity,
 	            locked,
-	            ignore
+	            ignore,
+	            storeId: this.storeId,
 	        }, this.client);
 	        // log('eu4.5')
 	        try {
@@ -75412,13 +75488,31 @@
 	    async executeUpdateItem(id, quantity, locked, ignore) {
 	        const items = this.items;
 	        for (const k in items) {
-	            const item = items[k];
+	            let item = items[k];
 	            // ignore if not a match to id
 	            if (item.id !== id &&
 	                item.productId !== id &&
-	                item.productSlug !== id) {
+	                item.productSlug !== id &&
+	                item.storeId === this.storeId) {
 	                continue;
 	            }
+	            if (item.storeId !== this.storeId) {
+	                // console.log('eui2', item.storeId, this.storeId)
+	                item = new LineItem({
+	                    id,
+	                    quantity,
+	                    locked,
+	                    ignore,
+	                    storeId: this.storeId,
+	                }, this.client);
+	                items[k] = item;
+	                try {
+	                    await item.bootstrapPromise;
+	                }
+	                catch (err) {
+	                }
+	            }
+	            // log('eu4.5')
 	            const oldValue = item.quantity;
 	            item.quantity = quantity;
 	            item.locked = locked;
@@ -75514,7 +75608,7 @@
 	     */
 	    async cartSetItem(id, quantity) {
 	        if (this.isCartInit) {
-	            console.log('cart item');
+	            // console.log('cart item')
 	            this.cart.id = this.cartId;
 	            return this.client.cart.set({
 	                id: this.cartId,
@@ -75717,6 +75811,10 @@
 	    __metadata$1("design:type", Promise)
 	], Commerce.prototype, "bootstrapPromise", void 0);
 	__decorate$1([
+	    observable$1,
+	    __metadata$1("design:type", String)
+	], Commerce.prototype, "_storeId", void 0);
+	__decorate$1([
 	    computed$2,
 	    __metadata$1("design:type", Array),
 	    __metadata$1("design:paramtypes", [])
@@ -75737,6 +75835,12 @@
 	    __metadata$1("design:paramtypes", [])
 	], Commerce.prototype, "isCartInit", null);
 	__decorate$1([
+	    observable$1,
+	    __metadata$1("design:type", Function),
+	    __metadata$1("design:paramtypes", [Object]),
+	    __metadata$1("design:returntype", Promise)
+	], Commerce.prototype, "setStoreId", null);
+	__decorate$1([
 	    computed$2,
 	    __metadata$1("design:type", String),
 	    __metadata$1("design:paramtypes", [])
@@ -75750,7 +75854,7 @@
 	__decorate$1([
 	    action$1,
 	    __metadata$1("design:type", Function),
-	    __metadata$1("design:paramtypes", [Object, Object, Object, Object]),
+	    __metadata$1("design:paramtypes", [Object, Object, Object, Object, Object]),
 	    __metadata$1("design:returntype", Promise)
 	], Commerce.prototype, "set", null);
 	__decorate$1([
@@ -75819,7 +75923,6 @@
 	    __metadata$1("design:paramtypes", [Object]),
 	    __metadata$1("design:returntype", Promise)
 	], Commerce.prototype, "checkout", null);
-	//# sourceMappingURL=index.esm.js.map
 
 	function toString$5(obj) {
 	  return Object.prototype.toString.call(obj)
@@ -75831,8 +75934,6 @@
 	var isNumber$3 = isNumber$2 = function(value) {
 	  return toString$5(value) === '[object Number]';
 	};
-
-	//# sourceMappingURL=number.js.map
 
 	// src/index.coffee
 	var getOwnSymbols$1;
@@ -75915,7 +76016,6 @@
 	    return to;
 	  };
 	})();
-	//# sourceMappingURL=es-object-assign.mjs.map
 
 	// src/cookies.coffee
 	var Cookies$2;
@@ -76025,7 +76125,6 @@
 
 	// src/index.coffee
 	var index$4 = new Cookies$1$1();
-	//# sourceMappingURL=cookies.mjs.map
 
 	// src/cookie-storage.coffee
 	var cookieStorage$1 = (function() {
@@ -76158,10 +76257,9 @@
 	    return pretendStorage$1;
 	  }
 	})();
-	//# sourceMappingURL=akasha.mjs.map
 
 	class ShopStore {
-	    constructor(client, analytics, raw) {
+	    constructor(client, analytics, raw = {}) {
 	        this.lastChecked = undefined;
 	        this.countries = [];
 	        this.isLoading = false;
@@ -76179,6 +76277,7 @@
 	        Object.assign(this, raw);
 	        this.client = client;
 	        this.commerce = new Commerce(client, undefined, [], [], analytics);
+	        if (raw.storeId || this.order.storeId) ;
 	        if (!this.order.currency) {
 	            this.order.currency = 'usd';
 	        }
@@ -76200,10 +76299,15 @@
 	        try {
 	            let res = await this.client.library.shopjs({
 	                hasCountries: !!this.countries && this.countries.length != 0,
+	                storeId: this.commerce.storeId,
 	                lastChecked: renderDate(this.lastChecked || '2000-01-01', rfc3339),
 	            });
 	            runInAction(() => {
 	                this.countries = res.countries || this.countries;
+	                this.order.currency = res.currency;
+	                this.order.shippingRates = res.shippingRates.geoRates;
+	                this.order.taxRates = res.taxRates.geoRates;
+	                // this.commerce.setStoreId(res.storeId)
 	                this.save();
 	                this.isLoading = false;
 	            });
@@ -76548,7 +76652,6 @@
 	            ...opts,
 	            el: cartEl2,
 	            showDescription: false,
-	            showTotals: false,
 	            nativeSelects: true,
 	        });
 	    }
@@ -76584,10 +76687,16 @@
 	    // add events to cart button
 	    const buttonEl = document.querySelector('button.addToCart');
 	    if (buttonEl) {
+	        const formEl = buttonEl.closest('form');
+	        formEl.action = '';
+	        formEl.method = '';
+	        formEl.addEventListener('submit', (event) => {
+	            event.preventDefault();
+	            event.stopPropagation();
+	            return false;
+	        });
 	        buttonEl.addEventListener('click', (event) => {
 	            const formEl = buttonEl.closest('form');
-	            formEl.action = '';
-	            formEl.method = '';
 	            let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector')));
 	            let slug = '';
 	            let slugOpts = options.map((d, i) => {
@@ -76979,7 +77088,6 @@
 	Promise$2.settle = settle;
 
 	Promise$2.soon = soon$1;
-	//# sourceMappingURL=broken.mjs.map
 
 	// src/parse-headers.coffee
 	var isArray;
@@ -77235,7 +77343,6 @@
 	})();
 
 	var XhrPromise$1 = XhrPromise;
-	//# sourceMappingURL=es-xhr-promise.mjs.map
 
 	// node_modules/es-tostring/index.mjs
 	function toString$6(obj) {
@@ -77898,7 +78005,6 @@
 	Hanzo.Client = Client$2;
 
 	var Hanzo$1 = Hanzo;
-	//# sourceMappingURL=hanzo.mjs.map
 
 	if (typeof window !== 'undefined') {
 	    window['ShopJS'] = {
@@ -77910,6 +78016,7 @@
 	        cart,
 	        count,
 	        shopify,
+	        getStore,
 	        set: (...args) => {
 	            const s = getStore();
 	            if (!s) {

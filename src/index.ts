@@ -24,6 +24,7 @@ if (typeof window !== 'undefined') {
     cart,
     count,
     shopify,
+    getStore,
     set: (...args) => {
       const s = getStore()
       if (!s) {

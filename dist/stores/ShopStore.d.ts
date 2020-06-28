@@ -1,4 +1,4 @@
-import { Commerce, Order, IAddress, IClient, ICoupon, IOrder, IPayment } from 'commerce.js';
+import { Commerce, Order, IAddress, IClient, ICoupon, IOrder, IPayment, IGeoRate } from 'commerce.js';
 export interface IRegion {
     name: string;
     code: string;
@@ -8,6 +8,14 @@ export interface ICountry extends IRegion {
 }
 export interface LibraryResponse {
     countries: ICountry[];
+    storeId: string;
+    currency: string;
+    shippingRates: {
+        geoRates: IGeoRate[];
+    };
+    taxRates: {
+        geoRates: IGeoRate[];
+    };
 }
 export interface ILibraryClient extends IClient {
     library: {
@@ -24,7 +32,7 @@ export default class ShopStore {
     bootstrapPromise: Promise<any>;
     client: ILibraryClient;
     _payment: IPayment;
-    constructor(client: ILibraryClient, analytics: any, raw: any);
+    constructor(client: ILibraryClient, analytics: any, raw?: any);
     save(): void;
     load(): Promise<void>;
     get countryOptions(): {};
