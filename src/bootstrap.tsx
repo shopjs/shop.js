@@ -168,7 +168,6 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
       ...opts,
       el: cartEl2,
       showDescription: false,
-      showTotals: false,
       nativeSelects: true,
     })
   }
@@ -211,10 +210,17 @@ export const shopify = function(client: ILibraryClient, opts: Options = {}) {
   // add events to cart button
   const buttonEl = (document.querySelector('button.addToCart') as HTMLElement)
   if (buttonEl) {
+    const formEl = (buttonEl.closest('form') as HTMLFormElement)
+    formEl.action = ''
+    formEl.method = ''
+    formEl.addEventListener('submit', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    })
+
     buttonEl.addEventListener('click', (event) => {
       const formEl = (buttonEl.closest('form') as HTMLFormElement)
-      formEl.action = ''
-      formEl.method = ''
 
       let options = ([].slice.call(formEl.querySelectorAll('select.single-option-selector'))) as HTMLSelectElement[]
       let slug = ''
