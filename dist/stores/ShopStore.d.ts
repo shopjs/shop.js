@@ -34,6 +34,7 @@ export default class ShopStore {
     _payment: IPayment;
     constructor(client: ILibraryClient, analytics: any, raw?: any);
     save(): void;
+    setStoreId(storeId: string): Promise<void>;
     load(): Promise<void>;
     get countryOptions(): {};
     get stateOptions(): {};
