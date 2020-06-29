@@ -97,7 +97,7 @@ export default class ShopStore {
 
     this.commerce = new Commerce(client, undefined, [], [], analytics)
     if (raw.storeId || this.order.storeId) {
-      // this.commerce.setStoreId(raw.storeId ?? this.order.storeId)
+      this.commerce.setStoreId(raw.storeId ?? this.order.storeId)
     }
 
     if (!this.order.currency) {
@@ -110,6 +110,11 @@ export default class ShopStore {
   save() {
     akasha.set('library.lastChecked', this.lastChecked)
     akasha.set('library.countries',   this.countries)
+  }
+
+  @action async setStoreId(storeId: string): Promise<void> {
+    this.commerce.setStoreId(storeId)
+    return this.load()
   }
 
   @action async load(): Promise<void> {
@@ -135,7 +140,6 @@ export default class ShopStore {
         this.order.currency = res.currency
         this.order.shippingRates = res.shippingRates.geoRates
         this.order.taxRates = res.taxRates.geoRates
-        // this.commerce.setStoreId(res.storeId)
 
         this.save()
         this.isLoading = false
