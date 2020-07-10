@@ -95,7 +95,7 @@ export default class ShopStore {
 
     this.client = client
 
-    this.commerce = new Commerce(client, undefined, [], [], analytics)
+    this.commerce = new Commerce(client, undefined, [], [], analytics, raw.analyticsProductTransform)
     if (raw.storeId || this.order.storeId) {
       this.commerce.setStoreId(raw.storeId ?? this.order.storeId)
     }
