@@ -88,7 +88,7 @@ export default [
     output: [
       { name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true },
       // { file: pkg.main, format: 'cjs', sourcemap: true },
-      // { file: pkg.module, format: 'es', sourcemap: true },
+      { file: pkg.module, format: 'es', sourcemap: true },
     ],
   },
 ]
