@@ -26,8 +26,8 @@
     "site",
     "subscriptions"
   ],
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "browser": "dist/index.umd.js",
   "directories": {
     "src": "src",
@@ -48,7 +48,7 @@
     "audit": "node_modules/.bin/source-map-explorer dist/index.umd.js",
     "prepare": "npm run build",
     "clean": "rm -rf dist",
-    "build": "npm run clean && node_modules/.bin/rollup -c",
+    "build": "npm run clean && node_modules/.bin/rollup -c && tsc",
     "build:watch": "node_modules/.bin/rollup -c -w",
     "watch": "node_modules/.bin/concurrently 'npm run build:watch' 'node_modules/.bin/live-server --host=127.0.0.1 --port=5000 --watch=dist'",
     "test": "node_modules/.bin/jest && npm run build",
