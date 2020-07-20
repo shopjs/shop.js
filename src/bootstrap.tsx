@@ -73,7 +73,7 @@ const checkout = (client: ILibraryClient, opts: Options = {}) => {
 
   ReactDOM.render(
     <ShopJS/>,
-    el,
+    el as any,
   )
 }
 
@@ -103,7 +103,7 @@ export const cart = (client: ILibraryClient, opts: Options = {}) => {
 
   ReactDOM.render(
     <ShopJSCart/>,
-    el,
+    el as any,
   )
 }
 
@@ -122,7 +122,7 @@ export const count = (client: ILibraryClient, opts: Options = {}) => {
 
   ReactDOM.render(
     <ShopJSCartCount/>,
-    el,
+    el as any,
   )
 }
 
