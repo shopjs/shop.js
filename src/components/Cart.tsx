@@ -218,6 +218,7 @@ const Cart = ({
                                       setValue={ (quantity) => {
                                         setItem(item.id, parseInt(quantity, 10))
                                       }}
+                                      SelectProps={{ native: !!nativeSelects }}
                                     />
                                   </Grid>
                                 </Grid>
