@@ -58536,7 +58536,7 @@
 	                                React__default.createElement(StyledGrid, { item: true, xs: 4, sm: 2, className: classnames(classes.right, 'cart-item-quantity') },
 	                                    React__default.createElement(MUIText, { select: true, disabled: item.locked || locked, options: quantityOpts, value: item.quantity, setValue: (quantity) => {
 	                                            setItem(item.id, parseInt(quantity, 10));
-	                                        } }))),
+	                                        }, SelectProps: { native: !!nativeSelects } }))),
 	                            React__default.createElement("br", null)))));
 	                    }))),
 	            !!(order.items && order.items.length && order.items.length > 0)

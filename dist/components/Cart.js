@@ -130,7 +130,7 @@ const Cart = ({ order, setCoupon, setItem, locked, cartIcon, cartTitle, showDesc
                                 React.createElement(Grid, { item: true, xs: 4, sm: 2, className: classnames(classes.right, 'cart-item-quantity') },
                                     React.createElement(MUIText, { select: true, disabled: item.locked || locked, options: quantityOpts, value: item.quantity, setValue: (quantity) => {
                                             setItem(item.id, parseInt(quantity, 10));
-                                        } }))),
+                                        }, SelectProps: { native: !!nativeSelects } }))),
                             React.createElement("br", null)))));
                     }))),
             !!(order.items && order.items.length && order.items.length > 0)
