@@ -1,10 +1,10 @@
 {
   "name": "shop.js",
   "version": "3.0.26",
-  "description": "Ecommerce UI components and framework powered by Hanzo",
-  "homepage": "http://github.com/hanzoai/shop.js",
+  "description": "Ecommerce UI components and framework powered by React",
+  "homepage": "http://github.com/shopjs/shop.js",
   "bugs": {
-    "url": "https://github.com/hanzoai/hanzo/issues"
+    "url": "https://github.com/shopjs/shop.js/issues"
   },
   "author": "Hanzo, Inc <hi@hanzo.ai>",
   "license": "BSD-3-Clause",
@@ -42,7 +42,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "github:hanzoai/shop.js"
+    "url": "github:shopjs/shop.js"
   },
   "scripts": {
     "audit": "node_modules/.bin/source-map-explorer dist/index.umd.js",
