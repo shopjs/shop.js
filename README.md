@@ -1,4 +1,4 @@
-# Shop.js  [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url] [![Greenkeeper badge](https://badges.greenkeeper.io/shopjs/shop.js.svg)](https://greenkeeper.io/)
+# Shop.js  [![Build Status][travis-image]][travis-url] [![NPM version][npm-image]][npm-url]  [![Gitter chat][gitter-image]][gitter-url]
 Shop.js is a front-end framework for Ecommerce powered by React and designed for
 [Hanzo](https://hanzo.ai).
 
@@ -15,7 +15,7 @@ You can see a great example of Shop.js in action at
 [npm-image]:       https://img.shields.io/npm/v/shop.js.svg
 [downloads-image]: https://img.shields.io/npm/dm/shop.js.svg
 [downloads-url]:   http://badge.fury.io/js/shop.js
-[gitter-url]:      https://gitter.im/shopjs/chat
+[gitter-url]:      https://gitter.im/shopjs/community
 [gitter-image]:    https://img.shields.io/badge/gitter-join_chat-brightgreen.svg
 
 [hanzo]:           https://hanzo.ai
