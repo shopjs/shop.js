@@ -81,12 +81,14 @@ export default [
   {
     input: 'src/index.ts',
     external: ['cross-fetch'],
-    globals: {
-      'cross-fetch': 'fetch',
-    },
     plugins,
     output: [
-      { name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true },
+      {
+        name: pkg.name, file: pkg.browser, format: 'umd', sourcemap: true,
+        globals: {
+          'cross-fetch': 'fetch',
+        },
+      },
       // { file: pkg.main, format: 'cjs', sourcemap: true },
       // { file: pkg.module, format: 'es', sourcemap: true },
     ],
