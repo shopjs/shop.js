@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom'
 import { AutoSizer } from 'react-virtualized'
 import './poly'
 
+import { configure } from 'mobx'
+configure({ isolateGlobalState: true }) // Allow multiple instances of mobx
+
 import { useLocalStore, useObserver } from 'mobx-react'
 
 import { Checkout, Cart, CartCount, PaymentForm, ShippingForm } from './components'

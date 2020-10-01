@@ -69137,6 +69137,7 @@
 	    return store;
 	};
 
+	configure({ isolateGlobalState: true }); // Allow multiple instances of mobx
 	const checkout = (client, opts = {}) => {
 	    let el = opts.el;
 	    const ShopJS = () => {
