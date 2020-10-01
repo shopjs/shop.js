@@ -4,7 +4,7 @@ Shop.js is a front-end framework for Ecommerce powered by React and designed for
 
 ## Examples
 You can see a great example of Shop.js in action at
-[damon.com](https://damon.com).
+[damon.com](https://damon.com) and [fund.karmabikinis.co](https://fund.karmabikinis.co).
 
 [shop.js]:         https://cdn.rawgit.com/shopjs/shop.js/v0.0.1/shop.min.js
 [travis-url]:      https://travis-ci.org/shopjs/shop.js
